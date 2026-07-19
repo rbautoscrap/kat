@@ -91,9 +91,12 @@ export function ListingForm({ listing }: Props) {
   const [coverName, setCoverName] = useState<string | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [photoCount, setPhotoCount] = useState(0);
-
-  const existingCover = listing?.images?.[0];
-  const existingGallery = listing?.images?.slice(1) ?? [];
+  const [keptCover, setKeptCover] = useState<ListingImage | null>(
+    () => listing?.images?.[0] ?? null,
+  );
+  const [keptGallery, setKeptGallery] = useState<ListingImage[]>(
+    () => listing?.images?.slice(1) ?? [],
+  );
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -107,6 +110,20 @@ export function ListingForm({ listing }: Props) {
       const cover = data.get("coverImage");
       if (!(cover instanceof File) || cover.size === 0) {
         setError("대표(메인) 사진을 등록해 주세요.");
+        setPending(false);
+        return;
+      }
+    } else {
+      const cover = data.get("coverImage");
+      const hasNewCover = cover instanceof File && cover.size > 0;
+      const hasNewGallery = photoCount > 0;
+      if (
+        !hasNewCover &&
+        !keptCover &&
+        keptGallery.length === 0 &&
+        !hasNewGallery
+      ) {
+        setError("사진은 최소 1장 이상 남겨 주세요.");
         setPending(false);
         return;
       }
@@ -306,6 +323,14 @@ export function ListingForm({ listing }: Props) {
         </div>
       </div>
 
+      {listing ? <input type="hidden" name="manageImages" value="1" /> : null}
+      {keptCover ? (
+        <input type="hidden" name="keepImageIds" value={keptCover.id} />
+      ) : null}
+      {keptGallery.map((img) => (
+        <input key={img.id} type="hidden" name="keepImageIds" value={img.id} />
+      ))}
+
       <div className="space-y-5 text-sm">
         <div>
           <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
@@ -313,7 +338,7 @@ export function ListingForm({ listing }: Props) {
             {listing ? (
               <span className="font-normal text-neutral-400">
                 {" "}
-                (비워두면 기존 대표 사진을 유지합니다)
+                (삭제 후 새 사진을 올리거나, 추가 사진이 대표로 승격됩니다)
               </span>
             ) : (
               <span className="font-normal text-neutral-400">
@@ -324,13 +349,28 @@ export function ListingForm({ listing }: Props) {
           </span>
 
           <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-dashed border-neutral-300 bg-neutral-50/60 px-4 py-6 transition hover:border-neutral-400 hover:bg-neutral-50 focus-within:border-neutral-400 focus-within:bg-white">
-            {(coverPreview || existingCover?.url) && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={coverPreview ?? existingCover!.url}
-                alt="대표 사진 미리보기"
-                className="h-36 w-full max-w-sm rounded-sm border border-neutral-200 object-cover"
-              />
+            {(coverPreview || keptCover?.url) && (
+              <span className="relative inline-block w-full max-w-sm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={coverPreview ?? keptCover!.url}
+                  alt="대표 사진 미리보기"
+                  className="h-36 w-full rounded-sm border border-neutral-200 object-cover"
+                />
+                {listing && !coverPreview && keptCover ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setKeptCover(null);
+                    }}
+                    className="absolute right-2 top-2 inline-flex h-7 items-center rounded-md bg-black/70 px-2 text-[12px] font-medium text-white hover:bg-black/85"
+                  >
+                    삭제
+                  </button>
+                ) : null}
+              </span>
             )}
             <span className="inline-flex h-9 items-center justify-center rounded-md border border-neutral-300 bg-white px-4 text-[13px] font-medium tracking-wide text-neutral-800 shadow-sm">
               대표 사진 선택
@@ -350,6 +390,7 @@ export function ListingForm({ listing }: Props) {
                 setCoverName(file?.name ?? null);
                 if (coverPreview) URL.revokeObjectURL(coverPreview);
                 setCoverPreview(file ? URL.createObjectURL(file) : null);
+                if (file) setKeptCover(null);
               }}
             />
           </label>
@@ -361,7 +402,7 @@ export function ListingForm({ listing }: Props) {
             <span className="font-normal text-neutral-400">
               {" "}
               · 대표 사진 포함 최대 100장
-              {listing ? " (비워두면 기존 추가 사진을 유지합니다)" : ""}
+              {listing ? " · 썸네일 × 로 개별 삭제" : ""}
             </span>
           </span>
 
@@ -396,18 +437,37 @@ export function ListingForm({ listing }: Props) {
             />
           </label>
 
-          {existingGallery.length > 0 ? (
+          {keptGallery.length > 0 ? (
             <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
-              {existingGallery.map((img) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={img.id}
-                  src={img.url}
-                  alt=""
-                  className="aspect-square rounded-sm border border-neutral-200 object-cover"
-                />
+              {keptGallery.map((img) => (
+                <div key={img.id} className="relative aspect-square">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={img.url}
+                    alt=""
+                    className="h-full w-full rounded-sm border border-neutral-200 object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setKeptGallery((prev) =>
+                        prev.filter((item) => item.id !== img.id),
+                      )
+                    }
+                    className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/75 text-[14px] leading-none text-white hover:bg-black/90"
+                    aria-label="사진 삭제"
+                    title="삭제"
+                  >
+                    ×
+                  </button>
+                </div>
               ))}
             </div>
+          ) : null}
+          {listing && keptGallery.length === 0 ? (
+            <p className="mt-2 text-[12px] tracking-wide text-neutral-400">
+              보관 중인 추가 사진이 없습니다. 위에서 새로 추가할 수 있습니다.
+            </p>
           ) : null}
         </div>
       </div>

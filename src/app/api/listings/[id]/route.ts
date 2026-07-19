@@ -32,6 +32,11 @@ export async function PUT(request: Request, { params }: Params) {
     const { coverUrl, galleryUrls, hasUpload } =
       await saveListingImageUploads(formData);
 
+    const manageImages = formData.get("manageImages") === "1";
+    const keepImageIds = formData
+      .getAll("keepImageIds")
+      .filter((v): v is string => typeof v === "string" && v.length > 0);
+
     let imageUpdate:
       | {
           images: {
@@ -42,20 +47,41 @@ export async function PUT(request: Request, { params }: Params) {
       | undefined;
     let orphanUrls: string[] = [];
 
-    if (hasUpload) {
-      const existingCover = existing.images[0]?.url;
-      const existingGallery = existing.images.slice(1).map((img) => img.url);
+    if (hasUpload || manageImages) {
       const previousUrls = existing.images.map((img) => img.url);
+      const byId = new Map(existing.images.map((img) => [img.id, img]));
+      const keptUrls = keepImageIds
+        .map((id) => byId.get(id)?.url)
+        .filter((url): url is string => Boolean(url));
 
       let ordered: string[];
-      if (coverUrl && galleryUrls.length > 0) {
+      if (manageImages) {
+        // Explicit keep list from editor (+ optional new uploads)
+        ordered = coverUrl
+          ? [coverUrl, ...keptUrls, ...galleryUrls]
+          : [...keptUrls, ...galleryUrls];
+      } else if (coverUrl && galleryUrls.length > 0) {
         ordered = [coverUrl, ...galleryUrls];
       } else if (coverUrl) {
+        const existingGallery = existing.images.slice(1).map((img) => img.url);
         ordered = [coverUrl, ...existingGallery];
       } else {
+        const existingCover = existing.images[0]?.url;
         ordered = existingCover
           ? [existingCover, ...galleryUrls]
           : galleryUrls;
+      }
+
+      // Deduplicate while preserving order
+      ordered = ordered.filter(
+        (url, index) => ordered.indexOf(url) === index,
+      );
+
+      if (ordered.length === 0) {
+        return NextResponse.json(
+          { error: "사진은 최소 1장 이상 남겨 주세요." },
+          { status: 400 },
+        );
       }
 
       if (ordered.length > MAX_IMAGES_PER_LISTING) {
