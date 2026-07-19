@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MEMBER
+  AUTHORIZED
+  ADMIN
+}
+
+enum AccountStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ListingCategory {
+  HOT_DEALS
+  CAR_LISTINGS
+  STAND_BY
+}
+
+enum OfferCurrency {
+  USD
+  KRW
+  EUR
+}
+
+enum ListingSaleStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+}
+
+model User {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  passwordHash String
+  name         String
+  role         Role            @default(MEMBER)
+  /** Join sets PENDING; existing/seed accounts default to APPROVED. */
+  status       AccountStatus   @default(APPROVED)
+  createdAt    DateTime        @default(now())
+  listings     Listing[]
+  purchaseOffers PurchaseOffer[]
+}
+
+model Listing {
+  id               String            @id @default(cuid())
+  serialNumber     String            @unique
+  title            String
+  category         ListingCategory
+  /** AVAILABLE = on sale, RESERVED = under contract, SOLD = sold out */
+  saleStatus       ListingSaleStatus @default(AVAILABLE)
+  year             Int
+  make             String
+  model            String
+  vin              String?
+  highlights       String?
+  engineMark       String?
+  displacement     String?
+  transmission     String?
+  engineStatus     String?
+  odometer         String?
+  damages          String?
+  /** English translation of damages for public display */
+  damagesEn        String?
+  fuelType         String?
+  exteriorColor    String?
+  registrationDate String?
+  youtubeUrl       String?
+  whatsappNumber   String
+  /** Admin-only internal reference (not shown publicly) */
+  vehicleNumber    String?
+  storageLocation  String?
+  inboundDate      String?
+  auctionPrice     String?
+  incidentalCost   String?
+  costPrice        String?
+  accumulatedDays  String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  authorId         String
+  author           User            @relation(fields: [authorId], references: [id])
+  images           ListingImage[]
+  purchaseOffers   PurchaseOffer[]
+
+  @@index([category, createdAt])
+  @@index([saleStatus])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+/** Member purchase interest / bid for a listing */
+model PurchaseOffer {
+  id        String        @id @default(cuid())
+  listingId String
+  listing   Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    String
+  currency  OfferCurrency
+  /** Hashed client IP — blocks multi-account bids from same network */
+  ipHash    String
+  /** Stable browser device cookie — blocks multi-account bids from same browser */
+  deviceId  String
+  createdAt DateTime      @default(now())
+
+  @@index([listingId, userId])
+  @@index([listingId, ipHash])
+  @@index([listingId, deviceId])
+  @@index([listingId, createdAt])
+}
+
+model ListingImage {
+  id        String  @id @default(cuid())
+  url       String
+  sortOrder Int     @default(0)
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, sortOrder])
+}
+
+model SiteStats {
+  id          String @id @default("main")
+  totalVisits Int    @default(0)
+  todayVisits Int    @default(0)
+  todayDate   String @default("")
+}
