@@ -6,3 +6,8 @@ dockerfilePath = "Dockerfile"
 startCommand = "node scripts/start-prod.mjs"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
+
+# Persistence (REQUIRED — create in Railway UI if missing):
+#   Volume mount path = /app/data
+# Stores SQLite DB + listing photos across redeploys.
+# Railway sets RAILWAY_VOLUME_MOUNT_PATH automatically when attached.

@@ -17,13 +17,42 @@ function resolveBin(pkg, ...parts) {
   }
 }
 
-// This app uses SQLite in prisma/schema.prisma — ignore Postgres-style URLs from Railway plugins
+function applyPersistEnv() {
+  const script = path.join(process.cwd(), "scripts", "ensure-persistent-data.mjs");
+  if (!existsSync(script)) {
+    console.warn("[start-prod] ensure-persistent-data.mjs missing");
+    return;
+  }
+  const result = spawnSync(process.execPath, [script], {
+    encoding: "utf8",
+    env: process.env,
+  });
+  if (result.stderr) process.stderr.write(result.stderr);
+  if (result.status !== 0) {
+    console.error(`[start-prod] ensure-persistent-data failed: ${result.status}`);
+    process.exit(result.status ?? 1);
+  }
+  for (const line of (result.stdout || "").split("\n")) {
+    const i = line.indexOf("=");
+    if (i <= 0) continue;
+    const key = line.slice(0, i).trim();
+    const value = line.slice(i + 1).trim();
+    if (key && value) process.env[key] = value;
+  }
+}
+
+// 1) Bind DB + uploads to Volume (/app/data) before anything else
+applyPersistEnv();
+
+// 2) Never use Postgres plugin URLs — this app is SQLite-only
 const dbUrl = process.env.DATABASE_URL?.trim() ?? "";
 if (!dbUrl.startsWith("file:")) {
-  process.env.DATABASE_URL = "file:./prod.db";
-  console.log(
-    `[start-prod] DATABASE_URL ${dbUrl ? "was not a file: URL" : "unset"} → using file:./prod.db`,
-  );
+  process.env.DATABASE_URL = "file:/app/data/prod.db";
+  console.log("[start-prod] DATABASE_URL forced to file:/app/data/prod.db");
+}
+
+if (!process.env.UPLOAD_DIR?.trim()) {
+  process.env.UPLOAD_DIR = "/app/data/uploads";
 }
 
 if (!process.env.AUTH_SECRET?.trim()) {
@@ -48,9 +77,13 @@ if (!process.env.AUTH_URL?.trim()) {
 console.log("[start-prod] Boot checks");
 console.log(`[start-prod] NODE_ENV=${process.env.NODE_ENV ?? "(unset)"}`);
 console.log(`[start-prod] PORT=${port}`);
-console.log(`[start-prod] bind=${bindHost}`);
-console.log(`[start-prod] AUTH_URL=${process.env.AUTH_URL ?? "(unset)"}`);
+console.log(`[start-prod] DATA_DIR=${process.env.DATA_DIR ?? "(unset)"}`);
 console.log(`[start-prod] DATABASE_URL=${process.env.DATABASE_URL}`);
+console.log(`[start-prod] UPLOAD_DIR=${process.env.UPLOAD_DIR}`);
+console.log(
+  `[start-prod] PERSIST_VOLUME=${process.env.PERSIST_VOLUME === "1" ? "yes" : "NO — attach Volume at /app/data"}`,
+);
+console.log(`[start-prod] AUTH_URL=${process.env.AUTH_URL ?? "(unset)"}`);
 console.log("[start-prod] AUTH_SECRET=(set)");
 
 const prismaCli = resolveBin("prisma", "build", "index.js");

@@ -14,7 +14,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-# Pin URL on the RUN line so Railway Variables cannot override build-time DB path
+# Build-time only DB (not persisted). Runtime uses Volume at /app/data
 RUN DATABASE_URL="file:./build.db" npx prisma generate \
   && DATABASE_URL="file:./build.db" npx prisma db push --skip-generate \
   && DATABASE_URL="file:./build.db" npx next build
@@ -23,7 +23,9 @@ FROM base AS runner
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=8080
-ENV DATABASE_URL="file:./prod.db"
+ENV DATA_DIR=/app/data
+ENV DATABASE_URL=file:/app/data/prod.db
+ENV UPLOAD_DIR=/app/data/uploads
 
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./
@@ -33,6 +35,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/next.config.ts ./
+
+# Persistent data lives on Railway Volume mounted at /app/data
+RUN mkdir -p /app/data/uploads
 
 EXPOSE 8080
 CMD ["node", "scripts/start-prod.mjs"]

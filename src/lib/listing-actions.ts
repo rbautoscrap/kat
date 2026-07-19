@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import sharp from "sharp";
 import { z } from "zod";
 import type { ListingCategory } from "@prisma/client";
+import { getUploadsDir } from "@/lib/storage-paths";
 import { translateToEnglish } from "@/lib/translate";
 
 const optionalDigits = z
@@ -231,7 +232,7 @@ const ALLOWED_IMAGE_TYPES = new Set([
 const ALLOWED_SHARP_FORMATS = new Set(["jpeg", "png", "webp", "gif"]);
 
 function uploadsDir() {
-  return path.join(process.cwd(), "public", "uploads");
+  return getUploadsDir();
 }
 
 /** Delete local `/uploads/...` files (best-effort; ignores missing files). */
