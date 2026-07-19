@@ -4,7 +4,6 @@ import { Manrope, Noto_Sans_KR } from "next/font/google";
 import { Header } from "@/components/Header";
 import { SiteSearchBar } from "@/components/SiteSearchBar";
 import { Footer } from "@/components/Footer";
-import { VisitTracker } from "@/components/VisitTracker";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -53,7 +52,6 @@ export default function RootLayout({
         </Suspense>
         <main className="flex-1">{children}</main>
         <Footer />
-        <VisitTracker />
       </body>
     </html>
   );

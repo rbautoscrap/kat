@@ -7,7 +7,6 @@ RUN apt-get update \
 
 FROM base AS deps
 COPY package.json package-lock.json ./
-# No postinstall prisma generate — schema not required at npm ci
 RUN npm ci
 
 FROM base AS builder
@@ -15,11 +14,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-# Build-time SQLite (relative to prisma/); tables required when Next prerenders layout/Footer
-ENV DATABASE_URL="file:./prod.db"
-RUN npx prisma generate
-RUN npx prisma db push --skip-generate
-RUN npx next build
+# Pin URL on the RUN line so Railway Variables cannot override build-time DB path
+RUN DATABASE_URL="file:./build.db" npx prisma generate \
+  && DATABASE_URL="file:./build.db" npx prisma db push --skip-generate \
+  && DATABASE_URL="file:./build.db" npx next build
 
 FROM base AS runner
 ENV NODE_ENV=production
