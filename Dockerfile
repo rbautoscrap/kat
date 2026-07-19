@@ -23,7 +23,7 @@ FROM base AS runner
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=8080
-ENV HOSTNAME=0.0.0.0
+ENV DATABASE_URL="file:./prod.db"
 
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./
