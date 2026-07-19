@@ -188,7 +188,8 @@ export default async function AdminListingsPage({ searchParams }: Props) {
     _count: { select: { purchaseOffers: true } },
   } as const;
 
-  let listings;
+  type AdminListingRow = Prisma.ListingGetPayload<{ include: typeof include }>;
+  let listings: AdminListingRow[] = [];
 
   if (sort === "newest") {
     listings = await prisma.listing.findMany({

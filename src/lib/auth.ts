@@ -22,8 +22,8 @@ declare module "next-auth" {
 
 declare module "@auth/core/jwt" {
   interface JWT {
-    id: string;
-    role: Role;
+    id?: string;
+    role?: Role;
     /** Epoch ms of last DB role/status revalidation */
     checkedAt?: number;
   }
@@ -107,11 +107,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             select: { role: true, name: true, email: true, status: true },
           });
           if (!dbUser) {
-            return { ...token, id: undefined, sub: undefined };
+            delete token.id;
+            delete token.sub;
+            delete token.role;
+            return token;
           }
           // Revoke session if a non-admin account is no longer approved.
           if (dbUser.role !== "ADMIN" && dbUser.status !== "APPROVED") {
-            return { ...token, id: undefined, sub: undefined };
+            delete token.id;
+            delete token.sub;
+            delete token.role;
+            return token;
           }
           token.id = userId;
           token.sub = userId;
@@ -130,7 +136,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (typeof token.sub === "string" && token.sub) ||
           "";
         session.user.id = id;
-        session.user.role = token.role as Role;
+        session.user.role = (token.role as Role | undefined) ?? "MEMBER";
         session.user.email = (token.email as string) ?? "";
         session.user.name = (token.name as string) ?? "";
       }
