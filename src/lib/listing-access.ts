@@ -12,28 +12,34 @@ export type SessionDbUser = {
 
 /** Resolve the signed-in user from DB (id first, then login email). */
 export async function resolveSessionDbUser(): Promise<SessionDbUser | null> {
-  const session = await auth();
-  if (!session?.user) return null;
+  try {
+    const session = await auth();
+    if (!session?.user) return null;
 
-  const select = { id: true, role: true, email: true, name: true } as const;
+    const select = { id: true, role: true, email: true, name: true } as const;
 
-  if (session.user.id) {
-    const byId = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select,
-    });
-    if (byId) return byId;
+    if (session.user.id) {
+      const byId = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select,
+      });
+      if (byId) return byId;
+    }
+
+    if (session.user.email) {
+      const byEmail = await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select,
+      });
+      if (byEmail) return byEmail;
+    }
+
+    return null;
+  } catch (error) {
+    // Avoid taking down every page if auth/DB is misconfigured in production.
+    console.error("[resolveSessionDbUser]", error);
+    return null;
   }
-
-  if (session.user.email) {
-    const byEmail = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select,
-    });
-    if (byEmail) return byEmail;
-  }
-
-  return null;
 }
 
 /** Whether the current user may edit/delete this listing (DB-backed role + id). */

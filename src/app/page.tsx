@@ -1,6 +1,7 @@
 import { HeroBanner } from "@/components/HeroBanner";
 import { ListingSection } from "@/components/ListingSection";
-import { auth, isAdmin } from "@/lib/auth";
+import { isAdmin } from "@/lib/auth";
+import { resolveSessionDbUser } from "@/lib/listing-access";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -11,35 +12,44 @@ type Props = {
   searchParams: Promise<{ error?: string }>;
 };
 
+const coverImageInclude = {
+  images: { orderBy: { sortOrder: "asc" as const }, take: 1 },
+};
+
+async function loadHomeListings() {
+  try {
+    return await Promise.all([
+      prisma.listing.findMany({
+        where: { category: "HOT_DEALS" },
+        include: coverImageInclude,
+        orderBy: { createdAt: "desc" },
+        take: HOME_SECTION_LIMIT,
+      }),
+      prisma.listing.findMany({
+        where: { category: "CAR_LISTINGS" },
+        include: coverImageInclude,
+        orderBy: { createdAt: "desc" },
+        take: HOME_SECTION_LIMIT,
+      }),
+      prisma.listing.findMany({
+        where: { category: "STAND_BY" },
+        include: coverImageInclude,
+        orderBy: { createdAt: "desc" },
+        take: HOME_SECTION_LIMIT,
+      }),
+    ]);
+  } catch (error) {
+    console.error("[HomePage] listing query failed", error);
+    return [[], [], []] as const;
+  }
+}
+
 export default async function HomePage({ searchParams }: Props) {
   const params = await searchParams;
-  const session = await auth();
-  const canViewSold = isAdmin(session?.user?.role);
+  const dbUser = await resolveSessionDbUser();
+  const canViewSold = isAdmin(dbUser?.role);
 
-  const coverImageInclude = {
-    images: { orderBy: { sortOrder: "asc" as const }, take: 1 },
-  };
-
-  const [hotDeals, carListings, standBy] = await Promise.all([
-    prisma.listing.findMany({
-      where: { category: "HOT_DEALS" },
-      include: coverImageInclude,
-      orderBy: { createdAt: "desc" },
-      take: HOME_SECTION_LIMIT,
-    }),
-    prisma.listing.findMany({
-      where: { category: "CAR_LISTINGS" },
-      include: coverImageInclude,
-      orderBy: { createdAt: "desc" },
-      take: HOME_SECTION_LIMIT,
-    }),
-    prisma.listing.findMany({
-      where: { category: "STAND_BY" },
-      include: coverImageInclude,
-      orderBy: { createdAt: "desc" },
-      take: HOME_SECTION_LIMIT,
-    }),
-  ]);
+  const [hotDeals, carListings, standBy] = await loadHomeListings();
 
   const errorMessage =
     params.error === "unauthorized"
