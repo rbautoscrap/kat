@@ -22,8 +22,12 @@ export function ListingThumb({ src, alt, sizes, className }: Props) {
       sizes={sizes}
       className={className}
       onError={() => setFailed(true)}
-      // Local /uploads go through Next image optimization (smaller payloads).
-      unoptimized={url.startsWith("http") || url.endsWith(".svg")}
+      // /uploads are served from Volume via route handler — skip optimizer
+      unoptimized={
+        url.startsWith("http") ||
+        url.startsWith("/uploads/") ||
+        url.endsWith(".svg")
+      }
     />
   );
 }

@@ -4,8 +4,7 @@
  *
  * Layout:
  *   /app/data/prod.db
- *   /app/data/uploads/*
- *   /app/public/uploads -> /app/data/uploads  (Next.js serves /uploads/…)
+ *   /app/data/uploads/*   ← photos (served by src/app/uploads/[...path]/route.ts)
  *
  * Prints KEY=value lines to stdout for start-prod to apply.
  */
@@ -17,7 +16,6 @@ import {
   mkdirSync,
   readdirSync,
   rmSync,
-  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
@@ -57,22 +55,31 @@ function migrateFile(src, dest) {
 }
 
 function migrateUploadsTree(srcDir, destDir) {
-  if (!isDir(srcDir) || isSymlink(srcDir)) return;
+  if (!isDir(srcDir) && !isSymlink(srcDir)) return;
+  let realSrc = srcDir;
+  try {
+    if (isSymlink(srcDir)) {
+      // already points at volume — nothing to migrate from public
+      return;
+    }
+  } catch {
+    return;
+  }
   let entries = [];
   try {
-    entries = readdirSync(srcDir);
+    entries = readdirSync(realSrc);
   } catch {
     return;
   }
   if (entries.length === 0) return;
   mkdirSync(destDir, { recursive: true });
   for (const name of entries) {
-    const from = path.join(srcDir, name);
+    const from = path.join(realSrc, name);
     const to = path.join(destDir, name);
     if (existsSync(to)) continue;
     cpSync(from, to, { recursive: true });
   }
-  console.error(`[persist] Migrated uploads ${srcDir} → ${destDir}`);
+  console.error(`[persist] Migrated uploads ${realSrc} → ${destDir}`);
 }
 
 mkdirSync(uploadsPersistent, { recursive: true });
@@ -82,13 +89,17 @@ migrateFile(path.join(cwd, "prisma", "prod.db"), dbPath);
 migrateFile(path.join(cwd, "prod.db"), dbPath);
 migrateUploadsTree(publicUploads, uploadsPersistent);
 
-if (!isSymlink(publicUploads)) {
-  if (existsSync(publicUploads)) {
-    migrateUploadsTree(publicUploads, uploadsPersistent);
+// Remove public/uploads so Next does not 404 on a dead/empty static dir.
+// Photos are served by App Router: /uploads/[...path] → Volume files.
+if (existsSync(publicUploads)) {
+  try {
     rmSync(publicUploads, { recursive: true, force: true });
+    console.error(
+      "[persist] Removed public/uploads (serving via /uploads route → Volume)",
+    );
+  } catch (err) {
+    console.error("[persist] Could not remove public/uploads", err);
   }
-  symlinkSync(uploadsPersistent, publicUploads, "dir");
-  console.error(`[persist] Symlink ${publicUploads} → ${uploadsPersistent}`);
 }
 
 try {
@@ -114,7 +125,6 @@ if (!volumeAttached) {
   );
 }
 
-// Parsed by start-prod (stdout only — keep logs on stderr)
 process.stdout.write(
   [
     `DATA_DIR=${dataDir}`,

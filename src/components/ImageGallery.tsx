@@ -52,7 +52,10 @@ export function ImageGallery({
               className={`object-cover ${
                 saleStatus === "SOLD" ? "opacity-70 grayscale-[0.35]" : ""
               }`}
-              unoptimized={img.url.startsWith("http")}
+              // /uploads are served from Volume via route handler — skip optimizer
+              unoptimized={
+                img.url.startsWith("http") || img.url.startsWith("/uploads/")
+              }
             />
             {index === 0 ? (
               <SaleStatusOverlay status={saleStatus} size="detail" />
