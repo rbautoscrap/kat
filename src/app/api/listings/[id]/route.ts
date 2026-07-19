@@ -26,9 +26,17 @@ export async function PUT(request: Request, { params }: Params) {
 
   try {
     const formData = await request.formData();
-    const data = await withPublicNotesTranslation(
-      formDataToListingInput(formData),
-    );
+    const parsed = formDataToListingInput(formData);
+    // Skip external translate when notes unchanged (avoids long hangs on Railway)
+    const notesUnchanged =
+      (parsed.damages ?? null) === (existing.damages ?? null);
+    const data = notesUnchanged
+      ? {
+          ...parsed,
+          damagesEn: parsed.damages ? (existing.damagesEn ?? null) : null,
+        }
+      : await withPublicNotesTranslation(parsed);
+
     const { coverUrl, galleryUrls, hasUpload } =
       await saveListingImageUploads(formData);
 

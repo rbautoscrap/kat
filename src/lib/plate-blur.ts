@@ -256,6 +256,8 @@ async function mosaicRegions(input: Buffer, regions: Box[]): Promise<Buffer> {
     .toBuffer();
 }
 
+const PLATE_BLUR_TIMEOUT_MS = 12_000;
+
 /**
  * Detect Korean-style license plates anywhere in the frame and pixelate them.
  * Runs entirely on-server (no third-party image upload). Best-effort — not 100%.
@@ -266,12 +268,25 @@ export async function blurLicensePlates(input: Buffer): Promise<PlateBlurResult>
   }
 
   try {
-    const boxes = await detectPlateBoxes(input);
-    if (boxes.length === 0) {
-      return { buffer: input, platesFound: 0 };
-    }
-    const buffer = await mosaicRegions(input, boxes);
-    return { buffer, platesFound: boxes.length };
+    const work = (async (): Promise<PlateBlurResult> => {
+      const boxes = await detectPlateBoxes(input);
+      if (boxes.length === 0) {
+        return { buffer: input, platesFound: 0 };
+      }
+      const buffer = await mosaicRegions(input, boxes);
+      return { buffer, platesFound: boxes.length };
+    })();
+
+    const result = await Promise.race([
+      work,
+      new Promise<PlateBlurResult>((resolve) =>
+        setTimeout(() => {
+          console.warn("[plate-blur] timed out — skipping mosaic");
+          resolve({ buffer: input, platesFound: 0 });
+        }, PLATE_BLUR_TIMEOUT_MS),
+      ),
+    ]);
+    return result;
   } catch (error) {
     console.error("[plate-blur] failed; uploading original compressed image", error);
     return { buffer: input, platesFound: 0 };

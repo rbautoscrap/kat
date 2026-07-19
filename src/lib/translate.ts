@@ -6,7 +6,7 @@ export function containsHangul(text: string) {
 
 /**
  * Translate Korean (or mixed) text to English for public listing notes.
- * Uses MyMemory free endpoint; falls back to the original text on failure.
+ * Uses MyMemory free endpoint; falls back to the original text on failure/timeout.
  */
 export async function translateToEnglish(text: string): Promise<string> {
   const trimmed = text.trim();
@@ -21,6 +21,7 @@ export async function translateToEnglish(text: string): Promise<string> {
     const res = await fetch(url.toString(), {
       headers: { Accept: "application/json" },
       cache: "no-store",
+      signal: AbortSignal.timeout(3000),
     });
     if (!res.ok) return trimmed;
 
@@ -30,7 +31,6 @@ export async function translateToEnglish(text: string): Promise<string> {
     };
     const translated = json.responseData?.translatedText?.trim();
     if (!translated || translated.toUpperCase() === "NULL") return trimmed;
-    // MyMemory sometimes echoes the query when it cannot translate
     if (translated === trimmed) return trimmed;
     return translated;
   } catch {

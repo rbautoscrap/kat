@@ -106,6 +106,19 @@ export function ListingForm({ listing }: Props) {
     const form = e.currentTarget;
     const data = new FormData(form);
 
+    // Drop empty file fields so the API does not treat them as uploads
+    const coverEntry = data.get("coverImage");
+    if (coverEntry instanceof File && coverEntry.size === 0) {
+      data.delete("coverImage");
+    }
+    const galleryFiles = data
+      .getAll("images")
+      .filter((f): f is File => f instanceof File && f.size > 0);
+    data.delete("images");
+    for (const file of galleryFiles) {
+      data.append("images", file);
+    }
+
     if (!listing) {
       const cover = data.get("coverImage");
       if (!(cover instanceof File) || cover.size === 0) {
@@ -116,7 +129,7 @@ export function ListingForm({ listing }: Props) {
     } else {
       const cover = data.get("coverImage");
       const hasNewCover = cover instanceof File && cover.size > 0;
-      const hasNewGallery = photoCount > 0;
+      const hasNewGallery = galleryFiles.length > 0;
       if (
         !hasNewCover &&
         !keptCover &&
@@ -130,31 +143,40 @@ export function ListingForm({ listing }: Props) {
     }
 
     try {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 120_000);
       const res = await fetch(
         listing ? `/api/listings/${listing.id}` : "/api/listings",
         {
           method: listing ? "PUT" : "POST",
           body: data,
+          signal: controller.signal,
         },
       );
+      window.clearTimeout(timeout);
       const json = (await res.json().catch(() => ({}))) as {
         error?: string;
         id?: string;
       };
       if (!res.ok) {
         setError(json.error ?? "매물 저장에 실패했습니다.");
-        setPending(false);
         return;
       }
       if (!json.id) {
         setError("매물 저장에 실패했습니다.");
-        setPending(false);
         return;
       }
       router.push(`/listings/${json.id}`);
       router.refresh();
-    } catch {
-      setError("네트워크 오류가 발생했습니다.");
+    } catch (err) {
+      const aborted =
+        err instanceof DOMException && err.name === "AbortError";
+      setError(
+        aborted
+          ? "저장 시간이 초과되었습니다. 새 사진 수를 줄이거나 다시 시도해 주세요."
+          : "네트워크 오류가 발생했습니다.",
+      );
+    } finally {
       setPending(false);
     }
   }
