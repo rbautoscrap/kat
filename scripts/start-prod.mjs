@@ -77,6 +77,19 @@ if (push.status !== 0) {
   process.exit(push.status ?? 1);
 }
 
+const ensureAdmin = path.join(process.cwd(), "scripts", "ensure-admin.mjs");
+if (existsSync(ensureAdmin)) {
+  console.log("[start-prod] Ensuring ADMIN account…");
+  const ensured = spawnSync(process.execPath, [ensureAdmin], {
+    stdio: "inherit",
+    env: process.env,
+  });
+  if (ensured.status !== 0) {
+    console.error(`[start-prod] ensure-admin failed with code ${ensured.status}`);
+    process.exit(ensured.status ?? 1);
+  }
+}
+
 console.log(`[start-prod] Starting Next.js on http://${bindHost}:${port}`);
 const next = spawnSync(
   process.execPath,
