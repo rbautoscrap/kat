@@ -25,10 +25,12 @@ export async function POST() {
     stats = await getVisitStats();
   } else {
     const updated = await recordVisit();
-    stats = {
-      todayVisits: updated.todayVisits,
-      totalVisits: updated.totalVisits,
-    };
+    stats = updated
+      ? {
+          todayVisits: updated.todayVisits,
+          totalVisits: updated.totalVisits,
+        }
+      : await getVisitStats();
   }
 
   const response = NextResponse.json(stats);

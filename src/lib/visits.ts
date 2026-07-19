@@ -8,61 +8,73 @@ function todayKey() {
   return `${y}-${m}-${d}`;
 }
 
-export async function getVisitStats() {
-  const stats = await prisma.siteStats.upsert({
-    where: { id: "main" },
-    update: {},
-    create: {
-      id: "main",
-      totalVisits: 0,
-      todayVisits: 0,
-      todayDate: todayKey(),
-    },
-  });
+const emptyStats = { todayVisits: 0, totalVisits: 0 };
 
-  const today = todayKey();
-  if (stats.todayDate !== today) {
+export async function getVisitStats() {
+  try {
+    const stats = await prisma.siteStats.upsert({
+      where: { id: "main" },
+      update: {},
+      create: {
+        id: "main",
+        totalVisits: 0,
+        todayVisits: 0,
+        todayDate: todayKey(),
+      },
+    });
+
+    const today = todayKey();
+    if (stats.todayDate !== today) {
+      return {
+        todayVisits: 0,
+        totalVisits: stats.totalVisits,
+      };
+    }
+
     return {
-      todayVisits: 0,
+      todayVisits: stats.todayVisits,
       totalVisits: stats.totalVisits,
     };
+  } catch (error) {
+    console.error("[visits] getVisitStats failed", error);
+    return emptyStats;
   }
-
-  return {
-    todayVisits: stats.todayVisits,
-    totalVisits: stats.totalVisits,
-  };
 }
 
 export async function recordVisit() {
-  const today = todayKey();
-  const current = await prisma.siteStats.upsert({
-    where: { id: "main" },
-    update: {},
-    create: {
-      id: "main",
-      totalVisits: 0,
-      todayVisits: 0,
-      todayDate: today,
-    },
-  });
+  try {
+    const today = todayKey();
+    const current = await prisma.siteStats.upsert({
+      where: { id: "main" },
+      update: {},
+      create: {
+        id: "main",
+        totalVisits: 0,
+        todayVisits: 0,
+        todayDate: today,
+      },
+    });
 
-  if (current.todayDate !== today) {
+    if (current.todayDate !== today) {
+      return prisma.siteStats.update({
+        where: { id: "main" },
+        data: {
+          todayDate: today,
+          todayVisits: 1,
+          totalVisits: { increment: 1 },
+        },
+      });
+    }
+
     return prisma.siteStats.update({
       where: { id: "main" },
       data: {
-        todayDate: today,
-        todayVisits: 1,
+        todayVisits: { increment: 1 },
         totalVisits: { increment: 1 },
       },
     });
+  } catch (error) {
+    console.error("[visits] recordVisit failed", error);
+    return null;
   }
-
-  return prisma.siteStats.update({
-    where: { id: "main" },
-    data: {
-      todayVisits: { increment: 1 },
-      totalVisits: { increment: 1 },
-    },
-  });
 }

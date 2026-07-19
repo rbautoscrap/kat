@@ -15,9 +15,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-# Dummy URL so prisma generate never fails on missing DATABASE_URL
+# Build-time SQLite (relative to prisma/); tables required when Next prerenders layout/Footer
 ENV DATABASE_URL="file:./prod.db"
 RUN npx prisma generate
+RUN npx prisma db push --skip-generate
 RUN npx next build
 
 FROM base AS runner

@@ -19,6 +19,8 @@ const noto = Noto_Sans_KR({
   weight: ["300", "400", "500"],
 });
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "KOREA AUTO TRADE",
   description: "Vehicle trading platform",
