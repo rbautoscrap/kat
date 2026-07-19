@@ -1,3 +1,4 @@
+import type { Listing, ListingImage } from "@prisma/client";
 import { HeroBanner } from "@/components/HeroBanner";
 import { ListingSection } from "@/components/ListingSection";
 import { isAdmin } from "@/lib/auth";
@@ -12,11 +13,15 @@ type Props = {
   searchParams: Promise<{ error?: string }>;
 };
 
+type HomeListing = Listing & { images: ListingImage[] };
+
 const coverImageInclude = {
   images: { orderBy: { sortOrder: "asc" as const }, take: 1 },
 };
 
-async function loadHomeListings() {
+async function loadHomeListings(): Promise<
+  [HomeListing[], HomeListing[], HomeListing[]]
+> {
   try {
     return await Promise.all([
       prisma.listing.findMany({
@@ -40,7 +45,7 @@ async function loadHomeListings() {
     ]);
   } catch (error) {
     console.error("[HomePage] listing query failed", error);
-    return [[], [], []] as const;
+    return [[], [], []];
   }
 }
 
