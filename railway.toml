@@ -1,6 +1,8 @@
 [build]
 builder = "NIXPACKS"
 buildCommand = "npm run build"
+# Next.js 16 requires Node >= 20.9
+nixpacksConfigPath = "nixpacks.toml"
 
 [deploy]
 startCommand = "npm run start:prod"
