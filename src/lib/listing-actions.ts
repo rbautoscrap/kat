@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import sharp from "sharp";
 import { z } from "zod";
 import type { ListingCategory } from "@prisma/client";
+import { blurLicensePlates } from "@/lib/plate-blur";
 import { getUploadsDir } from "@/lib/storage-paths";
 import { translateToEnglish } from "@/lib/translate";
 
@@ -289,6 +290,18 @@ async function saveImageFile(file: File) {
     output = await compressListingImage(input);
   } catch {
     throw new Error("이미지를 처리할 수 없습니다. 다른 파일을 시도해 주세요.");
+  }
+
+  try {
+    const blurred = await blurLicensePlates(output);
+    output = blurred.buffer;
+    if (blurred.platesFound > 0) {
+      console.info(
+        `[upload] license plate mosaic applied (${blurred.platesFound} region(s))`,
+      );
+    }
+  } catch (error) {
+    console.error("[upload] plate blur skipped", error);
   }
 
   const filename = `${randomUUID()}.jpg`;
