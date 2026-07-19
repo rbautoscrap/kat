@@ -172,14 +172,14 @@ export default async function ListingDetailPage({ params }: Props) {
               return (
                 <div
                   key={item.label}
-                  className={`grid min-w-0 grid-cols-[7.5rem_minmax(0,1fr)] border-[var(--line)] text-[13.5px] sm:grid-cols-[8.5rem_minmax(0,1fr)] ${
+                  className={`grid min-w-0 grid-cols-[6.25rem_minmax(0,1fr)] border-[var(--line)] text-[13px] sm:grid-cols-[8.5rem_minmax(0,1fr)] sm:text-[13.5px] ${
                     inLastRow ? "" : "border-b"
                   } ${isLeft ? "sm:border-r" : ""}`}
                 >
-                  <dt className="border-r border-[var(--line)] bg-neutral-50/90 px-3 py-2.5 font-medium tracking-wide text-neutral-500">
+                  <dt className="border-r border-[var(--line)] bg-neutral-50/90 px-2.5 py-2.5 font-medium tracking-wide text-neutral-500 sm:px-3">
                     {item.label}
                   </dt>
-                  <dd className="min-w-0 break-words px-3 py-2.5 tracking-wide text-neutral-700">
+                  <dd className="min-w-0 break-words px-2.5 py-2.5 tracking-wide text-neutral-700 sm:px-3">
                     {item.value}
                   </dd>
                 </div>
@@ -222,14 +222,20 @@ export default async function ListingDetailPage({ params }: Props) {
               No purchase offers yet.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-[13.5px]">
+            <div className="admin-table-scroll overflow-x-auto">
+              <table className="data-table">
+                <colgroup>
+                  <col style={{ width: "36%" }} />
+                  <col style={{ width: "22%" }} />
+                  <col style={{ width: "16%" }} />
+                  <col style={{ width: "26%" }} />
+                </colgroup>
                 <thead>
                   <tr className="border-b border-[var(--line)] bg-neutral-50 text-[12px] tracking-wide text-neutral-500">
-                    <th className="px-5 py-3 font-medium">Member</th>
-                    <th className="px-5 py-3 font-medium">Offer</th>
-                    <th className="px-5 py-3 font-medium">Currency</th>
-                    <th className="px-5 py-3 font-medium">Date</th>
+                    <th className="px-4 py-3 font-medium sm:px-5">Member</th>
+                    <th className="px-4 py-3 font-medium sm:px-5">Offer</th>
+                    <th className="px-4 py-3 font-medium sm:px-5">Currency</th>
+                    <th className="px-4 py-3 font-medium sm:px-5">Date</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -238,22 +244,25 @@ export default async function ListingDetailPage({ params }: Props) {
                       key={offer.id}
                       className="border-b border-neutral-100 last:border-0"
                     >
-                      <td className="px-5 py-3.5 tracking-wide text-neutral-700">
-                        <span className="font-medium text-neutral-800">
+                      <td className="min-w-0 px-4 py-3.5 tracking-wide text-neutral-700 sm:px-5">
+                        <span className="block truncate font-medium text-neutral-800">
                           {offer.user.name}
                         </span>
-                        <span className="mt-0.5 block text-[12px] text-neutral-500">
+                        <span className="mt-0.5 block truncate text-[12px] text-neutral-500">
                           {offer.user.email}
                         </span>
                       </td>
-                      <td className="px-5 py-3.5 font-medium tracking-wide text-neutral-800">
+                      <td className="px-4 py-3.5 font-medium tracking-wide text-neutral-800 sm:px-5">
                         {formatOfferAmount(offer.amount, offer.currency)}
                       </td>
-                      <td className="px-5 py-3.5 tracking-wide text-neutral-600">
+                      <td className="px-4 py-3.5 tracking-wide text-neutral-600 sm:px-5">
                         {offer.currency}
                       </td>
-                      <td className="px-5 py-3.5 whitespace-nowrap tracking-wide text-neutral-500">
-                        {offer.createdAt.toISOString().slice(0, 16).replace("T", " ")}
+                      <td className="px-4 py-3.5 whitespace-nowrap tracking-wide text-neutral-500 sm:px-5">
+                        {offer.createdAt
+                          .toISOString()
+                          .slice(0, 16)
+                          .replace("T", " ")}
                       </td>
                     </tr>
                   ))}

@@ -27,7 +27,7 @@ export function AdminListingSearch({
     <form
       action="/admin/listings"
       method="get"
-      className="flex flex-col gap-2 border-b border-[var(--line)] px-5 py-3.5 sm:flex-row sm:items-center"
+      className="flex flex-col gap-2 border-b border-[var(--line)] px-4 py-3.5 sm:flex-row sm:items-center sm:px-5"
     >
       {category !== "ALL" ? (
         <input type="hidden" name="category" value={category} />

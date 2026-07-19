@@ -11,6 +11,12 @@
   --page-x: 1.25rem;
 }
 
+@media (max-width: 639px) {
+  :root {
+    --page-x: 0.875rem;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -115,6 +121,11 @@ main {
   min-width: 0;
 }
 
+.admin-table-scroll {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+}
+
 .admin-table {
   width: 100%;
   table-layout: fixed;
@@ -139,4 +150,23 @@ main {
 
 .admin-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* Public / detail data tables */
+.data-table {
+  width: 100%;
+  min-width: 28rem;
+  border-collapse: collapse;
+  table-layout: fixed;
+  text-align: left;
+  font-size: 13.5px;
+}
+
+.data-table th,
+.data-table td {
+  vertical-align: top;
+}
+
+.data-table th {
+  white-space: nowrap;
 }

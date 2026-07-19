@@ -15,10 +15,10 @@ export async function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-white/95 backdrop-blur-md">
       <div className="site-container">
-        <div className="grid h-14 grid-cols-[minmax(0,auto)_minmax(0,1fr)_minmax(0,auto)] items-center gap-3 sm:h-16 sm:gap-6">
+        <div className="grid h-14 grid-cols-[minmax(0,auto)_minmax(0,1fr)_minmax(0,auto)] items-center gap-2 sm:h-16 sm:gap-6">
           <Link
             href="/"
-            className="site-title shrink-0 whitespace-nowrap text-[0.92rem] text-neutral-900 transition-opacity duration-200 hover:opacity-70 sm:text-[1rem]"
+            className="site-title min-w-0 max-w-[9.5rem] shrink truncate whitespace-nowrap text-[0.82rem] text-neutral-900 transition-opacity duration-200 hover:opacity-70 sm:max-w-none sm:text-[1rem]"
           >
             KOREA AUTO TRADE
           </Link>

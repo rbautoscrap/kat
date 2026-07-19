@@ -64,8 +64,8 @@ export function SaleStatusFilter({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-[var(--line)] px-5 py-3">
-      <span className="mr-1 shrink-0 text-[12.5px] tracking-wide text-neutral-500">
+    <div className="flex flex-wrap items-center gap-1.5 border-b border-[var(--line)] px-4 py-3 sm:gap-2 sm:px-5">
+      <span className="mr-0.5 w-full shrink-0 text-[12.5px] tracking-wide text-neutral-500 sm:mr-1 sm:w-auto">
         판매상태
       </span>
       {filters.map((f) => {

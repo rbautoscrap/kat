@@ -46,7 +46,7 @@ export function CategoryFilter({
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] px-5 py-3.5">
+    <div className="flex flex-col gap-3 border-b border-[var(--line)] px-4 py-3.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-5">
       <div className="flex flex-wrap gap-1.5">
         {filters.map((f) => {
           const active = current === f.value;
@@ -75,7 +75,7 @@ export function CategoryFilter({
         })}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-[12.5px] text-neutral-500">
+      <div className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-neutral-500 sm:gap-2">
         <span className="shrink-0">정렬</span>
         {sortOptions.map((option) => (
           <Link

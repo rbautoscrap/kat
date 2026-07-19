@@ -24,6 +24,7 @@ import {
 } from "@/lib/admin-labels";
 import {
   adminTableClass,
+  adminTableScrollClass,
   adminTdActionsClass,
   adminTdClass,
   adminThClass,
@@ -342,23 +343,25 @@ export default async function AdminListingsPage({ searchParams }: Props) {
         q={q}
       />
 
-      <div className="overflow-x-auto">
+      <div className={adminTableScrollClass}>
         <table className={adminTableClass}>
           <colgroup>
-            <col style={{ width: "24%" }} />
-            <col style={{ width: "10%" }} />
-            <col style={{ width: "12%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "10%" }} />
-            <col style={{ width: "10%" }} />
             <col style={{ width: "20%" }} />
+            <col style={{ width: "9%" }} />
+            <col style={{ width: "12%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "9%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "24%" }} />
           </colgroup>
           <thead>
             <tr>
               <th className={adminThClass}>제목</th>
               <th className={adminThClass}>카테고리</th>
               <th className={adminThClass}>원가</th>
-              <th className={adminThClass}>희망가접수 · 누적일</th>
+              <th className={`${adminThClass} text-center`}>희망가</th>
+              <th className={`${adminThClass} text-center`}>누적일</th>
               <th className={adminThClass}>등록자</th>
               <th className={adminThClass}>등록일</th>
               <th className={`${adminThClass} admin-th-actions text-right`}>
@@ -462,47 +465,45 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                       <span className="text-[13px] text-neutral-400">—</span>
                     )}
                   </td>
-                  <td className={adminTdClass}>
-                    <div className="flex flex-wrap items-center gap-x-1.5 text-[12.5px] tabular-nums tracking-wide">
-                      {hasOffers ? (
-                        <span className="font-semibold text-amber-900">
-                          {offerCount.toLocaleString("ko-KR")}회
-                        </span>
-                      ) : (
-                        <span className="text-neutral-400">—</span>
-                      )}
-                      <span className="text-neutral-300" aria-hidden>
-                        ·
+                  <td
+                    className={`${adminTdClass} text-center text-[12.5px] tabular-nums tracking-wide`}
+                  >
+                    {hasOffers ? (
+                      <span className="font-semibold text-amber-900">
+                        {offerCount.toLocaleString("ko-KR")}
                       </span>
-                      {days != null ? (
-                        <span
-                          className={
-                            days >= 30
-                              ? "font-semibold text-red-600"
-                              : "text-neutral-600"
-                          }
-                          title="입고일 기준 누적일"
-                        >
-                          {days.toLocaleString("ko-KR")}일
-                        </span>
-                      ) : (
-                        <span
-                          className="text-neutral-400"
-                          title="입고일자 미입력"
-                        >
-                          —
-                        </span>
-                      )}
-                    </div>
+                    ) : (
+                      <span className="text-neutral-400">—</span>
+                    )}
                   </td>
                   <td
-                    className={`${adminTdClass} truncate text-[13.5px] text-neutral-600`}
+                    className={`${adminTdClass} text-center text-[12.5px] tabular-nums tracking-wide`}
+                    title="입고일 기준 누적일"
+                  >
+                    {days != null ? (
+                      <span
+                        className={
+                          days >= 30
+                            ? "font-semibold text-red-600"
+                            : "text-neutral-600"
+                        }
+                      >
+                        {days.toLocaleString("ko-KR")}
+                      </span>
+                    ) : (
+                      <span className="text-neutral-400" title="입고일자 미입력">
+                        —
+                      </span>
+                    )}
+                  </td>
+                  <td
+                    className={`${adminTdClass} truncate text-[13px] text-neutral-600 sm:text-[13.5px]`}
                     title={listing.author.name}
                   >
                     {listing.author.name}
                   </td>
                   <td
-                    className={`${adminTdClass} whitespace-nowrap text-[13px] text-neutral-500`}
+                    className={`${adminTdClass} whitespace-nowrap text-[12.5px] text-neutral-500 sm:text-[13px]`}
                   >
                     {listing.createdAt.toISOString().slice(0, 10)}
                   </td>
@@ -519,7 +520,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
             {listings.length === 0 && (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="px-4 py-10 text-center text-[13.5px] text-neutral-500"
                 >
                   {q

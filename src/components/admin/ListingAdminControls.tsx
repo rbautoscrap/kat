@@ -38,13 +38,13 @@ export function ListingAdminControls({
   const [pending, startTransition] = useTransition();
 
   return (
-    <div className="flex flex-col items-stretch gap-1.5 sm:items-end">
-      <div className="flex flex-wrap items-center justify-end gap-1.5">
+    <div className="flex min-w-[13.5rem] flex-col items-stretch gap-1.5">
+      <div className="grid grid-cols-2 gap-1.5">
         <select
           defaultValue={category}
           disabled={pending}
           aria-label="카테고리"
-          className={`${adminSelectClass} w-[6.5rem]`}
+          className={`${adminSelectClass} w-full`}
           onChange={(e) => {
             const next = e.target.value as ListingCategory;
             const previous = category;
@@ -67,7 +67,7 @@ export function ListingAdminControls({
           defaultValue={saleStatus}
           disabled={pending}
           aria-label="판매 상태"
-          className={`${adminSelectClass} w-[5.5rem]`}
+          className={`${adminSelectClass} w-full`}
           onChange={(e) => {
             const next = e.target.value as ListingSaleStatus;
             const previous = saleStatus;
@@ -87,12 +87,12 @@ export function ListingAdminControls({
           ))}
         </select>
       </div>
-      <div className="flex flex-wrap items-center justify-end gap-1.5">
+      <div className="grid grid-cols-3 gap-1.5">
         <button
           type="button"
           disabled={pending}
           title="가장 최근에 등록한 것처럼 맨 앞으로 이동합니다"
-          className={adminActionBtnClass}
+          className={`${adminActionBtnClass} w-full px-1.5`}
           onClick={() => {
             startTransition(async () => {
               const result = await bumpListingToFront(listingId);
@@ -104,14 +104,14 @@ export function ListingAdminControls({
         </button>
         <Link
           href={`/listings/${listingId}/edit`}
-          className={adminActionBtnClass}
+          className={`${adminActionBtnClass} w-full px-1.5`}
         >
           수정
         </Link>
         <button
           type="button"
           disabled={pending}
-          className={adminDangerBtnClass}
+          className={`${adminDangerBtnClass} w-full px-1.5`}
           onClick={() => {
             if (!confirm("이 매물을 정말 삭제하시겠습니까?")) return;
             startTransition(async () => {
