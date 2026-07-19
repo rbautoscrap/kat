@@ -1,4 +1,4 @@
-# Railway / production image — Node 20 required by Next.js 16
+# Railway / production — Node 20 (Next.js 16)
 FROM node:20-bookworm-slim AS base
 WORKDIR /app
 RUN apt-get update \
@@ -6,9 +6,8 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 FROM base AS deps
-# prisma generate runs in postinstall — schema must exist before npm ci
 COPY package.json package-lock.json ./
-COPY prisma ./prisma
+# No postinstall prisma generate — schema not required at npm ci
 RUN npm ci
 
 FROM base AS builder
@@ -16,6 +15,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+# Dummy URL so prisma generate never fails on missing DATABASE_URL
+ENV DATABASE_URL="file:./prod.db"
 RUN npx prisma generate
 RUN npx next build
 

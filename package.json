@@ -10,7 +10,6 @@
     "build": "prisma generate && next build",
     "start": "next start --hostname 0.0.0.0",
     "start:prod": "node scripts/start-prod.mjs",
-    "postinstall": "prisma generate",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
