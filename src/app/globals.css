@@ -228,10 +228,10 @@ main {
 }
 
 .statement-watermark-img {
-  width: 72%;
-  max-width: 520px;
+  width: 92%;
+  max-width: 680px;
   height: auto;
-  opacity: 0.08;
+  opacity: 0.09;
   object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;
