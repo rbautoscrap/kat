@@ -17,6 +17,31 @@ const fieldClass =
   "mt-1 h-10 w-full rounded-md border border-neutral-200 bg-white px-3 text-[13.5px] tracking-wide text-neutral-800 outline-none focus:border-neutral-400";
 const labelClass = "block text-[12.5px] font-medium tracking-wide text-neutral-600";
 
+/** Display amount with thousands separators (e.g. 15,000,000). */
+function formatAmountInput(raw: string, currency: OfferCurrencyCode) {
+  const cleaned = raw.replace(/,/g, "");
+  if (!cleaned) return "";
+
+  if (currency === "KRW") {
+    const digits = cleaned.replace(/\D/g, "");
+    if (!digits) return "";
+    return Number(digits).toLocaleString("en-US");
+  }
+
+  const parts = cleaned.replace(/[^\d.]/g, "").split(".");
+  if (parts.length > 2) return null;
+  const intDigits = parts[0] ?? "";
+  const intFormatted = intDigits
+    ? Number(intDigits).toLocaleString("en-US")
+    : "";
+  if (parts.length === 1) return intFormatted;
+  const decimals = (parts[1] ?? "").slice(0, 2);
+  if (cleaned.endsWith(".") && decimals === "") {
+    return `${intFormatted}.`;
+  }
+  return `${intFormatted}.${decimals}`;
+}
+
 type Props = {
   mode: "create" | "edit";
   listings: ListingOption[];
@@ -40,10 +65,14 @@ export function StatementForm({
   const [buyerName, setBuyerName] = useState(initial?.buyerName ?? "");
   const [buyerPhone, setBuyerPhone] = useState(initial?.buyerPhone ?? "");
   const [buyerAddress, setBuyerAddress] = useState(initial?.buyerAddress ?? "");
-  const [amount, setAmount] = useState(initial?.amount ?? "");
-  const [currency, setCurrency] = useState<OfferCurrencyCode>(
-    (initial?.currency as OfferCurrencyCode) ?? "KRW",
+  const initialCurrency =
+    (initial?.currency as OfferCurrencyCode) ?? "KRW";
+  const [amount, setAmount] = useState(() =>
+    initial?.amount
+      ? formatAmountInput(initial.amount, initialCurrency) ?? initial.amount
+      : "",
   );
+  const [currency, setCurrency] = useState<OfferCurrencyCode>(initialCurrency);
   const [issueDate, setIssueDate] = useState(
     initial?.issueDate ?? defaultIssueDate,
   );
@@ -184,8 +213,12 @@ export function StatementForm({
             required
             inputMode="decimal"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="예: 15000000"
+            onChange={(e) => {
+              const next = formatAmountInput(e.target.value, currency);
+              if (next === null) return;
+              setAmount(next);
+            }}
+            placeholder="예: 15,000,000"
             className={fieldClass}
           />
         </label>
@@ -193,7 +226,11 @@ export function StatementForm({
           <span className={labelClass}>통화</span>
           <select
             value={currency}
-            onChange={(e) => setCurrency(e.target.value as OfferCurrencyCode)}
+            onChange={(e) => {
+              const next = e.target.value as OfferCurrencyCode;
+              setCurrency(next);
+              setAmount((prev) => formatAmountInput(prev, next) ?? prev);
+            }}
             className={fieldClass}
           >
             {OFFER_CURRENCIES.map((c) => (
