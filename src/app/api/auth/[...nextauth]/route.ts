@@ -40,18 +40,12 @@ function toBrowserSessionCookies(response: Response): Response {
   });
 }
 
-export async function GET(
-  req: NextRequest,
-  ctx: { params: Promise<{ nextauth: string[] }> },
-) {
-  const res = await handlers.GET(req, ctx);
+export async function GET(req: NextRequest) {
+  const res = await handlers.GET(req);
   return toBrowserSessionCookies(res);
 }
 
-export async function POST(
-  req: NextRequest,
-  ctx: { params: Promise<{ nextauth: string[] }> },
-) {
-  const res = await handlers.POST(req, ctx);
+export async function POST(req: NextRequest) {
+  const res = await handlers.POST(req);
   return toBrowserSessionCookies(res);
 }
