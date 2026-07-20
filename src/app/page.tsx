@@ -78,18 +78,21 @@ export default async function HomePage({ searchParams }: Props) {
         listings={hotDeals}
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
+        canManageSaleStatus={canViewSold}
       />
       <ListingSection
         category="CAR_LISTINGS"
         listings={carListings}
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
+        canManageSaleStatus={canViewSold}
       />
       <ListingSection
         category="STAND_BY"
         listings={standBy}
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
+        canManageSaleStatus={canViewSold}
       />
     </>
   );

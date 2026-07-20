@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Listing, ListingImage } from "@prisma/client";
+import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl";
 import { ListingThumb } from "@/components/ListingThumb";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
 
@@ -9,12 +10,15 @@ type Props = {
   size?: "default" | "large";
   /** Admins may open sold listing details */
   canViewSold?: boolean;
+  /** Admins can set sale status from the public listing grid */
+  canManageSaleStatus?: boolean;
 };
 
 export function ListingCard({
   listing,
   size = "default",
   canViewSold = false,
+  canManageSaleStatus = false,
 }: Props) {
   const thumb = listing.images[0]?.url ?? "/placeholder-car.svg";
   const label = `${listing.year} ${listing.make} ${listing.model}`;
@@ -54,19 +58,31 @@ export function ListingCard({
     </p>
   );
 
+  const saleControl = canManageSaleStatus ? (
+    <ListingSaleStatusControl
+      listingId={listing.id}
+      saleStatus={listing.saleStatus}
+      compact
+    />
+  ) : null;
+
   if (!canOpen) {
     return (
       <div className="block cursor-default" aria-label={`${label} — Sold out`}>
         {media}
         {caption}
+        {saleControl}
       </div>
     );
   }
 
   return (
-    <Link href={`/listings/${listing.id}`} className="group block">
-      {media}
-      {caption}
-    </Link>
+    <div className="block">
+      <Link href={`/listings/${listing.id}`} className="group block">
+        {media}
+        {caption}
+      </Link>
+      {saleControl}
+    </div>
   );
 }

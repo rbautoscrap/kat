@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import { ImageGallery } from "@/components/ImageGallery";
 import { ListingOwnerActions } from "@/components/ListingOwnerActions";
+import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl";
 import { PurchaseOfferPanel } from "@/components/PurchaseOfferPanel";
 import { auth, isAdmin } from "@/lib/auth";
 import { userCanModifyListing } from "@/lib/listing-access";
@@ -118,8 +119,15 @@ export default async function ListingDetailPage({ params }: Props) {
           <h1 className="site-heading min-w-0 max-w-4xl break-words text-[1.35rem] text-neutral-800 sm:text-[1.55rem]">
             {listing.title}
           </h1>
-          {listing.saleStatus === "RESERVED" ||
-          listing.saleStatus === "SOLD" ? (
+          {adminView ? (
+            <div className="mt-3">
+              <ListingSaleStatusControl
+                listingId={listing.id}
+                saleStatus={listing.saleStatus}
+              />
+            </div>
+          ) : listing.saleStatus === "RESERVED" ||
+            listing.saleStatus === "SOLD" ? (
             <p
               className={`mt-2 inline-flex rounded-md border px-2.5 py-1 text-[12.5px] font-medium tracking-[0.12em] uppercase ${
                 listing.saleStatus === "SOLD"

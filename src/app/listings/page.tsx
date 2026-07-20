@@ -94,6 +94,7 @@ export default async function ListingsPage({ searchParams }: Props) {
                 listing={listing}
                 size={useLargeGrid ? "large" : "default"}
                 canViewSold={canViewSold}
+                canManageSaleStatus={canViewSold}
               />
             ))}
           </div>

@@ -12,6 +12,7 @@ type Props = {
   listings: Array<Listing & { images: ListingImage[] }>;
   limit?: number;
   canViewSold?: boolean;
+  canManageSaleStatus?: boolean;
 };
 
 export function ListingSection({
@@ -19,6 +20,7 @@ export function ListingSection({
   listings,
   limit = 12,
   canViewSold = false,
+  canManageSaleStatus = false,
 }: Props) {
   const items = listings.slice(0, limit);
   if (items.length === 0) return null;
@@ -42,6 +44,7 @@ export function ListingSection({
             key={listing.id}
             listing={listing}
             canViewSold={canViewSold}
+            canManageSaleStatus={canManageSaleStatus}
           />
         ))}
       </div>
