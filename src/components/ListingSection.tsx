@@ -26,14 +26,14 @@ export function ListingSection({
   if (items.length === 0) return null;
 
   return (
-    <section className="site-container py-6 sm:py-7">
-      <div className="mb-3.5 flex items-center justify-between gap-3 border-b border-[var(--line)] pb-2.5">
-        <h2 className="site-heading text-[14.5px] tracking-[0.04em] text-neutral-800 sm:text-[15px]">
+    <section className="site-container py-7 sm:py-8">
+      <div className="mb-4 flex items-center justify-between gap-3 border-b border-[var(--line)] pb-2.5">
+        <h2 className="site-heading text-[15.5px] text-neutral-900 sm:text-[16.5px]">
           {CATEGORY_LABELS[category]}
         </h2>
         <Link
           href={CATEGORY_PATHS[category]}
-          className="shrink-0 text-[12.5px] font-medium tracking-wide text-neutral-400 transition hover:text-neutral-700"
+          className="shrink-0 text-[13.5px] font-semibold text-neutral-500 transition hover:text-neutral-800"
         >
           More
         </Link>

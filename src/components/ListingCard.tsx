@@ -6,7 +6,7 @@ import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
 
 type Props = {
   listing: Listing & { images: ListingImage[] };
-  /** Larger tiles for category listing pages (5-col grid) */
+  /** Larger tiles for category listing pages */
   size?: "default" | "large";
   /** Admins may open sold listing details */
   canViewSold?: boolean;
@@ -27,18 +27,14 @@ export function ListingCard({
   const canOpen = !isSold || canViewSold;
 
   const media = (
-    <div
-      className={`relative overflow-hidden rounded-[2px] bg-neutral-100 ${
-        large ? "aspect-[3/2]" : "aspect-[4/3]"
-      }`}
-    >
+    <div className="relative aspect-[3/2] overflow-hidden rounded-[3px] bg-neutral-100">
       <ListingThumb
         src={thumb}
         alt={listing.title}
         sizes={
           large
             ? "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-            : "(max-width: 640px) 50vw, 16vw"
+            : "(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
         }
         className={`object-cover transition duration-300 ease-out ${
           canOpen ? "group-hover:scale-[1.02]" : ""
@@ -50,8 +46,10 @@ export function ListingCard({
 
   const caption = (
     <p
-      className={`mt-2 line-clamp-2 break-words text-[12.5px] font-medium leading-snug tracking-wide text-neutral-700 ${
-        large ? "min-h-[2.75em] sm:text-[13px]" : "min-h-[2.6em]"
+      className={`mt-2.5 line-clamp-2 break-words font-semibold leading-snug text-neutral-800 ${
+        large
+          ? "min-h-[2.9em] text-[13.5px] sm:text-[14.5px]"
+          : "min-h-[2.8em] text-[13px] sm:text-[14px]"
       } ${canOpen ? "group-hover:text-neutral-950" : "text-neutral-500"}`}
     >
       {label}

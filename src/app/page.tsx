@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-const HOME_SECTION_LIMIT = 12; // 6 per row × 2 rows
+const HOME_SECTION_LIMIT = 10; // 5 per row × 2 rows
 
 type Props = {
   searchParams: Promise<{ error?: string }>;

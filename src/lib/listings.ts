@@ -19,13 +19,13 @@ export const CATEGORY_PATHS: Record<ListingCategory, string> = {
   STAND_BY: "/listings?category=STAND_BY",
 };
 
-/** Home section grid: 6 columns × 2 rows */
+/** Home section grid: 5 columns for larger listing tiles */
 export const LISTING_GRID_CLASS =
-  "grid grid-cols-2 items-start gap-x-2.5 gap-y-4 sm:grid-cols-3 sm:gap-x-3 md:grid-cols-4 lg:grid-cols-6";
+  "grid grid-cols-2 items-start gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-3.5 md:grid-cols-4 lg:grid-cols-5";
 
-/** Category menu pages: 5 columns × 4 rows (20 items) */
+/** Category menu pages: 4–5 columns with roomier tiles */
 export const LISTING_CATEGORY_GRID_CLASS =
-  "grid grid-cols-2 items-start gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-4 md:grid-cols-4 lg:grid-cols-5";
+  "grid grid-cols-2 items-start gap-x-3.5 gap-y-6 sm:grid-cols-3 sm:gap-x-4 md:grid-cols-4 lg:grid-cols-5";
 
 export const LISTING_CATEGORY_PAGE_SIZE = 20;
 

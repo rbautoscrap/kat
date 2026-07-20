@@ -13,24 +13,24 @@ export function SiteSearchBar() {
         <form
           action="/listings"
           method="get"
-          className="mx-auto w-full max-w-lg sm:max-w-xl"
+          className="mx-auto w-full max-w-lg sm:max-w-2xl"
           role="search"
         >
           <label htmlFor="site-search-q" className="sr-only">
             Search listings
           </label>
-          <div className="flex h-11 overflow-hidden rounded-md border border-neutral-300 bg-white focus-within:border-neutral-500 sm:h-11">
+          <div className="flex h-12 overflow-hidden rounded-md border border-neutral-300 bg-white focus-within:border-neutral-500">
             <input
               id="site-search-q"
               name="q"
               type="search"
               placeholder="Search by make, model, VIN, notes…"
               autoComplete="off"
-              className="min-w-0 flex-1 bg-transparent px-3.5 text-[13.5px] tracking-wide text-neutral-800 outline-none placeholder:text-neutral-400 sm:px-4 sm:text-[14px]"
+              className="min-w-0 flex-1 bg-transparent px-4 text-[15px] text-neutral-800 outline-none placeholder:text-neutral-400"
             />
             <button
               type="submit"
-              className="inline-flex shrink-0 items-center gap-1.5 border-l border-neutral-200 bg-neutral-900 px-3.5 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-800 sm:px-4"
+              className="inline-flex shrink-0 items-center gap-1.5 border-l border-neutral-200 bg-neutral-900 px-4 text-[14px] font-semibold text-white transition hover:bg-neutral-800"
             >
               <SearchIcon />
               <span className="hidden sm:inline">Search</span>

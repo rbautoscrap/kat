@@ -1,19 +1,5 @@
-import localFont from "next/font/local";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { requireAdmin } from "@/lib/admin";
-
-const pretendard = localFont({
-  src: "../../fonts/PretendardVariable.woff2",
-  display: "swap",
-  weight: "45 920",
-  variable: "--font-admin",
-  fallback: [
-    "Apple SD Gothic Neo",
-    "Malgun Gothic",
-    "Segoe UI",
-    "sans-serif",
-  ],
-});
 
 export default async function AdminLayout({
   children,
@@ -23,10 +9,7 @@ export default async function AdminLayout({
   await requireAdmin();
 
   return (
-    <div
-      className={`${pretendard.variable} ${pretendard.className} admin-shell border-b border-[var(--line)] bg-neutral-50/70`}
-      lang="ko"
-    >
+    <div className="admin-shell border-b border-[var(--line)] bg-neutral-50/70" lang="ko">
       <div className="site-container py-5 sm:py-6">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>

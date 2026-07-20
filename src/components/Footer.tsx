@@ -7,7 +7,7 @@ export function Footer() {
     <footer className="mt-auto">
       <ContactBar />
       <div className="border-t border-neutral-800 bg-[var(--banner)] text-neutral-300">
-        <div className="site-container flex min-h-[3.25rem] flex-wrap items-center justify-between gap-x-6 gap-y-2 py-4 text-[12px] tracking-wide">
+        <div className="site-container flex min-h-[3.25rem] flex-wrap items-center justify-between gap-x-6 gap-y-2 py-4 text-[13px]">
           <VisitStats />
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <span className="text-neutral-400">

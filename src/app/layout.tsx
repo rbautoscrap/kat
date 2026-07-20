@@ -1,21 +1,22 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Manrope, Noto_Sans_KR } from "next/font/google";
+import localFont from "next/font/local";
 import { Header } from "@/components/Header";
 import { SiteSearchBar } from "@/components/SiteSearchBar";
 import { Footer } from "@/components/Footer";
 import "./globals.css";
 
-const manrope = Manrope({
+const pretendard = localFont({
+  src: "./../fonts/PretendardVariable.woff2",
+  display: "swap",
+  weight: "45 920",
   variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
-
-const noto = Noto_Sans_KR({
-  variable: "--font-kr",
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
+  fallback: [
+    "Apple SD Gothic Neo",
+    "Malgun Gothic",
+    "Segoe UI",
+    "sans-serif",
+  ],
 });
 
 export const dynamic = "force-dynamic";
@@ -41,11 +42,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${manrope.variable} ${noto.variable} h-full`}
-    >
-      <body className="flex min-h-full flex-col bg-white font-sans text-[15px] text-neutral-800 antialiased">
+    <html lang="en" className={`${pretendard.variable} h-full`}>
+      <body
+        className={`${pretendard.className} flex min-h-full flex-col bg-white text-[16px] text-neutral-800 antialiased`}
+      >
         <Header />
         <Suspense fallback={<SiteSearchBarFallback />}>
           <SiteSearchBar />

@@ -16,7 +16,7 @@ export async function Header() {
   const admin = isAdmin(dbUser?.role);
 
   const accountLinkClass =
-    "inline-flex h-8 items-center rounded-md px-2.5 text-[13px] font-medium tracking-wide text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900";
+    "inline-flex h-8 items-center rounded-md px-2.5 text-[13.5px] font-semibold text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900";
 
   const mobileUser = dbUser
     ? { name: dbUser.name, canList, admin }
@@ -29,7 +29,7 @@ export async function Header() {
         <div className="flex h-14 items-center justify-between gap-3 md:hidden">
           <Link
             href="/"
-            className="site-title min-w-0 truncate text-[0.95rem] text-neutral-900"
+            className="site-title min-w-0 truncate text-[1.05rem] text-neutral-900"
           >
             KOREA AUTO TRADE
           </Link>
@@ -42,7 +42,7 @@ export async function Header() {
         <div className="hidden h-16 grid-cols-[minmax(0,auto)_minmax(0,1fr)_minmax(0,auto)] items-center gap-6 md:grid">
           <Link
             href="/"
-            className="site-title shrink-0 whitespace-nowrap text-[1rem] text-neutral-900 transition-opacity duration-200 hover:opacity-70"
+            className="site-title shrink-0 whitespace-nowrap text-[1.1rem] text-neutral-900 transition-opacity duration-200 hover:opacity-70"
           >
             KOREA AUTO TRADE
           </Link>
