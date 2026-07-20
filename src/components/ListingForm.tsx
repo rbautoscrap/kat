@@ -61,6 +61,8 @@ const FUEL_TYPES = [
   "Diesel",
   "LPG",
   "Electric",
+  "Hybrid(Electric+Gasoline)",
+  "Hybrid(Electric+Diesel)",
   "Hydrogen",
   "Other",
 ] as const;
