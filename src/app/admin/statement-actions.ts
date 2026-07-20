@@ -8,6 +8,7 @@ import { resolveSessionDbUser } from "@/lib/listing-access";
 import { OFFER_CURRENCIES } from "@/lib/purchase-offer";
 import { prisma } from "@/lib/prisma";
 import {
+  isExtraLineKey,
   parseOrphanListingKey,
   sumLineAmounts,
 } from "@/lib/statement";
@@ -33,11 +34,12 @@ const statementSchema = z.object({
   items: z
     .array(
       z.object({
-        listingId: z.string().min(1),
+        lineKey: z.string().min(1),
+        label: z.string().trim().max(120).optional(),
         amount: lineAmountSchema,
       }),
     )
-    .min(1, "매물을 1개 이상 선택해 주세요.")
+    .min(1, "품목을 1개 이상 추가해 주세요.")
     .max(30, "한 번에 최대 30개까지 선택할 수 있습니다."),
   buyerName: z.string().trim().min(1, "거래처명을 입력해 주세요.").max(120),
   buyerPhone: z.string().trim().max(40).optional(),
@@ -50,6 +52,17 @@ const statementSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "발행일을 YYYY-MM-DD 형식으로 입력해 주세요."),
   notes: z.string().trim().max(2000).optional(),
 });
+
+type BuiltRow = {
+  listingId: string | null;
+  isExtra: boolean;
+  vehicleLabel: string;
+  vin: string | null;
+  serialNumber: string;
+  vehicleNumber: string | null;
+  amount: string;
+  sortOrder: number;
+};
 
 async function assertAdminUser() {
   const session = await auth();
@@ -93,26 +106,28 @@ function listingSnapshot(listing: {
 }
 
 async function buildItemRows(
-  items: Array<{ listingId: string; amount: string }>,
+  items: Array<{ lineKey: string; label?: string; amount: string }>,
   opts?: { statementId?: string },
 ) {
-  const ids = items.map((i) => i.listingId);
-  const unique = new Set(ids);
-  if (unique.size !== ids.length) {
-    return { ok: false as const, error: "같은 매물이 중복 선택되었습니다." };
+  const keys = items.map((i) => i.lineKey);
+  const unique = new Set(keys);
+  if (unique.size !== keys.length) {
+    return { ok: false as const, error: "같은 품목이 중복되었습니다." };
   }
 
-  const liveIds = ids.filter((id) => !parseOrphanListingKey(id));
-  const listings = liveIds.length
-    ? await prisma.listing.findMany({ where: { id: { in: liveIds } } })
+  const listingKeys = keys.filter(
+    (key) => !parseOrphanListingKey(key) && !isExtraLineKey(key),
+  );
+  const listings = listingKeys.length
+    ? await prisma.listing.findMany({ where: { id: { in: listingKeys } } })
     : [];
-  if (listings.length !== liveIds.length) {
+  if (listings.length !== listingKeys.length) {
     return { ok: false as const, error: "일부 매물을 찾을 수 없습니다." };
   }
   const byId = new Map(listings.map((l) => [l.id, l]));
 
-  const orphanItemIds = ids
-    .map((id) => parseOrphanListingKey(id))
+  const orphanItemIds = keys
+    .map((key) => parseOrphanListingKey(key))
     .filter((id): id is string => Boolean(id));
   const orphanItems =
     orphanItemIds.length && opts?.statementId
@@ -125,18 +140,31 @@ async function buildItemRows(
       : [];
   const orphanById = new Map(orphanItems.map((row) => [row.id, row]));
 
-  const rows: Array<{
-    listingId: string | null;
-    vehicleLabel: string;
-    vin: string | null;
-    serialNumber: string;
-    vehicleNumber: string | null;
-    amount: string;
-    sortOrder: number;
-  }> = [];
+  const rows: BuiltRow[] = [];
 
   for (const [index, item] of items.entries()) {
-    const orphanId = parseOrphanListingKey(item.listingId);
+    if (isExtraLineKey(item.lineKey)) {
+      const label = item.label?.trim() || "";
+      if (!label) {
+        return {
+          ok: false as const,
+          error: "별도 금액 품목명을 입력해 주세요.",
+        };
+      }
+      rows.push({
+        listingId: null,
+        isExtra: true,
+        vehicleLabel: label,
+        vin: null,
+        serialNumber: "EXTRA",
+        vehicleNumber: null,
+        amount: item.amount,
+        sortOrder: index,
+      });
+      continue;
+    }
+
+    const orphanId = parseOrphanListingKey(item.lineKey);
     if (orphanId) {
       const existing = orphanById.get(orphanId);
       if (!existing) {
@@ -147,6 +175,7 @@ async function buildItemRows(
       }
       rows.push({
         listingId: null,
+        isExtra: existing.isExtra,
         vehicleLabel: existing.vehicleLabel,
         vin: existing.vin,
         serialNumber: existing.serialNumber,
@@ -157,13 +186,14 @@ async function buildItemRows(
       continue;
     }
 
-    const listing = byId.get(item.listingId);
+    const listing = byId.get(item.lineKey);
     if (!listing) {
       return { ok: false as const, error: "일부 매물을 찾을 수 없습니다." };
     }
     const snap = listingSnapshot(listing);
     rows.push({
       listingId: listing.id,
+      isExtra: false,
       ...snap,
       amount: item.amount,
       sortOrder: index,
@@ -171,6 +201,10 @@ async function buildItemRows(
   }
 
   return { ok: true as const, rows };
+}
+
+function primaryPreview(rows: BuiltRow[]) {
+  return rows.find((r) => !r.isExtra) ?? rows[0]!;
 }
 
 export async function createStatement(
@@ -190,7 +224,7 @@ export async function createStatement(
   const built = await buildItemRows(parsed.data.items);
   if (!built.ok) return { ok: false, error: built.error };
 
-  const first = built.rows[0]!;
+  const first = primaryPreview(built.rows);
   const totalAmount = sumLineAmounts(built.rows, parsed.data.currency);
   const statementNo = await nextStatementNo(parsed.data.issueDate);
 
@@ -248,7 +282,7 @@ export async function updateStatement(
   const built = await buildItemRows(parsed.data.items, { statementId: id });
   if (!built.ok) return { ok: false, error: built.error };
 
-  const first = built.rows[0]!;
+  const first = primaryPreview(built.rows);
   const totalAmount = sumLineAmounts(built.rows, parsed.data.currency);
 
   try {

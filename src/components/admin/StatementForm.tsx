@@ -16,6 +16,8 @@ import {
   STATEMENT_VAT_RATE,
   calcStatementTotals,
   getStatementLines,
+  isExtraLineKey,
+  newExtraLineKey,
   orphanListingKey,
   parseOrphanListingKey,
   sumLineAmounts,
@@ -25,8 +27,7 @@ import {
 
 const fieldClass =
   "mt-1 h-10 w-full rounded-md border border-neutral-200 bg-white px-3 text-[13.5px] text-neutral-800 outline-none focus:border-neutral-400";
-const labelClass =
-  "block text-[12.5px] font-medium text-neutral-600";
+const labelClass = "block text-[12.5px] font-medium text-neutral-600";
 
 function formatAmountInput(raw: string, currency: OfferCurrencyCode) {
   const cleaned = raw.replace(/,/g, "");
@@ -53,7 +54,8 @@ function formatAmountInput(raw: string, currency: OfferCurrencyCode) {
 }
 
 type SelectedLine = {
-  listingId: string;
+  lineKey: string;
+  kind: "listing" | "extra";
   label: string;
   serialNumber: string;
   vin: string | null;
@@ -76,12 +78,29 @@ function initialLines(
   if (!initial) return [];
   const lines = getStatementLines(initial);
   return lines.map((line) => {
-    const formListingId =
+    const isExtra =
+      line.isExtra === true ||
+      (!line.listingId && line.serialNumber === "EXTRA");
+
+    if (isExtra) {
+      return {
+        lineKey: line.id ? `extra:${line.id}` : newExtraLineKey(),
+        kind: "extra" as const,
+        label: line.vehicleLabel,
+        serialNumber: "EXTRA",
+        vin: null,
+        vehicleNumber: null,
+        amount: formatAmountInput(line.amount, currency) ?? line.amount,
+      };
+    }
+
+    const formKey =
       line.listingId ??
       (line.id ? orphanListingKey(line.id) : orphanListingKey("legacy"));
-    const opt = listings.find((l) => l.id === formListingId);
+    const opt = listings.find((l) => l.id === formKey);
     return {
-      listingId: formListingId,
+      lineKey: formKey,
+      kind: "listing" as const,
       label: opt?.label ?? line.vehicleLabel,
       serialNumber: line.serialNumber,
       vin: line.vin,
@@ -117,13 +136,23 @@ export function StatementForm({
   const [includeVat, setIncludeVat] = useState(initial?.includeVat !== false);
   const [listingQuery, setListingQuery] = useState("");
 
-  const selectedIds = useMemo(
-    () => new Set(selected.map((s) => s.listingId)),
+  const selectedListingIds = useMemo(
+    () =>
+      new Set(
+        selected
+          .filter((s) => s.kind === "listing")
+          .map((s) => s.lineKey),
+      ),
     [selected],
   );
 
+  const listingCount = selected.filter((s) => s.kind === "listing").length;
+  const extraCount = selected.filter((s) => s.kind === "extra").length;
+
   const filteredListings = useMemo(() => {
-    const selectable = listings.filter((l) => !parseOrphanListingKey(l.id));
+    const selectable = listings.filter(
+      (l) => !parseOrphanListingKey(l.id) && !isExtraLineKey(l.id),
+    );
     const q = listingQuery.trim().toLowerCase();
     if (!q) return selectable;
     return selectable.filter(
@@ -151,11 +180,12 @@ export function StatementForm({
   const vatPct = Math.round(STATEMENT_VAT_RATE * 100);
 
   function addListing(listing: ListingOption) {
-    if (selectedIds.has(listing.id)) return;
+    if (selectedListingIds.has(listing.id)) return;
     setSelected((prev) => [
       ...prev,
       {
-        listingId: listing.id,
+        lineKey: listing.id,
+        kind: "listing",
         label: listing.label,
         serialNumber: listing.serialNumber,
         vin: listing.vin,
@@ -165,17 +195,36 @@ export function StatementForm({
     ]);
   }
 
-  function removeListing(listingId: string) {
-    setSelected((prev) => prev.filter((s) => s.listingId !== listingId));
+  function addExtraLine() {
+    setSelected((prev) => [
+      ...prev,
+      {
+        lineKey: newExtraLineKey(),
+        kind: "extra",
+        label: "서비스 비용",
+        serialNumber: "EXTRA",
+        vin: null,
+        vehicleNumber: null,
+        amount: "",
+      },
+    ]);
   }
 
-  function updateLineAmount(listingId: string, raw: string) {
+  function removeLine(lineKey: string) {
+    setSelected((prev) => prev.filter((s) => s.lineKey !== lineKey));
+  }
+
+  function updateLineAmount(lineKey: string, raw: string) {
     const next = formatAmountInput(raw, currency);
     if (next === null) return;
     setSelected((prev) =>
-      prev.map((s) =>
-        s.listingId === listingId ? { ...s, amount: next } : s,
-      ),
+      prev.map((s) => (s.lineKey === lineKey ? { ...s, amount: next } : s)),
+    );
+  }
+
+  function updateExtraLabel(lineKey: string, label: string) {
+    setSelected((prev) =>
+      prev.map((s) => (s.lineKey === lineKey ? { ...s, label } : s)),
     );
   }
 
@@ -193,18 +242,23 @@ export function StatementForm({
     e.preventDefault();
     setError(null);
     if (selected.length === 0) {
-      setError("매물을 1개 이상 선택해 주세요.");
+      setError("품목을 1개 이상 추가해 주세요.");
       return;
     }
     if (selected.some((s) => !s.amount.trim())) {
-      setError("선택한 매물의 공급가액을 모두 입력해 주세요.");
+      setError("모든 품목의 공급가액을 입력해 주세요.");
+      return;
+    }
+    if (selected.some((s) => s.kind === "extra" && !s.label.trim())) {
+      setError("별도 금액 품목명을 입력해 주세요.");
       return;
     }
 
     startTransition(async () => {
       const payload = {
         items: selected.map((s) => ({
-          listingId: s.listingId,
+          lineKey: s.lineKey,
+          label: s.kind === "extra" ? s.label.trim() : undefined,
           amount: s.amount,
         })),
         buyerName,
@@ -249,7 +303,7 @@ export function StatementForm({
           ) : (
             <ul className="divide-y divide-[var(--line)]">
               {filteredListings.map((l) => {
-                const checked = selectedIds.has(l.id);
+                const checked = selectedListingIds.has(l.id);
                 return (
                   <li key={l.id}>
                     <label className="flex cursor-pointer items-start gap-2.5 px-3 py-2.5 text-[13px] hover:bg-neutral-50">
@@ -258,7 +312,7 @@ export function StatementForm({
                         className="mt-0.5"
                         checked={checked}
                         onChange={() => {
-                          if (checked) removeListing(l.id);
+                          if (checked) removeLine(l.id);
                           else addListing(l);
                         }}
                       />
@@ -284,33 +338,60 @@ export function StatementForm({
       </div>
 
       <div>
-        <p className={labelClass}>
-          선택 매물 ({selected.length}대) · 품목별 공급가액
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className={labelClass}>
+            선택 품목 ({listingCount}대
+            {extraCount > 0 ? ` + 별도 ${extraCount}` : ""}) · 공급가액
+          </p>
+          <button
+            type="button"
+            onClick={addExtraLine}
+            className="inline-flex h-8 items-center rounded-md border border-neutral-300 bg-white px-2.5 text-[12.5px] font-medium text-neutral-700 transition hover:bg-neutral-50"
+          >
+            + 별도 금액
+          </button>
+        </div>
         {selected.length === 0 ? (
           <p className="mt-2 rounded-md border border-dashed border-neutral-300 px-3 py-4 text-[13px] text-neutral-500">
-            위에서 매물을 체크해 추가해 주세요. 여러 대를 선택할 수 있습니다.
+            매물을 선택하거나 「별도 금액」으로 서비스 비용 등을 추가해 주세요.
           </p>
         ) : (
           <ul className="mt-2 space-y-2">
             {selected.map((line, index) => (
               <li
-                key={line.listingId}
-                className="rounded-md border border-[var(--line)] bg-white px-3 py-3"
+                key={line.lineKey}
+                className={`rounded-md border px-3 py-3 ${
+                  line.kind === "extra"
+                    ? "border-amber-200 bg-amber-50/40"
+                    : "border-[var(--line)] bg-white"
+                }`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-[12px] text-neutral-400">
                       품목 {index + 1}
+                      {line.kind === "extra" ? " · 별도 금액" : ""}
                     </p>
-                    <p className="font-medium text-neutral-800">
-                      [{line.serialNumber}] {line.label}
-                    </p>
+                    {line.kind === "extra" ? (
+                      <input
+                        value={line.label}
+                        onChange={(e) =>
+                          updateExtraLabel(line.lineKey, e.target.value)
+                        }
+                        placeholder="예: 서비스 비용, 탁송비"
+                        className={`${fieldClass} mt-1 font-medium`}
+                        required
+                      />
+                    ) : (
+                      <p className="font-medium text-neutral-800">
+                        [{line.serialNumber}] {line.label}
+                      </p>
+                    )}
                   </div>
                   <button
                     type="button"
                     className="text-[12.5px] text-red-600 hover:underline"
-                    onClick={() => removeListing(line.listingId)}
+                    onClick={() => removeLine(line.lineKey)}
                   >
                     제거
                   </button>
@@ -324,9 +405,9 @@ export function StatementForm({
                     inputMode="decimal"
                     value={line.amount}
                     onChange={(e) =>
-                      updateLineAmount(line.listingId, e.target.value)
+                      updateLineAmount(line.lineKey, e.target.value)
                     }
-                    placeholder="예: 15,000,000"
+                    placeholder="예: 150,000"
                     className={fieldClass}
                   />
                 </label>
@@ -428,7 +509,10 @@ export function StatementForm({
 
         <div className="rounded-md border border-[var(--line)] bg-neutral-50 px-3 py-3 text-[13px] text-neutral-700 sm:col-span-2">
           <p className="flex justify-between gap-3">
-            <span>공급가액 합계 ({selected.length}대)</span>
+            <span>
+              공급가액 합계 ({listingCount}대
+              {extraCount > 0 ? ` + 별도 ${extraCount}` : ""})
+            </span>
             <span className="font-medium">{totals.supplyLabel}</span>
           </p>
           <p className="mt-1 flex justify-between gap-3">

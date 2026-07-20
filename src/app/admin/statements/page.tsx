@@ -206,11 +206,11 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
                       <td className={adminTdClass}>
                         <span className="block truncate font-medium text-neutral-800">
                           {s.vehicleLabel}
-                          {multi ? ` 외 ${itemCount - 1}대` : ""}
+                          {multi ? ` 외 ${itemCount - 1}건` : ""}
                         </span>
                         <span className="mt-0.5 block truncate text-[12px] text-neutral-500">
-                          {s.serialNumber}
-                          {multi ? ` · 총 ${itemCount}대` : ""}
+                          {s.serialNumber === "EXTRA" ? "별도 항목" : s.serialNumber}
+                          {multi ? ` · 총 ${itemCount}건` : ""}
                         </span>
                       </td>
                       <td className={adminTdClass}>{s.buyerName}</td>

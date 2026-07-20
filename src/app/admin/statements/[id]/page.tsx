@@ -55,6 +55,9 @@ export default async function StatementDetailPage({ params }: Props) {
   };
 
   for (const item of statement.items) {
+    if (item.isExtra || (!item.listingId && item.serialNumber === "EXTRA")) {
+      continue;
+    }
     if (item.listingId) {
       ensureOption({
         id: item.listingId,

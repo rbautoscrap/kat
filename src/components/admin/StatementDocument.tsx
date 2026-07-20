@@ -126,26 +126,37 @@ export function StatementDocument({
             </tr>
           </thead>
           <tbody>
-            {lines.map((line) => (
-              <tr key={`${line.id ?? line.listingId ?? line.serialNumber}-${line.serialNumber}`}>
+            {lines.map((line) => {
+              const isExtra =
+                line.isExtra === true ||
+                (!line.listingId && line.serialNumber === "EXTRA");
+              return (
+              <tr key={`${line.id ?? line.listingId ?? line.serialNumber}-${line.vehicleLabel}-${line.sortOrder ?? 0}`}>
                 <td className="cell-item">{line.vehicleLabel}</td>
                 <td className="cell-detail">
-                  <p>
-                    {t.serial}: {line.serialNumber}
-                  </p>
-                  {line.vin ? <p>VIN: {line.vin}</p> : null}
-                  {line.vehicleNumber ? (
-                    <p>
-                      {t.vehicleNo}: {line.vehicleNumber}
-                    </p>
-                  ) : null}
+                  {isExtra ? (
+                    <p>{t.extraDetail}</p>
+                  ) : (
+                    <>
+                      <p>
+                        {t.serial}: {line.serialNumber}
+                      </p>
+                      {line.vin ? <p>VIN: {line.vin}</p> : null}
+                      {line.vehicleNumber ? (
+                        <p>
+                          {t.vehicleNo}: {line.vehicleNumber}
+                        </p>
+                      ) : null}
+                    </>
+                  )}
                 </td>
                 <td className="cell-qty">1</td>
                 <td className="cell-amount">
                   {formatStatementAmount(line.amount, statement.currency)}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
 

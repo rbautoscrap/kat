@@ -28,8 +28,10 @@ export const STATEMENT_VAT_RATE = 0.1;
 
 export type StatementLineItem = {
   id?: string;
-  /** Null when the linked listing was deleted; snapshot fields remain */
+  /** Null when the linked listing was deleted or this is an extra charge */
   listingId: string | null;
+  /** Service / misc charge line (not a vehicle) */
+  isExtra?: boolean;
   vehicleLabel: string;
   vin: string | null;
   serialNumber: string;
@@ -47,6 +49,29 @@ export function parseOrphanListingKey(value: string): string | null {
   if (!value.startsWith("orphan:")) return null;
   const id = value.slice("orphan:".length);
   return id || null;
+}
+
+/** Form key for a custom extra-charge line */
+export function extraLineKey(id: string) {
+  return `extra:${id}`;
+}
+
+export function parseExtraLineKey(value: string): string | null {
+  if (!value.startsWith("extra:")) return null;
+  const id = value.slice("extra:".length);
+  return id || null;
+}
+
+export function isExtraLineKey(value: string) {
+  return value.startsWith("extra:");
+}
+
+export function newExtraLineKey() {
+  const id =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return extraLineKey(id);
 }
 
 export type StatementView = Pick<
@@ -94,6 +119,7 @@ export const STATEMENT_COPY = {
     notes: "비고",
     serial: "시리얼",
     vehicleNo: "차량번호",
+    extraDetail: "별도 항목",
     footerVat: (pct: number) =>
       `본 명세서는 ${STATEMENT_SELLER.name}(${STATEMENT_SELLER.company})에서 발행한 거래 확인용 문서입니다. 합계 금액에는 부가세 ${pct}%가 포함되어 있습니다.`,
     footerNoVat: `본 명세서는 ${STATEMENT_SELLER.name}(${STATEMENT_SELLER.company})에서 발행한 거래 확인용 문서입니다. 본 거래는 영세율(부가세 미적용)로 작성되었습니다.`,
@@ -121,6 +147,7 @@ export const STATEMENT_COPY = {
     notes: "Notes",
     serial: "Serial",
     vehicleNo: "Plate No.",
+    extraDetail: "Extra charge",
     footerVat: (pct: number) =>
       `This statement is issued by ${STATEMENT_SELLER.name} (${STATEMENT_SELLER.companyEn}) for transaction confirmation. The total includes ${pct}% VAT.`,
     footerNoVat: `This statement is issued by ${STATEMENT_SELLER.name} (${STATEMENT_SELLER.companyEn}) for transaction confirmation. This transaction is zero-rated (VAT not applied).`,
@@ -150,6 +177,7 @@ export function getStatementLines(statement: StatementView): StatementLineItem[]
   return [
     {
       listingId: statement.listingId,
+      isExtra: false,
       vehicleLabel: statement.vehicleLabel,
       vin: statement.vin,
       serialNumber: statement.serialNumber,

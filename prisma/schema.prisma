@@ -139,9 +139,11 @@ model TransactionStatementItem {
   id            String               @id @default(cuid())
   statementId   String
   statement     TransactionStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
-  /** Null when the linked listing was deleted; snapshot fields remain */
+  /** Null when the linked listing was deleted or this is an extra charge line */
   listingId     String?
   listing       Listing?             @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  /** true = service / misc charge (not a vehicle listing) */
+  isExtra       Boolean              @default(false)
   vehicleLabel  String
   vin           String?
   serialNumber  String
