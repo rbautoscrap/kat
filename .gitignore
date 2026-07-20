@@ -47,3 +47,7 @@ next-env.d.ts
 /public/uploads
 /prisma/dev.db
 /prisma/dev.db-journal
+/prisma/build.db
+/prisma/build.db-journal
+/build.db
+/build.db-journal
