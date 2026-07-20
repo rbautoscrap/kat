@@ -1,21 +1,45 @@
 import {
   STATEMENT_BANK,
+  STATEMENT_COPY,
   STATEMENT_SELLER,
   STATEMENT_VAT_RATE,
   calcStatementTotals,
+  type StatementLocale,
   type StatementView,
 } from "@/lib/statement";
 
 type Props = {
   statement: StatementView;
+  locale?: StatementLocale;
 };
 
-export function StatementDocument({ statement }: Props) {
-  const totals = calcStatementTotals(statement.amount, statement.currency);
+export function StatementDocument({
+  statement,
+  locale = "ko",
+}: Props) {
+  const t = STATEMENT_COPY[locale];
+  const includeVat = statement.includeVat !== false;
+  const totals = calcStatementTotals(
+    statement.amount,
+    statement.currency,
+    includeVat,
+  );
   const vatPct = Math.round(STATEMENT_VAT_RATE * 100);
+  const company =
+    locale === "en" ? STATEMENT_SELLER.companyEn : STATEMENT_SELLER.company;
+  const bankName =
+    locale === "en" ? STATEMENT_BANK.bankNameEn : STATEMENT_BANK.bankName;
+  const accountHolder =
+    locale === "en"
+      ? STATEMENT_BANK.accountHolderEn
+      : STATEMENT_BANK.accountHolder;
 
   return (
-    <div id="statement-document" className="statement-document">
+    <div
+      id="statement-document"
+      className="statement-document"
+      data-locale={locale}
+    >
       <div className="statement-sheet">
         <div className="statement-accent" />
         <div className="statement-watermark" aria-hidden="true">
@@ -30,21 +54,21 @@ export function StatementDocument({ statement }: Props) {
         <header className="statement-header">
           <div className="statement-brand">
             <p className="statement-brand-name">{STATEMENT_SELLER.name}</p>
-            <p className="statement-brand-sub">{STATEMENT_SELLER.company}</p>
+            <p className="statement-brand-sub">{company}</p>
           </div>
           <div className="statement-heading-block">
-            <h1 className="statement-title">거래명세서</h1>
-            <p className="statement-subtitle">Transaction Statement</p>
+            <h1 className="statement-title">{t.title}</h1>
+            <p className="statement-subtitle">{t.subtitle}</p>
           </div>
         </header>
 
         <div className="statement-meta-row">
           <div className="statement-meta-chip">
-            <span className="statement-meta-label">명세서 번호</span>
+            <span className="statement-meta-label">{t.statementNo}</span>
             <span className="statement-meta-value">{statement.statementNo}</span>
           </div>
           <div className="statement-meta-chip">
-            <span className="statement-meta-label">발행일</span>
+            <span className="statement-meta-label">{t.issueDate}</span>
             <span className="statement-meta-value">{statement.issueDate}</span>
           </div>
         </div>
@@ -53,23 +77,27 @@ export function StatementDocument({ statement }: Props) {
           <tbody>
             <tr>
               <td className="statement-party">
-                <div className="statement-party-title">공급자</div>
+                <div className="statement-party-title">{t.seller}</div>
                 <div className="statement-party-body">
                   <p className="statement-party-name">{STATEMENT_SELLER.name}</p>
-                  <p>{STATEMENT_SELLER.company}</p>
+                  <p>{company}</p>
                   <p>Tel / KakaoTalk: {STATEMENT_SELLER.phone}</p>
                   <p>WhatsApp: +{STATEMENT_SELLER.whatsapp}</p>
                 </div>
               </td>
               <td className="statement-party">
-                <div className="statement-party-title">공급받는자</div>
+                <div className="statement-party-title">{t.buyer}</div>
                 <div className="statement-party-body">
                   <p className="statement-party-name">{statement.buyerName}</p>
                   {statement.buyerPhone ? (
-                    <p>연락처: {statement.buyerPhone}</p>
+                    <p>
+                      {t.phone}: {statement.buyerPhone}
+                    </p>
                   ) : null}
                   {statement.buyerAddress ? (
-                    <p>주소: {statement.buyerAddress}</p>
+                    <p>
+                      {t.address}: {statement.buyerAddress}
+                    </p>
                   ) : null}
                 </div>
               </td>
@@ -86,20 +114,24 @@ export function StatementDocument({ statement }: Props) {
           </colgroup>
           <thead>
             <tr>
-              <th>품목</th>
-              <th>상세</th>
-              <th>수량</th>
-              <th>공급가액</th>
+              <th>{t.item}</th>
+              <th>{t.detail}</th>
+              <th>{t.qty}</th>
+              <th>{t.supplyAmount}</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td className="cell-item">{statement.vehicleLabel}</td>
               <td className="cell-detail">
-                <p>시리얼: {statement.serialNumber}</p>
+                <p>
+                  {t.serial}: {statement.serialNumber}
+                </p>
                 {statement.vin ? <p>VIN: {statement.vin}</p> : null}
                 {statement.vehicleNumber ? (
-                  <p>차량번호: {statement.vehicleNumber}</p>
+                  <p>
+                    {t.vehicleNo}: {statement.vehicleNumber}
+                  </p>
                 ) : null}
               </td>
               <td className="cell-qty">1</td>
@@ -115,51 +147,53 @@ export function StatementDocument({ statement }: Props) {
           </colgroup>
           <tbody>
             <tr>
-              <td>공급가액</td>
+              <td>{t.supplyAmount}</td>
               <td>{totals.supplyLabel}</td>
             </tr>
             <tr>
-              <td>부가세 ({vatPct}%)</td>
+              <td>
+                {includeVat ? `${t.vat} (${vatPct}%)` : t.vatZero}
+              </td>
               <td>{totals.vatLabel}</td>
             </tr>
             <tr className="statement-totals-sum">
-              <td>합계 ({statement.currency})</td>
+              <td>
+                {t.total} ({statement.currency})
+              </td>
               <td>{totals.totalLabel}</td>
             </tr>
           </tbody>
         </table>
 
         <section className="statement-bank">
-          <div className="statement-bank-title">입금 계좌</div>
+          <div className="statement-bank-title">{t.bank}</div>
           <div className="statement-bank-body">
             <p className="statement-bank-line">
-              <span className="statement-bank-label">은행</span>
-              <span>{STATEMENT_BANK.bankName}</span>
+              <span className="statement-bank-label">{t.bankName}</span>
+              <span>{bankName}</span>
             </p>
             <p className="statement-bank-line">
-              <span className="statement-bank-label">계좌번호</span>
+              <span className="statement-bank-label">{t.accountNo}</span>
               <span className="statement-bank-account">
                 {STATEMENT_BANK.accountNo}
               </span>
             </p>
             <p className="statement-bank-line">
-              <span className="statement-bank-label">예금주</span>
-              <span>{STATEMENT_BANK.accountHolder}</span>
+              <span className="statement-bank-label">{t.accountHolder}</span>
+              <span>{accountHolder}</span>
             </p>
           </div>
         </section>
 
         {statement.notes ? (
           <section className="statement-notes">
-            <div className="statement-notes-title">비고</div>
+            <div className="statement-notes-title">{t.notes}</div>
             <div className="statement-notes-body">{statement.notes}</div>
           </section>
         ) : null}
 
         <p className="statement-footer">
-          본 명세서는 {STATEMENT_SELLER.name}({STATEMENT_SELLER.company})에서
-          발행한 거래 확인용 문서입니다. 합계 금액에는 부가세 {vatPct}%가
-          포함되어 있습니다.
+          {includeVat ? t.footerVat(vatPct) : t.footerNoVat}
         </p>
       </div>
     </div>

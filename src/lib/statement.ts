@@ -5,20 +5,25 @@ import {
   type OfferCurrencyCode,
 } from "@/lib/purchase-offer";
 
+export type StatementLocale = "ko" | "en";
+
 export const STATEMENT_SELLER = {
   name: "KOREA AUTO TRADE",
   company: "주식회사 알비오토",
+  companyEn: "RB Auto Co., Ltd.",
   phone: CONTACT_PHONE,
   whatsapp: CONTACT_WHATSAPP,
 } as const;
 
 export const STATEMENT_BANK = {
   bankName: "KEB하나은행",
+  bankNameEn: "KEB Hana Bank",
   accountNo: "676-910036-85204",
   accountHolder: "주식회사 알비오토",
+  accountHolderEn: "RB Auto Co., Ltd.",
 } as const;
 
-/** VAT rate applied on supply amount (공급가액) */
+/** VAT rate applied on supply amount when includeVat is true */
 export const STATEMENT_VAT_RATE = 0.1;
 
 export type StatementView = Pick<
@@ -35,9 +40,67 @@ export type StatementView = Pick<
   | "buyerAddress"
   | "amount"
   | "currency"
+  | "includeVat"
   | "issueDate"
   | "notes"
 >;
+
+export const STATEMENT_COPY = {
+  ko: {
+    title: "거래명세서",
+    subtitle: "Transaction Statement",
+    statementNo: "명세서 번호",
+    issueDate: "발행일",
+    seller: "공급자",
+    buyer: "공급받는자",
+    phone: "연락처",
+    address: "주소",
+    item: "품목",
+    detail: "상세",
+    qty: "수량",
+    supplyAmount: "공급가액",
+    vat: "부가세",
+    vatZero: "부가세 (영세율)",
+    total: "합계",
+    bank: "입금 계좌",
+    bankName: "은행",
+    accountNo: "계좌번호",
+    accountHolder: "예금주",
+    notes: "비고",
+    serial: "시리얼",
+    vehicleNo: "차량번호",
+    footerVat: (pct: number) =>
+      `본 명세서는 ${STATEMENT_SELLER.name}(${STATEMENT_SELLER.company})에서 발행한 거래 확인용 문서입니다. 합계 금액에는 부가세 ${pct}%가 포함되어 있습니다.`,
+    footerNoVat: `본 명세서는 ${STATEMENT_SELLER.name}(${STATEMENT_SELLER.company})에서 발행한 거래 확인용 문서입니다. 본 거래는 영세율(부가세 미적용)로 작성되었습니다.`,
+  },
+  en: {
+    title: "Transaction Statement",
+    subtitle: "거래명세서",
+    statementNo: "Statement No.",
+    issueDate: "Issue Date",
+    seller: "Supplier",
+    buyer: "Buyer",
+    phone: "Phone",
+    address: "Address",
+    item: "Item",
+    detail: "Details",
+    qty: "Qty",
+    supplyAmount: "Supply Amount",
+    vat: "VAT",
+    vatZero: "VAT (Zero-rated)",
+    total: "Total",
+    bank: "Bank Account",
+    bankName: "Bank",
+    accountNo: "Account No.",
+    accountHolder: "Account Holder",
+    notes: "Notes",
+    serial: "Serial",
+    vehicleNo: "Plate No.",
+    footerVat: (pct: number) =>
+      `This statement is issued by ${STATEMENT_SELLER.name} (${STATEMENT_SELLER.companyEn}) for transaction confirmation. The total includes ${pct}% VAT.`,
+    footerNoVat: `This statement is issued by ${STATEMENT_SELLER.name} (${STATEMENT_SELLER.companyEn}) for transaction confirmation. This transaction is zero-rated (VAT not applied).`,
+  },
+} as const;
 
 export function formatStatementAmount(
   amount: string,
@@ -52,10 +115,11 @@ function toMoneyString(value: number, currency: OfferCurrencyCode): string {
   return (Math.round(value * 100) / 100).toFixed(2);
 }
 
-/** Entered amount is treated as supply amount (공급가액, before VAT). */
+/** Entered amount is supply amount. VAT applied only when includeVat is true. */
 export function calcStatementTotals(
   amount: string,
   currency: OfferCurrency | OfferCurrencyCode,
+  includeVat = true,
 ) {
   const code = currency as OfferCurrencyCode;
   const supplyNum = Number(String(amount).replace(/,/g, ""));
@@ -67,6 +131,7 @@ export function calcStatementTotals(
       supplyLabel: formatStatementAmount("0", code),
       vatLabel: formatStatementAmount("0", code),
       totalLabel: formatStatementAmount("0", code),
+      includeVat,
     };
   }
 
@@ -74,10 +139,15 @@ export function calcStatementTotals(
     code === "KRW"
       ? Math.round(supplyNum)
       : Math.round(supplyNum * 100) / 100;
-  const vat =
-    code === "KRW"
-      ? Math.round(supply * STATEMENT_VAT_RATE)
-      : Math.round(supply * STATEMENT_VAT_RATE * 100) / 100;
+
+  let vat = 0;
+  if (includeVat) {
+    vat =
+      code === "KRW"
+        ? Math.round(supply * STATEMENT_VAT_RATE)
+        : Math.round(supply * STATEMENT_VAT_RATE * 100) / 100;
+  }
+
   const total =
     code === "KRW"
       ? supply + vat
@@ -94,6 +164,7 @@ export function calcStatementTotals(
     supplyLabel: formatStatementAmount(supplyStr, code),
     vatLabel: formatStatementAmount(vatStr, code),
     totalLabel: formatStatementAmount(totalStr, code),
+    includeVat,
   };
 }
 

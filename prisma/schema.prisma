@@ -114,6 +114,8 @@ model TransactionStatement {
   buyerAddress   String?
   amount         String
   currency       OfferCurrency @default(KRW)
+  /** true = 10% VAT included in total; false = zero-rated / no VAT */
+  includeVat     Boolean       @default(true)
   issueDate      String
   notes          String?
   createdById    String

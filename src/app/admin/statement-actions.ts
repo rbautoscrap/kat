@@ -30,6 +30,7 @@ const statementSchema = z.object({
       return Number.isFinite(n) && n > 0;
     }, "금액은 0보다 커야 합니다."),
   currency: z.enum(OFFER_CURRENCIES),
+  includeVat: z.boolean(),
   issueDate: z
     .string()
     .trim()
@@ -116,6 +117,7 @@ export async function createStatement(
         buyerAddress: parsed.data.buyerAddress || null,
         amount: parsed.data.amount,
         currency: parsed.data.currency as OfferCurrency,
+        includeVat: parsed.data.includeVat,
         issueDate: parsed.data.issueDate,
         notes: parsed.data.notes || null,
         createdById: admin.id,
@@ -164,6 +166,7 @@ export async function updateStatement(
         buyerAddress: parsed.data.buyerAddress || null,
         amount: parsed.data.amount,
         currency: parsed.data.currency as OfferCurrency,
+        includeVat: parsed.data.includeVat,
         issueDate: parsed.data.issueDate,
         notes: parsed.data.notes || null,
       },

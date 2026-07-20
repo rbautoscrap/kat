@@ -129,8 +129,14 @@ export function StatementActions({ statementId, statementNo }: Props) {
       }
 
       const a = document.createElement("a");
+      const locale =
+        document
+          .getElementById("statement-document")
+          ?.getAttribute("data-locale") === "en"
+          ? "EN"
+          : "KO";
       a.href = dataUrl;
-      a.download = `${statementNo}.png`;
+      a.download = `${statementNo}-${locale}.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();

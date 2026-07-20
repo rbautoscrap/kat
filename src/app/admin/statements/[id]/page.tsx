@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StatementActions } from "@/components/admin/StatementActions";
-import { StatementDocument } from "@/components/admin/StatementDocument";
 import { StatementForm } from "@/components/admin/StatementForm";
+import { StatementPreviewPanel } from "@/components/admin/StatementPreviewPanel";
 import { prisma } from "@/lib/prisma";
 import { defaultIssueDate, type ListingOption } from "@/lib/statement";
 
@@ -41,7 +41,6 @@ export default async function StatementDetailPage({ params }: Props) {
     vehicleNumber: l.vehicleNumber,
   }));
 
-  // Ensure current listing remains selectable even if outside take window
   if (!options.some((o) => o.id === statement.listingId)) {
     options.unshift({
       id: statement.listingId,
@@ -67,7 +66,8 @@ export default async function StatementDetailPage({ params }: Props) {
               {statement.statementNo}
             </h2>
             <p className="mt-1 text-[12.5px] tracking-wide text-neutral-500">
-              수정 후 저장하거나, 아래 문서를 출력·이미지로 저장할 수 있습니다.
+              수정 저장 후, 아래에서 한국어/영문 전환 · 출력 · 이미지 저장이
+              가능합니다.
             </p>
           </div>
           <StatementActions
@@ -85,13 +85,7 @@ export default async function StatementDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="statement-print-root rounded-sm border border-[var(--line)] bg-neutral-100 p-3 sm:p-5">
-        <p className="statement-no-print mb-3 text-[12.5px] tracking-wide text-neutral-500">
-          미리보기 · 좁은 화면에서는 좌우로 스크롤할 수 있습니다. 출력·이미지
-          저장은 A4 폭으로 고정됩니다.
-        </p>
-        <StatementDocument statement={statement} />
-      </div>
+      <StatementPreviewPanel statement={statement} />
     </div>
   );
 }

@@ -51,7 +51,8 @@ export default async function AdminStatementsPage() {
                 <th className={adminThClass}>발행일</th>
                 <th className={adminThClass}>매물</th>
                 <th className={adminThClass}>거래처</th>
-                <th className={adminThClass}>합계(부가세포함)</th>
+                <th className={adminThClass}>합계</th>
+                <th className={adminThClass}>부가세</th>
                 <th className={`${adminThClass} admin-th-actions`}>관리</th>
               </tr>
             </thead>
@@ -74,7 +75,13 @@ export default async function AdminStatementsPage() {
                   </td>
                   <td className={adminTdClass}>{s.buyerName}</td>
                   <td className={adminTdClass}>
-                    {calcStatementTotals(s.amount, s.currency).totalLabel}
+                    {
+                      calcStatementTotals(s.amount, s.currency, s.includeVat)
+                        .totalLabel
+                    }
+                  </td>
+                  <td className={adminTdClass}>
+                    {s.includeVat ? "포함 10%" : "영세율"}
                   </td>
                   <td className={`${adminTdActionsClass} admin-td-actions`}>
                     <div className="flex flex-wrap gap-1.5">

@@ -83,6 +83,7 @@ export function StatementForm({
     initial?.issueDate ?? defaultIssueDate,
   );
   const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [includeVat, setIncludeVat] = useState(initial?.includeVat !== false);
   const [listingQuery, setListingQuery] = useState("");
 
   const selected = useMemo(
@@ -103,8 +104,9 @@ export function StatementForm({
   }, [listings, listingQuery]);
 
   const totals = useMemo(
-    () => calcStatementTotals(amount.replace(/,/g, ""), currency),
-    [amount, currency],
+    () =>
+      calcStatementTotals(amount.replace(/,/g, ""), currency, includeVat),
+    [amount, currency, includeVat],
   );
   const vatPct = Math.round(STATEMENT_VAT_RATE * 100);
 
@@ -119,6 +121,7 @@ export function StatementForm({
         buyerAddress: buyerAddress || undefined,
         amount,
         currency,
+        includeVat,
         issueDate,
         notes: notes || undefined,
       };
@@ -252,13 +255,53 @@ export function StatementForm({
             ))}
           </select>
         </label>
+        <fieldset className="sm:col-span-2">
+          <legend className={labelClass}>부가세</legend>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <label
+              className={`inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-[13px] ${
+                includeVat
+                  ? "border-neutral-800 bg-neutral-900 text-white"
+                  : "border-neutral-200 bg-white text-neutral-700"
+              }`}
+            >
+              <input
+                type="radio"
+                name="includeVat"
+                className="sr-only"
+                checked={includeVat}
+                onChange={() => setIncludeVat(true)}
+              />
+              부가세 포함 ({vatPct}%)
+            </label>
+            <label
+              className={`inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-[13px] ${
+                !includeVat
+                  ? "border-neutral-800 bg-neutral-900 text-white"
+                  : "border-neutral-200 bg-white text-neutral-700"
+              }`}
+            >
+              <input
+                type="radio"
+                name="includeVat"
+                className="sr-only"
+                checked={!includeVat}
+                onChange={() => setIncludeVat(false)}
+              />
+              부가세 미포함 (영세율)
+            </label>
+          </div>
+        </fieldset>
+
         <div className="rounded-md border border-[var(--line)] bg-neutral-50 px-3 py-3 text-[13px] tracking-wide text-neutral-700 sm:col-span-2">
           <p className="flex justify-between gap-3">
             <span>공급가액</span>
             <span className="font-medium">{totals.supplyLabel}</span>
           </p>
           <p className="mt-1 flex justify-between gap-3">
-            <span>부가세 ({vatPct}%)</span>
+            <span>
+              {includeVat ? `부가세 (${vatPct}%)` : "부가세 (영세율)"}
+            </span>
             <span className="font-medium">{totals.vatLabel}</span>
           </p>
           <p className="mt-2 flex justify-between gap-3 border-t border-neutral-200 pt-2 text-[14px] font-semibold text-neutral-900">
