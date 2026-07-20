@@ -65,7 +65,7 @@ export function SaleStatusFilter({
 
   return (
     <div className="flex flex-wrap items-center gap-1.5 border-b border-[var(--line)] px-4 py-3 sm:gap-2 sm:px-5">
-      <span className="mr-0.5 w-full shrink-0 text-[12.5px] tracking-wide text-neutral-500 sm:mr-1 sm:w-auto">
+      <span className="mr-0.5 w-full shrink-0 text-[12.5px] text-neutral-500 sm:mr-1 sm:w-auto">
         판매상태
       </span>
       {filters.map((f) => {
@@ -78,7 +78,7 @@ export function SaleStatusFilter({
           <Link
             key={f.value}
             href={href}
-            className={`inline-flex h-8 items-center rounded-md border px-3 text-[12.5px] font-medium tracking-wide transition ${
+            className={`inline-flex h-8 items-center rounded-md border px-3 text-[12.5px] font-medium transition ${
               active ? f.activeClass : f.idleClass
             }`}
           >

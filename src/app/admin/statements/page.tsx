@@ -143,17 +143,17 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
     <div className="rounded-sm border border-[var(--line)] bg-white">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-4 sm:px-5">
         <div>
-          <h2 className="text-[15px] font-medium tracking-wide text-neutral-800">
+          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
             거래명세서
           </h2>
-          <p className="mt-1 text-[12.5px] tracking-wide text-neutral-500">
+          <p className="mt-1 text-[13px] text-neutral-500">
             매물 연동 명세서를 작성·저장하고 출력 또는 이미지로 저장합니다. 페이지당{" "}
             {ADMIN_PAGE_SIZE}건.
           </p>
         </div>
         <Link
           href="/admin/statements/new"
-          className="inline-flex h-9 items-center rounded-md bg-neutral-800 px-3.5 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-700"
+          className="inline-flex h-9 items-center rounded-md bg-neutral-800 px-3.5 text-[13px] font-medium text-white transition hover:bg-neutral-700"
         >
           + 새 명세서
         </Link>
@@ -162,7 +162,7 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
       <StatementListToolbar q={q} sort={sort} vat={vat} />
 
       {total === 0 ? (
-        <p className="px-5 py-10 text-[13.5px] tracking-wide text-neutral-500">
+        <p className="px-5 py-10 text-[13.5px] text-neutral-500">
           {q || vat !== "ALL"
             ? "검색 조건에 맞는 거래명세서가 없습니다."
             : "저장된 거래명세서가 없습니다. 새 명세서를 작성해 주세요."}
@@ -171,6 +171,15 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
         <>
           <div className={adminTableScrollClass}>
             <table className={`${adminTableClass} min-w-[920px]`}>
+              <colgroup>
+                <col style={{ width: "18%" }} />
+                <col style={{ width: "12%" }} />
+                <col style={{ width: "24%" }} />
+                <col style={{ width: "16%" }} />
+                <col style={{ width: "12%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "8%" }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th className={adminThClass}>번호</th>

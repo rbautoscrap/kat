@@ -49,11 +49,11 @@ export function AdminListingSearch({
           type="search"
           defaultValue={q}
           placeholder="제목, VIN, 차량번호, 원가, 특이사항, 등록자 등 상세 전체 검색"
-          className="h-10 min-w-0 flex-1 bg-white px-3.5 text-[13.5px] tracking-wide text-neutral-800 outline-none placeholder:text-neutral-400"
+          className="h-10 min-w-0 flex-1 bg-white px-3.5 text-[13.5px] text-neutral-800 outline-none placeholder:text-neutral-400"
         />
         <button
           type="submit"
-          className="shrink-0 border-l border-neutral-200 bg-neutral-800 px-4 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-700"
+          className="shrink-0 border-l border-neutral-200 bg-neutral-800 px-4 text-[13px] font-medium text-white transition hover:bg-neutral-700"
         >
           검색
         </button>
@@ -61,7 +61,7 @@ export function AdminListingSearch({
       {q ? (
         <Link
           href={clearHref}
-          className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-neutral-200 px-3.5 text-[13px] tracking-wide text-neutral-600 transition hover:bg-neutral-50"
+          className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-neutral-200 px-3.5 text-[13px] text-neutral-600 transition hover:bg-neutral-50"
         >
           초기화
         </Link>

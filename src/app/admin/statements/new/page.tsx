@@ -33,14 +33,14 @@ export default async function NewStatementPage() {
       <div className="border-b border-[var(--line)] px-4 py-4 sm:px-5">
         <Link
           href="/admin/statements"
-          className="text-[13px] tracking-wide text-neutral-500 transition hover:text-neutral-800"
+          className="text-[13px] text-neutral-500 transition hover:text-neutral-800"
         >
           ← 목록
         </Link>
-        <h2 className="mt-2 text-[15px] font-medium tracking-wide text-neutral-800">
+        <h2 className="mt-2 text-[15px] font-semibold tracking-tight text-neutral-900">
           거래명세서 작성
         </h2>
-        <p className="mt-1 text-[12.5px] tracking-wide text-neutral-500">
+        <p className="mt-1 text-[12.5px] text-neutral-500">
           매물을 선택하면 차량 정보가 자동으로 반영됩니다.
         </p>
       </div>

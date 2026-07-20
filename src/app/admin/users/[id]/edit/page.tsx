@@ -31,14 +31,14 @@ export default async function AdminEditUserPage({ params }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-medium text-neutral-800">회원 수정</h2>
-            <p className="mt-1 text-xs tracking-wide text-neutral-500">
+            <p className="mt-1 text-xs text-neutral-500">
               가입일 {user.createdAt.toISOString().slice(0, 10)} · 매물{" "}
               {user._count.listings}개
             </p>
           </div>
           <Link
             href="/admin/users"
-            className="text-[13px] tracking-wide text-neutral-500 underline hover:text-neutral-800"
+            className="text-[13px] text-neutral-500 underline hover:text-neutral-800"
           >
             목록으로
           </Link>

@@ -24,9 +24,9 @@ import {
 } from "@/lib/statement";
 
 const fieldClass =
-  "mt-1 h-10 w-full rounded-md border border-neutral-200 bg-white px-3 text-[13.5px] tracking-wide text-neutral-800 outline-none focus:border-neutral-400";
+  "mt-1 h-10 w-full rounded-md border border-neutral-200 bg-white px-3 text-[13.5px] text-neutral-800 outline-none focus:border-neutral-400";
 const labelClass =
-  "block text-[12.5px] font-medium tracking-wide text-neutral-600";
+  "block text-[12.5px] font-medium text-neutral-600";
 
 function formatAmountInput(raw: string, currency: OfferCurrencyCode) {
   const cleaned = raw.replace(/,/g, "");
@@ -426,7 +426,7 @@ export function StatementForm({
           </div>
         </fieldset>
 
-        <div className="rounded-md border border-[var(--line)] bg-neutral-50 px-3 py-3 text-[13px] tracking-wide text-neutral-700 sm:col-span-2">
+        <div className="rounded-md border border-[var(--line)] bg-neutral-50 px-3 py-3 text-[13px] text-neutral-700 sm:col-span-2">
           <p className="flex justify-between gap-3">
             <span>공급가액 합계 ({selected.length}대)</span>
             <span className="font-medium">{totals.supplyLabel}</span>
@@ -452,7 +452,7 @@ export function StatementForm({
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="mt-1 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-[13.5px] tracking-wide text-neutral-800 outline-none focus:border-neutral-400"
+            className="mt-1 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-[13.5px] text-neutral-800 outline-none focus:border-neutral-400"
           />
         </label>
       </div>
@@ -467,7 +467,7 @@ export function StatementForm({
         <button
           type="submit"
           disabled={pending || selected.length === 0}
-          className="inline-flex h-10 items-center rounded-md bg-neutral-800 px-4 text-[13.5px] font-medium tracking-wide text-white transition hover:bg-neutral-700 disabled:opacity-50"
+          className="inline-flex h-10 items-center rounded-md bg-neutral-800 px-4 text-[13.5px] font-medium text-white transition hover:bg-neutral-700 disabled:opacity-50"
         >
           {pending ? "저장 중…" : mode === "create" ? "저장" : "수정 저장"}
         </button>
@@ -475,7 +475,7 @@ export function StatementForm({
           type="button"
           disabled={pending}
           onClick={() => router.push("/admin/statements")}
-          className="inline-flex h-10 items-center rounded-md border border-neutral-300 bg-white px-4 text-[13.5px] font-medium tracking-wide text-neutral-700 transition hover:bg-neutral-50"
+          className="inline-flex h-10 items-center rounded-md border border-neutral-300 bg-white px-4 text-[13.5px] font-medium text-neutral-700 transition hover:bg-neutral-50"
         >
           목록
         </button>

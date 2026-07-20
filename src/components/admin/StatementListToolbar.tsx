@@ -56,11 +56,11 @@ export function StatementListToolbar({ q = "", sort, vat }: Props) {
             type="search"
             defaultValue={q}
             placeholder="명세서번호, 거래처, 매물명, 시리얼 검색"
-            className="h-10 min-w-0 flex-1 bg-white px-3.5 text-[13.5px] tracking-wide text-neutral-800 outline-none placeholder:text-neutral-400"
+            className="h-10 min-w-0 flex-1 bg-white px-3.5 text-[13.5px] text-neutral-800 outline-none placeholder:text-neutral-400"
           />
           <button
             type="submit"
-            className="shrink-0 border-l border-neutral-200 bg-neutral-800 px-4 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-700"
+            className="shrink-0 border-l border-neutral-200 bg-neutral-800 px-4 text-[13px] font-medium text-white transition hover:bg-neutral-700"
           >
             검색
           </button>
@@ -68,7 +68,7 @@ export function StatementListToolbar({ q = "", sort, vat }: Props) {
         {q || sort !== "newest" || vat !== "ALL" ? (
           <Link
             href={clearHref}
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-neutral-200 px-3 text-[13px] tracking-wide text-neutral-600 transition hover:bg-neutral-50"
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-neutral-200 px-3 text-[13px] text-neutral-600 transition hover:bg-neutral-50"
           >
             초기화
           </Link>
@@ -83,7 +83,7 @@ export function StatementListToolbar({ q = "", sort, vat }: Props) {
           id="admin-statement-sort"
           name="sort"
           defaultValue={sort}
-          className="h-9 rounded-md border border-neutral-200 bg-white px-2.5 text-[13px] tracking-wide text-neutral-700 outline-none focus:border-neutral-400"
+          className="h-9 rounded-md border border-neutral-200 bg-white px-2.5 text-[13px] text-neutral-700 outline-none focus:border-neutral-400"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -99,7 +99,7 @@ export function StatementListToolbar({ q = "", sort, vat }: Props) {
           id="admin-statement-vat"
           name="vat"
           defaultValue={vat}
-          className="h-9 rounded-md border border-neutral-200 bg-white px-2.5 text-[13px] tracking-wide text-neutral-700 outline-none focus:border-neutral-400"
+          className="h-9 rounded-md border border-neutral-200 bg-white px-2.5 text-[13px] text-neutral-700 outline-none focus:border-neutral-400"
         >
           {VAT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -110,7 +110,7 @@ export function StatementListToolbar({ q = "", sort, vat }: Props) {
 
         <button
           type="submit"
-          className="inline-flex h-9 items-center rounded-md border border-neutral-200 bg-white px-3 text-[13px] font-medium tracking-wide text-neutral-700 transition hover:bg-neutral-50"
+          className="inline-flex h-9 items-center rounded-md border border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-700 transition hover:bg-neutral-50"
         >
           적용
         </button>

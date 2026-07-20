@@ -91,14 +91,14 @@ export default async function StatementDetailPage({ params }: Props) {
           <div>
             <Link
               href="/admin/statements"
-              className="text-[13px] tracking-wide text-neutral-500 transition hover:text-neutral-800"
+              className="text-[13px] text-neutral-500 transition hover:text-neutral-800"
             >
               ← 목록
             </Link>
-            <h2 className="mt-2 text-[15px] font-medium tracking-wide text-neutral-800">
+            <h2 className="mt-2 text-[15px] font-semibold tracking-tight text-neutral-900">
               {statement.statementNo}
             </h2>
-            <p className="mt-1 text-[12.5px] tracking-wide text-neutral-500">
+            <p className="mt-1 text-[12.5px] text-neutral-500">
               수정 저장 후, 아래에서 한국어/영문 전환 · 출력 · 이미지 저장이
               가능합니다.
             </p>

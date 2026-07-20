@@ -15,7 +15,7 @@ export function StatementPreviewPanel({ statement }: Props) {
   return (
     <div className="statement-print-root rounded-sm border border-[var(--line)] bg-neutral-100 p-3 sm:p-5">
       <div className="statement-no-print mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[12.5px] tracking-wide text-neutral-500">
+        <p className="text-[12.5px] text-neutral-500">
           {locale === "ko"
             ? "미리보기 · 영문 버전은 외국인 바이어 전달용입니다."
             : "Preview · English version for overseas buyers."}

@@ -289,10 +289,10 @@ export default async function AdminListingsPage({ searchParams }: Props) {
     <div className="rounded-sm border border-[var(--line)] bg-white">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
         <div className="min-w-0">
-          <h2 className="text-[15px] font-medium tracking-wide text-neutral-800">
+          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
             매물 관리
           </h2>
-          <p className="mt-1 text-[12.5px] leading-relaxed tracking-wide text-neutral-500">
+          <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
             한 페이지에 {ADMIN_PAGE_SIZE}개씩 표시됩니다.
             {q ? (
               <>
@@ -313,7 +313,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
               </>
             ) : null}
           </p>
-          <p className="mt-1.5 text-[13px] leading-relaxed tracking-wide text-sky-900">
+          <p className="mt-1.5 text-[13px] leading-relaxed text-sky-900">
             재고 원가 합계{" "}
             <span className="font-semibold tabular-nums">
               {formatCostWon(availableCostTotal)}
@@ -323,7 +323,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
               · {availableStock.length.toLocaleString("ko-KR")}대
             </span>
           </p>
-          <p className="mt-1 text-[12.5px] leading-relaxed tracking-wide text-neutral-500">
+          <p className="mt-1 text-[12.5px] leading-relaxed text-neutral-500">
             원가{" "}
             <span className="font-medium text-orange-700">
               400만~1,000만 미만 · 주황
@@ -336,7 +336,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
         </div>
         <Link
           href="/listings/new"
-          className="inline-flex h-9 shrink-0 items-center rounded-md bg-neutral-800 px-3.5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-700"
+          className="inline-flex h-9 shrink-0 items-center rounded-md bg-neutral-800 px-3.5 text-[13px] font-medium text-white hover:bg-neutral-700"
         >
           + 매물 등록
         </Link>
@@ -470,7 +470,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                   <td className={adminTdClass}>
                     {cost != null ? (
                       <span
-                        className={`inline-flex max-w-full truncate rounded-md border px-2 py-1 text-[12.5px] font-semibold tabular-nums tracking-wide ${
+                        className={`inline-flex max-w-full truncate rounded-md border px-2 py-1 text-[12.5px] font-semibold tabular-nums ${
                           tier === "high"
                             ? "border-red-400 bg-red-100 text-red-900"
                             : tier === "mid"
@@ -486,7 +486,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                     )}
                   </td>
                   <td
-                    className={`${adminTdClass} text-center text-[12.5px] tabular-nums tracking-wide`}
+                    className={`${adminTdClass} text-center text-[12.5px] tabular-nums`}
                   >
                     {hasOffers ? (
                       <span className="font-semibold text-amber-900">
@@ -497,7 +497,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                     )}
                   </td>
                   <td
-                    className={`${adminTdClass} text-center text-[12.5px] tabular-nums tracking-wide`}
+                    className={`${adminTdClass} text-center text-[12.5px] tabular-nums`}
                     title="입고일 기준 누적일"
                   >
                     {days != null ? (

@@ -27,8 +27,8 @@ export function AdminPagination({
   const nextHref = buildPageHref(basePath, current + 1, params);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] px-5 py-3.5 text-[12.5px] tracking-wide text-neutral-500">
-      <p>
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] px-5 py-3.5 text-[12.5px] text-neutral-500">
+      <p className="tabular-nums">
         총 {total.toLocaleString("ko-KR")}건 중 {start}–{end} · {current}/
         {pages} 페이지
       </p>

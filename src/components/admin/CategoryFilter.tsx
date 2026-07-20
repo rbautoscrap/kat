@@ -58,7 +58,7 @@ export function CategoryFilter({
             <Link
               key={f.value}
               href={href}
-              className={`inline-flex h-8 items-center rounded-full px-3 text-[12.5px] tracking-wide transition ${
+              className={`inline-flex h-8 items-center rounded-full px-3 text-[12.5px] transition ${
                 active
                   ? "bg-neutral-800 text-white"
                   : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"

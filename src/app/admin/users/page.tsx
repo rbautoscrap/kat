@@ -109,10 +109,10 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   return (
     <div className="overflow-hidden rounded-sm border border-[var(--line)] bg-white">
       <div className="border-b border-[var(--line)] px-5 py-4">
-        <h2 className="text-[15px] font-medium tracking-wide text-neutral-800">
+        <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
           회원 관리
         </h2>
-        <p className="mt-1 text-[12.5px] leading-relaxed tracking-wide text-neutral-500">
+        <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
           신규 가입은 승인 후에만 로그인할 수 있습니다. 한 페이지에{" "}
           {ADMIN_PAGE_SIZE}개씩 표시됩니다.
           {pendingCount > 0 ? (
