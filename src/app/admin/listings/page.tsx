@@ -161,24 +161,34 @@ export default async function AdminListingsPage({ searchParams }: Props) {
     AND: [categoryWhere, searchWhere],
   };
 
-  const [total, grouped, saleGrouped, offerListingCount] = await Promise.all([
-    prisma.listing.count({ where }),
-    prisma.listing.groupBy({
-      by: ["category"],
-      where: categoryCountWhere,
-      _count: { _all: true },
-    }),
-    prisma.listing.groupBy({
-      by: ["saleStatus"],
-      where: saleCountWhere,
-      _count: { _all: true },
-    }),
-    prisma.listing.count({
-      where: {
-        AND: [where, { purchaseOffers: { some: {} } }],
-      },
-    }),
-  ]);
+  const [total, grouped, saleGrouped, offerListingCount, availableStock] =
+    await Promise.all([
+      prisma.listing.count({ where }),
+      prisma.listing.groupBy({
+        by: ["category"],
+        where: categoryCountWhere,
+        _count: { _all: true },
+      }),
+      prisma.listing.groupBy({
+        by: ["saleStatus"],
+        where: saleCountWhere,
+        _count: { _all: true },
+      }),
+      prisma.listing.count({
+        where: {
+          AND: [where, { purchaseOffers: { some: {} } }],
+        },
+      }),
+      prisma.listing.findMany({
+        where: { saleStatus: "AVAILABLE" },
+        select: { costPrice: true },
+      }),
+    ]);
+
+  const availableCostTotal = availableStock.reduce(
+    (sum, row) => sum + (parseCostPrice(row.costPrice) ?? 0),
+    0,
+  );
 
   const pages = totalPages(total);
   const currentPage = Math.min(page, pages);
@@ -302,6 +312,16 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                 </span>
               </>
             ) : null}
+          </p>
+          <p className="mt-1.5 text-[13px] leading-relaxed tracking-wide text-sky-900">
+            판매중 재고 원가 합계{" "}
+            <span className="font-semibold tabular-nums">
+              {formatCostWon(availableCostTotal)}
+            </span>
+            <span className="text-sky-700/80">
+              {" "}
+              · {availableStock.length.toLocaleString("ko-KR")}대
+            </span>
           </p>
           <p className="mt-1 text-[12.5px] leading-relaxed tracking-wide text-neutral-500">
             원가{" "}

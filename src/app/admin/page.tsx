@@ -4,11 +4,24 @@ import { ADMIN_CATEGORY_LABELS, ROLE_LABELS } from "@/lib/admin-labels";
 
 export const dynamic = "force-dynamic";
 
+function parseCostPrice(value?: string | null): number {
+  if (!value) return 0;
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return 0;
+  const n = Number(digits);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function formatWon(value: number) {
+  return `${value.toLocaleString("ko-KR")}원`;
+}
+
 export default async function AdminOverviewPage() {
   const [
     userCount,
     listingCount,
     offerListingCount,
+    availableForSale,
     byCategory,
     recentUsers,
     recentListings,
@@ -17,6 +30,10 @@ export default async function AdminOverviewPage() {
     prisma.listing.count(),
     prisma.listing.count({
       where: { purchaseOffers: { some: {} } },
+    }),
+    prisma.listing.findMany({
+      where: { saleStatus: "AVAILABLE" },
+      select: { costPrice: true },
     }),
     prisma.listing.groupBy({
       by: ["category"],
@@ -39,44 +56,86 @@ export default async function AdminOverviewPage() {
     }),
   ]);
 
+  const availableCount = availableForSale.length;
+  const availableCostTotal = availableForSale.reduce(
+    (sum, row) => sum + parseCostPrice(row.costPrice),
+    0,
+  );
+
   const stats = [
     {
       label: "오퍼 접수 매물",
-      value: offerListingCount,
+      value: String(offerListingCount),
       href: "/admin/listings",
-      accent: true,
+      accent: "amber" as const,
     },
-    { label: "전체 회원", value: userCount, href: "/admin/users", accent: false },
-    { label: "매물", value: listingCount, href: "/admin/listings", accent: false },
+    {
+      label: "판매중 원가 합계",
+      value: formatWon(availableCostTotal),
+      href: "/admin/listings?sale=AVAILABLE",
+      accent: "stock" as const,
+      hint: `판매중 ${availableCount.toLocaleString("ko-KR")}대`,
+    },
+    {
+      label: "전체 회원",
+      value: String(userCount),
+      href: "/admin/users",
+      accent: "none" as const,
+    },
+    {
+      label: "매물",
+      value: String(listingCount),
+      href: "/admin/listings",
+      accent: "none" as const,
+    },
   ];
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
           <Link
             key={stat.label}
             href={stat.href}
             className={`border px-4 py-4 transition hover:border-neutral-400 ${
-              stat.accent
+              stat.accent === "amber"
                 ? "border-amber-300 bg-amber-50 hover:border-amber-400"
-                : "border-neutral-200 bg-white"
+                : stat.accent === "stock"
+                  ? "border-sky-300 bg-sky-50 hover:border-sky-400"
+                  : "border-neutral-200 bg-white"
             }`}
           >
             <p
               className={`text-xs ${
-                stat.accent ? "text-amber-800" : "text-neutral-500"
+                stat.accent === "amber"
+                  ? "text-amber-800"
+                  : stat.accent === "stock"
+                    ? "text-sky-800"
+                    : "text-neutral-500"
               }`}
             >
               {stat.label}
             </p>
             <p
-              className={`mt-1 text-2xl font-semibold tabular-nums ${
-                stat.accent ? "text-amber-950" : "text-neutral-900"
+              className={`mt-1 font-semibold tabular-nums ${
+                stat.accent === "stock"
+                  ? "text-[1.35rem] leading-snug text-sky-950 sm:text-2xl"
+                  : "text-2xl"
+              } ${
+                stat.accent === "amber"
+                  ? "text-amber-950"
+                  : stat.accent === "stock"
+                    ? ""
+                    : "text-neutral-900"
               }`}
             >
               {stat.value}
             </p>
+            {"hint" in stat && stat.hint ? (
+              <p className="mt-1 text-[11.5px] tracking-wide text-sky-700/90">
+                {stat.hint}
+              </p>
+            ) : null}
           </Link>
         ))}
       </div>
