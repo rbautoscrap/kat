@@ -26,6 +26,17 @@ export const STATEMENT_BANK = {
 /** VAT rate applied on supply amount when includeVat is true */
 export const STATEMENT_VAT_RATE = 0.1;
 
+export type StatementLineItem = {
+  id?: string;
+  listingId: string;
+  vehicleLabel: string;
+  vin: string | null;
+  serialNumber: string;
+  vehicleNumber: string | null;
+  amount: string;
+  sortOrder?: number;
+};
+
 export type StatementView = Pick<
   TransactionStatement,
   | "id"
@@ -43,7 +54,9 @@ export type StatementView = Pick<
   | "includeVat"
   | "issueDate"
   | "notes"
->;
+> & {
+  items?: StatementLineItem[];
+};
 
 export const STATEMENT_COPY = {
   ko: {
@@ -115,7 +128,40 @@ function toMoneyString(value: number, currency: OfferCurrencyCode): string {
   return (Math.round(value * 100) / 100).toFixed(2);
 }
 
-/** Entered amount is supply amount. VAT applied only when includeVat is true. */
+/** Resolve line items — falls back to legacy single-listing fields. */
+export function getStatementLines(statement: StatementView): StatementLineItem[] {
+  if (statement.items && statement.items.length > 0) {
+    return [...statement.items].sort(
+      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
+    );
+  }
+  return [
+    {
+      listingId: statement.listingId,
+      vehicleLabel: statement.vehicleLabel,
+      vin: statement.vin,
+      serialNumber: statement.serialNumber,
+      vehicleNumber: statement.vehicleNumber,
+      amount: statement.amount,
+      sortOrder: 0,
+    },
+  ];
+}
+
+export function sumLineAmounts(
+  lines: Array<{ amount: string }>,
+  currency: OfferCurrency | OfferCurrencyCode,
+): string {
+  const code = currency as OfferCurrencyCode;
+  let sum = 0;
+  for (const line of lines) {
+    const n = Number(String(line.amount).replace(/,/g, ""));
+    if (Number.isFinite(n) && n > 0) sum += n;
+  }
+  return toMoneyString(sum, code);
+}
+
+/** Entered/summed amount is supply amount. VAT applied only when includeVat is true. */
 export function calcStatementTotals(
   amount: string,
   currency: OfferCurrency | OfferCurrencyCode,

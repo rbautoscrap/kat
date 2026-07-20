@@ -4,6 +4,9 @@ import {
   STATEMENT_SELLER,
   STATEMENT_VAT_RATE,
   calcStatementTotals,
+  formatStatementAmount,
+  getStatementLines,
+  sumLineAmounts,
   type StatementLocale,
   type StatementView,
 } from "@/lib/statement";
@@ -19,8 +22,10 @@ export function StatementDocument({
 }: Props) {
   const t = STATEMENT_COPY[locale];
   const includeVat = statement.includeVat !== false;
+  const lines = getStatementLines(statement);
+  const supplySum = sumLineAmounts(lines, statement.currency);
   const totals = calcStatementTotals(
-    statement.amount,
+    supplySum,
     statement.currency,
     includeVat,
   );
@@ -121,22 +126,26 @@ export function StatementDocument({
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td className="cell-item">{statement.vehicleLabel}</td>
-              <td className="cell-detail">
-                <p>
-                  {t.serial}: {statement.serialNumber}
-                </p>
-                {statement.vin ? <p>VIN: {statement.vin}</p> : null}
-                {statement.vehicleNumber ? (
+            {lines.map((line) => (
+              <tr key={`${line.listingId}-${line.serialNumber}`}>
+                <td className="cell-item">{line.vehicleLabel}</td>
+                <td className="cell-detail">
                   <p>
-                    {t.vehicleNo}: {statement.vehicleNumber}
+                    {t.serial}: {line.serialNumber}
                   </p>
-                ) : null}
-              </td>
-              <td className="cell-qty">1</td>
-              <td className="cell-amount">{totals.supplyLabel}</td>
-            </tr>
+                  {line.vin ? <p>VIN: {line.vin}</p> : null}
+                  {line.vehicleNumber ? (
+                    <p>
+                      {t.vehicleNo}: {line.vehicleNumber}
+                    </p>
+                  ) : null}
+                </td>
+                <td className="cell-qty">1</td>
+                <td className="cell-amount">
+                  {formatStatementAmount(line.amount, statement.currency)}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
 

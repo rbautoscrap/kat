@@ -17,6 +17,9 @@ export default async function AdminStatementsPage() {
   const statements = await prisma.transactionStatement.findMany({
     orderBy: { createdAt: "desc" },
     take: 100,
+    include: {
+      _count: { select: { items: true } },
+    },
   });
 
   return (
@@ -68,9 +71,17 @@ export default async function AdminStatementsPage() {
                   <td className={adminTdClass}>
                     <span className="block truncate font-medium text-neutral-800">
                       {s.vehicleLabel}
+                      {s._count.items > 1
+                        ? ` 외 ${s._count.items - 1}대`
+                        : s._count.items === 0
+                          ? ""
+                          : ""}
                     </span>
                     <span className="mt-0.5 block truncate text-[12px] text-neutral-500">
                       {s.serialNumber}
+                      {s._count.items > 1
+                        ? ` · 총 ${s._count.items}대`
+                        : ""}
                     </span>
                   </td>
                   <td className={adminTdClass}>{s.buyerName}</td>

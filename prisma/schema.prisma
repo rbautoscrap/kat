@@ -90,7 +90,9 @@ model Listing {
   author           User            @relation(fields: [authorId], references: [id])
   images           ListingImage[]
   purchaseOffers   PurchaseOffer[]
+  /** Primary listing on a statement (first line item) */
   transactionStatements TransactionStatement[]
+  statementItems   TransactionStatementItem[]
 
   @@index([category, createdAt])
   @@index([saleStatus])
@@ -98,13 +100,14 @@ model Listing {
   @@index([createdAt])
 }
 
-/** Admin-issued transaction statement (거래명세서), linked to a listing */
+/** Admin-issued transaction statement (거래명세서) */
 model TransactionStatement {
   id             String        @id @default(cuid())
   statementNo    String        @unique
+  /** First selected listing — kept for list preview / legacy rows */
   listingId      String
   listing        Listing       @relation(fields: [listingId], references: [id], onDelete: Restrict)
-  /** Snapshot so edits to the listing do not change issued statements */
+  /** Snapshot of the first line item (legacy + list preview) */
   vehicleLabel   String
   vin            String?
   serialNumber   String
@@ -112,6 +115,7 @@ model TransactionStatement {
   buyerName      String
   buyerPhone     String?
   buyerAddress   String?
+  /** Sum of line-item supply amounts */
   amount         String
   currency       OfferCurrency @default(KRW)
   /** true = 10% VAT included in total; false = zero-rated / no VAT */
@@ -122,11 +126,31 @@ model TransactionStatement {
   createdBy      User          @relation(fields: [createdById], references: [id])
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+  items          TransactionStatementItem[]
 
   @@index([listingId])
   @@index([issueDate])
   @@index([createdAt])
   @@index([createdById])
+}
+
+/** One vehicle / line on a transaction statement */
+model TransactionStatementItem {
+  id            String               @id @default(cuid())
+  statementId   String
+  statement     TransactionStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+  listingId     String
+  listing       Listing              @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  vehicleLabel  String
+  vin           String?
+  serialNumber  String
+  vehicleNumber String?
+  /** Supply amount for this line (before VAT) */
+  amount        String
+  sortOrder     Int                  @default(0)
+
+  @@index([statementId, sortOrder])
+  @@index([listingId])
 }
 
 /** Member purchase interest / bid for a listing */

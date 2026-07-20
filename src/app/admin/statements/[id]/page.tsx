@@ -16,6 +16,9 @@ export default async function StatementDetailPage({ params }: Props) {
   const { id } = await params;
   const statement = await prisma.transactionStatement.findUnique({
     where: { id },
+    include: {
+      items: { orderBy: { sortOrder: "asc" } },
+    },
   });
   if (!statement) notFound();
 
