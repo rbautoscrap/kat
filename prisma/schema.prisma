@@ -104,9 +104,9 @@ model Listing {
 model TransactionStatement {
   id             String        @id @default(cuid())
   statementNo    String        @unique
-  /** First selected listing — kept for list preview / legacy rows */
-  listingId      String
-  listing        Listing       @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  /** First selected listing — kept for list preview / legacy rows (null if listing deleted) */
+  listingId      String?
+  listing        Listing?      @relation(fields: [listingId], references: [id], onDelete: SetNull)
   /** Snapshot of the first line item (legacy + list preview) */
   vehicleLabel   String
   vin            String?
@@ -139,8 +139,9 @@ model TransactionStatementItem {
   id            String               @id @default(cuid())
   statementId   String
   statement     TransactionStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
-  listingId     String
-  listing       Listing              @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  /** Null when the linked listing was deleted; snapshot fields remain */
+  listingId     String?
+  listing       Listing?             @relation(fields: [listingId], references: [id], onDelete: SetNull)
   vehicleLabel  String
   vin           String?
   serialNumber  String

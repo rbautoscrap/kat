@@ -4,7 +4,11 @@ import { StatementActions } from "@/components/admin/StatementActions";
 import { StatementForm } from "@/components/admin/StatementForm";
 import { StatementPreviewPanel } from "@/components/admin/StatementPreviewPanel";
 import { prisma } from "@/lib/prisma";
-import { defaultIssueDate, type ListingOption } from "@/lib/statement";
+import {
+  defaultIssueDate,
+  orphanListingKey,
+  type ListingOption,
+} from "@/lib/statement";
 
 export const dynamic = "force-dynamic";
 
@@ -44,8 +48,34 @@ export default async function StatementDetailPage({ params }: Props) {
     vehicleNumber: l.vehicleNumber,
   }));
 
-  if (!options.some((o) => o.id === statement.listingId)) {
-    options.unshift({
+  const ensureOption = (opt: ListingOption) => {
+    if (!options.some((o) => o.id === opt.id)) {
+      options.unshift(opt);
+    }
+  };
+
+  for (const item of statement.items) {
+    if (item.listingId) {
+      ensureOption({
+        id: item.listingId,
+        serialNumber: item.serialNumber,
+        label: item.vehicleLabel,
+        vin: item.vin,
+        vehicleNumber: item.vehicleNumber,
+      });
+    } else {
+      ensureOption({
+        id: orphanListingKey(item.id),
+        serialNumber: item.serialNumber,
+        label: `${item.vehicleLabel} (삭제된 매물)`,
+        vin: item.vin,
+        vehicleNumber: item.vehicleNumber,
+      });
+    }
+  }
+
+  if (statement.listingId) {
+    ensureOption({
       id: statement.listingId,
       serialNumber: statement.serialNumber,
       label: statement.vehicleLabel,

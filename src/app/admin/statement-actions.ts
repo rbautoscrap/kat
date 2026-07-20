@@ -7,7 +7,10 @@ import { auth, isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { OFFER_CURRENCIES } from "@/lib/purchase-offer";
 import { prisma } from "@/lib/prisma";
-import { sumLineAmounts } from "@/lib/statement";
+import {
+  parseOrphanListingKey,
+  sumLineAmounts,
+} from "@/lib/statement";
 
 type ActionResult =
   | { ok: true; id: string }
@@ -91,6 +94,7 @@ function listingSnapshot(listing: {
 
 async function buildItemRows(
   items: Array<{ listingId: string; amount: string }>,
+  opts?: { statementId?: string },
 ) {
   const ids = items.map((i) => i.listingId);
   const unique = new Set(ids);
@@ -98,24 +102,73 @@ async function buildItemRows(
     return { ok: false as const, error: "같은 매물이 중복 선택되었습니다." };
   }
 
-  const listings = await prisma.listing.findMany({
-    where: { id: { in: ids } },
-  });
-  if (listings.length !== ids.length) {
+  const liveIds = ids.filter((id) => !parseOrphanListingKey(id));
+  const listings = liveIds.length
+    ? await prisma.listing.findMany({ where: { id: { in: liveIds } } })
+    : [];
+  if (listings.length !== liveIds.length) {
     return { ok: false as const, error: "일부 매물을 찾을 수 없습니다." };
   }
-
   const byId = new Map(listings.map((l) => [l.id, l]));
-  const rows = items.map((item, index) => {
-    const listing = byId.get(item.listingId)!;
+
+  const orphanItemIds = ids
+    .map((id) => parseOrphanListingKey(id))
+    .filter((id): id is string => Boolean(id));
+  const orphanItems =
+    orphanItemIds.length && opts?.statementId
+      ? await prisma.transactionStatementItem.findMany({
+          where: {
+            id: { in: orphanItemIds },
+            statementId: opts.statementId,
+          },
+        })
+      : [];
+  const orphanById = new Map(orphanItems.map((row) => [row.id, row]));
+
+  const rows: Array<{
+    listingId: string | null;
+    vehicleLabel: string;
+    vin: string | null;
+    serialNumber: string;
+    vehicleNumber: string | null;
+    amount: string;
+    sortOrder: number;
+  }> = [];
+
+  for (const [index, item] of items.entries()) {
+    const orphanId = parseOrphanListingKey(item.listingId);
+    if (orphanId) {
+      const existing = orphanById.get(orphanId);
+      if (!existing) {
+        return {
+          ok: false as const,
+          error: "삭제된 매물 품목을 찾을 수 없습니다. 페이지를 새로고침해 주세요.",
+        };
+      }
+      rows.push({
+        listingId: null,
+        vehicleLabel: existing.vehicleLabel,
+        vin: existing.vin,
+        serialNumber: existing.serialNumber,
+        vehicleNumber: existing.vehicleNumber,
+        amount: item.amount,
+        sortOrder: index,
+      });
+      continue;
+    }
+
+    const listing = byId.get(item.listingId);
+    if (!listing) {
+      return { ok: false as const, error: "일부 매물을 찾을 수 없습니다." };
+    }
     const snap = listingSnapshot(listing);
-    return {
+    rows.push({
       listingId: listing.id,
       ...snap,
       amount: item.amount,
       sortOrder: index,
-    };
-  });
+    });
+  }
 
   return { ok: true as const, rows };
 }
@@ -192,7 +245,7 @@ export async function updateStatement(
   });
   if (!existing) return { ok: false, error: "명세서를 찾을 수 없습니다." };
 
-  const built = await buildItemRows(parsed.data.items);
+  const built = await buildItemRows(parsed.data.items, { statementId: id });
   if (!built.ok) return { ok: false, error: built.error };
 
   const first = built.rows[0]!;

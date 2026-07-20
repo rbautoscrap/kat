@@ -127,7 +127,7 @@ export function StatementDocument({
           </thead>
           <tbody>
             {lines.map((line) => (
-              <tr key={`${line.listingId}-${line.serialNumber}`}>
+              <tr key={`${line.id ?? line.listingId ?? line.serialNumber}-${line.serialNumber}`}>
                 <td className="cell-item">{line.vehicleLabel}</td>
                 <td className="cell-detail">
                   <p>

@@ -62,11 +62,13 @@ function isAccountStatus(value: string): value is AccountStatus {
 }
 
 function prismaErrorMessage(error: unknown, fallback: string) {
-  if (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === "P2025"
-  ) {
-    return "대상을 찾을 수 없습니다.";
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2025") {
+      return "대상을 찾을 수 없습니다.";
+    }
+    if (error.code === "P2003") {
+      return "연결된 데이터가 있어 삭제할 수 없습니다.";
+    }
   }
   console.error(fallback, error);
   return fallback;
@@ -244,6 +246,7 @@ export async function deleteListing(listingId: string): Promise<ActionResult> {
   if (!listing) return { ok: false, error: "매물을 찾을 수 없습니다." };
 
   try {
+    // Statement FKs use onDelete: SetNull — snapshots remain after listing delete.
     await prisma.listing.delete({ where: { id: listingId } });
     await deleteUploadedFiles(listing.images.map((img) => img.url));
   } catch (error) {
@@ -255,6 +258,7 @@ export async function deleteListing(listingId: string): Promise<ActionResult> {
 
   revalidatePath("/admin");
   revalidatePath("/admin/listings");
+  revalidatePath("/admin/statements");
   revalidatePath("/");
   revalidatePath("/listings");
   return { ok: true };

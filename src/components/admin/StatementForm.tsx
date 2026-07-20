@@ -16,6 +16,8 @@ import {
   STATEMENT_VAT_RATE,
   calcStatementTotals,
   getStatementLines,
+  orphanListingKey,
+  parseOrphanListingKey,
   sumLineAmounts,
   type ListingOption,
   type StatementView,
@@ -74,9 +76,12 @@ function initialLines(
   if (!initial) return [];
   const lines = getStatementLines(initial);
   return lines.map((line) => {
-    const opt = listings.find((l) => l.id === line.listingId);
+    const formListingId =
+      line.listingId ??
+      (line.id ? orphanListingKey(line.id) : orphanListingKey("legacy"));
+    const opt = listings.find((l) => l.id === formListingId);
     return {
-      listingId: line.listingId,
+      listingId: formListingId,
       label: opt?.label ?? line.vehicleLabel,
       serialNumber: line.serialNumber,
       vin: line.vin,
@@ -118,9 +123,10 @@ export function StatementForm({
   );
 
   const filteredListings = useMemo(() => {
+    const selectable = listings.filter((l) => !parseOrphanListingKey(l.id));
     const q = listingQuery.trim().toLowerCase();
-    if (!q) return listings;
-    return listings.filter(
+    if (!q) return selectable;
+    return selectable.filter(
       (l) =>
         l.label.toLowerCase().includes(q) ||
         l.serialNumber.toLowerCase().includes(q) ||

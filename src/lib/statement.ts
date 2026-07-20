@@ -28,7 +28,8 @@ export const STATEMENT_VAT_RATE = 0.1;
 
 export type StatementLineItem = {
   id?: string;
-  listingId: string;
+  /** Null when the linked listing was deleted; snapshot fields remain */
+  listingId: string | null;
   vehicleLabel: string;
   vin: string | null;
   serialNumber: string;
@@ -36,6 +37,17 @@ export type StatementLineItem = {
   amount: string;
   sortOrder?: number;
 };
+
+/** Form / submit key for a line whose listing no longer exists */
+export function orphanListingKey(itemId: string) {
+  return `orphan:${itemId}`;
+}
+
+export function parseOrphanListingKey(value: string): string | null {
+  if (!value.startsWith("orphan:")) return null;
+  const id = value.slice("orphan:".length);
+  return id || null;
+}
 
 export type StatementView = Pick<
   TransactionStatement,
