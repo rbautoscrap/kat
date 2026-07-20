@@ -127,12 +127,15 @@ main {
 }
 
 .admin-shell {
-  font-family: var(--font-admin), var(--font-admin-kr), "IBM Plex Sans KR",
-    "Apple SD Gothic Neo", sans-serif;
+  font-family: var(--font-admin), "Pretendard Variable", "Pretendard",
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   font-size: 14px;
-  line-height: 1.55;
-  letter-spacing: -0.011em;
-  font-feature-settings: "ss01" 1, "kern" 1;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: -0.02em;
+  font-synthesis: none;
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -140,17 +143,17 @@ main {
 .admin-shell .admin-eyebrow {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #a3a3a3;
+  color: #737373;
 }
 
 .admin-shell .admin-page-title {
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.25;
-  color: #171717;
+  color: #111111;
 }
 
 .admin-shell .admin-ghost-btn {
@@ -162,9 +165,9 @@ main {
   border: 1px solid #d4d4d4;
   background: #fff;
   font-size: 13px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: #404040;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #262626;
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
@@ -177,7 +180,8 @@ main {
   width: 100%;
   table-layout: fixed;
   font-size: 13.5px;
-  letter-spacing: -0.01em;
+  font-weight: 400;
+  letter-spacing: -0.02em;
   border-spacing: 0;
 }
 
@@ -188,7 +192,9 @@ main {
 }
 
 .admin-table th {
-  letter-spacing: -0.005em;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #525252;
 }
 
 .admin-table th:not(.admin-th-actions),
@@ -209,7 +215,8 @@ main {
 .admin-table .tabular-nums,
 .admin-shell .tabular-nums {
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.025em;
 }
 
 .admin-list {

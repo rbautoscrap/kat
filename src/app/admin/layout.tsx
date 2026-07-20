@@ -1,22 +1,18 @@
-import {
-  IBM_Plex_Sans_KR,
-  Plus_Jakarta_Sans,
-} from "next/font/google";
+import localFont from "next/font/local";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { requireAdmin } from "@/lib/admin";
 
-const adminSans = Plus_Jakarta_Sans({
+const pretendard = localFont({
+  src: "../../fonts/PretendardVariable.woff2",
+  display: "swap",
+  weight: "45 920",
   variable: "--font-admin",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const adminKr = IBM_Plex_Sans_KR({
-  variable: "--font-admin-kr",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  display: "swap",
+  fallback: [
+    "Apple SD Gothic Neo",
+    "Malgun Gothic",
+    "Segoe UI",
+    "sans-serif",
+  ],
 });
 
 export default async function AdminLayout({
@@ -28,7 +24,7 @@ export default async function AdminLayout({
 
   return (
     <div
-      className={`${adminSans.variable} ${adminKr.variable} admin-shell border-b border-[var(--line)] bg-neutral-50/70`}
+      className={`${pretendard.variable} ${pretendard.className} admin-shell border-b border-[var(--line)] bg-neutral-50/70`}
       lang="ko"
     >
       <div className="site-container py-5 sm:py-6">

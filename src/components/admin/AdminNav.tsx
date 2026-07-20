@@ -23,7 +23,7 @@ export function AdminNav() {
           <Link
             key={link.href}
             href={link.href}
-            className={`shrink-0 border-b-2 px-3.5 py-2.5 text-[13.5px] font-medium transition-colors ${
+            className={`shrink-0 border-b-2 px-3.5 py-2.5 text-[13.5px] font-semibold transition-colors ${
               active
                 ? "border-neutral-900 text-neutral-900"
                 : "border-transparent text-neutral-500 hover:bg-white/80 hover:text-neutral-800"
