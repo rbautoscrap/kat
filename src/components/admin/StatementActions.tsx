@@ -17,6 +17,77 @@ type Props = {
   statementNo: string;
 };
 
+function waitFrames(count = 2) {
+  return new Promise<void>((resolve) => {
+    const step = (n: number) => {
+      if (n <= 0) {
+        resolve();
+        return;
+      }
+      requestAnimationFrame(() => step(n - 1));
+    };
+    step(count);
+  });
+}
+
+/**
+ * Capture via a short-lived on-screen layer.
+ * Off-screen clones (left: -9999px) often export as blank white in Chromium.
+ */
+async function captureStatementPng(source: HTMLElement): Promise<string> {
+  await document.fonts.ready.catch(() => undefined);
+
+  const layer = document.createElement("div");
+  layer.setAttribute("data-statement-export-layer", "1");
+  Object.assign(layer.style, {
+    position: "fixed",
+    left: "0",
+    top: "0",
+    width: `${EXPORT_WIDTH_PX}px`,
+    zIndex: "2147483646",
+    background: "#ffffff",
+    pointerEvents: "none",
+    opacity: "1",
+  });
+
+  const clone = source.cloneNode(true) as HTMLElement;
+  clone.removeAttribute("id");
+  Object.assign(clone.style, {
+    width: `${EXPORT_WIDTH_PX}px`,
+    maxWidth: `${EXPORT_WIDTH_PX}px`,
+    minWidth: `${EXPORT_WIDTH_PX}px`,
+    margin: "0",
+    background: "#ffffff",
+    transform: "none",
+    opacity: "1",
+  });
+
+  layer.appendChild(clone);
+  document.body.appendChild(layer);
+
+  try {
+    await waitFrames(3);
+    await new Promise((r) => setTimeout(r, 80));
+
+    const height = Math.max(clone.scrollHeight, clone.offsetHeight, 400);
+    return await toPng(clone, {
+      cacheBust: true,
+      pixelRatio: 2,
+      backgroundColor: "#ffffff",
+      width: EXPORT_WIDTH_PX,
+      height,
+      style: {
+        width: `${EXPORT_WIDTH_PX}px`,
+        maxWidth: `${EXPORT_WIDTH_PX}px`,
+        transform: "none",
+        opacity: "1",
+      },
+    });
+  } finally {
+    layer.remove();
+  }
+}
+
 export function StatementActions({ statementId, statementNo }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -33,52 +104,28 @@ export function StatementActions({ statementId, statementNo }: Props) {
       setMessage("문서 영역을 찾을 수 없습니다.");
       return;
     }
+
     setBusy(true);
     setMessage(null);
 
-    const clone = node.cloneNode(true) as HTMLElement;
-    clone.removeAttribute("id");
-    clone.setAttribute("data-statement-export", "1");
-    Object.assign(clone.style, {
-      position: "fixed",
-      left: "-10000px",
-      top: "0",
-      width: `${EXPORT_WIDTH_PX}px`,
-      maxWidth: `${EXPORT_WIDTH_PX}px`,
-      margin: "0",
-      zIndex: "-1",
-      background: "#ffffff",
-    });
-    document.body.appendChild(clone);
-
     try {
-      await new Promise<void>((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-      });
-
-      const height = Math.max(clone.scrollHeight, clone.offsetHeight);
-      const dataUrl = await toPng(clone, {
-        cacheBust: true,
-        pixelRatio: 2,
-        backgroundColor: "#ffffff",
-        width: EXPORT_WIDTH_PX,
-        height,
-        style: {
-          width: `${EXPORT_WIDTH_PX}px`,
-          maxWidth: `${EXPORT_WIDTH_PX}px`,
-          transform: "none",
-        },
-      });
+      const dataUrl = await captureStatementPng(node);
+      if (!dataUrl || dataUrl.length < 200) {
+        throw new Error("empty image data");
+      }
 
       const a = document.createElement("a");
       a.href = dataUrl;
       a.download = `${statementNo}.png`;
+      document.body.appendChild(a);
       a.click();
+      a.remove();
     } catch (e) {
       console.error(e);
-      setMessage("이미지 저장에 실패했습니다. 다시 시도해 주세요.");
+      setMessage(
+        "이미지 저장에 실패했습니다. 잠시 후 다시 시도하거나 출력(인쇄)을 이용해 주세요.",
+      );
     } finally {
-      clone.remove();
       setBusy(false);
     }
   }
