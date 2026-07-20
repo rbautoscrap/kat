@@ -46,9 +46,32 @@ const credentialsSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+/** Absolute JWT lifetime. Cookie is also made browser-session scoped in the auth route. */
+const SESSION_MAX_AGE_SEC = 8 * 60 * 60; // 8 hours
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: SESSION_MAX_AGE_SEC,
+    // Do not keep sliding the expiry forward on every request
+    updateAge: SESSION_MAX_AGE_SEC,
+  },
+  jwt: {
+    maxAge: SESSION_MAX_AGE_SEC,
+  },
+  cookies: {
+    sessionToken: {
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        // Prefer session cookie; Auth.js may still set Max-Age — stripped in route handler
+        maxAge: SESSION_MAX_AGE_SEC,
+      },
+    },
+  },
   pages: {
     signIn: "/login",
   },
