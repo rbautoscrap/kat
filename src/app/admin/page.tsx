@@ -70,7 +70,7 @@ export default async function AdminOverviewPage() {
       accent: "amber" as const,
     },
     {
-      label: "판매중 원가 합계",
+      label: "재고 원가 합계",
       value: formatWon(availableCostTotal),
       href: "/admin/listings?sale=AVAILABLE",
       accent: "stock" as const,

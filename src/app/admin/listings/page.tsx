@@ -314,7 +314,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
             ) : null}
           </p>
           <p className="mt-1.5 text-[13px] leading-relaxed tracking-wide text-sky-900">
-            판매중 재고 원가 합계{" "}
+            재고 원가 합계{" "}
             <span className="font-semibold tabular-nums">
               {formatCostWon(availableCostTotal)}
             </span>
