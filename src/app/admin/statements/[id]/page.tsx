@@ -85,7 +85,11 @@ export default async function StatementDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="statement-print-root rounded-sm border border-[var(--line)] bg-neutral-100 p-3 sm:p-6">
+      <div className="statement-print-root rounded-sm border border-[var(--line)] bg-neutral-100 p-3 sm:p-5">
+        <p className="statement-no-print mb-3 text-[12.5px] tracking-wide text-neutral-500">
+          미리보기 · 좁은 화면에서는 좌우로 스크롤할 수 있습니다. 출력·이미지
+          저장은 A4 폭으로 고정됩니다.
+        </p>
         <StatementDocument statement={statement} />
       </div>
     </div>

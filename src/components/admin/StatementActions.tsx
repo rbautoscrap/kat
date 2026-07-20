@@ -9,6 +9,9 @@ import {
   adminDangerBtnClass,
 } from "@/lib/admin-ui";
 
+/** A4-ish width at 96dpi — keeps layout identical on screen, print, and PNG */
+const EXPORT_WIDTH_PX = 794;
+
 type Props = {
   statementId: string;
   statementNo: string;
@@ -32,12 +35,41 @@ export function StatementActions({ statementId, statementNo }: Props) {
     }
     setBusy(true);
     setMessage(null);
+
+    const clone = node.cloneNode(true) as HTMLElement;
+    clone.removeAttribute("id");
+    clone.setAttribute("data-statement-export", "1");
+    Object.assign(clone.style, {
+      position: "fixed",
+      left: "-10000px",
+      top: "0",
+      width: `${EXPORT_WIDTH_PX}px`,
+      maxWidth: `${EXPORT_WIDTH_PX}px`,
+      margin: "0",
+      zIndex: "-1",
+      background: "#ffffff",
+    });
+    document.body.appendChild(clone);
+
     try {
-      const dataUrl = await toPng(node, {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+
+      const height = Math.max(clone.scrollHeight, clone.offsetHeight);
+      const dataUrl = await toPng(clone, {
         cacheBust: true,
         pixelRatio: 2,
         backgroundColor: "#ffffff",
+        width: EXPORT_WIDTH_PX,
+        height,
+        style: {
+          width: `${EXPORT_WIDTH_PX}px`,
+          maxWidth: `${EXPORT_WIDTH_PX}px`,
+          transform: "none",
+        },
       });
+
       const a = document.createElement("a");
       a.href = dataUrl;
       a.download = `${statementNo}.png`;
@@ -46,6 +78,7 @@ export function StatementActions({ statementId, statementNo }: Props) {
       console.error(e);
       setMessage("이미지 저장에 실패했습니다. 다시 시도해 주세요.");
     } finally {
+      clone.remove();
       setBusy(false);
     }
   }

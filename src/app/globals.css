@@ -178,8 +178,244 @@ main {
   }
 }
 
-/* Transaction statement print */
+/* Transaction statement — fixed A4 width for screen / print / PNG */
+.statement-print-root {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.statement-document {
+  width: 794px;
+  max-width: 794px;
+  margin-inline: auto;
+  box-sizing: border-box;
+  background: #fff;
+  color: #171717;
+  font-family: var(--font-sans);
+}
+
+.statement-sheet {
+  box-sizing: border-box;
+  width: 100%;
+  border: 2px solid #171717;
+  padding: 28px 32px;
+  background: #fff;
+}
+
+.statement-header {
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+.statement-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  color: #171717;
+}
+
+.statement-subtitle {
+  margin: 8px 0 0;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: #737373;
+}
+
+.statement-meta {
+  margin-bottom: 18px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.statement-meta p {
+  margin: 0;
+}
+
+.statement-meta-label {
+  display: inline-block;
+  min-width: 5.5rem;
+  color: #737373;
+}
+
+.statement-meta-value {
+  font-weight: 500;
+  color: #171717;
+}
+
+.statement-parties {
+  width: 100%;
+  margin-bottom: 18px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.statement-party {
+  width: 50%;
+  vertical-align: top;
+  border: 1px solid #d4d4d4;
+}
+
+.statement-party + .statement-party {
+  border-left: none;
+}
+
+.statement-party-title {
+  border-bottom: 1px solid #d4d4d4;
+  background: #fafafa;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #404040;
+}
+
+.statement-party-body {
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.65;
+  word-break: break-word;
+}
+
+.statement-party-body p {
+  margin: 0 0 4px;
+}
+
+.statement-party-body p:last-child {
+  margin-bottom: 0;
+}
+
+.statement-party-name {
+  font-weight: 600;
+  color: #171717;
+}
+
+.statement-items {
+  width: 100%;
+  margin-bottom: 18px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 13px;
+}
+
+.statement-items .col-item {
+  width: 28%;
+}
+
+.statement-items .col-detail {
+  width: 34%;
+}
+
+.statement-items .col-qty {
+  width: 12%;
+}
+
+.statement-items .col-amount {
+  width: 26%;
+}
+
+.statement-items th,
+.statement-items td {
+  border: 1px solid #d4d4d4;
+  padding: 10px 12px;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+.statement-items thead th {
+  background: #fafafa;
+  font-size: 12px;
+  font-weight: 500;
+  color: #525252;
+  text-align: left;
+}
+
+.statement-items th:nth-child(3),
+.statement-items .cell-qty {
+  text-align: center;
+}
+
+.statement-items th:nth-child(4),
+.statement-items .cell-amount,
+.statement-items .cell-total-amount {
+  text-align: right;
+}
+
+.statement-items .cell-item {
+  font-weight: 600;
+  color: #171717;
+}
+
+.statement-items .cell-detail {
+  color: #404040;
+}
+
+.statement-items .cell-detail p {
+  margin: 0 0 2px;
+}
+
+.statement-items .cell-detail p:last-child {
+  margin-bottom: 0;
+}
+
+.statement-items .cell-amount {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.statement-items .cell-total-label,
+.statement-items .cell-total-amount {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.statement-items .cell-total-label {
+  text-align: right;
+}
+
+.statement-items .cell-total-amount {
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.statement-notes {
+  margin-bottom: 16px;
+  border: 1px solid #d4d4d4;
+}
+
+.statement-notes-title {
+  border-bottom: 1px solid #d4d4d4;
+  background: #fafafa;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #404040;
+}
+
+.statement-notes-body {
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #404040;
+}
+
+.statement-footer {
+  margin: 24px 0 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #737373;
+}
+
 @media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
   body * {
     visibility: hidden !important;
   }
@@ -193,10 +429,11 @@ main {
     position: absolute;
     inset: 0;
     margin: 0;
-    padding: 0;
+    padding: 0 !important;
     border: none !important;
     background: white !important;
     box-shadow: none !important;
+    overflow: visible !important;
   }
 
   .statement-no-print {
@@ -204,6 +441,12 @@ main {
   }
 
   .statement-document {
-    max-width: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .statement-sheet {
+    border-width: 1.5pt;
   }
 }
