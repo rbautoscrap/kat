@@ -18,14 +18,19 @@ export function StatementDocument({ statement }: Props) {
     <div id="statement-document" className="statement-document">
       <div className="statement-sheet">
         <div className="statement-accent" />
+        <div className="statement-watermark" aria-hidden="true">
+          <img
+            src="/brand/rbauto-logo.png"
+            alt=""
+            className="statement-watermark-img"
+            draggable={false}
+          />
+        </div>
 
         <header className="statement-header">
           <div className="statement-brand">
-            <span className="statement-brand-mark">KAT</span>
-            <div>
-              <p className="statement-brand-name">{STATEMENT_SELLER.name}</p>
-              <p className="statement-brand-sub">{STATEMENT_SELLER.company}</p>
-            </div>
+            <p className="statement-brand-name">{STATEMENT_SELLER.name}</p>
+            <p className="statement-brand-sub">{STATEMENT_SELLER.company}</p>
           </div>
           <div className="statement-heading-block">
             <h1 className="statement-title">거래명세서</h1>

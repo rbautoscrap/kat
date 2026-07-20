@@ -212,6 +212,34 @@ main {
   right: 0;
   height: 4px;
   background: #1a1a1a;
+  z-index: 2;
+}
+
+/* Anti-copy watermark — keep below content, above sheet bg */
+.statement-watermark {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.statement-watermark-img {
+  width: 72%;
+  max-width: 520px;
+  height: auto;
+  opacity: 0.08;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.statement-sheet > *:not(.statement-accent):not(.statement-watermark) {
+  position: relative;
+  z-index: 1;
 }
 
 .statement-header {
@@ -229,24 +257,6 @@ main {
 
 .statement-brand {
   width: 52%;
-}
-
-.statement-brand-mark {
-  display: inline-block;
-  margin-right: 10px;
-  padding: 7px 9px;
-  border-radius: 4px;
-  background: #1a1a1a;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  vertical-align: middle;
-}
-
-.statement-brand > div {
-  display: inline-block;
-  vertical-align: middle;
 }
 
 .statement-brand-name {
@@ -608,5 +618,11 @@ main {
 
   .statement-sheet {
     border-radius: 0;
+  }
+
+  .statement-watermark,
+  .statement-watermark-img {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

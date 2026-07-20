@@ -66,6 +66,20 @@ async function captureStatementPng(source: HTMLElement): Promise<string> {
   document.body.appendChild(layer);
 
   try {
+    const images = Array.from(clone.querySelectorAll("img"));
+    await Promise.all(
+      images.map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete && img.naturalWidth > 0) {
+              resolve();
+              return;
+            }
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          }),
+      ),
+    );
     await waitFrames(3);
     await new Promise((r) => setTimeout(r, 80));
 
