@@ -2,7 +2,13 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { canManageListings, isAdmin, signOut } from "@/lib/auth";
 import { MainNav } from "@/components/MainNav";
+import { MobileNav } from "@/components/MobileNav";
 import { resolveSessionDbUser } from "@/lib/listing-access";
+
+async function logoutAction() {
+  "use server";
+  await signOut({ redirectTo: "/" });
+}
 
 export async function Header() {
   const dbUser = await resolveSessionDbUser();
@@ -12,26 +18,40 @@ export async function Header() {
   const accountLinkClass =
     "inline-flex h-8 items-center rounded-md px-2.5 text-[13px] font-medium tracking-wide text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900";
 
+  const mobileUser = dbUser
+    ? { name: dbUser.name, canList, admin }
+    : null;
+
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-white/95 backdrop-blur-md">
       <div className="site-container">
-        <div className="grid h-14 grid-cols-[minmax(0,auto)_minmax(0,1fr)_minmax(0,auto)] items-center gap-2 sm:h-16 sm:gap-6">
+        {/* Mobile: brand + menu button only */}
+        <div className="flex h-14 items-center justify-between gap-3 md:hidden">
           <Link
             href="/"
-            className="site-title min-w-0 max-w-[9.5rem] shrink truncate whitespace-nowrap text-[0.82rem] text-neutral-900 transition-opacity duration-200 hover:opacity-70 sm:max-w-none sm:text-[1rem]"
+            className="site-title min-w-0 truncate text-[0.95rem] text-neutral-900"
+          >
+            KOREA AUTO TRADE
+          </Link>
+          <Suspense fallback={<div className="h-10 w-10" aria-hidden />}>
+            <MobileNav user={mobileUser} logoutAction={logoutAction} />
+          </Suspense>
+        </div>
+
+        {/* Desktop */}
+        <div className="hidden h-16 grid-cols-[minmax(0,auto)_minmax(0,1fr)_minmax(0,auto)] items-center gap-6 md:grid">
+          <Link
+            href="/"
+            className="site-title shrink-0 whitespace-nowrap text-[1rem] text-neutral-900 transition-opacity duration-200 hover:opacity-70"
           >
             KOREA AUTO TRADE
           </Link>
 
-          <Suspense
-            fallback={
-              <div className="hidden min-h-8 md:block" aria-hidden />
-            }
-          >
+          <Suspense fallback={<div className="min-h-8" aria-hidden />}>
             <MainNav />
           </Suspense>
 
-          <div className="flex shrink-0 items-center justify-end gap-0.5 sm:gap-1">
+          <div className="flex shrink-0 items-center justify-end gap-1">
             {dbUser ? (
               <>
                 {canList && (
@@ -46,17 +66,12 @@ export async function Header() {
                 )}
                 <Link
                   href="/profile"
-                  className={`${accountLinkClass} max-w-[6.5rem] truncate sm:max-w-[8rem]`}
+                  className={`${accountLinkClass} max-w-[8rem] truncate`}
                   title={dbUser.name}
                 >
                   {dbUser.name}
                 </Link>
-                <form
-                  action={async () => {
-                    "use server";
-                    await signOut({ redirectTo: "/" });
-                  }}
-                >
+                <form action={logoutAction}>
                   <button type="submit" className={accountLinkClass}>
                     Logout
                   </button>

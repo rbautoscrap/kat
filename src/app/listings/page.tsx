@@ -64,11 +64,11 @@ export default async function ListingsPage({ searchParams }: Props) {
   const useLargeGrid = fromMenu || isSearch;
 
   return (
-    <div className="site-container py-8" lang="en">
-      <div className="mb-4">
+    <div className="site-container py-6 sm:py-8" lang="en">
+      <div className="mb-3 sm:mb-4">
         <BackButton href="/" />
       </div>
-      <h1 className="site-heading mb-6 text-[1.2rem] text-neutral-800">
+      <h1 className="site-heading mb-5 text-[1.1rem] text-neutral-800 sm:mb-6 sm:text-[1.2rem]">
         {heading}
       </h1>
       {isSearch ? (

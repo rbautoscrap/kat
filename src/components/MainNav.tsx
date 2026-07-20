@@ -31,7 +31,7 @@ export function MainNav() {
   return (
     <nav
       aria-label="Main"
-      className="flex min-w-0 items-center justify-start gap-4 overflow-x-auto md:justify-center md:gap-6 lg:gap-7"
+      className="hidden min-w-0 items-center justify-center gap-6 md:flex lg:gap-7"
     >
       {nav.map((item) => {
         const active =

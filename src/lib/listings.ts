@@ -21,11 +21,11 @@ export const CATEGORY_PATHS: Record<ListingCategory, string> = {
 
 /** Home section grid: 6 columns × 2 rows */
 export const LISTING_GRID_CLASS =
-  "grid grid-cols-2 gap-x-2.5 gap-y-4 sm:grid-cols-3 sm:gap-x-3 md:grid-cols-4 lg:grid-cols-6";
+  "grid grid-cols-2 items-start gap-x-2.5 gap-y-4 sm:grid-cols-3 sm:gap-x-3 md:grid-cols-4 lg:grid-cols-6";
 
 /** Category menu pages: 5 columns × 4 rows (20 items) */
 export const LISTING_CATEGORY_GRID_CLASS =
-  "grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-4 md:grid-cols-4 lg:grid-cols-5";
+  "grid grid-cols-2 items-start gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-4 md:grid-cols-4 lg:grid-cols-5";
 
 export const LISTING_CATEGORY_PAGE_SIZE = 20;
 

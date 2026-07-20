@@ -165,8 +165,15 @@ main {
 .data-table th,
 .data-table td {
   vertical-align: top;
+  word-break: break-word;
 }
 
 .data-table th {
   white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .data-table {
+    font-size: 12.5px;
+  }
 }

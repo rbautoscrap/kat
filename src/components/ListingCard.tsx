@@ -46,9 +46,9 @@ export function ListingCard({
 
   const caption = (
     <p
-      className={`mt-2 line-clamp-2 min-h-[2.6em] text-[12.5px] font-medium leading-snug tracking-wide text-neutral-700 ${
-        canOpen ? "group-hover:text-neutral-950" : "text-neutral-500"
-      } ${large ? "sm:text-[13px]" : ""}`}
+      className={`mt-2 line-clamp-2 break-words text-[12.5px] font-medium leading-snug tracking-wide text-neutral-700 ${
+        large ? "min-h-[2.75em] sm:text-[13px]" : "min-h-[2.6em]"
+      } ${canOpen ? "group-hover:text-neutral-950" : "text-neutral-500"}`}
     >
       {label}
     </p>
