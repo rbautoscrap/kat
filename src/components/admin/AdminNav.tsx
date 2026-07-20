@@ -7,6 +7,7 @@ const links = [
   { href: "/admin", label: "개요", exact: true },
   { href: "/admin/users", label: "회원 관리", exact: false },
   { href: "/admin/listings", label: "매물 관리", exact: false },
+  { href: "/admin/statements", label: "거래명세서", exact: false },
 ];
 
 export function AdminNav() {

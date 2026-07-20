@@ -177,3 +177,33 @@ main {
     font-size: 12.5px;
   }
 }
+
+/* Transaction statement print */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  .statement-print-root,
+  .statement-print-root * {
+    visibility: visible !important;
+  }
+
+  .statement-print-root {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    border: none !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+
+  .statement-no-print {
+    display: none !important;
+  }
+
+  .statement-document {
+    max-width: none !important;
+  }
+}

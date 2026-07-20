@@ -48,6 +48,7 @@ model User {
   createdAt    DateTime        @default(now())
   listings     Listing[]
   purchaseOffers PurchaseOffer[]
+  transactionStatements TransactionStatement[]
 }
 
 model Listing {
@@ -89,11 +90,41 @@ model Listing {
   author           User            @relation(fields: [authorId], references: [id])
   images           ListingImage[]
   purchaseOffers   PurchaseOffer[]
+  transactionStatements TransactionStatement[]
 
   @@index([category, createdAt])
   @@index([saleStatus])
   @@index([authorId])
   @@index([createdAt])
+}
+
+/** Admin-issued transaction statement (거래명세서), linked to a listing */
+model TransactionStatement {
+  id             String        @id @default(cuid())
+  statementNo    String        @unique
+  listingId      String
+  listing        Listing       @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  /** Snapshot so edits to the listing do not change issued statements */
+  vehicleLabel   String
+  vin            String?
+  serialNumber   String
+  vehicleNumber  String?
+  buyerName      String
+  buyerPhone     String?
+  buyerAddress   String?
+  amount         String
+  currency       OfferCurrency @default(KRW)
+  issueDate      String
+  notes          String?
+  createdById    String
+  createdBy      User          @relation(fields: [createdById], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([listingId])
+  @@index([issueDate])
+  @@index([createdAt])
+  @@index([createdById])
 }
 
 /** Member purchase interest / bid for a listing */
