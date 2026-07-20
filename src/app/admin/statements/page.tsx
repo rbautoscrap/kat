@@ -9,7 +9,7 @@ import {
   adminThClass,
 } from "@/lib/admin-ui";
 import { prisma } from "@/lib/prisma";
-import { formatStatementAmount } from "@/lib/statement";
+import { calcStatementTotals } from "@/lib/statement";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +51,7 @@ export default async function AdminStatementsPage() {
                 <th className={adminThClass}>발행일</th>
                 <th className={adminThClass}>매물</th>
                 <th className={adminThClass}>거래처</th>
-                <th className={adminThClass}>금액</th>
+                <th className={adminThClass}>합계(부가세포함)</th>
                 <th className={`${adminThClass} admin-th-actions`}>관리</th>
               </tr>
             </thead>
@@ -74,7 +74,7 @@ export default async function AdminStatementsPage() {
                   </td>
                   <td className={adminTdClass}>{s.buyerName}</td>
                   <td className={adminTdClass}>
-                    {formatStatementAmount(s.amount, s.currency)}
+                    {calcStatementTotals(s.amount, s.currency).totalLabel}
                   </td>
                   <td className={`${adminTdActionsClass} admin-td-actions`}>
                     <div className="flex flex-wrap gap-1.5">

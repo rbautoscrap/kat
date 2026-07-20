@@ -11,7 +11,13 @@ import {
   OFFER_CURRENCIES,
   type OfferCurrencyCode,
 } from "@/lib/purchase-offer";
-import type { ListingOption, StatementView } from "@/lib/statement";
+import {
+  STATEMENT_BANK,
+  STATEMENT_VAT_RATE,
+  calcStatementTotals,
+  type ListingOption,
+  type StatementView,
+} from "@/lib/statement";
 
 const fieldClass =
   "mt-1 h-10 w-full rounded-md border border-neutral-200 bg-white px-3 text-[13.5px] tracking-wide text-neutral-800 outline-none focus:border-neutral-400";
@@ -95,6 +101,12 @@ export function StatementForm({
         (l.vehicleNumber ?? "").toLowerCase().includes(q),
     );
   }, [listings, listingQuery]);
+
+  const totals = useMemo(
+    () => calcStatementTotals(amount.replace(/,/g, ""), currency),
+    [amount, currency],
+  );
+  const vatPct = Math.round(STATEMENT_VAT_RATE * 100);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -208,7 +220,7 @@ export function StatementForm({
           />
         </label>
         <label className="block">
-          <span className={labelClass}>금액</span>
+          <span className={labelClass}>공급가액 (부가세 별도)</span>
           <input
             required
             inputMode="decimal"
@@ -240,6 +252,24 @@ export function StatementForm({
             ))}
           </select>
         </label>
+        <div className="rounded-md border border-[var(--line)] bg-neutral-50 px-3 py-3 text-[13px] tracking-wide text-neutral-700 sm:col-span-2">
+          <p className="flex justify-between gap-3">
+            <span>공급가액</span>
+            <span className="font-medium">{totals.supplyLabel}</span>
+          </p>
+          <p className="mt-1 flex justify-between gap-3">
+            <span>부가세 ({vatPct}%)</span>
+            <span className="font-medium">{totals.vatLabel}</span>
+          </p>
+          <p className="mt-2 flex justify-between gap-3 border-t border-neutral-200 pt-2 text-[14px] font-semibold text-neutral-900">
+            <span>합계</span>
+            <span>{totals.totalLabel}</span>
+          </p>
+          <p className="mt-3 border-t border-neutral-200 pt-2 text-[12.5px] text-neutral-500">
+            입금 계좌: {STATEMENT_BANK.bankName} {STATEMENT_BANK.accountNo}{" "}
+            {STATEMENT_BANK.accountHolder}
+          </p>
+        </div>
         <label className="block sm:col-span-2">
           <span className={labelClass}>비고</span>
           <textarea
