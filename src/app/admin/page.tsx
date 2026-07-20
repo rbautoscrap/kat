@@ -7,8 +7,6 @@ export const dynamic = "force-dynamic";
 export default async function AdminOverviewPage() {
   const [
     userCount,
-    authorizedCount,
-    adminCount,
     listingCount,
     offerListingCount,
     byCategory,
@@ -16,8 +14,6 @@ export default async function AdminOverviewPage() {
     recentListings,
   ] = await Promise.all([
     prisma.user.count(),
-    prisma.user.count({ where: { role: "AUTHORIZED" } }),
-    prisma.user.count({ where: { role: "ADMIN" } }),
     prisma.listing.count(),
     prisma.listing.count({
       where: { purchaseOffers: { some: {} } },
@@ -44,21 +40,19 @@ export default async function AdminOverviewPage() {
   ]);
 
   const stats = [
-    { label: "전체 회원", value: userCount, href: "/admin/users", accent: false },
-    { label: "권한회원", value: authorizedCount, href: "/admin/users", accent: false },
-    { label: "관리자", value: adminCount, href: "/admin/users", accent: false },
-    { label: "매물", value: listingCount, href: "/admin/listings", accent: false },
     {
       label: "오퍼 접수 매물",
       value: offerListingCount,
       href: "/admin/listings",
       accent: true,
     },
+    { label: "전체 회원", value: userCount, href: "/admin/users", accent: false },
+    { label: "매물", value: listingCount, href: "/admin/listings", accent: false },
   ];
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-3">
         {stats.map((stat) => (
           <Link
             key={stat.label}
