@@ -63,6 +63,13 @@ type SelectedLine = {
   amount: string;
 };
 
+function withExtrasLast(lines: SelectedLine[]): SelectedLine[] {
+  return [
+    ...lines.filter((s) => s.kind !== "extra"),
+    ...lines.filter((s) => s.kind === "extra"),
+  ];
+}
+
 type Props = {
   mode: "create" | "edit";
   listings: ListingOption[];
@@ -77,7 +84,8 @@ function initialLines(
 ): SelectedLine[] {
   if (!initial) return [];
   const lines = getStatementLines(initial);
-  return lines.map((line) => {
+  return withExtrasLast(
+    lines.map((line) => {
     const isExtra =
       line.isExtra === true ||
       (!line.listingId && line.serialNumber === "EXTRA");
@@ -107,7 +115,8 @@ function initialLines(
       vehicleNumber: line.vehicleNumber,
       amount: formatAmountInput(line.amount, currency) ?? line.amount,
     };
-  });
+  }),
+  );
 }
 
 export function StatementForm({
@@ -181,33 +190,37 @@ export function StatementForm({
 
   function addListing(listing: ListingOption) {
     if (selectedListingIds.has(listing.id)) return;
-    setSelected((prev) => [
-      ...prev,
-      {
-        lineKey: listing.id,
-        kind: "listing",
-        label: listing.label,
-        serialNumber: listing.serialNumber,
-        vin: listing.vin,
-        vehicleNumber: listing.vehicleNumber,
-        amount: "",
-      },
-    ]);
+    setSelected((prev) =>
+      withExtrasLast([
+        ...prev,
+        {
+          lineKey: listing.id,
+          kind: "listing",
+          label: listing.label,
+          serialNumber: listing.serialNumber,
+          vin: listing.vin,
+          vehicleNumber: listing.vehicleNumber,
+          amount: "",
+        },
+      ]),
+    );
   }
 
   function addExtraLine() {
-    setSelected((prev) => [
-      ...prev,
-      {
-        lineKey: newExtraLineKey(),
-        kind: "extra",
-        label: "서비스 비용",
-        serialNumber: "EXTRA",
-        vin: null,
-        vehicleNumber: null,
-        amount: "",
-      },
-    ]);
+    setSelected((prev) =>
+      withExtrasLast([
+        ...prev,
+        {
+          lineKey: newExtraLineKey(),
+          kind: "extra",
+          label: "서비스 비용",
+          serialNumber: "EXTRA",
+          vin: null,
+          vehicleNumber: null,
+          amount: "",
+        },
+      ]),
+    );
   }
 
   function removeLine(lineKey: string) {
@@ -256,7 +269,7 @@ export function StatementForm({
 
     startTransition(async () => {
       const payload = {
-        items: selected.map((s) => ({
+        items: withExtrasLast(selected).map((s) => ({
           lineKey: s.lineKey,
           label: s.kind === "extra" ? s.label.trim() : undefined,
           amount: s.amount,

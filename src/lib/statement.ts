@@ -74,6 +74,35 @@ export function newExtraLineKey() {
   return extraLineKey(id);
 }
 
+export function isStatementExtraLine(line: {
+  isExtra?: boolean;
+  listingId?: string | null;
+  serialNumber?: string | null;
+}) {
+  return (
+    line.isExtra === true ||
+    ((!line.listingId || line.listingId === null) &&
+      line.serialNumber === "EXTRA")
+  );
+}
+
+/** Keep vehicle lines first, extra charges last (stable within each group). */
+export function sortStatementLinesExtrasLast<
+  T extends {
+    isExtra?: boolean;
+    listingId?: string | null;
+    serialNumber?: string | null;
+    sortOrder?: number;
+  },
+>(lines: T[]): T[] {
+  return [...lines].sort((a, b) => {
+    const aExtra = isStatementExtraLine(a) ? 1 : 0;
+    const bExtra = isStatementExtraLine(b) ? 1 : 0;
+    if (aExtra !== bExtra) return aExtra - bExtra;
+    return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+  });
+}
+
 export type StatementView = Pick<
   TransactionStatement,
   | "id"
@@ -170,9 +199,7 @@ function toMoneyString(value: number, currency: OfferCurrencyCode): string {
 /** Resolve line items — falls back to legacy single-listing fields. */
 export function getStatementLines(statement: StatementView): StatementLineItem[] {
   if (statement.items && statement.items.length > 0) {
-    return [...statement.items].sort(
-      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
-    );
+    return sortStatementLinesExtrasLast(statement.items);
   }
   return [
     {

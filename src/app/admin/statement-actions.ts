@@ -203,6 +203,15 @@ async function buildItemRows(
   return { ok: true as const, rows };
 }
 
+function withExtrasLast(rows: BuiltRow[]): BuiltRow[] {
+  const listings = rows.filter((r) => !r.isExtra);
+  const extras = rows.filter((r) => r.isExtra);
+  return [...listings, ...extras].map((row, index) => ({
+    ...row,
+    sortOrder: index,
+  }));
+}
+
 function primaryPreview(rows: BuiltRow[]) {
   return rows.find((r) => !r.isExtra) ?? rows[0]!;
 }
@@ -224,8 +233,9 @@ export async function createStatement(
   const built = await buildItemRows(parsed.data.items);
   if (!built.ok) return { ok: false, error: built.error };
 
-  const first = primaryPreview(built.rows);
-  const totalAmount = sumLineAmounts(built.rows, parsed.data.currency);
+  const rows = withExtrasLast(built.rows);
+  const first = primaryPreview(rows);
+  const totalAmount = sumLineAmounts(rows, parsed.data.currency);
   const statementNo = await nextStatementNo(parsed.data.issueDate);
 
   try {
@@ -247,7 +257,7 @@ export async function createStatement(
         notes: parsed.data.notes || null,
         createdById: admin.id,
         items: {
-          create: built.rows,
+          create: rows,
         },
       },
     });
@@ -282,8 +292,9 @@ export async function updateStatement(
   const built = await buildItemRows(parsed.data.items, { statementId: id });
   if (!built.ok) return { ok: false, error: built.error };
 
-  const first = primaryPreview(built.rows);
-  const totalAmount = sumLineAmounts(built.rows, parsed.data.currency);
+  const rows = withExtrasLast(built.rows);
+  const first = primaryPreview(rows);
+  const totalAmount = sumLineAmounts(rows, parsed.data.currency);
 
   try {
     await prisma.$transaction([
@@ -307,7 +318,7 @@ export async function updateStatement(
           issueDate: parsed.data.issueDate,
           notes: parsed.data.notes || null,
           items: {
-            create: built.rows,
+            create: rows,
           },
         },
       }),
