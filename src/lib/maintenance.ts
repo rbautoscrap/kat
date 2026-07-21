@@ -1,34 +1,61 @@
+import "server-only";
+
 import {
   copyFileSync,
   createWriteStream,
   existsSync,
   mkdirSync,
-  mkdtempSync,
   readdirSync,
   rmSync,
   statSync,
   unlinkSync,
 } from "node:fs";
-import { tmpdir } from "node:os";
+import { createRequire } from "node:module";
 import path from "node:path";
-import archiver from "archiver";
 import { prisma } from "@/lib/prisma";
 import { getUploadsDir } from "@/lib/storage-paths";
 
 const MAX_BACKUPS = 5;
+const require = createRequire(path.join(process.cwd(), "package.json"));
+
+type ArchiverFactory = (
+  format: string,
+  options?: { zlib?: { level?: number } },
+) => {
+  pipe: (dest: NodeJS.WritableStream) => unknown;
+  file: (filepath: string, data: { name: string }) => unknown;
+  directory: (dirpath: string, destpath: string | false) => unknown;
+  append: (
+    source: string | Buffer,
+    data: { name: string },
+  ) => unknown;
+  finalize: () => Promise<void> | void;
+  on: (event: string, cb: (err: Error & { code?: string }) => void) => unknown;
+};
+
+function loadArchiver(): ArchiverFactory {
+  const mod = require("archiver") as ArchiverFactory | { default: ArchiverFactory };
+  if (typeof mod === "function") return mod;
+  if (mod && typeof mod.default === "function") return mod.default;
+  throw new Error("archiver 모듈을 불러오지 못했습니다.");
+}
 
 export function getDataDir() {
   return (
     process.env.DATA_DIR?.trim() ||
     process.env.RAILWAY_VOLUME_MOUNT_PATH?.trim() ||
-    (process.env.NODE_ENV === "production" ? "/app/data" : path.join(process.cwd(), "data"))
+    (process.env.NODE_ENV === "production"
+      ? "/app/data"
+      : path.join(process.cwd(), "data"))
   );
 }
 
 export function getDbFilePath() {
   const fromUrl = process.env.DATABASE_URL?.trim();
   if (fromUrl?.startsWith("file:")) {
-    return fromUrl.slice("file:".length);
+    const raw = fromUrl.slice("file:".length);
+    // Prisma may use relative file: URLs; resolve against cwd.
+    return path.isAbsolute(raw) ? raw : path.resolve(process.cwd(), raw);
   }
   return path.join(getDataDir(), "prod.db");
 }
@@ -154,47 +181,64 @@ export function getBackupFilePath(name: string) {
   return full;
 }
 
-/** Snapshot DB sidecars next to a temp copy for a consistent-ish zip entry set. */
 function copyDbSnapshot(tempDir: string) {
   const dbPath = getDbFilePath();
   mkdirSync(tempDir, { recursive: true });
-  const base = path.basename(dbPath);
-  const copied: string[] = [];
 
-  if (existsSync(dbPath)) {
-    const dest = path.join(tempDir, base);
-    copyFileSync(dbPath, dest);
-    copied.push(dest);
+  if (!existsSync(dbPath)) {
+    throw new Error(`데이터베이스 파일이 없습니다: ${dbPath}`);
   }
+
+  const base = path.basename(dbPath);
+  copyFileSync(dbPath, path.join(tempDir, base));
+
   for (const suffix of ["-wal", "-shm"]) {
     const side = `${dbPath}${suffix}`;
     if (existsSync(side)) {
-      const dest = path.join(tempDir, `${base}${suffix}`);
-      copyFileSync(side, dest);
-      copied.push(dest);
+      copyFileSync(side, path.join(tempDir, `${base}${suffix}`));
     }
   }
-  return copied;
+}
+
+function errorMessage(error: unknown) {
+  if (error instanceof Error && error.message) return error.message;
+  return "알 수 없는 오류가 발생했습니다.";
 }
 
 export async function createBackupZip(): Promise<BackupInfo> {
+  const archiver = loadArchiver();
   const backupsDir = ensureBackupsDir();
   const name = `kat-backup-${backupStamp()}.zip`;
   const outPath = path.join(backupsDir, name);
-  const tempDir = mkdtempSync(path.join(tmpdir(), "kat-backup-"));
+  // Keep temp files on the same volume as the zip output (more reliable than /tmp).
+  const tempDir = path.join(backupsDir, `.tmp-${backupStamp()}-${process.pid}`);
 
   try {
+    mkdirSync(tempDir, { recursive: true });
     copyDbSnapshot(tempDir);
 
     await new Promise<void>((resolve, reject) => {
       const output = createWriteStream(outPath);
       const archive = archiver("zip", { zlib: { level: 1 } });
+      let settled = false;
 
-      output.on("close", () => resolve());
-      output.on("error", reject);
-      archive.on("error", reject);
-      archive.on("warning", (err: Error & { code?: string }) => {
-        if (err.code !== "ENOENT") reject(err);
+      const fail = (err: unknown) => {
+        if (settled) return;
+        settled = true;
+        reject(err instanceof Error ? err : new Error(errorMessage(err)));
+      };
+      const ok = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
+
+      output.on("close", ok);
+      output.on("error", fail);
+      archive.on("error", fail);
+      archive.on("warning", (err) => {
+        // Missing optional files are fine; real IO issues should fail.
+        if (err.code !== "ENOENT") fail(err);
       });
 
       archive.pipe(output);
@@ -208,14 +252,21 @@ export async function createBackupZip(): Promise<BackupInfo> {
         archive.directory(uploadsDir, "uploads");
       }
 
-      const meta = {
-        createdAt: new Date().toISOString(),
-        service: "korea-auto-trade",
-        dbFile: path.basename(getDbFilePath()),
-      };
-      archive.append(JSON.stringify(meta, null, 2), { name: "backup-info.json" });
+      archive.append(
+        JSON.stringify(
+          {
+            createdAt: new Date().toISOString(),
+            service: "korea-auto-trade",
+            dbFile: path.basename(getDbFilePath()),
+            uploadsDir,
+          },
+          null,
+          2,
+        ),
+        { name: "backup-info.json" },
+      );
 
-      void archive.finalize();
+      Promise.resolve(archive.finalize()).catch(fail);
     });
   } catch (error) {
     try {
@@ -223,7 +274,7 @@ export async function createBackupZip(): Promise<BackupInfo> {
     } catch {
       // ignore
     }
-    throw error;
+    throw new Error(`백업 생성 실패: ${errorMessage(error)}`);
   } finally {
     try {
       rmSync(tempDir, { recursive: true, force: true });
@@ -232,13 +283,22 @@ export async function createBackupZip(): Promise<BackupInfo> {
     }
   }
 
-  pruneOldBackups();
   const st = safeStat(outPath);
+  if (!st || st.size <= 0) {
+    try {
+      unlinkSync(outPath);
+    } catch {
+      // ignore
+    }
+    throw new Error("백업 파일이 비어 있습니다. 다시 시도해 주세요.");
+  }
+
+  pruneOldBackups();
   return {
     name,
-    size: st?.size ?? 0,
-    sizeLabel: formatBytes(st?.size ?? 0),
-    createdAt: (st?.mtime ?? new Date()).toISOString(),
+    size: st.size,
+    sizeLabel: formatBytes(st.size),
+    createdAt: st.mtime.toISOString(),
   };
 }
 
@@ -280,23 +340,16 @@ export async function collectMaintenanceSnapshot(): Promise<MaintenanceSnapshot>
   const dbStat = safeStat(dbPath);
   const uploads = dirStats(uploadsDir);
 
-  const [
-    listings,
-    available,
-    reserved,
-    sold,
-    users,
-    statements,
-    offers,
-  ] = await Promise.all([
-    prisma.listing.count(),
-    prisma.listing.count({ where: { saleStatus: "AVAILABLE" } }),
-    prisma.listing.count({ where: { saleStatus: "RESERVED" } }),
-    prisma.listing.count({ where: { saleStatus: "SOLD" } }),
-    prisma.user.count(),
-    prisma.transactionStatement.count(),
-    prisma.purchaseOffer.count(),
-  ]);
+  const [listings, available, reserved, sold, users, statements, offers] =
+    await Promise.all([
+      prisma.listing.count(),
+      prisma.listing.count({ where: { saleStatus: "AVAILABLE" } }),
+      prisma.listing.count({ where: { saleStatus: "RESERVED" } }),
+      prisma.listing.count({ where: { saleStatus: "SOLD" } }),
+      prisma.user.count(),
+      prisma.transactionStatement.count(),
+      prisma.purchaseOffer.count(),
+    ]);
 
   return {
     time: new Date().toISOString(),
