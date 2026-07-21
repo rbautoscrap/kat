@@ -1,9 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useCallback,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+  type RefObject,
+} from "react";
 import { useRouter } from "next/navigation";
 import type { Listing, ListingImage, ListingCategory } from "@prisma/client";
 import { ADMIN_CATEGORY_LABELS } from "@/lib/admin-labels";
+
+const IMAGE_ACCEPT =
+  "image/jpeg,image/png,image/webp,image/gif";
+
+function isImageFile(file: File) {
+  return file.type.startsWith("image/");
+}
+
+function assignInputFiles(
+  input: HTMLInputElement,
+  files: File[],
+  multiple: boolean,
+) {
+  const dt = new DataTransfer();
+  const list = multiple ? files : files.slice(0, 1);
+  for (const file of list) dt.items.add(file);
+  input.files = dt.files;
+}
 
 type Props = {
   listing?: Listing & {
@@ -98,6 +123,40 @@ export function ListingForm({ listing }: Props) {
   );
   const [keptGallery, setKeptGallery] = useState<ListingImage[]>(
     () => listing?.images?.slice(1) ?? [],
+  );
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  const applyCoverFile = useCallback(
+    (file: File | null) => {
+      setCoverName(file?.name ?? null);
+      setCoverPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return file ? URL.createObjectURL(file) : null;
+      });
+      if (file) setKeptCover(null);
+    },
+    [],
+  );
+
+  const applyGalleryFiles = useCallback(
+    (files: FileList | File[]) => {
+      const list = Array.from(files).filter(isImageFile);
+      if (list.length > 99) {
+        setError(
+          "추가 사진은 최대 99장까지 선택할 수 있습니다. (대표 사진 포함 100장)",
+        );
+        if (galleryInputRef.current) galleryInputRef.current.value = "";
+        setPhotoCount(0);
+        return;
+      }
+      setError(null);
+      setPhotoCount(list.length);
+      if (galleryInputRef.current) {
+        assignInputFiles(galleryInputRef.current, list, true);
+      }
+    },
+    [],
   );
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -355,9 +414,9 @@ export function ListingForm({ listing }: Props) {
         <input key={img.id} type="hidden" name="keepImageIds" value={img.id} />
       ))}
 
-      <div className="space-y-5 text-sm">
+      <div className="space-y-3 text-sm">
         <div>
-          <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
+          <span className="mb-1 block text-[13px] font-medium tracking-wide text-neutral-600">
             대표(메인) 사진
             {listing ? (
               <span className="font-normal text-neutral-400">
@@ -372,56 +431,60 @@ export function ListingForm({ listing }: Props) {
             )}
           </span>
 
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-dashed border-neutral-300 bg-neutral-50/60 px-4 py-6 transition hover:border-neutral-400 hover:bg-neutral-50 focus-within:border-neutral-400 focus-within:bg-white">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
             {(coverPreview || keptCover?.url) && (
-              <span className="relative inline-block w-full max-w-sm">
+              <div className="relative h-[4.5rem] w-full shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 sm:w-[7.5rem]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={coverPreview ?? keptCover!.url}
                   alt="대표 사진 미리보기"
-                  className="h-36 w-full rounded-sm border border-neutral-200 object-cover"
+                  className="h-full w-full object-cover"
                 />
                 {listing && !coverPreview && keptCover ? (
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setKeptCover(null);
-                    }}
-                    className="absolute right-2 top-2 inline-flex h-7 items-center rounded-md bg-black/70 px-2 text-[12px] font-medium text-white hover:bg-black/85"
+                    onClick={() => setKeptCover(null)}
+                    className="absolute right-1 top-1 inline-flex h-6 items-center rounded bg-black/70 px-1.5 text-[11px] font-medium text-white hover:bg-black/85"
                   >
                     삭제
                   </button>
                 ) : null}
-              </span>
+              </div>
             )}
-            <span className="inline-flex h-9 items-center justify-center rounded-md border border-neutral-300 bg-white px-4 text-[13px] font-medium tracking-wide text-neutral-800 shadow-sm">
-              대표 사진 선택
-            </span>
-            <span className="text-center text-[12.5px] leading-relaxed tracking-wide text-neutral-500">
-              {coverName
-                ? coverName
-                : "JPG, PNG, WEBP, GIF · 1장 · 자동 압축 저장"}
-            </span>
-            <input
-              type="file"
+
+            <ImageDropZone
+              className="min-w-0 flex-1"
+              inputRef={coverInputRef}
               name="coverImage"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              className="sr-only"
-              onChange={(e) => {
+              accept={IMAGE_ACCEPT}
+              browseLabel="대표 사진 선택"
+              hint={
+                coverName
+                  ? coverName
+                  : "드래그하여 놓거나 선택 · JPG/PNG/WEBP/GIF · 1장"
+              }
+              onFiles={(files) => {
+                const file = files.find(isImageFile) ?? null;
+                if (!file) {
+                  setError("이미지 파일만 등록할 수 있습니다.");
+                  return;
+                }
+                setError(null);
+                if (coverInputRef.current) {
+                  assignInputFiles(coverInputRef.current, [file], false);
+                }
+                applyCoverFile(file);
+              }}
+              onInputChange={(e) => {
                 const file = e.target.files?.[0] ?? null;
-                setCoverName(file?.name ?? null);
-                if (coverPreview) URL.revokeObjectURL(coverPreview);
-                setCoverPreview(file ? URL.createObjectURL(file) : null);
-                if (file) setKeptCover(null);
+                applyCoverFile(file);
               }}
             />
-          </label>
+          </div>
         </div>
 
         <div>
-          <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
+          <span className="mb-1 block text-[13px] font-medium tracking-wide text-neutral-600">
             추가 사진
             <span className="font-normal text-neutral-400">
               {" "}
@@ -430,39 +493,25 @@ export function ListingForm({ listing }: Props) {
             </span>
           </span>
 
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-neutral-300 bg-neutral-50/60 px-4 py-7 transition hover:border-neutral-400 hover:bg-neutral-50 focus-within:border-neutral-400 focus-within:bg-white">
-            <span className="inline-flex h-9 items-center justify-center rounded-md border border-neutral-300 bg-white px-4 text-[13px] font-medium tracking-wide text-neutral-800 shadow-sm">
-              추가 사진 선택
-            </span>
-            <span className="text-center text-[12.5px] leading-relaxed tracking-wide text-neutral-500">
-              {photoCount > 0
-                ? `${photoCount}장 선택됨 (최대 99장)`
-                : "JPG, PNG · 최대 99장 · 자동 압축 저장"}
-            </span>
-            <input
-              type="file"
-              name="images"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              multiple
-              className="sr-only"
-              onChange={(e) => {
-                const count = e.target.files?.length ?? 0;
-                if (count > 99) {
-                  setError(
-                    "추가 사진은 최대 99장까지 선택할 수 있습니다. (대표 사진 포함 100장)",
-                  );
-                  e.target.value = "";
-                  setPhotoCount(0);
-                  return;
-                }
-                setError(null);
-                setPhotoCount(count);
-              }}
-            />
-          </label>
+          <ImageDropZone
+            inputRef={galleryInputRef}
+            name="images"
+            accept={IMAGE_ACCEPT}
+            multiple
+            browseLabel="추가 사진 선택"
+            hint={
+              photoCount > 0
+                ? `${photoCount}장 선택됨 (최대 99장) · 드래그로 다시 지정 가능`
+                : "드래그하여 놓거나 선택 · JPG/PNG · 최대 99장"
+            }
+            onFiles={(files) => applyGalleryFiles(files)}
+            onInputChange={(e) => {
+              applyGalleryFiles(e.target.files ?? []);
+            }}
+          />
 
           {keptGallery.length > 0 ? (
-            <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
+            <div className="mt-2 grid grid-cols-5 gap-1.5 sm:grid-cols-8">
               {keptGallery.map((img) => (
                 <div key={img.id} className="relative aspect-square">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -478,7 +527,7 @@ export function ListingForm({ listing }: Props) {
                         prev.filter((item) => item.id !== img.id),
                       )
                     }
-                    className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/75 text-[14px] leading-none text-white hover:bg-black/90"
+                    className="absolute right-0.5 top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/75 text-[12px] leading-none text-white hover:bg-black/90"
                     aria-label="사진 삭제"
                     title="삭제"
                   >
@@ -489,7 +538,7 @@ export function ListingForm({ listing }: Props) {
             </div>
           ) : null}
           {listing && keptGallery.length === 0 ? (
-            <p className="mt-2 text-[12px] tracking-wide text-neutral-400">
+            <p className="mt-1.5 text-[12px] tracking-wide text-neutral-400">
               보관 중인 추가 사진이 없습니다. 위에서 새로 추가할 수 있습니다.
             </p>
           ) : null}
@@ -809,5 +858,99 @@ function Field({
         className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400 focus:bg-white"
       />
     </label>
+  );
+}
+
+function ImageDropZone({
+  inputRef,
+  name,
+  accept,
+  multiple = false,
+  browseLabel,
+  hint,
+  onFiles,
+  onInputChange,
+  className = "",
+}: {
+  inputRef: RefObject<HTMLInputElement | null>;
+  name: string;
+  accept: string;
+  multiple?: boolean;
+  browseLabel: string;
+  hint: string;
+  onFiles: (files: File[]) => void;
+  onInputChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  className?: string;
+}) {
+  const [dragOver, setDragOver] = useState(false);
+  const dragDepth = useRef(0);
+
+  function onDragEnter(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepth.current += 1;
+    setDragOver(true);
+  }
+
+  function onDragOver(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "copy";
+  }
+
+  function onDragLeave(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setDragOver(false);
+  }
+
+  function onDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepth.current = 0;
+    setDragOver(false);
+    const files = Array.from(e.dataTransfer.files).filter(isImageFile);
+    if (files.length === 0) return;
+    onFiles(files);
+  }
+
+  return (
+    <div
+      onDragEnter={onDragEnter}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      className={`flex min-h-[3.25rem] items-center justify-between gap-3 rounded-md border border-dashed px-3 py-2.5 transition ${
+        dragOver
+          ? "border-neutral-800 bg-neutral-100"
+          : "border-neutral-300 bg-neutral-50/70 hover:border-neutral-400 hover:bg-neutral-50"
+      } ${className}`}
+    >
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[12.5px] font-medium tracking-wide text-neutral-800">
+          {dragOver ? "여기에 놓아 등록" : browseLabel}
+        </p>
+        <p className="mt-0.5 truncate text-[11.5px] tracking-wide text-neutral-500">
+          {hint}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-neutral-300 bg-white px-3 text-[12.5px] font-medium tracking-wide text-neutral-800 hover:bg-neutral-50"
+      >
+        파일 선택
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        name={name}
+        accept={accept}
+        multiple={multiple}
+        className="sr-only"
+        onChange={onInputChange}
+      />
+    </div>
   );
 }
