@@ -4,6 +4,8 @@ import { ImageGallery } from "@/components/ImageGallery";
 import { ListingOwnerActions } from "@/components/ListingOwnerActions";
 import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl";
 import { PurchaseOfferPanel } from "@/components/PurchaseOfferPanel";
+import { AdminListingCostPanel } from "@/components/admin/AdminListingCostPanel";
+import { DownloadListingImagesButton } from "@/components/admin/DownloadListingImagesButton";
 import { auth, isAdmin } from "@/lib/auth";
 import { userCanModifyListing } from "@/lib/listing-access";
 import { prisma } from "@/lib/prisma";
@@ -143,6 +145,14 @@ export default async function ListingDetailPage({ params }: Props) {
           />
         ) : null}
       </div>
+
+      {adminView ? (
+        <AdminListingCostPanel
+          auctionPrice={listing.auctionPrice}
+          incidentalCost={listing.incidentalCost}
+          costPrice={listing.costPrice}
+        />
+      ) : null}
 
       <div className="mb-7 overflow-hidden rounded-sm border border-[var(--line)]">
         <div className="grid sm:grid-cols-[200px_minmax(0,1fr)]">
@@ -315,9 +325,17 @@ export default async function ListingDetailPage({ params }: Props) {
 
       {listing.images.length > 0 && (
         <section className="w-full">
-          <h2 className="site-heading mb-3 text-[15px] text-neutral-800">
-            Photos
-          </h2>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="site-heading text-[15px] text-neutral-800">
+              Photos
+            </h2>
+            {adminView ? (
+              <DownloadListingImagesButton
+                listingId={listing.id}
+                imageCount={listing.images.length}
+              />
+            ) : null}
+          </div>
           <ImageGallery
             images={listing.images}
             alt={listing.title}
