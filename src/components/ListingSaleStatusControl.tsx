@@ -80,11 +80,11 @@ export function ListingSaleStatusControl({
 
   return (
     <div
-      className="inline-flex flex-col gap-1.5"
+      className="inline-flex flex-col gap-1"
       role="group"
       aria-label="판매 상태"
     >
-      <p className="text-[11px] font-semibold tracking-wide text-neutral-400 uppercase">
+      <p className="text-[10.5px] font-semibold tracking-wide text-neutral-400 uppercase">
         판매 상태
       </p>
       <div className="inline-flex overflow-hidden rounded-md border border-neutral-200 bg-white">
@@ -97,7 +97,7 @@ export function ListingSaleStatusControl({
               disabled={pending}
               aria-pressed={active}
               onClick={() => setStatus(status)}
-              className={`h-9 min-w-[5.5rem] px-3 text-[13px] font-semibold transition disabled:opacity-50 ${
+              className={`h-8 min-w-[4.75rem] px-2.5 text-[12.5px] font-semibold transition disabled:opacity-50 ${
                 active
                   ? status === "SOLD"
                     ? "bg-neutral-800 text-white"
@@ -113,7 +113,7 @@ export function ListingSaleStatusControl({
         })}
       </div>
       {pending ? (
-        <p className="text-[12px] text-neutral-400">저장 중…</p>
+        <p className="text-[11px] text-neutral-400">저장 중…</p>
       ) : null}
     </div>
   );

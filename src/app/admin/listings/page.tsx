@@ -29,7 +29,7 @@ import {
   adminTdClass,
   adminThClass,
 } from "@/lib/admin-ui";
-import { calcAccumulatedDays } from "@/lib/listing-actions";
+import { displayAccumulatedDays } from "@/lib/listing-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -65,26 +65,6 @@ function costTier(cost: number | null): CostTier {
 
 function formatCostWon(cost: number) {
   return `${cost.toLocaleString("ko-KR")}원`;
-}
-
-/**
- * Same 누적일 as listing registration: inboundDate → today.
- * Falls back to stored accumulatedDays when inbound date is missing.
- */
-function displayAccumulatedDays(listing: {
-  inboundDate?: string | null;
-  accumulatedDays?: string | null;
-}): number | null {
-  const inbound = listing.inboundDate?.replace(/\D/g, "") ?? "";
-  if (inbound.length === 8) {
-    return calcAccumulatedDays(inbound);
-  }
-  const stored = listing.accumulatedDays?.replace(/\D/g, "") ?? "";
-  if (stored) {
-    const n = Number(stored);
-    return Number.isFinite(n) ? n : null;
-  }
-  return null;
 }
 
 function parseCategory(value?: string): ListingCategory | "ALL" {

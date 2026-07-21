@@ -200,6 +200,21 @@ export function calcAccumulatedDays(inboundYyyymmdd: string): number {
   return Math.max(0, Math.floor(diffMs / 86_400_000));
 }
 
+/** Prefer live days from inboundDate; fall back to stored accumulatedDays. */
+export function displayAccumulatedDays(listing: {
+  inboundDate?: string | null;
+  accumulatedDays?: string | null;
+}): number | null {
+  const inbound = listing.inboundDate?.replace(/\D/g, "") ?? "";
+  if (inbound.length === 8) {
+    return calcAccumulatedDays(inbound);
+  }
+  const stored = listing.accumulatedDays?.replace(/\D/g, "") ?? "";
+  if (!stored) return null;
+  const n = Number(stored);
+  return Number.isFinite(n) ? n : null;
+}
+
 export function generateSerialNumber() {
   return `${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 90 + 10)}`;
 }

@@ -54,7 +54,7 @@ export function DownloadListingImagesButton({
         type="button"
         onClick={onDownload}
         disabled={pending || imageCount <= 0}
-        className="inline-flex h-9 items-center justify-center rounded-md border border-neutral-300 bg-white px-3.5 text-[13px] font-medium tracking-wide text-neutral-800 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex h-8 items-center justify-center rounded-md border border-neutral-300 bg-white px-3 text-[12.5px] font-medium tracking-wide text-neutral-800 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {pending
           ? "준비 중…"
