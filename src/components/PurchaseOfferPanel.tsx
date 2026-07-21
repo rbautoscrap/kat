@@ -73,6 +73,8 @@ export function PurchaseOfferPanel({ listingId, ownOffers = [] }: Props) {
   const [success, setSuccess] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const preview = formatPreview(amount, currency);
+
   return (
     <section className="rounded-sm border border-[var(--line)] bg-white px-4 py-4 sm:px-5">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
@@ -140,64 +142,94 @@ export function PurchaseOfferPanel({ listingId, ownOffers = [] }: Props) {
             });
           }}
         >
-          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-stretch">
-            <div
-              className="inline-flex shrink-0 self-start rounded-md border border-neutral-200 bg-neutral-50 p-0.5"
-              role="radiogroup"
-              aria-label="Currency"
-            >
-              {CURRENCY_OPTIONS.map((code) => {
-                const meta = CURRENCY_META[code];
-                const selected = currency === code;
-                return (
-                  <button
-                    key={code}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    disabled={pending}
-                    onClick={() => {
-                      setCurrency(code);
-                      setAmount((prev) => formatAmountInput(prev, code) ?? "");
-                    }}
-                    className={`min-w-[3.25rem] rounded-[5px] px-2.5 py-1.5 text-[12.5px] font-medium tracking-wide transition ${
-                      selected
-                        ? "bg-neutral-900 text-white shadow-sm"
-                        : "text-neutral-600 hover:text-neutral-900"
-                    } disabled:opacity-60`}
-                  >
-                    {meta.symbol} {meta.label}
-                  </button>
-                );
-              })}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-3">
+            <div className="shrink-0">
+              <p className="mb-1.5 text-[11px] font-medium tracking-[0.06em] text-neutral-500 uppercase">
+                Currency
+              </p>
+              <div
+                className="inline-flex h-11 items-center rounded-md border border-neutral-300 bg-neutral-50 p-0.5"
+                role="radiogroup"
+                aria-label="Currency"
+              >
+                {CURRENCY_OPTIONS.map((code) => {
+                  const meta = CURRENCY_META[code];
+                  const selected = currency === code;
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      disabled={pending}
+                      onClick={() => {
+                        setCurrency(code);
+                        setAmount(
+                          (prev) => formatAmountInput(prev, code) ?? "",
+                        );
+                      }}
+                      className={`min-w-[3.5rem] rounded-[5px] px-2.5 py-2 text-[12.5px] font-medium tracking-wide transition ${
+                        selected
+                          ? "bg-neutral-900 text-white"
+                          : "text-neutral-600 hover:bg-white hover:text-neutral-900"
+                      } disabled:opacity-60`}
+                    >
+                      {meta.symbol} {meta.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="flex min-w-0 flex-1 overflow-hidden rounded-md border border-neutral-300 focus-within:border-neutral-500">
-              <span className="flex w-9 shrink-0 items-center justify-center border-r border-neutral-200 bg-neutral-50 text-[14px] font-medium text-neutral-700">
-                {CURRENCY_META[currency].symbol}
-              </span>
-              <input
-                id="offer-amount"
-                name="amount"
-                inputMode={currency === "KRW" ? "numeric" : "decimal"}
-                autoComplete="off"
-                aria-label="Desired amount"
-                placeholder={currency === "KRW" ? "15,000,000" : "12,000"}
-                value={amount}
-                disabled={pending}
-                onChange={(e) => {
-                  const formatted = formatAmountInput(e.target.value, currency);
-                  if (formatted === null) return;
-                  setAmount(formatted);
-                }}
-                className="h-9 min-w-0 flex-1 bg-white px-3 text-[14px] tabular-nums tracking-wide text-neutral-900 outline-none placeholder:text-neutral-400 disabled:opacity-60"
-              />
+            <div className="w-full max-w-[17.5rem] shrink-0">
+              <label
+                htmlFor="offer-amount"
+                className="mb-1.5 block text-[11px] font-medium tracking-[0.06em] text-neutral-500 uppercase"
+              >
+                Amount
+              </label>
+              <div className="flex h-11 overflow-hidden rounded-md border-2 border-neutral-800 bg-neutral-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-neutral-800/15">
+                <span className="flex w-10 shrink-0 items-center justify-center border-r border-neutral-300 text-[16px] font-semibold text-neutral-800">
+                  {CURRENCY_META[currency].symbol}
+                </span>
+                <input
+                  id="offer-amount"
+                  name="amount"
+                  inputMode={currency === "KRW" ? "numeric" : "decimal"}
+                  autoComplete="off"
+                  aria-label="Desired amount"
+                  placeholder={currency === "KRW" ? "15,000,000" : "12,000"}
+                  value={amount}
+                  disabled={pending}
+                  onChange={(e) => {
+                    const formatted = formatAmountInput(
+                      e.target.value,
+                      currency,
+                    );
+                    if (formatted === null) return;
+                    setAmount(formatted);
+                  }}
+                  className="h-full min-w-0 flex-1 bg-transparent px-3 text-[17px] font-semibold tabular-nums tracking-wide text-neutral-900 outline-none placeholder:font-normal placeholder:text-neutral-400 disabled:opacity-60"
+                />
+              </div>
+              {preview ? (
+                <p className="mt-1.5 text-[12px] tracking-wide text-neutral-500">
+                  Your offer ·{" "}
+                  <span className="font-medium tabular-nums text-neutral-800">
+                    {preview}
+                  </span>
+                </p>
+              ) : (
+                <p className="mt-1.5 text-[12px] tracking-wide text-neutral-400">
+                  Enter your purchase offer amount
+                </p>
+              )}
             </div>
 
             <button
               type="submit"
               disabled={pending || !amount.trim()}
-              className="inline-flex h-9 shrink-0 items-center justify-center rounded-md bg-neutral-900 px-4 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-11 w-full shrink-0 items-center justify-center rounded-md bg-neutral-900 px-5 text-[13.5px] font-medium tracking-wide text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-white sm:mt-[1.625rem] sm:w-auto"
             >
               {pending ? "…" : "Submit"}
             </button>
