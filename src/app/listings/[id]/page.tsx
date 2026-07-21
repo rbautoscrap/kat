@@ -187,7 +187,7 @@ export default async function ListingDetailPage({ params }: Props) {
                   <dt className="border-r border-[var(--line)] bg-neutral-50/90 px-2.5 py-2.5 font-medium tracking-wide text-neutral-500 sm:px-3">
                     {item.label}
                   </dt>
-                  <dd className="min-w-0 break-words px-2.5 py-2.5 tracking-wide text-neutral-700 sm:px-3">
+                  <dd className="min-w-0 break-words whitespace-pre-wrap px-2.5 py-2.5 tracking-wide text-neutral-700 sm:px-3">
                     {item.value}
                   </dd>
                 </div>

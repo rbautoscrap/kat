@@ -4,11 +4,7 @@ export function containsHangul(text: string) {
   return HANGUL_RE.test(text);
 }
 
-/**
- * Translate Korean (or mixed) text to English for public listing notes.
- * Uses MyMemory free endpoint; falls back to the original text on failure/timeout.
- */
-export async function translateToEnglish(text: string): Promise<string> {
+async function translateChunk(text: string): Promise<string> {
   const trimmed = text.trim();
   if (!trimmed) return "";
   if (!containsHangul(trimmed)) return trimmed;
@@ -36,4 +32,26 @@ export async function translateToEnglish(text: string): Promise<string> {
   } catch {
     return trimmed;
   }
+}
+
+/**
+ * Translate Korean (or mixed) text to English for public listing notes.
+ * Preserves line breaks by translating each line separately.
+ */
+export async function translateToEnglish(text: string): Promise<string> {
+  const normalized = text.replace(/\r\n/g, "\n").trim();
+  if (!normalized) return "";
+
+  const lines = normalized.split("\n");
+  if (lines.length === 1) {
+    return translateChunk(lines[0]!);
+  }
+
+  const translated = await Promise.all(
+    lines.map(async (line) => {
+      if (!line.trim()) return "";
+      return translateChunk(line);
+    }),
+  );
+  return translated.join("\n");
 }

@@ -545,22 +545,25 @@ function NotesField({
   return (
     <label className="block text-sm sm:col-span-2">
       <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
-        특이 사항
+        특이사항
       </span>
       <textarea
         name="damages"
-        rows={3}
+        rows={5}
         defaultValue={defaultValue}
-        placeholder="한글로 입력하면 공개 페이지에 영문으로 자동 번역됩니다"
-        className="w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 py-2 text-[13.5px] leading-relaxed tracking-wide outline-none focus:border-neutral-400 focus:bg-white"
+        placeholder={"한 줄씩 입력할 수 있습니다.\n예:\n전면 범퍼 스크래치\n휠 기스"}
+        className="w-full resize-y rounded-md border border-neutral-200 bg-neutral-50/40 px-3 py-2 text-[13.5px] leading-relaxed whitespace-pre-wrap outline-none focus:border-neutral-400 focus:bg-white"
       />
       <span className="mt-1.5 block text-[12px] leading-relaxed tracking-wide text-neutral-400">
-        저장 시 영문으로 번역되어 사이트에 노출됩니다.
+        Enter로 줄바꿈할 수 있습니다. 저장 시 영문으로 번역되어 사이트에
+        노출됩니다.
         {translatedEn ? (
           <>
             {" "}
             현재 공개 문구:{" "}
-            <span className="text-neutral-600">{translatedEn}</span>
+            <span className="whitespace-pre-wrap text-neutral-600">
+              {translatedEn}
+            </span>
           </>
         ) : null}
       </span>
