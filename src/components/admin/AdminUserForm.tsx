@@ -11,6 +11,7 @@ type Props = {
     id: string;
     name: string;
     email: string;
+    phone: string | null;
     role: Role;
   };
 };
@@ -36,6 +37,7 @@ export function AdminUserForm({ user }: Props) {
     const result = await updateUser(user.id, {
       name: String(form.get("name") ?? ""),
       email: String(form.get("email") ?? ""),
+      phone: String(form.get("phone") ?? ""),
       role: String(form.get("role") ?? "MEMBER") as Role,
       password: String(form.get("password") ?? ""),
     });
@@ -75,6 +77,22 @@ export function AdminUserForm({ user }: Props) {
         />
         <span className="mt-1 block text-[12px] text-neutral-400">
           로그인에 사용하는 아이디입니다. (이름과 별개)
+        </span>
+      </label>
+
+      <label className="block text-sm">
+        <span className={labelClass}>연락처</span>
+        <input
+          name="phone"
+          type="tel"
+          minLength={8}
+          autoComplete="tel"
+          defaultValue={user.phone ?? ""}
+          placeholder="WhatsApp / 전화번호"
+          className={fieldClass}
+        />
+        <span className="mt-1 block text-[12px] text-neutral-400">
+          오퍼 확인 등 관리자 연락용입니다.
         </span>
       </label>
 

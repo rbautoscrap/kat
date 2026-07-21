@@ -4,12 +4,14 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { loginIdSchema, passwordSchema } from "@/lib/login-id";
+import { phoneSchema } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 
 const registerSchema = z
   .object({
     name: z.string().trim().min(2, "Name must be at least 2 characters"),
     email: loginIdSchema,
+    phone: phoneSchema,
     password: passwordSchema,
     confirmPassword: z.string().min(1, "Please confirm your password"),
   })
@@ -27,6 +29,7 @@ export async function registerAccount(
   const parsed = registerSchema.safeParse({
     name: String(formData.get("name") ?? ""),
     email: String(formData.get("email") ?? ""),
+    phone: String(formData.get("phone") ?? ""),
     password: String(formData.get("password") ?? ""),
     confirmPassword: String(formData.get("confirmPassword") ?? ""),
   });
@@ -46,6 +49,7 @@ export async function registerAccount(
     data: {
       name: parsed.data.name,
       email: loginId,
+      phone: parsed.data.phone,
       passwordHash,
       role: "MEMBER",
       status: "PENDING",

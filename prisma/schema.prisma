@@ -42,6 +42,8 @@ model User {
   email        String          @unique
   passwordHash String
   name         String
+  /** Phone / WhatsApp contact for admin follow-up (offers, etc.) */
+  phone        String?
   role         Role            @default(MEMBER)
   /** Join sets PENDING; existing/seed accounts default to APPROVED. */
   status       AccountStatus   @default(APPROVED)

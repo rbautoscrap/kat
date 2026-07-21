@@ -74,7 +74,7 @@ export default async function ListingDetailPage({ params }: Props) {
     ? await prisma.purchaseOffer.findMany({
         where: { listingId: listing.id },
         include: {
-          user: { select: { name: true, email: true } },
+          user: { select: { name: true, email: true, phone: true } },
         },
         orderBy: { createdAt: "desc" },
         take: 50,
@@ -232,8 +232,8 @@ export default async function ListingDetailPage({ params }: Props) {
               Purchase offers ({adminOffers.length})
             </h2>
             <p className="mt-1 text-[12.5px] tracking-wide text-neutral-500">
-              Offer details are visible only to administrators and the member
-              who submitted them.
+              Offer amount and member contact are visible only to
+              administrators. Members see only their own offers.
             </p>
           </div>
           {adminOffers.length === 0 ? (
@@ -244,16 +244,16 @@ export default async function ListingDetailPage({ params }: Props) {
             <div className="admin-table-scroll overflow-x-auto">
               <table className="data-table">
                 <colgroup>
-                  <col style={{ width: "36%" }} />
-                  <col style={{ width: "22%" }} />
-                  <col style={{ width: "16%" }} />
                   <col style={{ width: "26%" }} />
+                  <col style={{ width: "28%" }} />
+                  <col style={{ width: "24%" }} />
+                  <col style={{ width: "22%" }} />
                 </colgroup>
                 <thead>
                   <tr className="border-b border-[var(--line)] bg-neutral-50 text-[12px] tracking-wide text-neutral-500">
                     <th className="px-4 py-3 font-medium sm:px-5">Member</th>
+                    <th className="px-4 py-3 font-medium sm:px-5">Contact</th>
                     <th className="px-4 py-3 font-medium sm:px-5">Offer</th>
-                    <th className="px-4 py-3 font-medium sm:px-5">Currency</th>
                     <th className="px-4 py-3 font-medium sm:px-5">Date</th>
                   </tr>
                 </thead>
@@ -271,11 +271,20 @@ export default async function ListingDetailPage({ params }: Props) {
                           {offer.user.email}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 font-medium tracking-wide text-neutral-800 sm:px-5">
-                        {formatOfferAmount(offer.amount, offer.currency)}
+                      <td className="min-w-0 px-4 py-3.5 tracking-wide text-neutral-700 sm:px-5">
+                        {offer.user.phone ? (
+                          <a
+                            href={`tel:${offer.user.phone}`}
+                            className="block truncate font-medium tabular-nums text-neutral-800 hover:underline"
+                          >
+                            {offer.user.phone}
+                          </a>
+                        ) : (
+                          <span className="text-neutral-400">—</span>
+                        )}
                       </td>
-                      <td className="px-4 py-3.5 tracking-wide text-neutral-600 sm:px-5">
-                        {offer.currency}
+                      <td className="px-4 py-3.5 font-medium tracking-wide tabular-nums text-neutral-800 sm:px-5">
+                        {formatOfferAmount(offer.amount, offer.currency)}
                       </td>
                       <td className="px-4 py-3.5 whitespace-nowrap tracking-wide text-neutral-500 sm:px-5">
                         {offer.createdAt

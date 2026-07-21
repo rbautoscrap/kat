@@ -3,11 +3,13 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { loginIdSchema, passwordSchema } from "@/lib/login-id";
+import { phoneSchema } from "@/lib/phone";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters"),
   // Accept legacy "email" field name from the form; value is the login ID.
   email: loginIdSchema,
+  phone: phoneSchema,
   password: passwordSchema,
 });
 
@@ -30,6 +32,7 @@ export async function POST(request: Request) {
       data: {
         name: data.name.trim(),
         email: loginId,
+        phone: data.phone,
         passwordHash,
         role: "MEMBER",
         status: "PENDING",

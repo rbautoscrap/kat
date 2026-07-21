@@ -130,20 +130,22 @@ export default async function AdminUsersPage({ searchParams }: Props) {
       <RoleFilter current={role} counts={counts} sort={sort} />
 
       <div className={adminTableScrollClass}>
-        <table className={`${adminTableClass} min-w-[1020px]`}>
+        <table className={`${adminTableClass} min-w-[1120px]`}>
           <colgroup>
-            <col style={{ width: "13%" }} />
-            <col style={{ width: "18%" }} />
-            <col style={{ width: "8%" }} />
-            <col style={{ width: "11%" }} />
-            <col style={{ width: "10%" }} />
             <col style={{ width: "12%" }} />
-            <col style={{ width: "28%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "16%" }} />
+            <col style={{ width: "7%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "9%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "22%" }} />
           </colgroup>
           <thead>
             <tr>
               <th className={adminThClass}>이름</th>
               <th className={adminThClass}>아이디</th>
+              <th className={adminThClass}>연락처</th>
               <th className={`${adminThClass} text-center`}>매물</th>
               <th className={adminThClass}>가입일</th>
               <th className={adminThClass}>역할</th>
@@ -186,6 +188,13 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                   </td>
                   <td className={`${adminTdClass} truncate text-neutral-600`}>
                     {user.email}
+                  </td>
+                  <td
+                    className={`${adminTdClass} truncate tabular-nums text-neutral-700`}
+                  >
+                    {user.phone || (
+                      <span className="text-neutral-400">—</span>
+                    )}
                   </td>
                   <td
                     className={`${adminTdClass} text-center tabular-nums text-neutral-700`}

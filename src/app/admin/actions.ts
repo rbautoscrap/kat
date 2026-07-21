@@ -14,6 +14,7 @@ import { auth, isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { deleteUploadedFiles } from "@/lib/listing-actions";
 import { loginIdSchema, passwordSchema } from "@/lib/login-id";
+import { optionalPhoneSchema } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
@@ -26,6 +27,7 @@ const ACCOUNT_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
 const updateUserSchema = z.object({
   name: z.string().min(2, "이름은 2자 이상이어야 합니다."),
   email: loginIdSchema,
+  phone: optionalPhoneSchema,
   role: z.enum(ROLES),
   password: z
     .string()
@@ -303,6 +305,7 @@ export async function updateUser(
   input: {
     name: string;
     email: string;
+    phone?: string;
     role: Role;
     password?: string;
   },
@@ -313,6 +316,7 @@ export async function updateUser(
   const parsed = updateUserSchema.safeParse({
     name: input.name.trim(),
     email: input.email,
+    phone: input.phone?.trim() || undefined,
     role: input.role,
     password: input.password?.trim() || undefined,
   });
@@ -355,6 +359,7 @@ export async function updateUser(
       data: {
         name: parsed.data.name,
         email: parsed.data.email,
+        phone: parsed.data.phone,
         role: parsed.data.role,
         ...(parsed.data.role === "ADMIN" ? { status: "APPROVED" as const } : {}),
         ...(parsed.data.password

@@ -49,6 +49,21 @@ export default function JoinPage() {
           </span>
         </label>
         <label className="block text-sm">
+          <span className={labelClass}>Contact</span>
+          <input
+            name="phone"
+            type="tel"
+            required
+            minLength={8}
+            autoComplete="tel"
+            placeholder="WhatsApp / phone number"
+            className={fieldClass}
+          />
+          <span className="mt-1 block text-[12px] tracking-wide text-neutral-400">
+            Used so administrators can reach you about offers.
+          </span>
+        </label>
+        <label className="block text-sm">
           <span className={labelClass}>Password</span>
           <input
             name="password"
