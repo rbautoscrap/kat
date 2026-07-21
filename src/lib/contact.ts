@@ -1,8 +1,13 @@
 export const CONTACT_PHONE =
-  process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "+10 5817 2207";
+  process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "+82 10-5817-2207";
 
 export const CONTACT_LINE = `Real-time updates, Contact to WhatsApp | KakaoTalk (${CONTACT_PHONE})`;
 
 /** Digits for wa.me links */
 export const CONTACT_WHATSAPP =
   process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT ?? "821058172207";
+
+export const CONTACT_EMAIL =
+  process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "rbautoscrap@naver.com";
+
+export const CONTACT_HOURS = "Mon – Fri, 09:00 – 18:00 (KST)";
