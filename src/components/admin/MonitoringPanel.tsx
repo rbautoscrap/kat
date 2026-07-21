@@ -7,12 +7,16 @@ type Props = {
 function StatusPill({ ok, label }: { ok: boolean; label: string }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-semibold ${
-        ok
-          ? "bg-emerald-50 text-emerald-800"
-          : "bg-amber-50 text-amber-900"
+      className={`inline-flex h-8 items-center rounded-md px-2.5 text-[12.5px] font-semibold ${
+        ok ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"
       }`}
     >
+      <span
+        className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${
+          ok ? "bg-emerald-500" : "bg-amber-500"
+        }`}
+        aria-hidden
+      />
       {label}
     </span>
   );
@@ -20,7 +24,24 @@ function StatusPill({ ok, label }: { ok: boolean; label: string }) {
 
 export function MonitoringPanel({ snapshot }: Props) {
   const ready = snapshot.persistence.ready;
-  const cards = [
+
+  const systemCards = [
+    { label: "가동 시간", value: snapshot.uptimeLabel },
+    {
+      label: "볼륨",
+      value: snapshot.persistence.volumeMounted ? "연결됨" : "로컬/미연결",
+    },
+    {
+      label: "DB",
+      value: snapshot.persistence.dbFileExists ? "확인됨" : "없음",
+    },
+    {
+      label: "업로드 폴더",
+      value: snapshot.persistence.uploadsDirExists ? "확인됨" : "없음",
+    },
+  ];
+
+  const dataCards = [
     {
       label: "매물",
       value: snapshot.counts.listings.toLocaleString("ko-KR"),
@@ -44,64 +65,59 @@ export function MonitoringPanel({ snapshot }: Props) {
   ];
 
   return (
-    <section className="space-y-4">
-      <div className="admin-panel p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
+    <section className="admin-panel overflow-hidden">
+      <div className="border-b border-[var(--line)] px-5 py-4">
+        <div className="admin-section-head">
+          <div className="admin-section-head-text">
             <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
               모니터링
             </h2>
             <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
-              서비스 상태와 데이터 규모를 간단히 확인합니다.
+              서비스 상태와 데이터 규모를 확인합니다.
             </p>
           </div>
-          <StatusPill
-            ok={ready}
-            label={ready ? "정상" : "점검 필요"}
-          />
+          <div className="admin-section-head-actions">
+            <StatusPill ok={ready} label={ready ? "정상" : "점검 필요"} />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4 px-5 py-4">
+        <div>
+          <p className="mb-2 text-[12px] font-semibold text-neutral-500">
+            시스템
+          </p>
+          <div className="admin-metric-grid">
+            {systemCards.map((card) => (
+              <div key={card.label} className="admin-metric-card">
+                <p className="admin-metric-label">{card.label}</p>
+                <p className="admin-metric-value">{card.value}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-md border border-neutral-100 bg-neutral-50/70 px-3.5 py-3">
-            <dt className="text-[12px] font-medium text-neutral-500">가동 시간</dt>
-            <dd className="mt-1 text-[15px] font-semibold text-neutral-900">
-              {snapshot.uptimeLabel}
-            </dd>
+        <div>
+          <p className="mb-2 text-[12px] font-semibold text-neutral-500">
+            데이터
+          </p>
+          <div className="admin-metric-grid">
+            {dataCards.map((card) => (
+              <div key={card.label} className="admin-metric-card is-emphasis">
+                <div>
+                  <p className="admin-metric-label">{card.label}</p>
+                  <p className="admin-metric-value">{card.value}</p>
+                </div>
+                <p className="admin-metric-hint">{card.hint}</p>
+              </div>
+            ))}
           </div>
-          <div className="rounded-md border border-neutral-100 bg-neutral-50/70 px-3.5 py-3">
-            <dt className="text-[12px] font-medium text-neutral-500">볼륨</dt>
-            <dd className="mt-1 text-[15px] font-semibold text-neutral-900">
-              {snapshot.persistence.volumeMounted ? "연결됨" : "로컬/미연결"}
-            </dd>
-          </div>
-          <div className="rounded-md border border-neutral-100 bg-neutral-50/70 px-3.5 py-3">
-            <dt className="text-[12px] font-medium text-neutral-500">DB</dt>
-            <dd className="mt-1 text-[15px] font-semibold text-neutral-900">
-              {snapshot.persistence.dbFileExists ? "확인됨" : "없음"}
-            </dd>
-          </div>
-          <div className="rounded-md border border-neutral-100 bg-neutral-50/70 px-3.5 py-3">
-            <dt className="text-[12px] font-medium text-neutral-500">업로드 폴더</dt>
-            <dd className="mt-1 text-[15px] font-semibold text-neutral-900">
-              {snapshot.persistence.uploadsDirExists ? "확인됨" : "없음"}
-            </dd>
-          </div>
-        </dl>
+        </div>
 
-        <p className="mt-3 text-[12.5px] text-neutral-400">
+        <p className="border-t border-neutral-100 pt-3 text-[12.5px] text-neutral-400">
           기준 시각 {snapshot.time.slice(0, 19).replace("T", " ")} UTC · Node{" "}
           {snapshot.nodeVersion}
         </p>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) => (
-          <div key={card.label} className="admin-stat-card">
-            <p className="admin-stat-label">{card.label}</p>
-            <p className="admin-stat-value">{card.value}</p>
-            <p className="mt-1.5 text-[12px] text-neutral-500">{card.hint}</p>
-          </div>
-        ))}
       </div>
     </section>
   );

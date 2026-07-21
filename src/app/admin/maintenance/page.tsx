@@ -14,14 +14,18 @@ export default async function AdminMaintenancePage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="admin-panel px-5 py-4">
-        <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
-          유지보수
-        </h2>
-        <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
-          서비스 상태를 확인하고, 데이터베이스·이미지를 백업합니다.
-        </p>
+        <div className="admin-section-head">
+          <div className="admin-section-head-text">
+            <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
+              유지보수
+            </h2>
+            <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
+              서비스 상태를 확인하고, 데이터베이스·이미지를 백업합니다.
+            </p>
+          </div>
+        </div>
       </div>
 
       <MonitoringPanel snapshot={snapshot} />
