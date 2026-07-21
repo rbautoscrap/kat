@@ -87,7 +87,7 @@ export default async function ListingDetailPage({ params }: Props) {
     `Inquiry about ${listing.title}`,
   );
 
-  const specs: { label: string; value: string }[] = [
+  const shortSpecs: { label: string; value: string }[] = [
     { label: "VIN", value: listing.vin || "—" },
     { label: "Engine Mark", value: listing.engineMark || "—" },
     {
@@ -99,15 +99,12 @@ export default async function ListingDetailPage({ params }: Props) {
       value: formatOdometerDisplay(listing.odometer) || "—",
     },
     {
-      label: "Notes",
-      value:
-        formatNotesDisplay(listing.damages, listing.damagesEn) || "—",
-    },
-    {
       label: "Fuel Type",
       value: formatFuelType(listing.fuelType) || "—",
     },
   ];
+  const notesValue =
+    formatNotesDisplay(listing.damages, listing.damagesEn) || "—";
 
   return (
     <div className="site-container py-8" lang="en">
@@ -172,17 +169,21 @@ export default async function ListingDetailPage({ params }: Props) {
           </div>
 
           <dl className="grid grid-cols-1 sm:grid-cols-2">
-            {specs.map((item, index) => {
-              const total = specs.length;
+            {shortSpecs.map((item, index) => {
+              const total = shortSpecs.length;
               const isLeft = index % 2 === 0;
+              const isLast = index === total - 1;
+              const oddLoneLast = total % 2 === 1 && isLast;
               const lastRowStart = total % 2 === 0 ? total - 2 : total - 1;
               const inLastRow = index >= lastRowStart;
               return (
                 <div
                   key={item.label}
-                  className={`grid min-w-0 grid-cols-[6.25rem_minmax(0,1fr)] border-[var(--line)] text-[13px] sm:grid-cols-[8.5rem_minmax(0,1fr)] sm:text-[13.5px] ${
+                  className={`grid min-w-0 grid-cols-[6.25rem_minmax(0,1fr)] items-start border-[var(--line)] text-[13px] sm:grid-cols-[8.5rem_minmax(0,1fr)] sm:text-[13.5px] ${
                     inLastRow ? "" : "border-b"
-                  } ${isLeft ? "sm:border-r" : ""}`}
+                  } ${isLeft && !oddLoneLast ? "sm:border-r" : ""} ${
+                    oddLoneLast ? "sm:col-span-2" : ""
+                  }`}
                 >
                   <dt className="border-r border-[var(--line)] bg-neutral-50/90 px-2.5 py-2.5 font-medium tracking-wide text-neutral-500 sm:px-3">
                     {item.label}
@@ -194,6 +195,16 @@ export default async function ListingDetailPage({ params }: Props) {
               );
             })}
           </dl>
+        </div>
+
+        {/* Full-width Notes so long text does not stretch neighboring short cells. */}
+        <div className="grid min-w-0 grid-cols-[6.25rem_minmax(0,1fr)] border-t border-[var(--line)] text-[13px] sm:grid-cols-[8.5rem_minmax(0,1fr)] sm:text-[13.5px]">
+          <div className="border-r border-[var(--line)] bg-neutral-50/90 px-2.5 py-2.5 font-medium tracking-wide text-neutral-500 sm:px-3">
+            Notes
+          </div>
+          <div className="min-w-0 break-words whitespace-pre-wrap px-2.5 py-2.5 tracking-wide text-neutral-700 sm:px-3">
+            {notesValue}
+          </div>
         </div>
       </div>
 
