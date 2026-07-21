@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { confirmListingDelete } from "@/lib/confirm-listing-delete";
 
 type Props = {
   listingId: string;
@@ -15,13 +16,7 @@ export function ListingOwnerActions({ listingId, categoryPath }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   async function onDelete() {
-    if (
-      !window.confirm(
-        "Delete this listing? This cannot be undone.",
-      )
-    ) {
-      return;
-    }
+    if (!confirmListingDelete()) return;
     setError(null);
     setPending(true);
     try {
