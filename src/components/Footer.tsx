@@ -13,6 +13,9 @@ export function Footer() {
             <span className="text-neutral-400">
               © {new Date().getFullYear()} KOREA AUTO TRADE
             </span>
+            <Link href="/about-us" className="hover:text-white">
+              About Us
+            </Link>
             <Link href="/terms" className="hover:text-white">
               Terms of Use
             </Link>

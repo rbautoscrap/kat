@@ -21,6 +21,7 @@ const nav = [
     category: "STAND_BY",
   },
   { href: "/how-to-buy", label: "How to buy" },
+  { href: "/about-us", label: "About Us" },
 ];
 
 export function MainNav() {
