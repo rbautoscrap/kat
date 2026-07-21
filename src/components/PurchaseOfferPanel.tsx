@@ -198,7 +198,7 @@ export function PurchaseOfferPanel({ listingId, ownOffers = [] }: Props) {
                   inputMode={currency === "KRW" ? "numeric" : "decimal"}
                   autoComplete="off"
                   aria-label="Desired amount"
-                  placeholder={currency === "KRW" ? "15,000,000" : "12,000"}
+                  placeholder={currency === "KRW" ? "100,000" : "12,000"}
                   value={amount}
                   disabled={pending}
                   onChange={(e) => {
