@@ -9,11 +9,11 @@ import {
 const strengths = [
   {
     title: "Verified Vehicle Inventory",
-    body: "We provide accurate, high-resolution media and detailed inspection reports to minimize risk and maximize bidding confidence.",
+    body: "We provide accurate, high-resolution media and detailed inspection reports to minimize risk and maximize purchase confidence.",
   },
   {
     title: "Transparent & Secure Trades",
-    body: "Our streamlined auction framework and secure transaction process ensure safe, hassle-free global cross-border trading.",
+    body: "Our streamlined purchasing process and secure transaction support ensure safe, hassle-free global cross-border trading.",
   },
   {
     title: "Direct Supply Pipeline",
@@ -65,7 +65,8 @@ export default function AboutUsPage() {
               <p>
                 At KOREA AUTO TRADE, we are transforming the salvage and used
                 vehicle trading landscape through transparent data, verified
-                inventory, and an advanced digital auction platform.
+                inventory, and a reliable digital platform for buying and
+                supplying vehicles and parts.
               </p>
               <p>
                 Based in South Korea, we bridge the gap between major domestic
@@ -124,7 +125,7 @@ export default function AboutUsPage() {
               <p>
                 We are constantly expanding our global network and actively
                 seeking strategic business partnerships. Whether you are an
-                insurance provider, salvage auction company, automotive
+                insurance provider, salvage trading company, automotive
                 exporter, or auto parts distributor, KOREA AUTO TRADE is ready
                 to build a mutually beneficial future together.
               </p>
