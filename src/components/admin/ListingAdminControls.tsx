@@ -13,6 +13,7 @@ import {
   ADMIN_CATEGORY_LABELS,
   SALE_STATUS_ADMIN_LABELS,
 } from "@/lib/admin-labels";
+import { confirmListingDelete } from "@/lib/confirm-listing-delete";
 import {
   adminActionBtnClass,
   adminDangerBtnClass,
@@ -113,7 +114,7 @@ export function ListingAdminControls({
           disabled={pending}
           className={`${adminDangerBtnClass} w-full px-1.5`}
           onClick={() => {
-            if (!confirm("이 매물을 정말 삭제하시겠습니까?")) return;
+            if (!confirmListingDelete()) return;
             startTransition(async () => {
               const result = await deleteListing(listingId);
               if (!result.ok) alert(result.error);
