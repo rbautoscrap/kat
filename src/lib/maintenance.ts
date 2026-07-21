@@ -147,15 +147,25 @@ export function listBackups(): BackupInfo[] {
   return readdirSync(dir)
     .filter((name) => name.startsWith("kat-backup-") && name.endsWith(".zip"))
     .map((name) => {
-      const st = safeStat(path.join(dir, name));
-      const created = st?.mtime ?? new Date(0);
+      const full = path.join(dir, name);
+      const st = safeStat(full);
+      // Remove empty/corrupt leftovers from failed runs
+      if (!st || st.size <= 0) {
+        try {
+          unlinkSync(full);
+        } catch {
+          // ignore
+        }
+        return null;
+      }
       return {
         name,
-        size: st?.size ?? 0,
-        sizeLabel: formatBytes(st?.size ?? 0),
-        createdAt: created.toISOString(),
+        size: st.size,
+        sizeLabel: formatBytes(st.size),
+        createdAt: st.mtime.toISOString(),
       };
     })
+    .filter((row): row is BackupInfo => Boolean(row))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
@@ -179,6 +189,20 @@ export function getBackupFilePath(name: string) {
   const full = path.join(getBackupsDir(), name);
   if (!existsSync(full)) return null;
   return full;
+}
+
+export function deleteBackup(name: string): { ok: true } | { ok: false; error: string } {
+  const filePath = getBackupFilePath(name);
+  if (!filePath) {
+    return { ok: false, error: "백업 파일을 찾을 수 없습니다." };
+  }
+  try {
+    unlinkSync(filePath);
+    return { ok: true };
+  } catch (error) {
+    console.error("[deleteBackup]", error);
+    return { ok: false, error: "백업 삭제에 실패했습니다." };
+  }
 }
 
 function copyDbSnapshot(tempDir: string) {
