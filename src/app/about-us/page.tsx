@@ -63,31 +63,32 @@ export default function AboutUsPage() {
           <BackButton href="/" />
         </div>
 
-        {/* 1. Heading */}
-        <header className="mb-8 border-b border-[var(--line)] pb-8 sm:mb-10 sm:pb-10">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-7">
-            <div className="shrink-0">
-              <Image
-                src="/brand/rbauto-logo.png"
-                alt="RBAUTO"
-                width={220}
-                height={220}
-                priority
-                className="h-[4.75rem] w-auto object-contain sm:h-[5.5rem]"
-              />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[12px] font-medium tracking-[0.14em] text-neutral-500 uppercase">
-                About Us
-              </p>
-              <h1 className="site-heading mt-1.5 max-w-4xl text-[1.55rem] text-neutral-900 sm:text-[1.9rem]">
-                Welcome to KOREA AUTO TRADE
-              </h1>
-              <p className="mt-2.5 max-w-2xl text-[14.5px] leading-relaxed tracking-wide text-neutral-600 sm:text-[15px]">
-                Your Trusted Global Partner for Salvage Vehicles, Automotive
-                Parts &amp; Asset Recovery.
-              </p>
-            </div>
+        {/* 1. Heading — logo as soft watermark behind the copy */}
+        <header className="relative mb-8 overflow-hidden border-b border-[var(--line)] pb-10 pt-2 sm:mb-10 sm:pb-12 sm:pt-3">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-[8%] flex justify-center sm:top-[4%]"
+          >
+            <Image
+              src="/brand/rbauto-logo.png"
+              alt=""
+              width={520}
+              height={520}
+              priority
+              className="h-[13rem] w-auto object-contain opacity-[0.09] sm:h-[17rem] sm:opacity-[0.08]"
+            />
+          </div>
+          <div className="relative z-10 mx-auto max-w-2xl text-center">
+            <p className="text-[12px] font-medium tracking-[0.14em] text-neutral-500 uppercase">
+              About Us
+            </p>
+            <h1 className="site-heading mt-2 text-[1.55rem] text-neutral-900 sm:text-[1.9rem]">
+              Welcome to KOREA AUTO TRADE
+            </h1>
+            <p className="mt-3 text-[14.5px] leading-relaxed tracking-wide text-neutral-600 sm:text-[15px]">
+              Your Trusted Global Partner for Salvage Vehicles, Automotive Parts
+              &amp; Asset Recovery.
+            </p>
           </div>
         </header>
 
