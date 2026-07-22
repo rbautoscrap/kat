@@ -1,11 +1,71 @@
-import { mkdir, unlink, writeFile } from "fs/promises";
+import { mkdir, statfs, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 import sharp from "sharp";
 import { z } from "zod";
 import type { ListingCategory } from "@prisma/client";
-import { getUploadsDir } from "@/lib/storage-paths";
+import { getAppTempDir, getUploadsDir } from "@/lib/storage-paths";
 import { translateToEnglish } from "@/lib/translate";
+
+/** Prefer volume tmp over tiny container /tmp (multipart + libvips). */
+function ensureUploadTempEnv() {
+  const tmp = getAppTempDir();
+  if (process.env.TMPDIR !== tmp) process.env.TMPDIR = tmp;
+  if (process.env.TMP !== tmp) process.env.TMP = tmp;
+  if (process.env.TEMP !== tmp) process.env.TEMP = tmp;
+  if (!process.env.VIPS_DISC_THRESHOLD?.trim()) {
+    process.env.VIPS_DISC_THRESHOLD = "512m";
+  }
+}
+
+let sharpTuned = false;
+function tuneSharpForUploads() {
+  if (sharpTuned) return;
+  sharpTuned = true;
+  // Lower peak RAM/disk while saving many listing photos in one request.
+  sharp.concurrency(1);
+  sharp.cache({ memory: 32, files: 0, items: 16 });
+}
+
+function isNoSpaceError(err: unknown) {
+  if (!err || typeof err !== "object") return false;
+  const code = "code" in err ? String((err as { code?: string }).code ?? "") : "";
+  const message = err instanceof Error ? err.message : String(err);
+  return code === "ENOSPC" || /ENOSPC|no space left on device/i.test(message);
+}
+
+function mapUploadError(err: unknown): Error {
+  if (isNoSpaceError(err)) {
+    return new Error(
+      "서버 저장 공간이 부족하여 사진을 저장하지 못했습니다. 사진 수를 줄이거나, 관리자 유지보수에서 백업·용량을 확인한 뒤 다시 시도해 주세요.",
+    );
+  }
+  if (err instanceof Error) return err;
+  return new Error("이미지 저장에 실패했습니다.");
+}
+
+const MIN_FREE_UPLOAD_BYTES = 120 * 1024 * 1024;
+
+async function assertUploadSpace(dir: string) {
+  try {
+    await mkdir(dir, { recursive: true });
+    const st = await statfs(dir);
+    const free = Number(st.bavail) * Number(st.bsize);
+    if (Number.isFinite(free) && free < MIN_FREE_UPLOAD_BYTES) {
+      throw new Error(
+        "서버 저장 공간이 부족합니다. 관리자 유지보수에서 백업을 정리하거나 볼륨 용량을 늘린 뒤 다시 시도해 주세요.",
+      );
+    }
+  } catch (err) {
+    if (
+      err instanceof Error &&
+      (err.message.includes("저장 공간") || isNoSpaceError(err))
+    ) {
+      throw mapUploadError(err);
+    }
+    // statfs unsupported — continue; write path still maps ENOSPC.
+  }
+}
 
 const optionalDigits = z
   .string()
@@ -229,9 +289,9 @@ export const MAX_IMAGES_PER_LISTING = 100;
 /** Longest edge after resize — keeps detail for listings without huge files. */
 const MAX_IMAGE_EDGE = 1920;
 /** Mild JPEG quality — visibly clean, meaningfully smaller files. */
-const JPEG_QUALITY = 80;
-/** Limit parallel sharp work under burst uploads. */
-const UPLOAD_CONCURRENCY = 3;
+const JPEG_QUALITY = 78;
+/** One-at-a-time avoids /tmp + RAM spikes on 50+ photo uploads. */
+const UPLOAD_CONCURRENCY = 1;
 const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -262,7 +322,12 @@ export async function deleteUploadedFiles(urls: string[]) {
 }
 
 async function compressListingImage(input: Buffer) {
-  const pipeline = sharp(input, { failOn: "none", animated: false });
+  const pipeline = sharp(input, {
+    failOn: "none",
+    animated: false,
+    sequentialRead: true,
+    limitInputPixels: 40_000_000,
+  });
   const meta = await pipeline.metadata();
   if (meta.format && !ALLOWED_SHARP_FORMATS.has(meta.format)) {
     throw new Error("unsupported");
@@ -291,18 +356,27 @@ async function saveImageFile(file: File) {
     throw new Error("JPG, PNG, WEBP, GIF 이미지만 업로드할 수 있습니다.");
   }
 
-  await mkdir(uploadsDir(), { recursive: true });
+  const dir = uploadsDir();
+  await mkdir(dir, { recursive: true });
+  await mkdir(getAppTempDir(), { recursive: true });
 
-  const input = Buffer.from(await file.arrayBuffer());
+  let input: Buffer | null = Buffer.from(await file.arrayBuffer());
   let output: Buffer;
   try {
     output = await compressListingImage(input);
-  } catch {
+  } catch (err) {
+    if (isNoSpaceError(err)) throw mapUploadError(err);
     throw new Error("이미지를 처리할 수 없습니다. 다른 파일을 시도해 주세요.");
+  } finally {
+    input = null;
   }
 
   const filename = `${randomUUID()}.jpg`;
-  await writeFile(path.join(uploadsDir(), filename), output);
+  try {
+    await writeFile(path.join(dir, filename), output);
+  } catch (err) {
+    throw mapUploadError(err);
+  }
   return `/uploads/${filename}`;
 }
 
@@ -334,6 +408,9 @@ function fileFromForm(entry: FormDataEntryValue | null) {
 
 /** Cover (대표) + gallery uploads. Cover is always first in `urls`. */
 export async function saveListingImageUploads(formData: FormData) {
+  ensureUploadTempEnv();
+  tuneSharpForUploads();
+
   const coverFile = fileFromForm(formData.get("coverImage"));
   const galleryFiles = formData
     .getAll("images")
@@ -346,20 +423,34 @@ export async function saveListingImageUploads(formData: FormData) {
     );
   }
 
-  const coverUrl = coverFile ? await saveImageFile(coverFile) : null;
-  const galleryUrls = await mapPool(
-    galleryFiles,
-    UPLOAD_CONCURRENCY,
-    saveImageFile,
-  );
+  await assertUploadSpace(uploadsDir());
 
-  return {
-    coverUrl,
-    galleryUrls,
-    /** Ordered list for full replace: cover first, then gallery */
-    urls: coverUrl ? [coverUrl, ...galleryUrls] : galleryUrls,
-    hasUpload: Boolean(coverUrl || galleryUrls.length),
-  };
+  const savedUrls: string[] = [];
+  try {
+    const coverUrl = coverFile ? await saveImageFile(coverFile) : null;
+    if (coverUrl) savedUrls.push(coverUrl);
+
+    const galleryUrls = await mapPool(
+      galleryFiles,
+      UPLOAD_CONCURRENCY,
+      async (file) => {
+        const url = await saveImageFile(file);
+        savedUrls.push(url);
+        return url;
+      },
+    );
+
+    return {
+      coverUrl,
+      galleryUrls,
+      /** Ordered list for full replace: cover first, then gallery */
+      urls: coverUrl ? [coverUrl, ...galleryUrls] : galleryUrls,
+      hasUpload: Boolean(coverUrl || galleryUrls.length),
+    };
+  } catch (err) {
+    await deleteUploadedFiles(savedUrls);
+    throw mapUploadError(err);
+  }
 }
 
 /** @deprecated Prefer saveListingImageUploads — kept for any legacy callers */

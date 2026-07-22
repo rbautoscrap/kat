@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import type { Listing, ListingImage, ListingCategory } from "@prisma/client";
 import { ADMIN_CATEGORY_LABELS } from "@/lib/admin-labels";
+import { compressImagesForUpload } from "@/lib/browser-compress-image";
 
 const IMAGE_ACCEPT =
   "image/jpeg,image/png,image/webp,image/gif";
@@ -115,6 +116,7 @@ export function ListingForm({ listing }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
   const [coverName, setCoverName] = useState<string | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [photoCount, setPhotoCount] = useState(0);
@@ -162,6 +164,7 @@ export function ListingForm({ listing }: Props) {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setProgress(null);
     setPending(true);
 
     const form = e.currentTarget;
@@ -172,24 +175,22 @@ export function ListingForm({ listing }: Props) {
     if (coverEntry instanceof File && coverEntry.size === 0) {
       data.delete("coverImage");
     }
-    const galleryFiles = data
+    let galleryFiles = data
       .getAll("images")
       .filter((f): f is File => f instanceof File && f.size > 0);
     data.delete("images");
-    for (const file of galleryFiles) {
-      data.append("images", file);
-    }
+
+    let coverFile =
+      coverEntry instanceof File && coverEntry.size > 0 ? coverEntry : null;
 
     if (!listing) {
-      const cover = data.get("coverImage");
-      if (!(cover instanceof File) || cover.size === 0) {
+      if (!coverFile) {
         setError("대표(메인) 사진을 등록해 주세요.");
         setPending(false);
         return;
       }
     } else {
-      const cover = data.get("coverImage");
-      const hasNewCover = cover instanceof File && cover.size > 0;
+      const hasNewCover = Boolean(coverFile);
       const hasNewGallery = galleryFiles.length > 0;
       if (
         !hasNewCover &&
@@ -204,8 +205,37 @@ export function ListingForm({ listing }: Props) {
     }
 
     try {
+      const toCompress = [
+        ...(coverFile ? [coverFile] : []),
+        ...galleryFiles,
+      ];
+      if (toCompress.length > 0) {
+        setProgress(`사진 최적화 중… 0/${toCompress.length}`);
+        const compressed = await compressImagesForUpload(
+          toCompress,
+          (done, total) => setProgress(`사진 최적화 중… ${done}/${total}`),
+        );
+        let idx = 0;
+        if (coverFile) {
+          coverFile = compressed[idx++] ?? coverFile;
+          data.delete("coverImage");
+          data.set("coverImage", coverFile);
+        }
+        galleryFiles = compressed.slice(idx);
+      }
+
+      for (const file of galleryFiles) {
+        data.append("images", file);
+      }
+
+      setProgress(
+        galleryFiles.length + (coverFile ? 1 : 0) > 20
+          ? "서버에 저장 중… 사진이 많아 시간이 걸릴 수 있습니다."
+          : "서버에 저장 중…",
+      );
+
       const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 120_000);
+      const timeout = window.setTimeout(() => controller.abort(), 300_000);
       const res = await fetch(
         listing ? `/api/listings/${listing.id}` : "/api/listings",
         {
@@ -239,6 +269,7 @@ export function ListingForm({ listing }: Props) {
       );
     } finally {
       setPending(false);
+      setProgress(null);
     }
   }
 
@@ -546,13 +577,22 @@ export function ListingForm({ listing }: Props) {
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {progress && !error ? (
+        <p className="text-[13px] tracking-wide text-neutral-500">{progress}</p>
+      ) : null}
 
       <button
         type="submit"
         disabled={pending}
         className="rounded-md bg-neutral-800 px-5 py-2.5 text-[13.5px] font-medium tracking-wide text-white transition hover:bg-neutral-700 disabled:opacity-60"
       >
-        {pending ? "저장 중…" : listing ? "매물 수정" : "매물 등록"}
+        {pending
+          ? progress?.startsWith("사진 최적화")
+            ? "최적화 중…"
+            : "저장 중…"
+          : listing
+            ? "매물 수정"
+            : "매물 등록"}
       </button>
     </form>
   );

@@ -18,6 +18,18 @@ export function toApiErrorMessage(
   }
 
   const message = err instanceof Error ? err.message : "";
+  const code =
+    err && typeof err === "object" && "code" in err
+      ? String((err as { code?: string }).code ?? "")
+      : "";
+
+  if (
+    code === "ENOSPC" ||
+    /ENOSPC|no space left on device/i.test(message)
+  ) {
+    return "서버 저장 공간이 부족하여 사진을 저장하지 못했습니다. 사진 수를 줄이거나, 관리자 유지보수에서 백업·용량을 확인한 뒤 다시 시도해 주세요.";
+  }
+
   if (
     message.includes("Unknown argument") ||
     message.includes("prisma.") ||
@@ -26,7 +38,7 @@ export function toApiErrorMessage(
     return "데이터베이스 스키마가 최신이 아닙니다. 서버를 재시작한 뒤 다시 시도해 주세요.";
   }
 
-  if (message && message.length < 120 && !message.includes("\n")) {
+  if (message && message.length < 160 && !message.includes("\n")) {
     return message;
   }
 

@@ -55,6 +55,21 @@ if (!process.env.UPLOAD_DIR?.trim()) {
   process.env.UPLOAD_DIR = "/app/data/uploads";
 }
 
+const dataRoot =
+  process.env.DATA_DIR?.trim() ||
+  process.env.RAILWAY_VOLUME_MOUNT_PATH?.trim() ||
+  "/app/data";
+if (!process.env.KAT_TMP_DIR?.trim()) {
+  process.env.KAT_TMP_DIR = `${dataRoot}/tmp`;
+}
+// Multipart + sharp/libvips must not use the tiny ephemeral /tmp.
+process.env.TMPDIR = process.env.KAT_TMP_DIR;
+process.env.TMP = process.env.KAT_TMP_DIR;
+process.env.TEMP = process.env.KAT_TMP_DIR;
+if (!process.env.VIPS_DISC_THRESHOLD?.trim()) {
+  process.env.VIPS_DISC_THRESHOLD = "512m";
+}
+
 if (!process.env.AUTH_SECRET?.trim()) {
   process.env.AUTH_SECRET = randomBytes(32).toString("hex");
   console.warn(
@@ -80,6 +95,10 @@ console.log(`[start-prod] PORT=${port}`);
 console.log(`[start-prod] DATA_DIR=${process.env.DATA_DIR ?? "(unset)"}`);
 console.log(`[start-prod] DATABASE_URL=${process.env.DATABASE_URL}`);
 console.log(`[start-prod] UPLOAD_DIR=${process.env.UPLOAD_DIR}`);
+console.log(`[start-prod] TMPDIR=${process.env.TMPDIR}`);
+console.log(
+  `[start-prod] VIPS_DISC_THRESHOLD=${process.env.VIPS_DISC_THRESHOLD}`,
+);
 console.log(
   `[start-prod] PERSIST_VOLUME=${process.env.PERSIST_VOLUME === "1" ? "yes" : "NO — attach Volume at /app/data"}`,
 );

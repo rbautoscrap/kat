@@ -82,7 +82,9 @@ function migrateUploadsTree(srcDir, destDir) {
   console.error(`[persist] Migrated uploads ${realSrc} → ${destDir}`);
 }
 
+const tmpPersistent = path.join(dataDir, "tmp");
 mkdirSync(uploadsPersistent, { recursive: true });
+mkdirSync(tmpPersistent, { recursive: true });
 mkdirSync(path.join(cwd, "public"), { recursive: true });
 
 migrateFile(path.join(cwd, "prisma", "prod.db"), dbPath);
@@ -130,6 +132,12 @@ process.stdout.write(
     `DATA_DIR=${dataDir}`,
     `DATABASE_URL=${dbUrl}`,
     `UPLOAD_DIR=${uploadsPersistent}`,
+    `KAT_TMP_DIR=${tmpPersistent}`,
+    `TMPDIR=${tmpPersistent}`,
+    `TMP=${tmpPersistent}`,
+    `TEMP=${tmpPersistent}`,
+    // Keep large decode work in RAM so libvips does not flood tiny container /tmp.
+    `VIPS_DISC_THRESHOLD=512m`,
     `PERSIST_VOLUME=${volumeAttached ? "1" : "0"}`,
   ].join("\n") + "\n",
 );
