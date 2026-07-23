@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { LiveAuctionAccessDialog } from "@/components/LiveAuctionAccessDialog";
 
 const nav = [
   {
@@ -34,18 +35,28 @@ type UserProps = {
   name: string;
   canList: boolean;
   admin: boolean;
+  canAccessLiveAuction: boolean;
 } | null;
 
 type Props = {
   user: UserProps;
   logoutAction: () => Promise<void>;
+  canAccessLiveAuction?: boolean;
 };
 
-export function MobileNav({ user, logoutAction }: Props) {
+export function MobileNav({
+  user,
+  logoutAction,
+  canAccessLiveAuction = false,
+}: Props) {
   const [open, setOpen] = useState(false);
+  const [gateOpen, setGateOpen] = useState(false);
+  const closeGate = useCallback(() => setGateOpen(false), []);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get("category");
+  const allowLiveAuction =
+    canAccessLiveAuction || Boolean(user?.canAccessLiveAuction);
 
   useEffect(() => {
     setOpen(false);
@@ -112,17 +123,33 @@ export function MobileNav({ user, logoutAction }: Props) {
                       ? pathname.startsWith("/listings") &&
                         activeCategory === item.category
                       : pathname === item.href;
+                  const className = `flex min-h-12 w-full items-center px-1 text-left text-[15px] font-medium tracking-wide ${
+                    item.hot ? "text-[var(--accent)]" : "text-neutral-800"
+                  } ${active ? "bg-neutral-50" : ""}`;
+                  const isLiveAuction = item.category === "LIVE_AUCTION";
+
                   return (
                     <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className={`flex min-h-12 items-center px-1 text-[15px] font-medium tracking-wide ${
-                          item.hot ? "text-[var(--accent)]" : "text-neutral-800"
-                        } ${active ? "bg-neutral-50" : ""}`}
-                        onClick={() => setOpen(false)}
-                      >
-                        {item.label}
-                      </Link>
+                      {isLiveAuction && !allowLiveAuction ? (
+                        <button
+                          type="button"
+                          className={className}
+                          onClick={() => {
+                            setOpen(false);
+                            setGateOpen(true);
+                          }}
+                        >
+                          {item.label}
+                        </button>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className={className}
+                          onClick={() => setOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      )}
                     </li>
                   );
                 })}
@@ -200,6 +227,7 @@ export function MobileNav({ user, logoutAction }: Props) {
           </div>
         </div>
       ) : null}
+      <LiveAuctionAccessDialog open={gateOpen} onClose={closeGate} />
     </div>
   );
 }

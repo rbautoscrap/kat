@@ -62,7 +62,11 @@ img {
   line-height: 1;
   color: #404040;
   text-decoration: none;
+  background: transparent;
+  border: none;
   border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
   transition: border-color 0.2s ease, color 0.2s ease;
 }
 

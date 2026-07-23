@@ -1,7 +1,7 @@
 import type { Listing, ListingImage } from "@prisma/client";
 import { HeroBanner } from "@/components/HeroBanner";
 import { ListingSection } from "@/components/ListingSection";
-import { isAdmin } from "@/lib/auth";
+import { canAccessLiveAuction, isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { prisma } from "@/lib/prisma";
 
@@ -59,8 +59,11 @@ export default async function HomePage({ searchParams }: Props) {
   const params = await searchParams;
   const dbUser = await resolveSessionDbUser();
   const canViewSold = isAdmin(dbUser?.role);
+  const allowLiveAuction = canAccessLiveAuction(dbUser?.role);
 
-  const [hotDeals, carListings, liveAuction, standBy] = await loadHomeListings();
+  const [hotDeals, carListings, liveAuctionRaw, standBy] =
+    await loadHomeListings();
+  const liveAuction = allowLiveAuction ? liveAuctionRaw : [];
 
   const errorMessage =
     params.error === "unauthorized"

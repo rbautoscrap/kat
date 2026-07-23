@@ -1,8 +1,10 @@
 import { BackButton } from "@/components/BackButton";
 import { ListingCard } from "@/components/ListingCard";
 import { ListingPagination } from "@/components/ListingPagination";
+import { LiveAuctionGatePanel } from "@/components/LiveAuctionGatePanel";
 import { parsePage } from "@/lib/admin-pagination";
-import { auth, isAdmin } from "@/lib/auth";
+import { canAccessLiveAuction, isAdmin } from "@/lib/auth";
+import { resolveSessionDbUser } from "@/lib/listing-access";
 import { buildPublicListingSearchWhere } from "@/lib/listing-search";
 import { prisma } from "@/lib/prisma";
 import {
@@ -22,19 +24,27 @@ type Props = {
 
 export default async function ListingsPage({ searchParams }: Props) {
   const params = await searchParams;
-  const session = await auth();
-  const canViewSold = isAdmin(session?.user?.role);
+  const dbUser = await resolveSessionDbUser();
+  const canViewSold = isAdmin(dbUser?.role);
+  const allowLiveAuction = canAccessLiveAuction(dbUser?.role);
   const category = parseCategory(params.category ?? null);
   const q = params.q?.trim() ?? "";
   const page = parsePage(params.page);
+
+  if (category === "LIVE_AUCTION" && !allowLiveAuction) {
+    return <LiveAuctionGatePanel />;
+  }
 
   const searchWhere = buildPublicListingSearchWhere(q);
   const categoryWhere: Prisma.ListingWhereInput = category
     ? { category }
     : {};
+  const liveAuctionWhere: Prisma.ListingWhereInput = allowLiveAuction
+    ? {}
+    : { NOT: { category: "LIVE_AUCTION" } };
 
   const where: Prisma.ListingWhereInput = {
-    AND: [categoryWhere, searchWhere],
+    AND: [categoryWhere, searchWhere, liveAuctionWhere],
   };
 
   const fromMenu = Boolean(category) && !q;
