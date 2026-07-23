@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { BackupInfo } from "@/lib/maintenance";
+import { formatKoreaDateTime } from "@/lib/format-korea-time";
 import {
   adminActionBtnClass,
   adminDangerBtnClass,
@@ -161,7 +162,7 @@ export function BackupPanel({ initialBackups }: Props) {
                     </td>
                     <td className={`${adminTdClass} whitespace-nowrap text-neutral-600`}>
                       <span className="tabular-nums">
-                        {backup.createdAt.slice(0, 19).replace("T", " ")} UTC
+                        {formatKoreaDateTime(backup.createdAt)}
                       </span>
                       <span className="mx-1.5 text-neutral-300">·</span>
                       <span className="tabular-nums">{backup.sizeLabel}</span>

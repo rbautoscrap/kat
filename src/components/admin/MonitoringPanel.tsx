@@ -1,4 +1,5 @@
 import type { MaintenanceSnapshot } from "@/lib/maintenance";
+import { formatKoreaDateTime } from "@/lib/format-korea-time";
 
 type Props = {
   snapshot: MaintenanceSnapshot;
@@ -115,7 +116,7 @@ export function MonitoringPanel({ snapshot }: Props) {
         </div>
 
         <p className="border-t border-neutral-100 pt-3 text-[12.5px] text-neutral-400">
-          기준 시각 {snapshot.time.slice(0, 19).replace("T", " ")} UTC · Node{" "}
+          기준 시각 {formatKoreaDateTime(snapshot.time)} · Node{" "}
           {snapshot.nodeVersion}
         </p>
       </div>
