@@ -11,7 +11,15 @@ const nextConfig: NextConfig = {
     "lazystream",
     "readdir-glob",
     "tar-stream",
+    "unzipper",
   ],
+  experimental: {
+    // Allow large backup ZIP uploads for admin restore.
+    proxyClientMaxBodySize: "2gb",
+    serverActions: {
+      bodySizeLimit: "2gb",
+    },
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [

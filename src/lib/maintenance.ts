@@ -2,17 +2,21 @@ import "server-only";
 
 import {
   copyFileSync,
+  cpSync,
   createWriteStream,
   existsSync,
   mkdirSync,
   readdirSync,
+  renameSync,
   rmSync,
   statSync,
   unlinkSync,
+  writeFileSync,
 } from "node:fs";
 import path from "node:path";
 import { createZipArchiver } from "@/lib/create-zip-archiver";
-import { prisma } from "@/lib/prisma";
+import { extractZipSafe } from "@/lib/extract-zip";
+import { disconnectPrisma, prisma } from "@/lib/prisma";
 import { getUploadsDir } from "@/lib/storage-paths";
 
 const MAX_BACKUPS = 5;
@@ -330,6 +334,226 @@ export type MaintenanceSnapshot = {
     offers: number;
   };
 };
+
+export type RestoreResult = {
+  ok: true;
+  listings: number;
+  users: number;
+  uploadsFiles: number;
+};
+
+function findRestoredDbFile(dbDir: string): string {
+  if (!existsSync(dbDir)) {
+    throw new Error("백업에 데이터베이스 폴더(db/)가 없습니다.");
+  }
+  const files = readdirSync(dbDir).filter((name) => !name.startsWith("."));
+  const preferred = path.basename(getDbFilePath());
+  if (files.includes(preferred)) {
+    return path.join(dbDir, preferred);
+  }
+  const dbFiles = files.filter(
+    (name) => name.endsWith(".db") && !name.includes("-wal") && !name.includes("-shm"),
+  );
+  if (dbFiles.length === 0) {
+    throw new Error("백업에 SQLite 데이터베이스 파일이 없습니다.");
+  }
+  return path.join(dbDir, dbFiles[0]!);
+}
+
+function removeDbSidecars(dbPath: string) {
+  for (const suffix of ["-wal", "-shm"]) {
+    const side = `${dbPath}${suffix}`;
+    if (existsSync(side)) {
+      try {
+        unlinkSync(side);
+      } catch {
+        // ignore
+      }
+    }
+  }
+}
+
+function replaceFile(fromPath: string, toPath: string) {
+  mkdirSync(path.dirname(toPath), { recursive: true });
+  const tmp = `${toPath}.restoring`;
+  try {
+    if (existsSync(tmp)) unlinkSync(tmp);
+  } catch {
+    // ignore
+  }
+  copyFileSync(fromPath, tmp);
+  try {
+    if (existsSync(toPath)) unlinkSync(toPath);
+  } catch {
+    // ignore — rename may overwrite on some platforms
+  }
+  renameSync(tmp, toPath);
+}
+
+function replaceUploadsDir(fromUploads: string, uploadsDir: string) {
+  const parent = path.dirname(uploadsDir);
+  mkdirSync(parent, { recursive: true });
+  const staging = path.join(parent, `.uploads-restore-${backupStamp()}-${process.pid}`);
+  const previous = path.join(parent, `.uploads-prev-${backupStamp()}-${process.pid}`);
+
+  try {
+    if (existsSync(staging)) rmSync(staging, { recursive: true, force: true });
+    mkdirSync(staging, { recursive: true });
+    if (existsSync(fromUploads)) {
+      cpSync(fromUploads, staging, { recursive: true });
+    }
+
+    if (existsSync(uploadsDir)) {
+      if (existsSync(previous)) rmSync(previous, { recursive: true, force: true });
+      renameSync(uploadsDir, previous);
+    }
+    renameSync(staging, uploadsDir);
+
+    if (existsSync(previous)) {
+      try {
+        rmSync(previous, { recursive: true, force: true });
+      } catch {
+        // Best-effort cleanup; restore already applied.
+      }
+    }
+  } catch (error) {
+    // Attempt rollback if we moved the live uploads aside.
+    try {
+      if (!existsSync(uploadsDir) && existsSync(previous)) {
+        renameSync(previous, uploadsDir);
+      }
+    } catch {
+      // ignore
+    }
+    try {
+      if (existsSync(staging)) rmSync(staging, { recursive: true, force: true });
+    } catch {
+      // ignore
+    }
+    throw error;
+  }
+}
+
+/**
+ * Restore DB + uploads from a KAT backup ZIP on disk.
+ * Disconnects Prisma while swapping files, then verifies with a count query.
+ */
+export async function restoreFromBackupZip(zipPath: string): Promise<RestoreResult> {
+  if (!existsSync(zipPath)) {
+    throw new Error("백업 ZIP 파일을 찾을 수 없습니다.");
+  }
+  const st = safeStat(zipPath);
+  if (!st || st.size <= 0) {
+    throw new Error("백업 ZIP 파일이 비어 있습니다.");
+  }
+
+  const workRoot = path.join(
+    getBackupsDir(),
+    `.restore-${backupStamp()}-${process.pid}`,
+  );
+  const extractRoot = path.join(workRoot, "extracted");
+
+  try {
+    mkdirSync(extractRoot, { recursive: true });
+    await extractZipSafe(zipPath, extractRoot);
+
+    const dbSource = findRestoredDbFile(path.join(extractRoot, "db"));
+    const uploadsSource = path.join(extractRoot, "uploads");
+    const dbTarget = getDbFilePath();
+    const uploadsDir = getUploadsDir();
+
+    // Marker so monitoring still sees a healthy volume after restore.
+    try {
+      const marker = path.join(getDataDir(), ".kat-persist");
+      mkdirSync(getDataDir(), { recursive: true });
+      if (!existsSync(marker)) {
+        writeFileSync(marker, `${new Date().toISOString()}\n`);
+      }
+    } catch {
+      // ignore
+    }
+
+    await disconnectPrisma();
+
+    removeDbSidecars(dbTarget);
+    replaceFile(dbSource, dbTarget);
+
+    // Restore WAL/SHM from the backup when present (same basename).
+    const sourceBase = path.basename(dbSource);
+    for (const suffix of ["-wal", "-shm"]) {
+      const sideSource = path.join(path.dirname(dbSource), `${sourceBase}${suffix}`);
+      if (existsSync(sideSource)) {
+        replaceFile(sideSource, `${dbTarget}${suffix}`);
+      }
+    }
+
+    if (existsSync(uploadsSource)) {
+      replaceUploadsDir(uploadsSource, uploadsDir);
+    } else {
+      mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    // Force a fresh connection against the restored file.
+    const listings = await prisma.listing.count();
+    const users = await prisma.user.count();
+    const uploads = dirStats(uploadsDir);
+
+    return {
+      ok: true,
+      listings,
+      users,
+      uploadsFiles: uploads.files,
+    };
+  } catch (error) {
+    throw new Error(`복원 실패: ${errorMessage(error)}`);
+  } finally {
+    try {
+      rmSync(workRoot, { recursive: true, force: true });
+    } catch {
+      // ignore
+    }
+  }
+}
+
+export async function restoreFromBackupName(name: string): Promise<RestoreResult> {
+  const filePath = getBackupFilePath(name);
+  if (!filePath) {
+    throw new Error("백업 파일을 찾을 수 없습니다.");
+  }
+  return restoreFromBackupZip(filePath);
+}
+
+/** Save an uploaded ZIP into the backups folder (keeps naming convention). */
+export function storeUploadedBackupZip(
+  sourcePath: string,
+  originalName?: string,
+): BackupInfo {
+  ensureBackupsDir();
+  let name =
+    originalName && isSafeBackupName(originalName)
+      ? originalName
+      : `kat-backup-${backupStamp()}.zip`;
+  if (!isSafeBackupName(name)) {
+    name = `kat-backup-${backupStamp()}.zip`;
+  }
+
+  const dest = path.join(getBackupsDir(), name);
+  if (path.resolve(sourcePath) !== path.resolve(dest)) {
+    copyFileSync(sourcePath, dest);
+  }
+
+  pruneOldBackups();
+  const st = safeStat(dest);
+  if (!st || st.size <= 0) {
+    throw new Error("업로드된 백업 파일이 비어 있습니다.");
+  }
+  return {
+    name,
+    size: st.size,
+    sizeLabel: formatBytes(st.size),
+    createdAt: st.mtime.toISOString(),
+  };
+}
 
 export async function collectMaintenanceSnapshot(): Promise<MaintenanceSnapshot> {
   const dataDir = getDataDir();

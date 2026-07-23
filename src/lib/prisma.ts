@@ -31,3 +31,8 @@ if (
 }
 
 export const prisma = globalForPrisma.prisma;
+
+/** Close DB handles before swapping the SQLite file on disk. */
+export async function disconnectPrisma() {
+  await globalForPrisma.prisma?.$disconnect();
+}
