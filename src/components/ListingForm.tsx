@@ -910,12 +910,14 @@ function Field({
   type = "text",
   required,
   defaultValue,
+  placeholder,
 }: {
   label: string;
   name: string;
   type?: string;
   required?: boolean;
   defaultValue?: string;
+  placeholder?: string;
 }) {
   return (
     <label className="block text-sm">
@@ -927,6 +929,7 @@ function Field({
         type={type}
         required={required}
         defaultValue={defaultValue}
+        placeholder={placeholder}
         className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400 focus:bg-white"
       />
     </label>
