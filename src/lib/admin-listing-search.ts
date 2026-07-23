@@ -12,7 +12,8 @@ export function buildListingSearchWhere(
   const contains = { contains: q } as const;
   const digits = q.replace(/\D/g, "");
   const isPureNumeric = digits.length > 0 && digits === q.replace(/\s/g, "");
-  const isShortNumeric = isPureNumeric && digits.length > 0 && digits.length < 4;
+  /** Align with public: short digit runs are too noisy for odometer / phone substrings. */
+  const isShortNumeric = isPureNumeric && digits.length > 0 && digits.length < 5;
 
   const detail: Prisma.ListingWhereInput[] = [
     { highlights: contains },

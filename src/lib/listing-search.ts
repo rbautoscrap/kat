@@ -1,9 +1,14 @@
 import type { Prisma } from "@prisma/client";
 
+/** Minimum digit length before matching against VIN / S/N substrings. */
+const MIN_VIN_SERIAL_DIGITS = 5;
+
 /**
- * Public storefront search — strict identity + notes only.
- * Avoids false hits from odometer/displacement/etc. substring matches
- * (e.g. searching "500" matching "71,500 km" or "1500cc").
+ * Public storefront search — strict identity matching.
+ *
+ * Short numbers like "500" only match title / make / model (e.g. Equus VS500).
+ * They must NOT scan VIN / S/N / notes: those fields often contain incidental
+ * digit runs and caused false hits (e.g. Spark appearing for "500" / "VS500").
  */
 export function buildPublicListingSearchWhere(
   raw?: string | null,
@@ -13,8 +18,8 @@ export function buildPublicListingSearchWhere(
 
   const digits = q.replace(/\D/g, "");
   const isPureNumeric = digits.length > 0 && digits === q.replace(/\s/g, "");
-  /** Short numbers like 500 are too ambiguous for notes / partial odometer hits. */
-  const isShortNumeric = isPureNumeric && digits.length > 0 && digits.length < 4;
+  const isShortNumeric =
+    isPureNumeric && digits.length > 0 && digits.length < MIN_VIN_SERIAL_DIGITS;
 
   const year = Number(digits);
   const yearMatch =
@@ -27,27 +32,28 @@ export function buildPublicListingSearchWhere(
 
   const contains = { contains: q } as const;
 
+  /** Name / model code fields — safe for short numeric fragments like 500 → VS500. */
   const identity: Prisma.ListingWhereInput[] = [
     { title: contains },
     { make: contains },
     { model: contains },
-    { vin: contains },
-    { serialNumber: contains },
   ];
 
-  if (digits && digits !== q) {
-    identity.push(
-      { vin: { contains: digits } },
-      { serialNumber: { contains: digits } },
-    );
-  } else if (digits && digits.length >= 4) {
-    // Longer numeric queries (VIN / S/N fragments) may match digit-only fields.
+  if (!isShortNumeric) {
+    // Full query against VIN / S/N (e.g. "VS500", "211748", partial VIN text).
+    identity.push({ vin: contains }, { serialNumber: contains });
+  }
+
+  // Digit-only VIN / S/N scan — only when long enough to be intentional.
+  // Prevents "VS500" → digits "500" from matching unrelated VIN/S/N substrings.
+  if (digits.length >= MIN_VIN_SERIAL_DIGITS) {
     identity.push(
       { vin: { contains: digits } },
       { serialNumber: { contains: digits } },
     );
   }
 
+  // Notes: allow text search, but never short pure numbers (too many false hits).
   const notes: Prisma.ListingWhereInput[] = isShortNumeric
     ? []
     : [{ damages: contains }, { damagesEn: contains }];
