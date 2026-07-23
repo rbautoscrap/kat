@@ -77,16 +77,45 @@ if (!process.env.AUTH_SECRET?.trim()) {
   );
 }
 
+// Auth.js on Railway / custom domains
+process.env.AUTH_TRUST_HOST = "true";
+
+function normalizeAuthUrl(raw) {
+  let v = String(raw ?? "").trim();
+  // Railway UI paste sometimes keeps wrapping quotes
+  if (
+    (v.startsWith('"') && v.endsWith('"')) ||
+    (v.startsWith("'") && v.endsWith("'"))
+  ) {
+    v = v.slice(1, -1).trim();
+  }
+  if (!v) return "";
+  if (!/^https?:\/\//i.test(v)) v = `https://${v}`;
+  // Auth.js expects origin only (no path / trailing slash)
+  try {
+    const u = new URL(v);
+    return u.origin;
+  } catch {
+    return v.replace(/\/+$/, "");
+  }
+}
+
 if (!process.env.AUTH_URL?.trim()) {
   const domain =
     process.env.RAILWAY_PUBLIC_DOMAIN?.trim() ||
     process.env.RAILWAY_STATIC_URL?.trim();
   if (domain) {
-    process.env.AUTH_URL = domain.startsWith("http")
-      ? domain
-      : `https://${domain}`;
+    process.env.AUTH_URL = normalizeAuthUrl(domain);
     console.log(`[start-prod] AUTH_URL → ${process.env.AUTH_URL}`);
   }
+} else {
+  const normalized = normalizeAuthUrl(process.env.AUTH_URL);
+  if (normalized && normalized !== process.env.AUTH_URL.trim()) {
+    console.log(
+      `[start-prod] AUTH_URL normalized: ${process.env.AUTH_URL} → ${normalized}`,
+    );
+  }
+  if (normalized) process.env.AUTH_URL = normalized;
 }
 
 console.log("[start-prod] Boot checks");
