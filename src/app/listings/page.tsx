@@ -73,8 +73,10 @@ export default async function ListingsPage({ searchParams }: Props) {
       </h1>
       {isSearch ? (
         <p className="-mt-4 mb-6 text-[13px] tracking-wide text-neutral-500">
-          {total.toLocaleString("en-US")} result{total === 1 ? "" : "s"} across
-          listing details
+          {total.toLocaleString("en-US")} result{total === 1 ? "" : "s"}
+          {" "}
+          for make, model, VIN, S/N
+          {/^\d{1,3}$/.test(q) ? "" : ", or notes"}
         </p>
       ) : null}
       {listings.length === 0 ? (

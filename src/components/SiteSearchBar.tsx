@@ -24,7 +24,7 @@ export function SiteSearchBar() {
               id="site-search-q"
               name="q"
               type="search"
-              placeholder="Search by make, model, VIN, notes…"
+              placeholder="Search by make, model, VIN, S/N…"
               autoComplete="off"
               className="min-w-0 flex-1 bg-transparent px-4 text-[15px] text-neutral-800 outline-none placeholder:text-neutral-400"
             />
