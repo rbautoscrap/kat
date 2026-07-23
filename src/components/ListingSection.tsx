@@ -13,6 +13,7 @@ type Props = {
   limit?: number;
   canViewSold?: boolean;
   canManageSaleStatus?: boolean;
+  canAccessLiveAuction?: boolean;
 };
 
 export function ListingSection({
@@ -21,6 +22,7 @@ export function ListingSection({
   limit = 12,
   canViewSold = false,
   canManageSaleStatus = false,
+  canAccessLiveAuction = false,
 }: Props) {
   const items = listings.slice(0, limit);
   if (items.length === 0) return null;
@@ -45,6 +47,7 @@ export function ListingSection({
             listing={listing}
             canViewSold={canViewSold}
             canManageSaleStatus={canManageSaleStatus}
+            canAccessLiveAuction={canAccessLiveAuction}
           />
         ))}
       </div>

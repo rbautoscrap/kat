@@ -47,7 +47,12 @@ export default async function ListingDetailPage({ params }: Props) {
     listing.category === "LIVE_AUCTION" &&
     !canAccessLiveAuction(dbUser?.role)
   ) {
-    return <LiveAuctionGatePanel />;
+    return (
+      <LiveAuctionGatePanel
+        callbackUrl={`/listings/${listing.id}`}
+        backHref={CATEGORY_PATHS.LIVE_AUCTION}
+      />
+    );
   }
 
   // Sold listings: detail view for administrators only

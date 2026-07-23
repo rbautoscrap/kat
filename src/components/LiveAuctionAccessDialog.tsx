@@ -7,10 +7,16 @@ import { LIVE_AUCTION_ACCESS_MESSAGE } from "@/lib/live-auction";
 type Props = {
   open: boolean;
   onClose: () => void;
+  /** Where to return after login (usually the listing detail URL). */
+  callbackUrl?: string;
 };
 
-/** Clean warning dialog when Live Auction is opened without partner access. */
-export function LiveAuctionAccessDialog({ open, onClose }: Props) {
+/** Warning dialog when a Live Auction listing is opened without partner access. */
+export function LiveAuctionAccessDialog({
+  open,
+  onClose,
+  callbackUrl = "/listings?category=LIVE_AUCTION",
+}: Props) {
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -26,6 +32,8 @@ export function LiveAuctionAccessDialog({ open, onClose }: Props) {
   }, [open, onClose]);
 
   if (!open) return null;
+
+  const loginHref = `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -56,7 +64,7 @@ export function LiveAuctionAccessDialog({ open, onClose }: Props) {
         </p>
         <div className="mt-7 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
           <Link
-            href="/login?callbackUrl=/listings?category=LIVE_AUCTION"
+            href={loginHref}
             className="inline-flex h-10 items-center justify-center bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-800"
             onClick={onClose}
           >

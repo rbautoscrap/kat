@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useCallback, useState } from "react";
 import type { Listing, ListingImage } from "@prisma/client";
+import { LiveAuctionAccessDialog } from "@/components/LiveAuctionAccessDialog";
 import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl";
 import { ListingThumb } from "@/components/ListingThumb";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
@@ -12,6 +16,8 @@ type Props = {
   canViewSold?: boolean;
   /** Admins can set sale status from the public listing grid */
   canManageSaleStatus?: boolean;
+  /** Partner members may open Live Auction listing details */
+  canAccessLiveAuction?: boolean;
 };
 
 export function ListingCard({
@@ -19,12 +25,19 @@ export function ListingCard({
   size = "default",
   canViewSold = false,
   canManageSaleStatus = false,
+  canAccessLiveAuction = false,
 }: Props) {
   const thumb = listing.images[0]?.url ?? "/placeholder-car.svg";
   const label = `${listing.year} ${listing.make} ${listing.model}`;
   const large = size === "large";
   const isSold = listing.saleStatus === "SOLD";
   const canOpen = !isSold || canViewSold;
+  const detailHref = `/listings/${listing.id}`;
+  const liveAuctionLocked =
+    listing.category === "LIVE_AUCTION" && !canAccessLiveAuction;
+
+  const [gateOpen, setGateOpen] = useState(false);
+  const closeGate = useCallback(() => setGateOpen(false), []);
 
   const media = (
     <div className="relative aspect-[3/2] overflow-hidden rounded-[3px] bg-neutral-100">
@@ -74,9 +87,31 @@ export function ListingCard({
     );
   }
 
+  if (liveAuctionLocked) {
+    return (
+      <div className="block">
+        <button
+          type="button"
+          className="group block w-full cursor-pointer border-0 bg-transparent p-0 text-left"
+          onClick={() => setGateOpen(true)}
+          aria-label={`${label} — partner access required`}
+        >
+          {media}
+          {caption}
+        </button>
+        {saleControl}
+        <LiveAuctionAccessDialog
+          open={gateOpen}
+          onClose={closeGate}
+          callbackUrl={detailHref}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="block">
-      <Link href={`/listings/${listing.id}`} className="group block">
+      <Link href={detailHref} className="group block">
         {media}
         {caption}
       </Link>

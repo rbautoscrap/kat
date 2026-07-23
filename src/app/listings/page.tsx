@@ -1,7 +1,6 @@
 import { BackButton } from "@/components/BackButton";
 import { ListingCard } from "@/components/ListingCard";
 import { ListingPagination } from "@/components/ListingPagination";
-import { LiveAuctionGatePanel } from "@/components/LiveAuctionGatePanel";
 import { parsePage } from "@/lib/admin-pagination";
 import { canAccessLiveAuction, isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
@@ -31,20 +30,13 @@ export default async function ListingsPage({ searchParams }: Props) {
   const q = params.q?.trim() ?? "";
   const page = parsePage(params.page);
 
-  if (category === "LIVE_AUCTION" && !allowLiveAuction) {
-    return <LiveAuctionGatePanel />;
-  }
-
   const searchWhere = buildPublicListingSearchWhere(q);
   const categoryWhere: Prisma.ListingWhereInput = category
     ? { category }
     : {};
-  const liveAuctionWhere: Prisma.ListingWhereInput = allowLiveAuction
-    ? {}
-    : { NOT: { category: "LIVE_AUCTION" } };
 
   const where: Prisma.ListingWhereInput = {
-    AND: [categoryWhere, searchWhere, liveAuctionWhere],
+    AND: [categoryWhere, searchWhere],
   };
 
   const fromMenu = Boolean(category) && !q;
@@ -108,6 +100,7 @@ export default async function ListingsPage({ searchParams }: Props) {
                 size={useLargeGrid ? "large" : "default"}
                 canViewSold={canViewSold}
                 canManageSaleStatus={canViewSold}
+                canAccessLiveAuction={allowLiveAuction}
               />
             ))}
           </div>

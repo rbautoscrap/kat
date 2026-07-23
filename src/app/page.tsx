@@ -61,9 +61,8 @@ export default async function HomePage({ searchParams }: Props) {
   const canViewSold = isAdmin(dbUser?.role);
   const allowLiveAuction = canAccessLiveAuction(dbUser?.role);
 
-  const [hotDeals, carListings, liveAuctionRaw, standBy] =
+  const [hotDeals, carListings, liveAuction, standBy] =
     await loadHomeListings();
-  const liveAuction = allowLiveAuction ? liveAuctionRaw : [];
 
   const errorMessage =
     params.error === "unauthorized"
@@ -88,6 +87,7 @@ export default async function HomePage({ searchParams }: Props) {
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
+        canAccessLiveAuction={allowLiveAuction}
       />
       <ListingSection
         category="CAR_LISTINGS"
@@ -95,6 +95,7 @@ export default async function HomePage({ searchParams }: Props) {
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
+        canAccessLiveAuction={allowLiveAuction}
       />
       <ListingSection
         category="LIVE_AUCTION"
@@ -102,6 +103,7 @@ export default async function HomePage({ searchParams }: Props) {
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
+        canAccessLiveAuction={allowLiveAuction}
       />
       <ListingSection
         category="STAND_BY"
@@ -109,6 +111,7 @@ export default async function HomePage({ searchParams }: Props) {
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
+        canAccessLiveAuction={allowLiveAuction}
       />
     </>
   );

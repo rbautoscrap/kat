@@ -1,11 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import {
-  canAccessLiveAuction,
-  canManageListings,
-  isAdmin,
-  signOut,
-} from "@/lib/auth";
+import { canManageListings, isAdmin, signOut } from "@/lib/auth";
 import { MainNav } from "@/components/MainNav";
 import { MobileNav } from "@/components/MobileNav";
 import { resolveSessionDbUser } from "@/lib/listing-access";
@@ -19,18 +14,12 @@ export async function Header() {
   const dbUser = await resolveSessionDbUser();
   const canList = canManageListings(dbUser?.role);
   const admin = isAdmin(dbUser?.role);
-  const liveAuction = canAccessLiveAuction(dbUser?.role);
 
   const accountLinkClass =
     "inline-flex h-8 items-center rounded-md px-2.5 text-[13.5px] font-semibold text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900";
 
   const mobileUser = dbUser
-    ? {
-        name: dbUser.name,
-        canList,
-        admin,
-        canAccessLiveAuction: liveAuction,
-      }
+    ? { name: dbUser.name, canList, admin }
     : null;
 
   return (
@@ -45,11 +34,7 @@ export async function Header() {
             KOREA AUTO TRADE
           </Link>
           <Suspense fallback={<div className="h-10 w-10" aria-hidden />}>
-            <MobileNav
-              user={mobileUser}
-              logoutAction={logoutAction}
-              canAccessLiveAuction={liveAuction}
-            />
+            <MobileNav user={mobileUser} logoutAction={logoutAction} />
           </Suspense>
         </div>
 
@@ -63,7 +48,7 @@ export async function Header() {
           </Link>
 
           <Suspense fallback={<div className="min-h-8" aria-hidden />}>
-            <MainNav canAccessLiveAuction={liveAuction} />
+            <MainNav />
           </Suspense>
 
           <div className="flex shrink-0 items-center justify-end gap-1">

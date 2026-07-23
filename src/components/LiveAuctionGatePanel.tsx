@@ -1,13 +1,23 @@
 import Link from "next/link";
 import { BackButton } from "@/components/BackButton";
 import { LIVE_AUCTION_ACCESS_MESSAGE } from "@/lib/live-auction";
+import { CATEGORY_PATHS } from "@/lib/listings";
 
 type Props = {
   backHref?: string;
+  /** Listing detail URL for login redirect. */
+  callbackUrl?: string;
 };
 
-/** Full-page gate when Live Auction URL is opened without partner access. */
-export function LiveAuctionGatePanel({ backHref = "/" }: Props) {
+/** Full-page gate when a Live Auction listing detail is opened without partner access. */
+export function LiveAuctionGatePanel({
+  backHref = CATEGORY_PATHS.LIVE_AUCTION,
+  callbackUrl,
+}: Props) {
+  const loginHref = `/login?callbackUrl=${encodeURIComponent(
+    callbackUrl || backHref,
+  )}`;
+
   return (
     <div className="site-container py-10 sm:py-14" lang="en">
       <div className="mb-6">
@@ -22,7 +32,7 @@ export function LiveAuctionGatePanel({ backHref = "/" }: Props) {
         </p>
         <div className="mt-7 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
           <Link
-            href="/login?callbackUrl=/listings?category=LIVE_AUCTION"
+            href={loginHref}
             className="inline-flex h-10 items-center justify-center bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-800"
           >
             Login
