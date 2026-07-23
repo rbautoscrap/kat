@@ -1,7 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["archiver"],
+  serverExternalPackages: [
+    "archiver",
+    "archiver-utils",
+    "zip-stream",
+    "compress-commons",
+    "crc32-stream",
+    "crc-32",
+    "lazystream",
+    "readdir-glob",
+    "tar-stream",
+  ],
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [

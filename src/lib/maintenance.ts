@@ -10,35 +10,12 @@ import {
   statSync,
   unlinkSync,
 } from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
+import { createZipArchiver } from "@/lib/create-zip-archiver";
 import { prisma } from "@/lib/prisma";
 import { getUploadsDir } from "@/lib/storage-paths";
 
 const MAX_BACKUPS = 5;
-const require = createRequire(path.join(process.cwd(), "package.json"));
-
-type ArchiverFactory = (
-  format: string,
-  options?: { zlib?: { level?: number } },
-) => {
-  pipe: (dest: NodeJS.WritableStream) => unknown;
-  file: (filepath: string, data: { name: string }) => unknown;
-  directory: (dirpath: string, destpath: string | false) => unknown;
-  append: (
-    source: string | Buffer,
-    data: { name: string },
-  ) => unknown;
-  finalize: () => Promise<void> | void;
-  on: (event: string, cb: (err: Error & { code?: string }) => void) => unknown;
-};
-
-function loadArchiver(): ArchiverFactory {
-  const mod = require("archiver") as ArchiverFactory | { default: ArchiverFactory };
-  if (typeof mod === "function") return mod;
-  if (mod && typeof mod.default === "function") return mod.default;
-  throw new Error("archiver 모듈을 불러오지 못했습니다.");
-}
 
 export function getDataDir() {
   return (
@@ -230,7 +207,7 @@ function errorMessage(error: unknown) {
 }
 
 export async function createBackupZip(): Promise<BackupInfo> {
-  const archiver = loadArchiver();
+  const archive = await createZipArchiver({ zlib: { level: 1 } });
   const backupsDir = ensureBackupsDir();
   const name = `kat-backup-${backupStamp()}.zip`;
   const outPath = path.join(backupsDir, name);
@@ -243,7 +220,6 @@ export async function createBackupZip(): Promise<BackupInfo> {
 
     await new Promise<void>((resolve, reject) => {
       const output = createWriteStream(outPath);
-      const archive = archiver("zip", { zlib: { level: 1 } });
       let settled = false;
 
       const fail = (err: unknown) => {
@@ -272,7 +248,7 @@ export async function createBackupZip(): Promise<BackupInfo> {
       }
 
       const uploadsDir = getUploadsDir();
-      if (existsSync(uploadsDir)) {
+      if (existsSync(uploadsDir) && archive.directory) {
         archive.directory(uploadsDir, "uploads");
       }
 

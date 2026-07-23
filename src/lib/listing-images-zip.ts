@@ -1,38 +1,14 @@
 import "server-only";
 
-import { createRequire } from "node:module";
 import { existsSync } from "node:fs";
 import { PassThrough, Readable } from "node:stream";
 import path from "node:path";
+import { createZipArchiver } from "@/lib/create-zip-archiver";
 import { getUploadsDir } from "@/lib/storage-paths";
-
-const require = createRequire(path.join(process.cwd(), "package.json"));
-
-type ArchiverInstance = {
-  pipe: (dest: NodeJS.WritableStream) => unknown;
-  file: (filepath: string, data: { name: string }) => unknown;
-  append: (source: string | Buffer, data: { name: string }) => unknown;
-  finalize: () => Promise<void> | void;
-  on: (event: string, cb: (err: Error) => void) => unknown;
-};
-
-type ArchiverFactory = (
-  format: string,
-  options?: { zlib?: { level?: number } },
-) => ArchiverInstance;
 
 type ZipEntry =
   | { kind: "file"; path: string; name: string }
   | { kind: "buffer"; data: Buffer; name: string };
-
-function loadArchiver(): ArchiverFactory {
-  const mod = require("archiver") as
-    | ArchiverFactory
-    | { default: ArchiverFactory };
-  if (typeof mod === "function") return mod;
-  if (mod && typeof mod.default === "function") return mod.default;
-  throw new Error("archiver 모듈을 불러오지 못했습니다.");
-}
 
 function safeEntryName(url: string, index: number): string {
   const base = path.basename(url.split("?")[0] ?? "");
@@ -65,13 +41,10 @@ async function resolveEntries(imageUrls: string[]): Promise<ZipEntry[]> {
       try {
         const res = await fetch(url);
         if (!res.ok) continue;
-        entries.push({
-          kind: "buffer",
-          data: Buffer.from(await res.arrayBuffer()),
-          name,
-        });
+        const buf = Buffer.from(await res.arrayBuffer());
+        if (buf.length > 0) entries.push({ kind: "buffer", data: buf, name });
       } catch {
-        // skip unreachable remotes
+        // skip failed remote fetch
       }
     }
   }
@@ -91,8 +64,7 @@ export async function createListingImagesZipStream(
     throw new Error("다운로드할 이미지 파일을 찾을 수 없습니다.");
   }
 
-  const archiver = loadArchiver();
-  const archive = archiver("zip", { zlib: { level: 1 } });
+  const archive = await createZipArchiver({ zlib: { level: 1 } });
   const passthrough = new PassThrough();
   archive.on("error", (err) => passthrough.destroy(err));
   archive.pipe(passthrough);
