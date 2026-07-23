@@ -1,7 +1,7 @@
 import type { Listing, ListingImage } from "@prisma/client";
 import { HeroBanner } from "@/components/HeroBanner";
 import { ListingSection } from "@/components/ListingSection";
-import { canAccessLiveAuction, isAdmin } from "@/lib/auth";
+import { isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { prisma } from "@/lib/prisma";
 
@@ -59,7 +59,6 @@ export default async function HomePage({ searchParams }: Props) {
   const params = await searchParams;
   const dbUser = await resolveSessionDbUser();
   const canViewSold = isAdmin(dbUser?.role);
-  const allowLiveAuction = canAccessLiveAuction(dbUser?.role);
 
   const [hotDeals, carListings, liveAuction, standBy] =
     await loadHomeListings();
@@ -87,7 +86,6 @@ export default async function HomePage({ searchParams }: Props) {
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
-        canAccessLiveAuction={allowLiveAuction}
       />
       <ListingSection
         category="CAR_LISTINGS"
@@ -95,7 +93,6 @@ export default async function HomePage({ searchParams }: Props) {
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
-        canAccessLiveAuction={allowLiveAuction}
       />
       <ListingSection
         category="LIVE_AUCTION"
@@ -103,7 +100,6 @@ export default async function HomePage({ searchParams }: Props) {
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
-        canAccessLiveAuction={allowLiveAuction}
       />
       <ListingSection
         category="STAND_BY"
@@ -111,7 +107,6 @@ export default async function HomePage({ searchParams }: Props) {
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
-        canAccessLiveAuction={allowLiveAuction}
       />
     </>
   );

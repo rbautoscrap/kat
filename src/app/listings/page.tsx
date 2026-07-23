@@ -25,7 +25,6 @@ export default async function ListingsPage({ searchParams }: Props) {
   const params = await searchParams;
   const dbUser = await resolveSessionDbUser();
   const canViewSold = isAdmin(dbUser?.role);
-  const allowLiveAuction = canAccessLiveAuction(dbUser?.role);
   const category = parseCategory(params.category ?? null);
   const q = params.q?.trim() ?? "";
   const page = parsePage(params.page);
@@ -100,7 +99,6 @@ export default async function ListingsPage({ searchParams }: Props) {
                 size={useLargeGrid ? "large" : "default"}
                 canViewSold={canViewSold}
                 canManageSaleStatus={canViewSold}
-                canAccessLiveAuction={allowLiveAuction}
               />
             ))}
           </div>

@@ -7,7 +7,7 @@ import { PurchaseOfferPanel } from "@/components/PurchaseOfferPanel";
 import { AdminListingCostPanel } from "@/components/admin/AdminListingCostPanel";
 import { DownloadListingImagesButton } from "@/components/admin/DownloadListingImagesButton";
 import { LiveAuctionGatePanel } from "@/components/LiveAuctionGatePanel";
-import { canAccessLiveAuction, isAdmin } from "@/lib/auth";
+import { auth, canAccessLiveAuctionAsSignedIn, isAdmin } from "@/lib/auth";
 import {
   resolveSessionDbUser,
   userCanModifyListing,
@@ -38,14 +38,15 @@ export default async function ListingDetailPage({ params }: Props) {
   });
   if (!listing) notFound();
 
+  const session = await auth();
   const dbUser = await resolveSessionDbUser();
   const canEdit = await userCanModifyListing(listing.authorId);
-  const adminView = isAdmin(dbUser?.role);
-  const isSignedIn = Boolean(dbUser?.id);
+  const adminView = isAdmin(dbUser?.role ?? session?.user?.role);
+  const isSignedIn = Boolean(dbUser?.id || session?.user?.id);
 
   if (
     listing.category === "LIVE_AUCTION" &&
-    !canAccessLiveAuction(dbUser?.role)
+    !canAccessLiveAuctionAsSignedIn(isSignedIn)
   ) {
     return (
       <LiveAuctionGatePanel

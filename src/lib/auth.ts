@@ -174,12 +174,16 @@ export function canManageListings(role?: Role) {
 }
 
 /**
- * Live Auction detail + offers: any signed-in member (MEMBER / AUTHORIZED / ADMIN).
- * Guests still see the login gate when opening a listing.
- * (Login already requires APPROVED status.)
+ * Live Auction detail + offers: any signed-in account.
+ * Guests are redirected to the login gate on the listing detail page.
  */
 export function canAccessLiveAuction(role?: Role) {
-  return role === "ADMIN" || role === "AUTHORIZED" || role === "MEMBER";
+  return Boolean(role);
+}
+
+/** Prefer when you already know the user is signed in. */
+export function canAccessLiveAuctionAsSignedIn(isSignedIn: boolean) {
+  return isSignedIn;
 }
 
 export function isAdmin(role?: Role) {
