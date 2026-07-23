@@ -1,3 +1,3 @@
-/** Shown when a non-partner tries to open Live Auction. */
+/** Shown when a guest tries to open a Live Auction listing. */
 export const LIVE_AUCTION_ACCESS_MESSAGE =
-  "Auction participation is restricted to registered partner members. Please log in or register to join.";
+  "Live Auction listings and offers are available to registered members. Please log in or register to continue.";

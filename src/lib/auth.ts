@@ -174,11 +174,12 @@ export function canManageListings(role?: Role) {
 }
 
 /**
- * Live Auction: approved partner members only.
- * (Login already requires APPROVED status; role must be AUTHORIZED or ADMIN.)
+ * Live Auction detail + offers: any signed-in member (MEMBER / AUTHORIZED / ADMIN).
+ * Guests still see the login gate when opening a listing.
+ * (Login already requires APPROVED status.)
  */
 export function canAccessLiveAuction(role?: Role) {
-  return role === "ADMIN" || role === "AUTHORIZED";
+  return role === "ADMIN" || role === "AUTHORIZED" || role === "MEMBER";
 }
 
 export function isAdmin(role?: Role) {
