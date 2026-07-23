@@ -2,7 +2,7 @@ import { BackButton } from "@/components/BackButton";
 import { ListingCard } from "@/components/ListingCard";
 import { ListingPagination } from "@/components/ListingPagination";
 import { parsePage } from "@/lib/admin-pagination";
-import { canAccessLiveAuction, isAdmin } from "@/lib/auth";
+import { isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { buildPublicListingSearchWhere } from "@/lib/listing-search";
 import { prisma } from "@/lib/prisma";
