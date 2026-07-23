@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import sharp from "sharp";
 import { z } from "zod";
 import type { ListingCategory } from "@prisma/client";
+import { DEFAULT_LISTING_WHATSAPP } from "@/lib/contact";
 import { getAppTempDir, getUploadsDir } from "@/lib/storage-paths";
 import { translateToEnglish } from "@/lib/translate";
 
@@ -189,7 +190,9 @@ export function formDataToListingInput(formData: FormData) {
     damages: emptyToUndef(formData.get("damages")),
     fuelType: normalizeFuelType(String(formData.get("fuelType") ?? "")),
     youtubeUrl: emptyToUndef(formData.get("youtubeUrl")),
-    whatsappNumber: String(formData.get("whatsappNumber") ?? ""),
+    whatsappNumber:
+      String(formData.get("whatsappNumber") ?? "").trim() ||
+      DEFAULT_LISTING_WHATSAPP,
     vehicleNumber: emptyToUndef(formData.get("vehicleNumber")),
     storageLocation: emptyToUndef(formData.get("storageLocation")),
     inboundDate: emptyToUndef(formData.get("inboundDate")),

@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import type { Listing, ListingImage, ListingCategory } from "@prisma/client";
 import { ADMIN_CATEGORY_LABELS } from "@/lib/admin-labels";
 import { compressImagesForUpload } from "@/lib/browser-compress-image";
+import { DEFAULT_LISTING_WHATSAPP } from "@/lib/contact";
 
 const IMAGE_ACCEPT =
   "image/jpeg,image/png,image/webp,image/gif";
@@ -379,12 +380,8 @@ export function ListingForm({ listing }: Props) {
         <Field
           label="WhatsApp 번호"
           name="whatsappNumber"
-          required
-          defaultValue={
-            listing?.whatsappNumber ??
-            process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT ??
-            ""
-          }
+          defaultValue={listing?.whatsappNumber || DEFAULT_LISTING_WHATSAPP}
+          placeholder={DEFAULT_LISTING_WHATSAPP}
         />
       </div>
 
