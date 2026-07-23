@@ -1,4 +1,4 @@
-import { auth, signOut } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { LoginForm } from "@/components/LoginForm";
 import { normalizeLoginId } from "@/lib/login-id";
 
@@ -31,12 +31,12 @@ export default async function LoginPage({ searchParams }: Props) {
   const defaultId = params.id ? normalizeLoginId(params.id) : "";
   const errorMessage = loginErrorMessage(params.error);
 
-  // Clear any existing session so Login always starts as a fresh sign-in
-  const session = await auth();
-  if (session?.user?.id) {
-    await signOut({
-      redirectTo: `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`,
-    });
+  // Never call signOut() during RSC render — it can throw and take down /login.
+  // auth() may also fail if AUTH_SECRET/cookies are mismatched after domain changes.
+  try {
+    await auth();
+  } catch (error) {
+    console.error("[login] auth() failed", error);
   }
 
   return (
