@@ -14,10 +14,10 @@ const nextConfig: NextConfig = {
     "unzipper",
   ],
   experimental: {
-    // Allow large backup ZIP uploads for admin restore.
-    proxyClientMaxBodySize: "2gb",
+    // Large backup ZIP restore over Railway (volume ~250GB).
+    proxyClientMaxBodySize: "50gb",
     serverActions: {
-      bodySizeLimit: "2gb",
+      bodySizeLimit: "50gb",
     },
   },
   images: {

@@ -146,7 +146,7 @@ export function BackupPanel({ initialBackups }: Props) {
   async function onRestoreUpload(file: File) {
     if (
       !window.confirm(
-        `"${file.name}" 파일로 복원할까요?\n\n현재 서버의 데이터베이스와 업로드 이미지가 이 ZIP 내용으로 교체됩니다.\n파일 크기에 따라 수 분 걸릴 수 있습니다.`,
+        `"${file.name}" 파일로 복원할까요?\n\n현재 서버의 데이터베이스와 업로드 이미지가 이 ZIP 내용으로 교체됩니다.\n대용량 파일은 Railway로 직접 업로드됩니다.`,
       )
     ) {
       return;
@@ -156,12 +156,34 @@ export function BackupPanel({ initialBackups }: Props) {
     setMessage(null);
     setRestoring(true);
     try {
-      const body = new FormData();
-      body.set("file", file);
-      const res = await fetch("/api/admin/backups/restore", {
+      const ticketRes = await fetch("/api/admin/backups/restore-ticket", {
         method: "POST",
         credentials: "same-origin",
+      });
+      const ticketJson = (await ticketRes.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        ticket?: string;
+        uploadUrl?: string;
+        viaRailway?: boolean;
+      };
+      if (!ticketRes.ok || !ticketJson.ok || !ticketJson.uploadUrl || !ticketJson.ticket) {
+        setError(ticketJson.error ?? "복원 업로드 주소를 준비하지 못했습니다.");
+        return;
+      }
+
+      if (ticketJson.viaRailway) {
+        setMessage("Railway로 직접 업로드·복원 중입니다. 완료까지 기다려 주세요…");
+      }
+
+      const body = new FormData();
+      body.set("file", file);
+      const res = await fetch(ticketJson.uploadUrl, {
+        method: "POST",
         body,
+        headers: { "X-Kat-Restore-Ticket": ticketJson.ticket },
+        mode: ticketJson.viaRailway ? "cors" : "same-origin",
+        credentials: "omit",
       });
       const json = (await res.json().catch(() => ({}))) as RestoreJson;
       if (!res.ok || !json.ok) {
@@ -172,7 +194,7 @@ export function BackupPanel({ initialBackups }: Props) {
       router.refresh();
     } catch {
       setError(
-        "복원 업로드 중 오류가 발생했습니다. 파일이 매우 크면 네트워크/프록시 제한으로 실패할 수 있습니다.",
+        "복원 업로드 중 오류가 발생했습니다. Railway 공개 도메인이 연결돼 있는지 확인해 주세요.",
       );
     } finally {
       setRestoring(false);
@@ -192,8 +214,8 @@ export function BackupPanel({ initialBackups }: Props) {
               백업
             </h2>
             <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
-              데이터베이스와 업로드 이미지를 ZIP으로 저장·복원합니다. 최근 5개까지
-              보관됩니다.
+              데이터베이스와 업로드 이미지를 Railway 볼륨에 ZIP으로 저장·복원합니다.
+              대용량 ZIP 복원은 Cloudflare를 거치지 않고 Railway로 직접 업로드됩니다.
             </p>
           </div>
           <div className="admin-section-head-actions flex flex-wrap items-center justify-end gap-2">
@@ -214,7 +236,7 @@ export function BackupPanel({ initialBackups }: Props) {
               onClick={() => fileRef.current?.click()}
               className="inline-flex h-8 items-center rounded-md border border-neutral-300 bg-white px-3 text-[12.5px] font-semibold text-neutral-800 transition hover:bg-neutral-50 disabled:opacity-50"
             >
-              {restoring ? "복원 중…" : "ZIP으로 복원"}
+              {restoring ? "Railway 복원 중…" : "ZIP으로 복원"}
             </button>
             <button
               type="button"

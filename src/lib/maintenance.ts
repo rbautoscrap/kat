@@ -9,6 +9,7 @@ import {
   readdirSync,
   renameSync,
   rmSync,
+  statfsSync,
   statSync,
   unlinkSync,
   writeFileSync,
@@ -19,7 +20,12 @@ import { extractZipSafe } from "@/lib/extract-zip";
 import { disconnectPrisma, prisma } from "@/lib/prisma";
 import { getUploadsDir } from "@/lib/storage-paths";
 
-const MAX_BACKUPS = 5;
+/** Keep more backups on large Railway volumes (~250GB). Override with BACKUP_MAX_COUNT. */
+function maxBackupsToKeep() {
+  const raw = Number(process.env.BACKUP_MAX_COUNT ?? "25");
+  if (!Number.isFinite(raw) || raw < 1) return 25;
+  return Math.min(Math.floor(raw), 200);
+}
 
 export function getDataDir() {
   return (
@@ -152,7 +158,7 @@ export function listBackups(): BackupInfo[] {
 
 function pruneOldBackups() {
   const backups = listBackups();
-  for (const old of backups.slice(MAX_BACKUPS)) {
+  for (const old of backups.slice(maxBackupsToKeep())) {
     try {
       unlinkSync(path.join(getBackupsDir(), old.name));
     } catch {
@@ -323,6 +329,9 @@ export type MaintenanceSnapshot = {
     uploadsFiles: number;
     uploadsSizeLabel: string;
     backupsCount: number;
+    backupsKeep: number;
+    volumeTotalLabel: string | null;
+    volumeFreeLabel: string | null;
   };
   counts: {
     listings: number;
@@ -564,6 +573,19 @@ export async function collectMaintenanceSnapshot(): Promise<MaintenanceSnapshot>
   const dbStat = safeStat(dbPath);
   const uploads = dirStats(uploadsDir);
 
+  let volumeTotalLabel: string | null = null;
+  let volumeFreeLabel: string | null = null;
+  try {
+    const fsStat = statfsSync(dataDir);
+    const bsize = Number(fsStat.bsize) || 0;
+    const total = bsize * Number(fsStat.blocks);
+    const free = bsize * Number(fsStat.bavail);
+    if (total > 0) volumeTotalLabel = formatBytes(total);
+    if (free > 0) volumeFreeLabel = formatBytes(free);
+  } catch {
+    // Local Windows / unsupported fs — skip
+  }
+
   const [listings, available, reserved, sold, users, statements, offers] =
     await Promise.all([
       prisma.listing.count(),
@@ -594,6 +616,9 @@ export async function collectMaintenanceSnapshot(): Promise<MaintenanceSnapshot>
       uploadsFiles: uploads.files,
       uploadsSizeLabel: formatBytes(uploads.bytes),
       backupsCount: listBackups().length,
+      backupsKeep: maxBackupsToKeep(),
+      volumeTotalLabel,
+      volumeFreeLabel,
     },
     counts: {
       listings,

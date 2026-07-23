@@ -9,5 +9,11 @@ restartPolicyMaxRetries = 10
 
 # Persistence (REQUIRED — create in Railway UI if missing):
 #   Volume mount path = /app/data
-# Stores SQLite DB + listing photos across redeploys.
-# Railway sets RAILWAY_VOLUME_MOUNT_PATH automatically when attached.
+#   Recommended size ≈ 250GB (DB + uploads + backup ZIPs)
+# Stores SQLite DB + listing photos + backups across redeploys.
+# Railway sets RAILWAY_VOLUME_MOUNT_PATH / RAILWAY_PUBLIC_DOMAIN automatically.
+#
+# Large ZIP restore uploads go to RAILWAY_PUBLIC_DOMAIN (not Cloudflare).
+# Optional overrides:
+#   RAILWAY_RESTORE_ORIGIN=https://your-service.up.railway.app
+#   BACKUP_MAX_COUNT=25

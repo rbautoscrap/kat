@@ -56,12 +56,16 @@ export function MonitoringPanel({ snapshot }: Props) {
     {
       label: "명세서",
       value: snapshot.counts.statements.toLocaleString("ko-KR"),
-      hint: `백업 ${snapshot.storage.backupsCount}개 보관`,
+      hint: `백업 ${snapshot.storage.backupsCount}/${snapshot.storage.backupsKeep}개 보관`,
     },
     {
       label: "저장소",
-      value: snapshot.storage.dbSizeLabel,
-      hint: `이미지 ${snapshot.storage.uploadsFiles.toLocaleString("ko-KR")}개 · ${snapshot.storage.uploadsSizeLabel}`,
+      value: snapshot.storage.volumeFreeLabel
+        ? `여유 ${snapshot.storage.volumeFreeLabel}`
+        : snapshot.storage.dbSizeLabel,
+      hint: snapshot.storage.volumeTotalLabel
+        ? `전체 ${snapshot.storage.volumeTotalLabel} · DB ${snapshot.storage.dbSizeLabel} · 이미지 ${snapshot.storage.uploadsSizeLabel}`
+        : `DB ${snapshot.storage.dbSizeLabel} · 이미지 ${snapshot.storage.uploadsFiles.toLocaleString("ko-KR")}개 · ${snapshot.storage.uploadsSizeLabel}`,
     },
   ];
 
