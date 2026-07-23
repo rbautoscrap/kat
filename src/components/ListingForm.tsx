@@ -515,14 +515,49 @@ export function ListingForm({ listing }: Props) {
         </div>
 
         <div>
-          <span className="mb-1 block text-[13px] font-medium tracking-wide text-neutral-600">
-            추가 사진
-            <span className="font-normal text-neutral-400">
-              {" "}
-              · 대표 사진 포함 최대 100장
-              {listing ? " · 썸네일 × 로 개별 삭제" : ""}
+          <div className="mb-1 flex flex-wrap items-end justify-between gap-2">
+            <span className="block text-[13px] font-medium tracking-wide text-neutral-600">
+              추가 사진
+              <span className="font-normal text-neutral-400">
+                {" "}
+                · 대표 사진 포함 최대 100장
+                {listing ? " · 개별 × 또는 전체 삭제" : ""}
+              </span>
             </span>
-          </span>
+            {listing && (keptGallery.length > 0 || photoCount > 0) ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const parts: string[] = [];
+                  if (keptGallery.length > 0) {
+                    parts.push(`보관 중인 추가 사진 ${keptGallery.length}장`);
+                  }
+                  if (photoCount > 0) {
+                    parts.push(`새로 선택한 사진 ${photoCount}장`);
+                  }
+                  if (
+                    !confirm(
+                      `${parts.join("과 ")}을(를) 모두 삭제할까요?\n삭제 후 아래에서 새 사진을 등록할 수 있습니다.`,
+                    )
+                  ) {
+                    return;
+                  }
+                  setKeptGallery([]);
+                  setPhotoCount(0);
+                  if (galleryInputRef.current) {
+                    galleryInputRef.current.value = "";
+                  }
+                  setError(null);
+                }}
+                className="inline-flex h-7 shrink-0 items-center rounded-md border border-red-200 bg-white px-2.5 text-[12px] font-medium tracking-wide text-red-700 transition hover:bg-red-50"
+              >
+                추가 사진 전체 삭제
+                {keptGallery.length + photoCount > 0
+                  ? ` (${keptGallery.length + photoCount})`
+                  : ""}
+              </button>
+            ) : null}
+          </div>
 
           <ImageDropZone
             inputRef={galleryInputRef}
