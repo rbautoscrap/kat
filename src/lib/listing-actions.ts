@@ -124,7 +124,7 @@ function normalizeFuelType(value: string) {
 }
 
 const listingFieldsSchema = z.object({
-  category: z.enum(["HOT_DEALS", "CAR_LISTINGS", "STAND_BY"]),
+  category: z.enum(["HOT_DEALS", "CAR_LISTINGS", "LIVE_AUCTION", "STAND_BY"]),
   year: z.coerce.number().int().min(1980).max(2100),
   make: z.string().min(1),
   model: z.string().min(1),

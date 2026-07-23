@@ -20,7 +20,7 @@ const coverImageInclude = {
 };
 
 async function loadHomeListings(): Promise<
-  [HomeListing[], HomeListing[], HomeListing[]]
+  [HomeListing[], HomeListing[], HomeListing[], HomeListing[]]
 > {
   try {
     return await Promise.all([
@@ -37,6 +37,12 @@ async function loadHomeListings(): Promise<
         take: HOME_SECTION_LIMIT,
       }),
       prisma.listing.findMany({
+        where: { category: "LIVE_AUCTION" },
+        include: coverImageInclude,
+        orderBy: { createdAt: "desc" },
+        take: HOME_SECTION_LIMIT,
+      }),
+      prisma.listing.findMany({
         where: { category: "STAND_BY" },
         include: coverImageInclude,
         orderBy: { createdAt: "desc" },
@@ -45,7 +51,7 @@ async function loadHomeListings(): Promise<
     ]);
   } catch (error) {
     console.error("[HomePage] listing query failed", error);
-    return [[], [], []];
+    return [[], [], [], []];
   }
 }
 
@@ -54,7 +60,7 @@ export default async function HomePage({ searchParams }: Props) {
   const dbUser = await resolveSessionDbUser();
   const canViewSold = isAdmin(dbUser?.role);
 
-  const [hotDeals, carListings, standBy] = await loadHomeListings();
+  const [hotDeals, carListings, liveAuction, standBy] = await loadHomeListings();
 
   const errorMessage =
     params.error === "unauthorized"
@@ -83,6 +89,13 @@ export default async function HomePage({ searchParams }: Props) {
       <ListingSection
         category="CAR_LISTINGS"
         listings={carListings}
+        limit={HOME_SECTION_LIMIT}
+        canViewSold={canViewSold}
+        canManageSaleStatus={canViewSold}
+      />
+      <ListingSection
+        category="LIVE_AUCTION"
+        listings={liveAuction}
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}

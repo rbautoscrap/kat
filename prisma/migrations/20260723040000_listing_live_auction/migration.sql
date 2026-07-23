@@ -1,0 +1,2 @@
+-- SQLite stores ListingCategory as TEXT; no table rewrite required.
+-- New allowed value: LIVE_AUCTION (same listing flow as CAR_LISTINGS).

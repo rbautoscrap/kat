@@ -22,6 +22,7 @@ const filters: Array<{ value: "ALL" | ListingCategory; label: string }> = [
   { value: "ALL", label: "전체" },
   { value: "HOT_DEALS", label: ADMIN_CATEGORY_LABELS.HOT_DEALS },
   { value: "CAR_LISTINGS", label: ADMIN_CATEGORY_LABELS.CAR_LISTINGS },
+  { value: "LIVE_AUCTION", label: ADMIN_CATEGORY_LABELS.LIVE_AUCTION },
   { value: "STAND_BY", label: ADMIN_CATEGORY_LABELS.STAND_BY },
 ];
 

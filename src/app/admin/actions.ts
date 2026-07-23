@@ -20,7 +20,12 @@ import { prisma } from "@/lib/prisma";
 type ActionResult = { ok: true } | { ok: false; error: string };
 
 const ROLES = ["MEMBER", "AUTHORIZED", "ADMIN"] as const;
-const CATEGORIES = ["HOT_DEALS", "CAR_LISTINGS", "STAND_BY"] as const;
+const CATEGORIES = [
+  "HOT_DEALS",
+  "CAR_LISTINGS",
+  "LIVE_AUCTION",
+  "STAND_BY",
+] as const;
 const SALE_STATUSES = ["AVAILABLE", "RESERVED", "SOLD"] as const;
 const ACCOUNT_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
 

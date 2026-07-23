@@ -16,6 +16,11 @@ const nav = [
     category: "CAR_LISTINGS",
   },
   {
+    href: "/listings?category=LIVE_AUCTION",
+    label: "Live Auction",
+    category: "LIVE_AUCTION",
+  },
+  {
     href: "/listings?category=STAND_BY",
     label: "Stand by",
     category: "STAND_BY",
