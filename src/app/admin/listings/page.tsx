@@ -15,6 +15,7 @@ import { AdminPagination } from "@/components/admin/AdminPagination";
 import { buildListingSearchWhere } from "@/lib/admin-listing-search";
 import {
   ADMIN_PAGE_SIZE,
+  buildPageHref,
   parsePage,
   totalPages,
 } from "@/lib/admin-pagination";
@@ -83,7 +84,8 @@ function parseSort(value?: string): ListingSort {
   if (
     value === "price_desc" ||
     value === "price_asc" ||
-    value === "days_desc"
+    value === "days_desc" ||
+    value === "offers_desc"
   ) {
     return value;
   }
@@ -191,6 +193,38 @@ export default async function AdminListingsPage({ searchParams }: Props) {
       take: ADMIN_PAGE_SIZE,
       include,
     });
+  } else if (sort === "offers_desc") {
+    const rows = await prisma.listing.findMany({
+      where,
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: { select: { purchaseOffers: true } },
+      },
+    });
+    rows.sort((a, b) => {
+      const ca = a._count.purchaseOffers;
+      const cb = b._count.purchaseOffers;
+      if (ca !== cb) return cb - ca;
+      if (a.updatedAt.getTime() !== b.updatedAt.getTime()) {
+        return b.updatedAt.getTime() - a.updatedAt.getTime();
+      }
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
+    const pageIds = rows.slice(skip, skip + ADMIN_PAGE_SIZE).map((r) => r.id);
+    if (pageIds.length === 0) {
+      listings = [];
+    } else {
+      const pageRows = await prisma.listing.findMany({
+        where: { id: { in: pageIds } },
+        include,
+      });
+      const byId = new Map(pageRows.map((row) => [row.id, row]));
+      listings = pageIds
+        .map((id) => byId.get(id))
+        .filter((row): row is NonNullable<typeof row> => Boolean(row));
+    }
   } else {
     // Lightweight id list for numeric cost / days sort, then fetch page rows
     const rows = await prisma.listing.findMany({
@@ -288,10 +322,17 @@ export default async function AdminListingsPage({ searchParams }: Props) {
             {offerListingCount > 0 ? (
               <>
                 {" "}
-                · 희망가 접수{" "}
-                <span className="font-medium text-amber-800">
-                  {offerListingCount.toLocaleString("ko-KR")}건
-                </span>
+                ·{" "}
+                <Link
+                  href={buildPageHref("/admin/listings", 1, {
+                    ...queryParams,
+                    sort: "offers_desc",
+                    page: undefined,
+                  })}
+                  className="font-medium text-amber-800 underline-offset-2 hover:underline"
+                >
+                  희망가 접수 {offerListingCount.toLocaleString("ko-KR")}건
+                </Link>
               </>
             ) : null}
           </p>

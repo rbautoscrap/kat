@@ -8,7 +8,8 @@ export type ListingSort =
   | "newest"
   | "price_desc"
   | "price_asc"
-  | "days_desc";
+  | "days_desc"
+  | "offers_desc";
 
 type Props = {
   current?: ListingCategory | "ALL";
@@ -26,11 +27,16 @@ const filters: Array<{ value: "ALL" | ListingCategory; label: string }> = [
   { value: "STAND_BY", label: ADMIN_CATEGORY_LABELS.STAND_BY },
 ];
 
-const sortOptions: Array<{ value: ListingSort; label: string }> = [
+const sortOptions: Array<{
+  value: ListingSort;
+  label: string;
+  accent?: boolean;
+}> = [
   { value: "newest", label: "최신순" },
   { value: "price_desc", label: "높은원가순" },
   { value: "price_asc", label: "낮은원가순" },
   { value: "days_desc", label: "누적일순" },
+  { value: "offers_desc", label: "희망가순", accent: true },
 ];
 
 export function CategoryFilter({
@@ -86,12 +92,21 @@ export function CategoryFilter({
               sort: option.value,
               category: current === "ALL" ? undefined : current,
             })}
-            className={`inline-flex h-8 items-center rounded-md border px-3 transition ${
+            className={`inline-flex h-8 items-center gap-1 rounded-md border px-3 transition ${
               sort === option.value
-                ? "border-neutral-800 bg-white text-neutral-800"
-                : "border-neutral-200 text-neutral-500 hover:border-neutral-300"
+                ? option.accent
+                  ? "border-amber-700 bg-amber-50 text-amber-900"
+                  : "border-neutral-800 bg-white text-neutral-800"
+                : option.accent
+                  ? "border-amber-200 text-amber-800 hover:border-amber-300 hover:bg-amber-50/70"
+                  : "border-neutral-200 text-neutral-500 hover:border-neutral-300"
             }`}
           >
+            {option.accent ? (
+              <span aria-hidden className="text-[11px] leading-none">
+                ◆
+              </span>
+            ) : null}
             {option.label}
           </Link>
         ))}
