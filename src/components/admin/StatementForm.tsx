@@ -22,6 +22,7 @@ import {
   parseOrphanListingKey,
   sumLineAmounts,
   type ListingOption,
+  type MemberOption,
   type StatementView,
 } from "@/lib/statement";
 
@@ -73,6 +74,7 @@ function withExtrasLast(lines: SelectedLine[]): SelectedLine[] {
 type Props = {
   mode: "create" | "edit";
   listings: ListingOption[];
+  members: MemberOption[];
   initial?: StatementView;
   defaultIssueDate: string;
 };
@@ -122,6 +124,7 @@ function initialLines(
 export function StatementForm({
   mode,
   listings,
+  members,
   initial,
   defaultIssueDate,
 }: Props) {
@@ -134,6 +137,9 @@ export function StatementForm({
   const [selected, setSelected] = useState<SelectedLine[]>(() =>
     initialLines(listings, initial, initialCurrency),
   );
+  const [buyerUserId, setBuyerUserId] = useState<string | null>(
+    initial?.buyerUserId ?? null,
+  );
   const [buyerName, setBuyerName] = useState(initial?.buyerName ?? "");
   const [buyerPhone, setBuyerPhone] = useState(initial?.buyerPhone ?? "");
   const [buyerAddress, setBuyerAddress] = useState(initial?.buyerAddress ?? "");
@@ -144,6 +150,7 @@ export function StatementForm({
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [includeVat, setIncludeVat] = useState(initial?.includeVat !== false);
   const [listingQuery, setListingQuery] = useState("");
+  const [memberQuery, setMemberQuery] = useState("");
 
   const selectedListingIds = useMemo(
     () =>
@@ -172,6 +179,35 @@ export function StatementForm({
         (l.vehicleNumber ?? "").toLowerCase().includes(q),
     );
   }, [listings, listingQuery]);
+
+  const selectedMember = useMemo(
+    () => members.find((m) => m.id === buyerUserId) ?? null,
+    [members, buyerUserId],
+  );
+
+  const filteredMembers = useMemo(() => {
+    const q = memberQuery.trim().toLowerCase();
+    if (!q) return members.slice(0, 40);
+    return members
+      .filter(
+        (m) =>
+          m.name.toLowerCase().includes(q) ||
+          m.email.toLowerCase().includes(q) ||
+          (m.phone ?? "").toLowerCase().includes(q),
+      )
+      .slice(0, 40);
+  }, [members, memberQuery]);
+
+  function selectMember(member: MemberOption) {
+    setBuyerUserId(member.id);
+    setBuyerName(member.name);
+    if (member.phone) setBuyerPhone(member.phone);
+    setMemberQuery("");
+  }
+
+  function clearMemberLink() {
+    setBuyerUserId(null);
+  }
 
   const supplySum = useMemo(
     () =>
@@ -277,6 +313,7 @@ export function StatementForm({
         buyerName,
         buyerPhone: buyerPhone || undefined,
         buyerAddress: buyerAddress || undefined,
+        buyerUserId: buyerUserId || null,
         currency,
         includeVat,
         issueDate,
@@ -431,6 +468,81 @@ export function StatementForm({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <label className={labelClass} htmlFor="member-search">
+            회원 선택 (아이디)
+          </label>
+          <p className="mt-0.5 text-[12px] leading-relaxed text-neutral-500">
+            가입 회원을 연결하면 누적 구매액 등 분석에 사용할 수 있습니다. 비회원
+            거래는 아래에서 거래처명만 직접 입력하세요.
+          </p>
+          {selectedMember ? (
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-sky-200 bg-sky-50/80 px-3 py-2.5">
+              <div className="min-w-0">
+                <p className="truncate text-[13.5px] font-medium text-sky-950">
+                  {selectedMember.name}
+                </p>
+                <p className="mt-0.5 truncate text-[12.5px] text-sky-800/80">
+                  {selectedMember.email}
+                  {selectedMember.phone ? ` · ${selectedMember.phone}` : ""}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={clearMemberLink}
+                className="shrink-0 rounded-md border border-sky-200 bg-white px-2.5 py-1 text-[12px] font-medium text-sky-900 transition hover:bg-sky-50"
+              >
+                연결 해제
+              </button>
+            </div>
+          ) : (
+            <>
+              <input
+                id="member-search"
+                value={memberQuery}
+                onChange={(e) => setMemberQuery(e.target.value)}
+                placeholder="이름, 아이디, 연락처 검색…"
+                className={fieldClass}
+                autoComplete="off"
+              />
+              <div className="mt-2 max-h-40 overflow-y-auto rounded-md border border-[var(--line)]">
+                {filteredMembers.length === 0 ? (
+                  <p className="px-3 py-3 text-[13px] text-neutral-500">
+                    {memberQuery.trim()
+                      ? "검색 결과가 없습니다."
+                      : "회원을 검색해 선택하세요."}
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-[var(--line)]">
+                    {filteredMembers.map((m) => (
+                      <li key={m.id}>
+                        <button
+                          type="button"
+                          onClick={() => selectMember(m)}
+                          className="flex w-full items-start justify-between gap-3 px-3 py-2.5 text-left transition hover:bg-neutral-50"
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate text-[13.5px] font-medium text-neutral-800">
+                              {m.name}
+                            </span>
+                            <span className="mt-0.5 block truncate text-[12px] text-neutral-500">
+                              {m.email}
+                              {m.phone ? ` · ${m.phone}` : ""}
+                            </span>
+                          </span>
+                          <span className="shrink-0 text-[12px] font-medium text-sky-700">
+                            선택
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
         <label className="block sm:col-span-2">
           <span className={labelClass}>거래처명 (공급받는자)</span>
           <input

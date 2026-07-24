@@ -8,6 +8,7 @@ import {
   defaultIssueDate,
   orphanListingKey,
   type ListingOption,
+  type MemberOption,
 } from "@/lib/statement";
 
 export const dynamic = "force-dynamic";
@@ -22,23 +23,39 @@ export default async function StatementDetailPage({ params }: Props) {
     where: { id },
     include: {
       items: { orderBy: { sortOrder: "asc" } },
+      buyerUser: {
+        select: { id: true, name: true, email: true, phone: true },
+      },
     },
   });
   if (!statement) notFound();
 
-  const listings = await prisma.listing.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 500,
-    select: {
-      id: true,
-      serialNumber: true,
-      year: true,
-      make: true,
-      model: true,
-      vin: true,
-      vehicleNumber: true,
-    },
-  });
+  const [listings, users] = await Promise.all([
+    prisma.listing.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 500,
+      select: {
+        id: true,
+        serialNumber: true,
+        year: true,
+        make: true,
+        model: true,
+        vin: true,
+        vehicleNumber: true,
+      },
+    }),
+    prisma.user.findMany({
+      where: { status: "APPROVED" },
+      orderBy: { name: "asc" },
+      take: 1000,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+      },
+    }),
+  ]);
 
   const options: ListingOption[] = listings.map((l) => ({
     id: l.id,
@@ -47,6 +64,19 @@ export default async function StatementDetailPage({ params }: Props) {
     vin: l.vin,
     vehicleNumber: l.vehicleNumber,
   }));
+
+  const members: MemberOption[] = users;
+  if (
+    statement.buyerUser &&
+    !members.some((m) => m.id === statement.buyerUser!.id)
+  ) {
+    members.unshift({
+      id: statement.buyerUser.id,
+      name: statement.buyerUser.name,
+      email: statement.buyerUser.email,
+      phone: statement.buyerUser.phone,
+    });
+  }
 
   const ensureOption = (opt: ListingOption) => {
     if (!options.some((o) => o.id === opt.id)) {
@@ -115,6 +145,7 @@ export default async function StatementDetailPage({ params }: Props) {
           <StatementForm
             mode="edit"
             listings={options}
+            members={members}
             initial={statement}
             defaultIssueDate={defaultIssueDate()}
           />

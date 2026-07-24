@@ -1,24 +1,41 @@
 import Link from "next/link";
 import { StatementForm } from "@/components/admin/StatementForm";
 import { prisma } from "@/lib/prisma";
-import { defaultIssueDate, type ListingOption } from "@/lib/statement";
+import {
+  defaultIssueDate,
+  type ListingOption,
+  type MemberOption,
+} from "@/lib/statement";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewStatementPage() {
-  const listings = await prisma.listing.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 500,
-    select: {
-      id: true,
-      serialNumber: true,
-      year: true,
-      make: true,
-      model: true,
-      vin: true,
-      vehicleNumber: true,
-    },
-  });
+  const [listings, users] = await Promise.all([
+    prisma.listing.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 500,
+      select: {
+        id: true,
+        serialNumber: true,
+        year: true,
+        make: true,
+        model: true,
+        vin: true,
+        vehicleNumber: true,
+      },
+    }),
+    prisma.user.findMany({
+      where: { status: "APPROVED" },
+      orderBy: { name: "asc" },
+      take: 1000,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+      },
+    }),
+  ]);
 
   const options: ListingOption[] = listings.map((l) => ({
     id: l.id,
@@ -27,6 +44,8 @@ export default async function NewStatementPage() {
     vin: l.vin,
     vehicleNumber: l.vehicleNumber,
   }));
+
+  const members: MemberOption[] = users;
 
   return (
     <div className="rounded-sm border border-[var(--line)] bg-white">
@@ -41,7 +60,7 @@ export default async function NewStatementPage() {
           거래명세서 작성
         </h2>
         <p className="mt-1 text-[12.5px] text-neutral-500">
-          매물을 선택하면 차량 정보가 자동으로 반영됩니다.
+          매물을 선택하고, 가능하면 가입 회원을 연결해 주세요.
         </p>
       </div>
       <div className="px-4 py-5 sm:px-5">
@@ -53,6 +72,7 @@ export default async function NewStatementPage() {
           <StatementForm
             mode="create"
             listings={options}
+            members={members}
             defaultIssueDate={defaultIssueDate()}
           />
         )}

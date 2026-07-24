@@ -115,6 +115,7 @@ export type StatementView = Pick<
   | "buyerName"
   | "buyerPhone"
   | "buyerAddress"
+  | "buyerUserId"
   | "amount"
   | "currency"
   | "includeVat"
@@ -287,6 +288,14 @@ export type ListingOption = {
   label: string;
   vin: string | null;
   vehicleNumber: string | null;
+};
+
+/** Member option for linking a statement buyer */
+export type MemberOption = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
 };
 
 export function defaultIssueDate() {

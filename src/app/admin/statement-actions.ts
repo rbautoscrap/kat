@@ -44,6 +44,7 @@ const statementSchema = z.object({
   buyerName: z.string().trim().min(1, "거래처명을 입력해 주세요.").max(120),
   buyerPhone: z.string().trim().max(40).optional(),
   buyerAddress: z.string().trim().max(300).optional(),
+  buyerUserId: z.string().trim().min(1).optional().nullable(),
   currency: z.enum(OFFER_CURRENCIES),
   includeVat: z.boolean(),
   issueDate: z
@@ -233,6 +234,17 @@ export async function createStatement(
   const built = await buildItemRows(parsed.data.items);
   if (!built.ok) return { ok: false, error: built.error };
 
+  let buyerUserId: string | null = parsed.data.buyerUserId?.trim() || null;
+  if (buyerUserId) {
+    const member = await prisma.user.findUnique({
+      where: { id: buyerUserId },
+      select: { id: true },
+    });
+    if (!member) {
+      return { ok: false, error: "선택한 회원을 찾을 수 없습니다." };
+    }
+  }
+
   const rows = withExtrasLast(built.rows);
   const first = primaryPreview(rows);
   const totalAmount = sumLineAmounts(rows, parsed.data.currency);
@@ -250,6 +262,7 @@ export async function createStatement(
         buyerName: parsed.data.buyerName,
         buyerPhone: parsed.data.buyerPhone || null,
         buyerAddress: parsed.data.buyerAddress || null,
+        buyerUserId,
         amount: totalAmount,
         currency: parsed.data.currency as OfferCurrency,
         includeVat: parsed.data.includeVat,
@@ -292,6 +305,17 @@ export async function updateStatement(
   const built = await buildItemRows(parsed.data.items, { statementId: id });
   if (!built.ok) return { ok: false, error: built.error };
 
+  let buyerUserId: string | null = parsed.data.buyerUserId?.trim() || null;
+  if (buyerUserId) {
+    const member = await prisma.user.findUnique({
+      where: { id: buyerUserId },
+      select: { id: true },
+    });
+    if (!member) {
+      return { ok: false, error: "선택한 회원을 찾을 수 없습니다." };
+    }
+  }
+
   const rows = withExtrasLast(built.rows);
   const first = primaryPreview(rows);
   const totalAmount = sumLineAmounts(rows, parsed.data.currency);
@@ -312,6 +336,7 @@ export async function updateStatement(
           buyerName: parsed.data.buyerName,
           buyerPhone: parsed.data.buyerPhone || null,
           buyerAddress: parsed.data.buyerAddress || null,
+          buyerUserId,
           amount: totalAmount,
           currency: parsed.data.currency as OfferCurrency,
           includeVat: parsed.data.includeVat,

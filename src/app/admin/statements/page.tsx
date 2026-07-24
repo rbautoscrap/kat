@@ -97,9 +97,17 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
             OR: [
               { statementNo: { contains: q } },
               { buyerName: { contains: q } },
+              { buyerPhone: { contains: q } },
+              {
+                buyerUser: {
+                  OR: [
+                    { email: { contains: q } },
+                    { name: { contains: q } },
+                  ],
+                },
+              },
               { vehicleLabel: { contains: q } },
               { serialNumber: { contains: q } },
-              { buyerPhone: { contains: q } },
               { notes: { contains: q } },
               {
                 items: {
@@ -130,6 +138,7 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
     skip: (currentPage - 1) * ADMIN_PAGE_SIZE,
     include: {
       _count: { select: { items: true } },
+      buyerUser: { select: { email: true } },
     },
   });
 
@@ -213,7 +222,16 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
                           {multi ? ` · 총 ${itemCount}건` : ""}
                         </span>
                       </td>
-                      <td className={adminTdClass}>{s.buyerName}</td>
+                      <td className={adminTdClass}>
+                        <span className="block truncate font-medium text-neutral-800">
+                          {s.buyerName}
+                        </span>
+                        {s.buyerUser?.email ? (
+                          <span className="mt-0.5 block truncate text-[12px] text-sky-700">
+                            {s.buyerUser.email}
+                          </span>
+                        ) : null}
+                      </td>
                       <td className={adminTdClass}>
                         {
                           calcStatementTotals(

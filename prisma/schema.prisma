@@ -53,7 +53,10 @@ model User {
   createdAt    DateTime        @default(now())
   listings     Listing[]
   purchaseOffers PurchaseOffer[]
-  transactionStatements TransactionStatement[]
+  /** Statements this admin created */
+  createdStatements TransactionStatement[] @relation("StatementCreatedBy")
+  /** Statements where this member is the linked buyer */
+  purchasedStatements TransactionStatement[] @relation("StatementBuyer")
 }
 
 model Listing {
@@ -120,6 +123,9 @@ model TransactionStatement {
   buyerName      String
   buyerPhone     String?
   buyerAddress   String?
+  /** Optional link to a registered member (for purchase analytics). */
+  buyerUserId    String?
+  buyerUser      User?         @relation("StatementBuyer", fields: [buyerUserId], references: [id], onDelete: SetNull)
   /** Sum of line-item supply amounts */
   amount         String
   currency       OfferCurrency @default(KRW)
@@ -128,7 +134,7 @@ model TransactionStatement {
   issueDate      String
   notes          String?
   createdById    String
-  createdBy      User          @relation(fields: [createdById], references: [id])
+  createdBy      User          @relation("StatementCreatedBy", fields: [createdById], references: [id])
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   items          TransactionStatementItem[]
@@ -137,6 +143,7 @@ model TransactionStatement {
   @@index([issueDate])
   @@index([createdAt])
   @@index([createdById])
+  @@index([buyerUserId])
 }
 
 /** One vehicle / line on a transaction statement */
