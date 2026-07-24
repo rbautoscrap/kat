@@ -31,6 +31,10 @@ import {
   adminThClass,
 } from "@/lib/admin-ui";
 import { displayAccumulatedDays } from "@/lib/listing-actions";
+import {
+  formatCostWon,
+  getInventoryCostSummary,
+} from "@/lib/inventory-cost";
 
 export const dynamic = "force-dynamic";
 
@@ -62,10 +66,6 @@ function costTier(cost: number | null): CostTier {
   if (cost >= COST_RED_MIN) return "high";
   if (cost >= COST_ORANGE_MIN) return "mid";
   return null;
-}
-
-function formatCostWon(cost: number) {
-  return `${cost.toLocaleString("ko-KR")}원`;
 }
 
 function parseCategory(value?: string): ListingCategory | "ALL" {
@@ -144,7 +144,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
     AND: [categoryWhere, searchWhere],
   };
 
-  const [total, grouped, saleGrouped, offerListingCount, availableStock] =
+  const [total, grouped, saleGrouped, offerListingCount, inventory] =
     await Promise.all([
       prisma.listing.count({ where }),
       prisma.listing.groupBy({
@@ -162,16 +162,10 @@ export default async function AdminListingsPage({ searchParams }: Props) {
           AND: [where, { purchaseOffers: { some: {} } }],
         },
       }),
-      prisma.listing.findMany({
-        where: { saleStatus: "AVAILABLE" },
-        select: { costPrice: true },
-      }),
+      getInventoryCostSummary(),
     ]);
 
-  const availableCostTotal = availableStock.reduce(
-    (sum, row) => sum + (parseCostPrice(row.costPrice) ?? 0),
-    0,
-  );
+  const availableCostTotal = inventory.total;
 
   const pages = totalPages(total);
   const currentPage = Math.min(page, pages);
@@ -343,7 +337,10 @@ export default async function AdminListingsPage({ searchParams }: Props) {
             </span>
             <span className="text-sky-700/80">
               {" "}
-              · {availableStock.length.toLocaleString("ko-KR")}대
+              ·{" "}
+              {inventory.soldCount > 0
+                ? `판매완료 ${inventory.soldCount.toLocaleString("ko-KR")}대 차감 · 판매중 ${inventory.count.toLocaleString("ko-KR")}대`
+                : `판매중 ${inventory.count.toLocaleString("ko-KR")}대`}
             </span>
           </p>
           <p className="mt-1 text-[12.5px] leading-relaxed text-neutral-500">

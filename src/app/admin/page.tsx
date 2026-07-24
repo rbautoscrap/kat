@@ -1,27 +1,19 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ADMIN_CATEGORY_LABELS, ROLE_LABELS } from "@/lib/admin-labels";
+import {
+  formatCostWon,
+  getInventoryCostSummary,
+} from "@/lib/inventory-cost";
 
 export const dynamic = "force-dynamic";
-
-function parseCostPrice(value?: string | null): number {
-  if (!value) return 0;
-  const digits = value.replace(/\D/g, "");
-  if (!digits) return 0;
-  const n = Number(digits);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function formatWon(value: number) {
-  return `${value.toLocaleString("ko-KR")}원`;
-}
 
 export default async function AdminOverviewPage() {
   const [
     userCount,
     listingCount,
     offerListingCount,
-    availableForSale,
+    inventory,
     byCategory,
     recentUsers,
     recentListings,
@@ -31,10 +23,7 @@ export default async function AdminOverviewPage() {
     prisma.listing.count({
       where: { purchaseOffers: { some: {} } },
     }),
-    prisma.listing.findMany({
-      where: { saleStatus: "AVAILABLE" },
-      select: { costPrice: true },
-    }),
+    getInventoryCostSummary(),
     prisma.listing.groupBy({
       by: ["category"],
       _count: { _all: true },
@@ -56,11 +45,10 @@ export default async function AdminOverviewPage() {
     }),
   ]);
 
-  const availableCount = availableForSale.length;
-  const availableCostTotal = availableForSale.reduce(
-    (sum, row) => sum + parseCostPrice(row.costPrice),
-    0,
-  );
+  const inventoryHint =
+    inventory.soldCount > 0
+      ? `판매완료 ${inventory.soldCount.toLocaleString("ko-KR")}대 차감 · 판매중 ${inventory.count.toLocaleString("ko-KR")}대`
+      : `판매중 ${inventory.count.toLocaleString("ko-KR")}대`;
 
   const stats = [
     {
@@ -71,10 +59,10 @@ export default async function AdminOverviewPage() {
     },
     {
       label: "재고 원가 합계",
-      value: formatWon(availableCostTotal),
+      value: formatCostWon(inventory.total),
       href: "/admin/listings?sale=AVAILABLE",
       accent: "stock" as const,
-      hint: `판매중 ${availableCount.toLocaleString("ko-KR")}대`,
+      hint: inventoryHint,
     },
     {
       label: "전체 회원",
