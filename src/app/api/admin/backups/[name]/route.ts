@@ -1,4 +1,4 @@
-import { createReadStream, existsSync } from "node:fs";
+import { createReadStream, existsSync, statSync } from "node:fs";
 import { Readable } from "node:stream";
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/auth";
@@ -36,13 +36,25 @@ export async function GET(_request: Request, { params }: Params) {
     );
   }
 
+  let size = 0;
+  try {
+    size = statSync(filePath).size;
+  } catch {
+    size = 0;
+  }
+
   const stream = createReadStream(filePath);
+  const headers: Record<string, string> = {
+    "Content-Type": "application/zip",
+    "Content-Disposition": `attachment; filename="${decoded}"`,
+    "Cache-Control": "no-store",
+  };
+  if (size > 0) {
+    headers["Content-Length"] = String(size);
+  }
+
   return new NextResponse(Readable.toWeb(stream) as ReadableStream, {
-    headers: {
-      "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="${decoded}"`,
-      "Cache-Control": "no-store",
-    },
+    headers,
   });
 }
 
