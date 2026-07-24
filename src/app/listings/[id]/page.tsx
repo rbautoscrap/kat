@@ -5,6 +5,7 @@ import { ListingOwnerActions } from "@/components/ListingOwnerActions";
 import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl";
 import { PurchaseOfferPanel } from "@/components/PurchaseOfferPanel";
 import { AdminListingCostPanel } from "@/components/admin/AdminListingCostPanel";
+import { AdminPurchaseOffersPanel } from "@/components/admin/AdminPurchaseOffersPanel";
 import { DownloadListingImagesButton } from "@/components/admin/DownloadListingImagesButton";
 import { LiveAuctionGatePanel } from "@/components/LiveAuctionGatePanel";
 import { auth, canAccessLiveAuctionAsSignedIn, isAdmin } from "@/lib/auth";
@@ -24,7 +25,6 @@ import {
   youtubeEmbedUrl,
 } from "@/lib/listings";
 import { displayAccumulatedDays } from "@/lib/listing-actions";
-import { formatOfferAmount } from "@/lib/purchase-offer";
 
 export const dynamic = "force-dynamic";
 
@@ -256,78 +256,18 @@ export default async function ListingDetailPage({ params }: Props) {
       ) : null}
 
       {adminView ? (
-        <section className="mb-5 rounded-sm border border-[var(--line)] bg-white">
-          <div className="border-b border-[var(--line)] px-3.5 py-2.5 sm:px-4">
-            <h2 className="text-[13.5px] font-medium tracking-wide text-neutral-800">
-              Purchase offers ({adminOffers.length})
-            </h2>
-            <p className="mt-0.5 text-[11.5px] tracking-wide text-neutral-500">
-              Offer amount and contact are admin-only.
-            </p>
-          </div>
-          {adminOffers.length === 0 ? (
-            <p className="px-3.5 py-4 text-[13px] tracking-wide text-neutral-500 sm:px-4">
-              No purchase offers yet.
-            </p>
-          ) : (
-            <div className="admin-table-scroll overflow-x-auto">
-              <table className="data-table text-[12.5px] sm:text-[13px]">
-                <colgroup>
-                  <col style={{ width: "26%" }} />
-                  <col style={{ width: "28%" }} />
-                  <col style={{ width: "24%" }} />
-                  <col style={{ width: "22%" }} />
-                </colgroup>
-                <thead>
-                  <tr className="border-b border-[var(--line)] bg-neutral-50 text-[11.5px] tracking-wide text-neutral-500">
-                    <th className="px-3 py-2 font-medium sm:px-4">Member</th>
-                    <th className="px-3 py-2 font-medium sm:px-4">Contact</th>
-                    <th className="px-3 py-2 font-medium sm:px-4">Offer</th>
-                    <th className="px-3 py-2 font-medium sm:px-4">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {adminOffers.map((offer) => (
-                    <tr
-                      key={offer.id}
-                      className="border-b border-neutral-100 last:border-0"
-                    >
-                      <td className="min-w-0 px-3 py-2 tracking-wide text-neutral-700 sm:px-4">
-                        <span className="block truncate font-medium text-neutral-800">
-                          {offer.user.name}
-                        </span>
-                        <span className="mt-0.5 block truncate text-[11.5px] text-neutral-500">
-                          {offer.user.email}
-                        </span>
-                      </td>
-                      <td className="min-w-0 px-3 py-2 tracking-wide text-neutral-700 sm:px-4">
-                        {offer.user.phone ? (
-                          <a
-                            href={`tel:${offer.user.phone}`}
-                            className="block truncate font-medium tabular-nums text-neutral-800 hover:underline"
-                          >
-                            {offer.user.phone}
-                          </a>
-                        ) : (
-                          <span className="text-neutral-400">—</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 font-medium tracking-wide tabular-nums text-neutral-800 sm:px-4">
-                        {formatOfferAmount(offer.amount, offer.currency)}
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap tracking-wide text-neutral-500 sm:px-4">
-                        {offer.createdAt
-                          .toISOString()
-                          .slice(0, 16)
-                          .replace("T", " ")}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+        <AdminPurchaseOffersPanel
+          offers={adminOffers.map((offer) => ({
+            id: offer.id,
+            amount: offer.amount,
+            currency: offer.currency,
+            createdAtLabel: offer.createdAt
+              .toISOString()
+              .slice(0, 16)
+              .replace("T", " "),
+            user: offer.user,
+          }))}
+        />
       ) : null}
 
       {embed && (

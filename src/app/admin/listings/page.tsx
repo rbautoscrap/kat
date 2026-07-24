@@ -35,6 +35,7 @@ import {
   formatCostWon,
   getInventoryCostSummary,
 } from "@/lib/inventory-cost";
+import { AdminListingOffersCell } from "@/components/admin/AdminListingOffersCell";
 
 export const dynamic = "force-dynamic";
 
@@ -174,6 +175,16 @@ export default async function AdminListingsPage({ searchParams }: Props) {
   const include = {
     author: { select: { name: true, email: true } },
     _count: { select: { purchaseOffers: true } },
+    purchaseOffers: {
+      orderBy: { createdAt: "desc" as const },
+      take: 8,
+      select: {
+        id: true,
+        amount: true,
+        currency: true,
+        user: { select: { name: true } },
+      },
+    },
   } as const;
 
   type AdminListingRow = Prisma.ListingGetPayload<{ include: typeof include }>;
@@ -508,13 +519,23 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                   <td
                     className={`${adminTdClass} text-center text-[12.5px] tabular-nums`}
                   >
-                    {hasOffers ? (
-                      <span className="font-semibold text-amber-900">
-                        {offerCount.toLocaleString("ko-KR")}
-                      </span>
-                    ) : (
-                      <span className="text-neutral-400">—</span>
-                    )}
+                    <AdminListingOffersCell
+                      offers={listing.purchaseOffers.map((o) => ({
+                        id: o.id,
+                        amount: o.amount,
+                        currency: o.currency,
+                        userName: o.user.name,
+                      }))}
+                    />
+                    {offerCount > listing.purchaseOffers.length ? (
+                      <p className="mt-1 text-[11px] text-amber-800/80">
+                        외{" "}
+                        {(
+                          offerCount - listing.purchaseOffers.length
+                        ).toLocaleString("ko-KR")}
+                        건
+                      </p>
+                    ) : null}
                   </td>
                   <td
                     className={`${adminTdClass} text-center text-[12.5px] tabular-nums`}

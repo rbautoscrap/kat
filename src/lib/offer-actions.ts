@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth";
+import { auth, isAdmin } from "@/lib/auth";
+import { resolveSessionDbUser } from "@/lib/listing-access";
 import { prisma } from "@/lib/prisma";
 import {
   formatOfferAmount,
@@ -130,5 +131,43 @@ export async function submitPurchaseOffer(input: {
       ok: false,
       error: "Something went wrong. Please try again in a moment.",
     };
+  }
+}
+
+export type DeleteOfferResult = { ok: true } | { ok: false; error: string };
+
+/** Admin-only: remove a member purchase offer. */
+export async function deletePurchaseOffer(
+  offerId: string,
+): Promise<DeleteOfferResult> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { ok: false, error: "권한이 없습니다." };
+    }
+
+    const dbUser = await resolveSessionDbUser();
+    if (!dbUser || !isAdmin(dbUser.role)) {
+      return { ok: false, error: "권한이 없습니다." };
+    }
+
+    const id = offerId.trim();
+    if (!id) return { ok: false, error: "오퍼를 찾을 수 없습니다." };
+
+    const offer = await prisma.purchaseOffer.findUnique({
+      where: { id },
+      select: { id: true, listingId: true },
+    });
+    if (!offer) return { ok: false, error: "오퍼를 찾을 수 없습니다." };
+
+    await prisma.purchaseOffer.delete({ where: { id: offer.id } });
+
+    revalidatePath(`/listings/${offer.listingId}`);
+    revalidatePath("/admin");
+    revalidatePath("/admin/listings");
+    return { ok: true };
+  } catch (error) {
+    console.error("deletePurchaseOffer failed:", error);
+    return { ok: false, error: "삭제에 실패했습니다. 잠시 후 다시 시도해 주세요." };
   }
 }
