@@ -66,6 +66,71 @@ export function whatsappLink(phone: string, text: string) {
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
+/**
+ * Pre-filled WhatsApp inquiry text for a listing.
+ * Vehicle title is always included so the seller knows which unit.
+ */
+export function listingWhatsAppInquiryText(
+  title: string,
+  options?: { listingUrl?: string | null },
+) {
+  const vehicle = title.trim() || "this vehicle";
+  const lines = [
+    "Hello, I am interested in this vehicle.",
+    "",
+    `Vehicle: ${vehicle}`,
+  ];
+  const url = options?.listingUrl?.trim();
+  if (url) {
+    lines.push(`Link: ${url}`);
+  }
+  lines.push("", "Please share the price and more details. Thank you.");
+  return lines.join("\n");
+}
+
+/** Public site origin for WhatsApp listing links (server-side). */
+export function getPublicSiteOrigin() {
+  const candidates = [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.AUTH_URL,
+    process.env.RAILWAY_PUBLIC_DOMAIN,
+  ];
+  for (const raw of candidates) {
+    let v = String(raw ?? "").trim();
+    if (!v) continue;
+    if (
+      (v.startsWith('"') && v.endsWith('"')) ||
+      (v.startsWith("'") && v.endsWith("'"))
+    ) {
+      v = v.slice(1, -1).trim();
+    }
+    if (!/^https?:\/\//i.test(v)) v = `https://${v}`;
+    try {
+      return new URL(v).origin;
+    } catch {
+      // try next candidate
+    }
+  }
+  return "";
+}
+
+export function listingWhatsAppLink(
+  phone: string,
+  title: string,
+  options?: { listingId?: string; listingUrl?: string | null },
+) {
+  let listingUrl = options?.listingUrl?.trim() || "";
+  if (!listingUrl && options?.listingId) {
+    const origin = getPublicSiteOrigin();
+    if (origin) listingUrl = `${origin}/listings/${options.listingId}`;
+  }
+  return whatsappLink(
+    phone,
+    listingWhatsAppInquiryText(title, { listingUrl: listingUrl || null }),
+  );
+}
+
+
 const TRANSMISSION_LEGACY_EN: Record<string, string> = {
   자동: "Automatic",
   수동: "Manual",

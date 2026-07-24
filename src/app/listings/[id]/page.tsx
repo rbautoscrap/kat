@@ -20,7 +20,7 @@ import {
   formatOdometerDisplay,
   formatTransmission,
   SALE_STATUS_LABELS,
-  whatsappLink,
+  listingWhatsAppLink,
   youtubeEmbedUrl,
 } from "@/lib/listings";
 import { displayAccumulatedDays } from "@/lib/listing-actions";
@@ -102,10 +102,9 @@ export default async function ListingDetailPage({ params }: Props) {
     : [];
 
   const embed = youtubeEmbedUrl(listing.youtubeUrl);
-  const wa = whatsappLink(
-    listing.whatsappNumber,
-    `Inquiry about ${listing.title}`,
-  );
+  const wa = listingWhatsAppLink(listing.whatsappNumber, listing.title, {
+    listingId: listing.id,
+  });
 
   const shortSpecs: { label: string; value: string }[] = [
     { label: "VIN", value: listing.vin || "—" },
@@ -189,7 +188,7 @@ export default async function ListingDetailPage({ params }: Props) {
                   WhatsApp
                 </a>
                 <p className="text-[11px] leading-snug tracking-wide text-neutral-500">
-                  Click for price
+                  Opens with vehicle name
                 </p>
               </>
             ) : (
