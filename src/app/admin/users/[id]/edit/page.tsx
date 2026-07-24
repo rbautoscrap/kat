@@ -20,6 +20,7 @@ export default async function AdminEditUserPage({ params }: Props) {
       email: true,
       phone: true,
       role: true,
+      adminNote: true,
       createdAt: true,
       _count: { select: { listings: true } },
     },

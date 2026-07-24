@@ -48,6 +48,8 @@ model User {
   role         Role            @default(MEMBER)
   /** Join sets PENDING; existing/seed accounts default to APPROVED. */
   status       AccountStatus   @default(APPROVED)
+  /** Admin-only internal memo (shared among admins). */
+  adminNote    String?
   createdAt    DateTime        @default(now())
   listings     Listing[]
   purchaseOffers PurchaseOffer[]

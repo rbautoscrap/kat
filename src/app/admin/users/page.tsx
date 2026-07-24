@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { DeleteUserButton } from "@/components/admin/DeleteUserButton";
 import { RoleFilter } from "@/components/admin/RoleFilter";
+import { UserAdminNoteButton } from "@/components/admin/UserAdminNoteButton";
 import { UserStatusControls } from "@/components/admin/UserStatusControls";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { ROLE_LABELS, STATUS_LABELS } from "@/lib/admin-labels";
@@ -130,16 +131,17 @@ export default async function AdminUsersPage({ searchParams }: Props) {
       <RoleFilter current={role} counts={counts} sort={sort} />
 
       <div className={adminTableScrollClass}>
-        <table className={`${adminTableClass} min-w-[1120px]`}>
+        <table className={`${adminTableClass} min-w-[1240px]`}>
           <colgroup>
+            <col style={{ width: "11%" }} />
             <col style={{ width: "12%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "16%" }} />
-            <col style={{ width: "7%" }} />
-            <col style={{ width: "10%" }} />
+            <col style={{ width: "13%" }} />
+            <col style={{ width: "6%" }} />
             <col style={{ width: "9%" }} />
-            <col style={{ width: "10%" }} />
-            <col style={{ width: "22%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "19%" }} />
           </colgroup>
           <thead>
             <tr>
@@ -150,6 +152,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
               <th className={adminThClass}>가입일</th>
               <th className={adminThClass}>역할</th>
               <th className={adminThClass}>승인</th>
+              <th className={adminThClass}>비고</th>
               <th className={`${adminThClass} admin-th-actions text-right`}>
                 작업
               </th>
@@ -224,6 +227,13 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                       {STATUS_LABELS[user.status]}
                     </span>
                   </td>
+                  <td className={`${adminTdClass} max-w-[11rem]`}>
+                    <UserAdminNoteButton
+                      userId={user.id}
+                      userName={user.name}
+                      note={user.adminNote}
+                    />
+                  </td>
                   <td className={`${adminTdActionsClass} admin-td-actions`}>
                     <div className="flex flex-wrap items-center justify-end gap-1.5">
                       {user.role !== "ADMIN" ? (
@@ -253,7 +263,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
             {users.length === 0 && (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={9}
                   className="px-4 py-10 text-center text-[13.5px] text-neutral-500"
                 >
                   {role === "ALL"

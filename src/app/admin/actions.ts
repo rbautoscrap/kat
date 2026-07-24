@@ -385,6 +385,41 @@ export async function updateUser(
   return { ok: true };
 }
 
+export async function updateUserAdminNote(
+  userId: string,
+  note: string,
+): Promise<ActionResult> {
+  const session = await assertAdmin();
+  if (!session) return { ok: false, error: "권한이 없습니다." };
+
+  const trimmed = note.trim();
+  if (trimmed.length > 2000) {
+    return { ok: false, error: "비고는 2,000자 이내로 작성해 주세요." };
+  }
+
+  const target = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true },
+  });
+  if (!target) return { ok: false, error: "회원을 찾을 수 없습니다." };
+
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { adminNote: trimmed.length > 0 ? trimmed : null },
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: prismaErrorMessage(error, "비고 저장에 실패했습니다."),
+    };
+  }
+
+  revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${userId}/edit`);
+  return { ok: true };
+}
+
 export async function deleteUser(userId: string): Promise<ActionResult> {
   const session = await assertAdmin();
   if (!session) return { ok: false, error: "권한이 없습니다." };

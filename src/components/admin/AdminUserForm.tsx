@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Role } from "@prisma/client";
-import { updateUser } from "@/app/admin/actions";
+import { updateUser, updateUserAdminNote } from "@/app/admin/actions";
 import { ROLE_LABELS } from "@/lib/admin-labels";
 
 type Props = {
@@ -13,6 +13,7 @@ type Props = {
     email: string;
     phone: string | null;
     role: Role;
+    adminNote: string | null;
   };
 };
 
@@ -42,9 +43,19 @@ export function AdminUserForm({ user }: Props) {
       password: String(form.get("password") ?? ""),
     });
 
-    setPending(false);
     if (!result.ok) {
+      setPending(false);
       setError(result.error);
+      return;
+    }
+
+    const noteResult = await updateUserAdminNote(
+      user.id,
+      String(form.get("adminNote") ?? ""),
+    );
+    setPending(false);
+    if (!noteResult.ok) {
+      setError(noteResult.error);
       return;
     }
 
@@ -110,6 +121,23 @@ export function AdminUserForm({ user }: Props) {
             </option>
           ))}
         </select>
+      </label>
+
+      <label className="block text-sm">
+        <span className={labelClass}>
+          비고{" "}
+          <span className="font-normal text-neutral-400">
+            (관리자 전용)
+          </span>
+        </span>
+        <textarea
+          name="adminNote"
+          rows={4}
+          maxLength={2000}
+          defaultValue={user.adminNote ?? ""}
+          placeholder="다른 관리자와 공유할 메모"
+          className="w-full resize-y rounded-md border border-neutral-200 bg-neutral-50/40 px-3 py-2.5 text-[13.5px] leading-relaxed outline-none focus:border-neutral-400 focus:bg-white"
+        />
       </label>
 
       <label className="block text-sm">
