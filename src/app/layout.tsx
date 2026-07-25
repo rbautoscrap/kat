@@ -27,6 +27,13 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "KOREA AUTO TRADE",
   description: "Vehicle trading platform",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/brand/favicon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/brand/favicon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 function SiteSearchBarFallback() {
