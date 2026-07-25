@@ -1,6 +1,12 @@
 import Link from "next/link";
+import type { ListingCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ADMIN_CATEGORY_LABELS, ROLE_LABELS } from "@/lib/admin-labels";
+import {
+  adminTableClass,
+  adminTdClass,
+  adminThClass,
+} from "@/lib/admin-ui";
 import {
   formatCostWon,
   getInventoryCostSummary,
@@ -8,11 +14,19 @@ import {
 
 export const dynamic = "force-dynamic";
 
+const CATEGORY_ORDER: ListingCategory[] = [
+  "HOT_DEALS",
+  "CAR_LISTINGS",
+  "LIVE_AUCTION",
+  "STAND_BY",
+];
+
 export default async function AdminOverviewPage() {
   const [
     userCount,
     listingCount,
     offerListingCount,
+    pendingUserCount,
     inventory,
     byCategory,
     recentUsers,
@@ -23,6 +37,7 @@ export default async function AdminOverviewPage() {
     prisma.listing.count({
       where: { purchaseOffers: { some: {} } },
     }),
+    prisma.user.count({ where: { status: "PENDING" } }),
     getInventoryCostSummary(),
     prisma.listing.groupBy({
       by: ["category"],
@@ -45,119 +60,112 @@ export default async function AdminOverviewPage() {
     }),
   ]);
 
-  const inventoryHint =
-    inventory.soldCount > 0
-      ? `판매완료 ${inventory.soldCount.toLocaleString("ko-KR")}대 차감 · 판매중 ${inventory.count.toLocaleString("ko-KR")}대`
-      : `판매중 ${inventory.count.toLocaleString("ko-KR")}대`;
+  const categoryCounts = Object.fromEntries(
+    CATEGORY_ORDER.map((c) => [c, 0]),
+  ) as Record<ListingCategory, number>;
+  for (const row of byCategory) {
+    categoryCounts[row.category] = row._count._all;
+  }
 
-  const stats = [
+  const kpis = [
     {
-      label: "오퍼 접수 매물",
-      value: String(offerListingCount),
-      href: "/admin/listings",
-      accent: "amber" as const,
+      label: "오퍼 접수",
+      value: offerListingCount.toLocaleString("ko-KR"),
+      href: "/admin/listings?sort=offers_desc",
+      note:
+        offerListingCount > 0
+          ? "희망가 있는 매물"
+          : "접수된 오퍼 없음",
     },
     {
-      label: "재고 원가 합계",
-      value: formatCostWon(inventory.total),
-      href: "/admin/listings?sale=AVAILABLE",
-      accent: "stock" as const,
-      hint: inventoryHint,
-    },
-    {
-      label: "전체 회원",
-      value: String(userCount),
+      label: "회원",
+      value: userCount.toLocaleString("ko-KR"),
       href: "/admin/users",
-      accent: "none" as const,
+      note:
+        pendingUserCount > 0
+          ? `승인 대기 ${pendingUserCount.toLocaleString("ko-KR")}`
+          : "전체 회원",
     },
     {
       label: "매물",
-      value: String(listingCount),
+      value: listingCount.toLocaleString("ko-KR"),
       href: "/admin/listings",
-      accent: "none" as const,
+      note: `판매중 ${inventory.count.toLocaleString("ko-KR")}`,
+    },
+    {
+      label: "재고 원가",
+      value: formatCostWon(inventory.total),
+      href: "/admin/listings?sale=AVAILABLE",
+      note:
+        inventory.soldCount > 0
+          ? `완료 ${inventory.soldCount.toLocaleString("ko-KR")}대 제외`
+          : "판매중 기준",
+      compact: true,
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <Link
-            key={stat.label}
-            href={stat.href}
-            className={`admin-stat-card ${
-              stat.accent === "amber"
-                ? "border-amber-300 bg-amber-50 hover:border-amber-400"
-                : stat.accent === "stock"
-                  ? "border-sky-300 bg-sky-50 hover:border-sky-400"
-                  : ""
-            }`}
-          >
-            <p
-              className={`admin-stat-label ${
-                stat.accent === "amber"
-                  ? "text-amber-800"
-                  : stat.accent === "stock"
-                    ? "text-sky-800"
-                    : ""
-              }`}
-            >
-              {stat.label}
-            </p>
-            <p
-              className={`admin-stat-value ${
-                stat.accent === "stock"
-                  ? "text-[1.35rem] text-sky-950 sm:text-[1.5rem]"
-                  : ""
-              } ${
-                stat.accent === "amber"
-                  ? "text-amber-950"
-                  : stat.accent === "stock"
-                    ? ""
-                    : ""
-              }`}
-            >
-              {stat.value}
-            </p>
-            {"hint" in stat && stat.hint ? (
-              <p className="mt-1.5 text-[12px] font-medium text-sky-700/90">
-                {stat.hint}
-              </p>
-            ) : null}
-          </Link>
-        ))}
-      </div>
-
-      <section className="admin-panel p-5">
-        <h2 className="mb-3 text-[14px] font-semibold tracking-tight text-neutral-900">
-          카테고리별 매물
-        </h2>
-        {byCategory.length === 0 ? (
-          <p className="py-6 text-center text-[13px] text-neutral-400">
-            등록된 매물이 없습니다.
+    <div className="admin-overview space-y-4">
+      <section className="admin-panel overflow-hidden">
+        <div className="border-b border-[var(--line)] px-5 py-3.5">
+          <h2 className="text-[14px] font-semibold tracking-tight text-neutral-900">
+            현황 요약
+          </h2>
+          <p className="mt-0.5 text-[12.5px] text-neutral-500">
+            핵심 지표만 모아 두었습니다. 카드를 누르면 해당 관리 화면으로
+            이동합니다.
           </p>
-        ) : (
-          <ul className="grid gap-2 sm:grid-cols-3">
-            {byCategory.map((row) => (
-              <li
-                key={row.category}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-neutral-100 px-3.5 py-2.5 text-[13.5px]"
+        </div>
+
+        <div className="admin-overview-kpi-grid grid grid-cols-2 xl:grid-cols-4">
+          {kpis.map((kpi) => (
+            <Link
+              key={kpi.label}
+              href={kpi.href}
+              className="admin-overview-kpi min-h-[6.5rem] px-5 py-4 transition hover:bg-neutral-50/80"
+            >
+              <p className="text-[12px] font-medium text-neutral-500">
+                {kpi.label}
+              </p>
+              <p
+                className={`mt-2 font-semibold tracking-tight text-neutral-900 tabular-nums ${
+                  kpi.compact
+                    ? "text-[1.15rem] leading-snug sm:text-[1.25rem]"
+                    : "text-[1.65rem] leading-none"
+                }`}
               >
-                <span className="truncate text-neutral-700">
-                  {ADMIN_CATEGORY_LABELS[row.category]}
+                {kpi.value}
+              </p>
+              <p className="mt-2 truncate text-[12px] text-neutral-400">
+                {kpi.note}
+              </p>
+            </Link>
+          ))}
+        </div>
+
+        <div className="border-t border-[var(--line)] bg-neutral-50/50 px-5 py-3">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4 sm:gap-x-6">
+            {CATEGORY_ORDER.map((category) => (
+              <Link
+                key={category}
+                href={`/admin/listings?category=${category}`}
+                className="flex min-w-0 items-baseline justify-between gap-2 text-[13px] transition hover:text-neutral-950"
+              >
+                <span className="truncate text-neutral-600">
+                  {ADMIN_CATEGORY_LABELS[category]}
                 </span>
-                <span className="tabular-nums font-medium text-neutral-900">
-                  {row._count._all}
+                <span className="shrink-0 font-semibold tabular-nums text-neutral-900">
+                  {categoryCounts[category].toLocaleString("ko-KR")}
                 </span>
-              </li>
+              </Link>
             ))}
-          </ul>
-        )}
+          </div>
+        </div>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2 lg:gap-5">
-        <section className="admin-panel p-5">
-          <div className="admin-panel-header mb-1">
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        <section className="admin-panel overflow-hidden">
+          <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-5 py-3">
             <h2 className="text-[14px] font-semibold tracking-tight text-neutral-900">
               최근 회원
             </h2>
@@ -165,39 +173,61 @@ export default async function AdminOverviewPage() {
               href="/admin/users"
               className="text-[12.5px] font-medium text-neutral-500 transition hover:text-neutral-800"
             >
-              전체 보기
+              전체
             </Link>
           </div>
           {recentUsers.length === 0 ? (
-            <p className="py-8 text-center text-[13px] text-neutral-400">
+            <p className="px-5 py-10 text-center text-[13px] text-neutral-400">
               회원이 없습니다.
             </p>
           ) : (
-            <ul className="admin-list">
-              {recentUsers.map((user) => (
-                <li key={user.id} className="admin-list-row">
-                  <div className="min-w-0">
-                    <Link
-                      href={`/admin/users/${user.id}/edit`}
-                      className="block truncate text-[13.5px] font-medium text-neutral-900 hover:underline"
-                    >
-                      {user.name}
-                    </Link>
-                    <p className="mt-0.5 truncate text-[12.5px] text-neutral-500">
-                      {user.email}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-neutral-100 px-2.5 py-1 text-[12px] font-medium text-neutral-600">
-                    {ROLE_LABELS[user.role]}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <div className="overflow-x-auto">
+              <table className={`${adminTableClass} min-w-[320px]`}>
+                <colgroup>
+                  <col style={{ width: "42%" }} />
+                  <col style={{ width: "36%" }} />
+                  <col style={{ width: "22%" }} />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th className={adminThClass}>이름</th>
+                    <th className={adminThClass}>아이디</th>
+                    <th className={`${adminThClass} text-right`}>역할</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentUsers.map((user) => (
+                    <tr key={user.id}>
+                      <td className={adminTdClass}>
+                        <Link
+                          href={`/admin/users/${user.id}/edit`}
+                          className="block truncate font-medium text-neutral-900 hover:underline"
+                          title={user.name}
+                        >
+                          {user.name}
+                        </Link>
+                      </td>
+                      <td
+                        className={`${adminTdClass} truncate text-neutral-500`}
+                        title={user.email}
+                      >
+                        {user.email}
+                      </td>
+                      <td
+                        className={`${adminTdClass} whitespace-nowrap text-right text-[12.5px] text-neutral-600`}
+                      >
+                        {ROLE_LABELS[user.role]}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
 
-        <section className="admin-panel p-5">
-          <div className="admin-panel-header mb-1">
+        <section className="admin-panel overflow-hidden">
+          <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-5 py-3">
             <h2 className="text-[14px] font-semibold tracking-tight text-neutral-900">
               최근 매물
             </h2>
@@ -205,34 +235,56 @@ export default async function AdminOverviewPage() {
               href="/admin/listings"
               className="text-[12.5px] font-medium text-neutral-500 transition hover:text-neutral-800"
             >
-              전체 보기
+              전체
             </Link>
           </div>
           {recentListings.length === 0 ? (
-            <p className="py-8 text-center text-[13px] text-neutral-400">
+            <p className="px-5 py-10 text-center text-[13px] text-neutral-400">
               매물이 없습니다.
             </p>
           ) : (
-            <ul className="admin-list">
-              {recentListings.map((listing) => (
-                <li key={listing.id} className="admin-list-row">
-                  <div className="min-w-0">
-                    <Link
-                      href={`/listings/${listing.id}`}
-                      className="block truncate text-[13.5px] font-medium text-neutral-900 hover:underline"
-                    >
-                      {listing.title}
-                    </Link>
-                    <p className="mt-0.5 truncate text-[12.5px] text-neutral-500">
-                      {ADMIN_CATEGORY_LABELS[listing.category]}
-                    </p>
-                  </div>
-                  <time className="shrink-0 tabular-nums text-[12px] text-neutral-400">
-                    {listing.createdAt.toISOString().slice(0, 10)}
-                  </time>
-                </li>
-              ))}
-            </ul>
+            <div className="overflow-x-auto">
+              <table className={`${adminTableClass} min-w-[320px]`}>
+                <colgroup>
+                  <col style={{ width: "52%" }} />
+                  <col style={{ width: "28%" }} />
+                  <col style={{ width: "20%" }} />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th className={adminThClass}>매물</th>
+                    <th className={adminThClass}>카테고리</th>
+                    <th className={`${adminThClass} text-right`}>등록일</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentListings.map((listing) => (
+                    <tr key={listing.id}>
+                      <td className={adminTdClass}>
+                        <Link
+                          href={`/listings/${listing.id}`}
+                          className="block truncate font-medium text-neutral-900 hover:underline"
+                          title={listing.title}
+                        >
+                          {listing.title}
+                        </Link>
+                      </td>
+                      <td
+                        className={`${adminTdClass} truncate text-neutral-500`}
+                        title={ADMIN_CATEGORY_LABELS[listing.category]}
+                      >
+                        {ADMIN_CATEGORY_LABELS[listing.category]}
+                      </td>
+                      <td
+                        className={`${adminTdClass} whitespace-nowrap text-right tabular-nums text-neutral-500`}
+                      >
+                        {listing.createdAt.toISOString().slice(0, 10)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
       </div>
