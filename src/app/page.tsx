@@ -3,6 +3,11 @@ import { HeroBanner } from "@/components/HeroBanner";
 import { ListingSection } from "@/components/ListingSection";
 import { isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
+import {
+  orderByIds,
+  seededShuffle,
+  standByHomeShuffleSeed,
+} from "@/lib/listing-shuffle";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +23,25 @@ type HomeListing = Listing & { images: ListingImage[] };
 const coverImageInclude = {
   images: { orderBy: { sortOrder: "asc" as const }, take: 1 },
 };
+
+async function loadStandByHomeListings(): Promise<HomeListing[]> {
+  const idRows = await prisma.listing.findMany({
+    where: { category: "STAND_BY" },
+    select: { id: true },
+    orderBy: { id: "asc" },
+  });
+  const shuffledIds = seededShuffle(
+    idRows.map((row) => row.id),
+    standByHomeShuffleSeed(),
+  ).slice(0, HOME_SECTION_LIMIT);
+  if (shuffledIds.length === 0) return [];
+
+  const rows = await prisma.listing.findMany({
+    where: { id: { in: shuffledIds } },
+    include: coverImageInclude,
+  });
+  return orderByIds(rows, shuffledIds);
+}
 
 async function loadHomeListings(): Promise<
   [HomeListing[], HomeListing[], HomeListing[], HomeListing[]]
@@ -42,12 +66,7 @@ async function loadHomeListings(): Promise<
         orderBy: { createdAt: "desc" },
         take: HOME_SECTION_LIMIT,
       }),
-      prisma.listing.findMany({
-        where: { category: "STAND_BY" },
-        include: coverImageInclude,
-        orderBy: { createdAt: "desc" },
-        take: HOME_SECTION_LIMIT,
-      }),
+      loadStandByHomeListings(),
     ]);
   } catch (error) {
     console.error("[HomePage] listing query failed", error);

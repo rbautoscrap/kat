@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import { ListingCard } from "@/components/ListingCard";
 import { ListingPagination } from "@/components/ListingPagination";
@@ -13,12 +14,23 @@ import {
   LISTING_GRID_CLASS,
   parseCategory,
 } from "@/lib/listings";
+import {
+  newStandByShuffleSeed,
+  orderByIds,
+  parseStandByShuffleSeed,
+  seededShuffle,
+} from "@/lib/listing-shuffle";
 import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
 type Props = {
-  searchParams: Promise<{ category?: string; q?: string; page?: string }>;
+  searchParams: Promise<{
+    category?: string;
+    q?: string;
+    page?: string;
+    shuffle?: string;
+  }>;
 };
 
 export default async function ListingsPage({ searchParams }: Props) {
@@ -41,20 +53,58 @@ export default async function ListingsPage({ searchParams }: Props) {
   const fromMenu = Boolean(category) && !q;
   const isSearch = Boolean(q);
   const pageSize = LISTING_CATEGORY_PAGE_SIZE;
+  const shuffleStandBy = category === "STAND_BY";
+
+  let shuffleSeed: number | null = null;
+  if (shuffleStandBy) {
+    shuffleSeed = parseStandByShuffleSeed(params.shuffle);
+    if (shuffleSeed === null) {
+      const sp = new URLSearchParams();
+      sp.set("category", "STAND_BY");
+      if (q) sp.set("q", q);
+      if (page > 1) sp.set("page", String(page));
+      sp.set("shuffle", String(newStandByShuffleSeed()));
+      redirect(`/listings?${sp.toString()}`);
+    }
+  }
 
   const total = await prisma.listing.count({ where });
   const totalPageCount = Math.max(1, Math.ceil(total / pageSize));
   const currentPage = Math.min(page, totalPageCount);
 
-  const listings = await prisma.listing.findMany({
-    where,
-    include: {
-      images: { orderBy: { sortOrder: "asc" }, take: 1 },
-    },
-    orderBy: { createdAt: "desc" },
-    take: pageSize,
-    skip: (currentPage - 1) * pageSize,
-  });
+  let listings;
+  if (shuffleStandBy && shuffleSeed !== null) {
+    const idRows = await prisma.listing.findMany({
+      where,
+      select: { id: true },
+      orderBy: { id: "asc" },
+    });
+    const shuffledIds = seededShuffle(
+      idRows.map((row) => row.id),
+      shuffleSeed,
+    );
+    const pageIds = shuffledIds.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize,
+    );
+    const pageRows = await prisma.listing.findMany({
+      where: { id: { in: pageIds } },
+      include: {
+        images: { orderBy: { sortOrder: "asc" }, take: 1 },
+      },
+    });
+    listings = orderByIds(pageRows, pageIds);
+  } else {
+    listings = await prisma.listing.findMany({
+      where,
+      include: {
+        images: { orderBy: { sortOrder: "asc" }, take: 1 },
+      },
+      orderBy: { createdAt: "desc" },
+      take: pageSize,
+      skip: (currentPage - 1) * pageSize,
+    });
+  }
 
   const heading = category
     ? CATEGORY_LABELS[category]
@@ -111,6 +161,8 @@ export default async function ListingsPage({ searchParams }: Props) {
               params={{
                 category: category ?? undefined,
                 q: q || undefined,
+                shuffle:
+                  shuffleSeed !== null ? String(shuffleSeed) : undefined,
               }}
             />
           ) : null}
