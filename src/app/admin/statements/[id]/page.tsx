@@ -132,14 +132,11 @@ export default async function StatementDetailPage({ params }: Props) {
               {statement.statementNo}
             </h2>
             <p className="mt-1 text-[12.5px] text-neutral-500">
-              수정 저장 후, 아래에서 한국어/영문 전환 · 출력 · 이미지 저장이
+              수정 저장 후, 아래 미리보기에서 언어 전환·이미지 저장이
               가능합니다.
             </p>
           </div>
-          <StatementActions
-            statementId={statement.id}
-            statementNo={statement.statementNo}
-          />
+          <StatementActions statementId={statement.id} />
         </div>
         <div className="px-4 py-5 sm:px-5">
           <StatementForm
