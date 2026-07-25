@@ -1,33 +1,32 @@
 /**
- * Reset / ensure ADMIN login on the production SQLite volume.
- *
- * Usage (Railway Console / one-off):
- *   ADMIN_LOGIN=admin ADMIN_PASSWORD='YourPass1' node scripts/reset-admin-password.mjs
- *
- * Defaults: admin / KatAdmin#2026
+ * Reset ADMIN password.
+ * Usage: ADMIN_PASSWORD='your-new-password' node scripts/reset-admin-password.mjs
  */
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const LOGIN = (process.env.ADMIN_LOGIN || "admin").trim().toLowerCase();
-const PASSWORD = process.env.ADMIN_PASSWORD || "KatAdmin#2026";
+const PASSWORD = process.env.ADMIN_PASSWORD?.trim() || "";
 const NAME = process.env.ADMIN_NAME || "Admin";
+
+if (!PASSWORD || PASSWORD.length < 8) {
+  console.error(
+    "[reset-admin-password] Set ADMIN_PASSWORD (min 8 chars). Example:\n  ADMIN_PASSWORD='your-new-password' node scripts/reset-admin-password.mjs",
+  );
+  process.exit(1);
+}
 
 const prisma = new PrismaClient();
 
 async function main() {
-  if (PASSWORD.length < 6) {
-    throw new Error("ADMIN_PASSWORD must be at least 6 characters");
-  }
-
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
-  const user = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: LOGIN },
     update: {
+      name: NAME,
       passwordHash,
       role: "ADMIN",
       status: "APPROVED",
-      name: NAME,
     },
     create: {
       email: LOGIN,
@@ -37,15 +36,12 @@ async function main() {
       status: "APPROVED",
     },
   });
-
-  console.log(
-    `[reset-admin] OK id=${user.id} login=${LOGIN} (password updated)`,
-  );
+  console.log(`[reset-admin-password] Updated ADMIN login=${LOGIN}`);
 }
 
 main()
   .catch((err) => {
-    console.error("[reset-admin] failed", err);
+    console.error("[reset-admin-password] failed", err);
     process.exit(1);
   })
   .finally(async () => {

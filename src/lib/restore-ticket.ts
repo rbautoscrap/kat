@@ -19,7 +19,7 @@ function sign(payloadB64: string) {
 }
 
 /** Short-lived admin ticket for large ZIP restore via Railway origin. */
-export function createRestoreTicket(userId: string, ttlSec = 45 * 60): string {
+export function createRestoreTicket(userId: string, ttlSec = 15 * 60): string {
   const payload: TicketPayload = {
     v: 1,
     uid: userId,

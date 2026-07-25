@@ -5,7 +5,11 @@ import { cookies, headers } from "next/headers";
 import { OFFER_DEVICE_COOKIE } from "@/lib/purchase-offer";
 
 export function hashClientIp(ip: string) {
-  const salt = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "kat";
+  const salt =
+    process.env.AUTH_SECRET?.trim() || process.env.NEXTAUTH_SECRET?.trim();
+  if (!salt) {
+    throw new Error("AUTH_SECRET이 설정되지 않았습니다.");
+  }
   return createHash("sha256").update(`${salt}:offer-ip:${ip}`).digest("hex");
 }
 

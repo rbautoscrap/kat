@@ -40,10 +40,8 @@ export async function OPTIONS(request: Request) {
 }
 
 async function authorizeRestore(request: Request) {
-  const ticket =
-    request.headers.get("x-kat-restore-ticket")?.trim() ||
-    new URL(request.url).searchParams.get("ticket")?.trim() ||
-    "";
+  // Header-only ticket (never accept query string — leaks via logs/Referer).
+  const ticket = request.headers.get("x-kat-restore-ticket")?.trim() || "";
 
   if (ticket) {
     const parsed = verifyRestoreTicket(ticket);
@@ -99,6 +97,21 @@ export async function POST(request: Request) {
         return json(
           request,
           { ok: false, error: "복원할 ZIP 파일을 선택해 주세요." },
+          { status: 400 },
+        );
+      }
+      // Hard cap to protect volume fill / zip bombs (override with RESTORE_MAX_ZIP_BYTES).
+      const maxZipBytes = (() => {
+        const raw = Number(process.env.RESTORE_MAX_ZIP_BYTES ?? String(40 * 1024 ** 3));
+        return Number.isFinite(raw) && raw > 0 ? raw : 40 * 1024 ** 3;
+      })();
+      if (entry.size > maxZipBytes) {
+        return json(
+          request,
+          {
+            ok: false,
+            error: `ZIP이 너무 큽니다. 최대 ${Math.floor(maxZipBytes / 1024 ** 3)}GB까지 허용됩니다.`,
+          },
           { status: 400 },
         );
       }

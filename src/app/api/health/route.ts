@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
 
-/** Uptime + persistence checks (no secrets). */
+/** Lightweight readiness probe — no internal paths exposed. */
 export async function GET() {
   const dataDir =
     process.env.DATA_DIR?.trim() ||
@@ -18,19 +18,15 @@ export async function GET() {
   const markerOk = existsSync(path.join(dataDir, ".kat-persist"));
   const dbOk = existsSync(dbFile);
   const uploadsOk = existsSync(uploadDir);
+  const ready = volumeMounted
+    ? markerOk && dbOk && uploadsOk
+    : dbOk && uploadsOk;
 
   return NextResponse.json({
-    ok: true,
+    ok: ready,
     service: "korea-auto-trade",
     time: new Date().toISOString(),
-    persistence: {
-      volumeMounted,
-      mountPath: process.env.RAILWAY_VOLUME_MOUNT_PATH ?? null,
-      dataDir,
-      dbFileExists: dbOk,
-      uploadsDirExists: uploadsOk,
-      markerOk,
-      ready: volumeMounted && markerOk && dbOk && uploadsOk,
-    },
+    ready,
+    volumeMounted,
   });
 }

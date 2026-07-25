@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { toPng } from "html-to-image";
 import { StatementDocument } from "@/components/admin/StatementDocument";
 import type { StatementLocale, StatementView } from "@/lib/statement";
 import { adminActionBtnClass } from "@/lib/admin-ui";
@@ -30,7 +29,10 @@ function waitFrames(count = 2) {
  * Capture via a short-lived on-screen layer.
  * Off-screen clones (left: -9999px) often export as blank white in Chromium.
  */
-async function captureStatementPng(source: HTMLElement): Promise<string> {
+async function captureStatementPng(
+  source: HTMLElement,
+  toPng: typeof import("html-to-image").toPng,
+): Promise<string> {
   await document.fonts.ready.catch(() => undefined);
 
   const layer = document.createElement("div");
@@ -114,7 +116,8 @@ export function StatementPreviewPanel({ statement }: Props) {
     setMessage(null);
 
     try {
-      const dataUrl = await captureStatementPng(node);
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await captureStatementPng(node, toPng);
       if (!dataUrl || dataUrl.length < 200) {
         throw new Error("empty image data");
       }

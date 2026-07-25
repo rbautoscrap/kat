@@ -5,6 +5,7 @@ import type { Role } from "@prisma/client";
 import { verifyCredentials } from "@/lib/authenticate";
 import { loginIdSchema } from "@/lib/login-id";
 import { prisma } from "@/lib/prisma";
+import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
 
 declare module "next-auth" {
   interface User {
@@ -84,6 +85,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(raw) {
         const parsed = credentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
+
+        const ip = await clientIpFromHeaders();
+        const byIp = rateLimit(`login:ip:${ip}`, 20, 15 * 60 * 1000);
+        const byId = rateLimit(
+          `login:id:${parsed.data.email}`,
+          10,
+          15 * 60 * 1000,
+        );
+        if (!byIp.ok || !byId.ok) {
+          return null;
+        }
 
         const result = await verifyCredentials(
           parsed.data.email,

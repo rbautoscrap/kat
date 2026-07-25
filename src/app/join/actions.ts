@@ -6,6 +6,7 @@ import { z } from "zod";
 import { loginIdSchema, passwordSchema } from "@/lib/login-id";
 import { phoneSchema } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
+import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
 
 const registerSchema = z
   .object({
@@ -26,6 +27,14 @@ export async function registerAccount(
   _prev: RegisterState,
   formData: FormData,
 ): Promise<RegisterState> {
+  const ip = await clientIpFromHeaders();
+  const limited = rateLimit(`join:${ip}`, 8, 60 * 60 * 1000);
+  if (!limited.ok) {
+    return {
+      error: "Too many registration attempts. Please try again later.",
+    };
+  }
+
   const parsed = registerSchema.safeParse({
     name: String(formData.get("name") ?? ""),
     email: String(formData.get("email") ?? ""),

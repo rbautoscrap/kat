@@ -18,12 +18,12 @@ import path from "node:path";
 import { createZipArchiver } from "@/lib/create-zip-archiver";
 import { extractZipSafe } from "@/lib/extract-zip";
 import { disconnectPrisma, prisma } from "@/lib/prisma";
-import { getUploadsDir } from "@/lib/storage-paths";
+import { getAppTempDir, getUploadsDir } from "@/lib/storage-paths";
 
-/** Keep more backups on large Railway volumes (~250GB). Override with BACKUP_MAX_COUNT. */
+/** Keep backups on large Railway volumes. Override with BACKUP_MAX_COUNT. */
 function maxBackupsToKeep() {
-  const raw = Number(process.env.BACKUP_MAX_COUNT ?? "25");
-  if (!Number.isFinite(raw) || raw < 1) return 25;
+  const raw = Number(process.env.BACKUP_MAX_COUNT ?? "12");
+  if (!Number.isFinite(raw) || raw < 1) return 12;
   return Math.min(Math.floor(raw), 200);
 }
 
@@ -165,6 +165,63 @@ function pruneOldBackups() {
       // ignore
     }
   }
+  cleanupVolumeScratch();
+}
+
+/**
+ * Remove leftover restore/upload/tmp artifacts that can accumulate on the volume.
+ * Safe to run from maintenance snapshot / after backup ops.
+ */
+export function cleanupVolumeScratch(maxAgeMs = 24 * 60 * 60 * 1000) {
+  const now = Date.now();
+  let removed = 0;
+
+  const tryRm = (target: string, recursive: boolean) => {
+    try {
+      rmSync(target, { recursive, force: true });
+      removed += 1;
+    } catch {
+      // ignore
+    }
+  };
+
+  const backupsDir = getBackupsDir();
+  if (existsSync(backupsDir)) {
+    for (const name of readdirSync(backupsDir)) {
+      if (
+        name.startsWith(".upload-") ||
+        name.startsWith(".tmp-") ||
+        name.startsWith(".restore-") ||
+        name.endsWith(".zip.part")
+      ) {
+        const full = path.join(backupsDir, name);
+        const st = safeStat(full);
+        if (st && now - st.mtimeMs > maxAgeMs) tryRm(full, st.isDirectory());
+      }
+    }
+  }
+
+  const dataDir = getDataDir();
+  if (existsSync(dataDir)) {
+    for (const name of readdirSync(dataDir)) {
+      if (name.startsWith(".uploads-prev-") || name.startsWith(".restore-")) {
+        const full = path.join(dataDir, name);
+        const st = safeStat(full);
+        if (st && now - st.mtimeMs > maxAgeMs) tryRm(full, true);
+      }
+    }
+  }
+
+  const tmpDir = getAppTempDir();
+  if (existsSync(tmpDir)) {
+    for (const name of readdirSync(tmpDir)) {
+      const full = path.join(tmpDir, name);
+      const st = safeStat(full);
+      if (st && now - st.mtimeMs > maxAgeMs) tryRm(full, st.isDirectory());
+    }
+  }
+
+  return removed;
 }
 
 export function isSafeBackupName(name: string) {
@@ -565,6 +622,13 @@ export function storeUploadedBackupZip(
 }
 
 export async function collectMaintenanceSnapshot(): Promise<MaintenanceSnapshot> {
+  // Opportunistic GC of restore/upload leftovers (does not touch live uploads/DB).
+  try {
+    cleanupVolumeScratch();
+  } catch {
+    // ignore
+  }
+
   const dataDir = getDataDir();
   const dbPath = getDbFilePath();
   const uploadsDir = getUploadsDir();

@@ -16,4 +16,4 @@ restartPolicyMaxRetries = 10
 # Large ZIP restore uploads go to RAILWAY_PUBLIC_DOMAIN (not Cloudflare).
 # Optional overrides:
 #   RAILWAY_RESTORE_ORIGIN=https://your-service.up.railway.app
-#   BACKUP_MAX_COUNT=25
+#   BACKUP_MAX_COUNT=12

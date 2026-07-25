@@ -45,6 +45,11 @@ next-env.d.ts
 
 /src/generated/prisma
 /public/uploads
+/data
+/data/**
+*.db
+*.db-journal
+*.db-*
 /prisma/dev.db
 /prisma/dev.db-journal
 /prisma/build.db
