@@ -21,6 +21,7 @@ export function ListingThumb({ src, alt, sizes, className }: Props) {
       fill
       sizes={sizes}
       className={className}
+      draggable={false}
       onError={() => setFailed(true)}
       // /uploads are served from Volume via route handler — skip optimizer
       unoptimized={

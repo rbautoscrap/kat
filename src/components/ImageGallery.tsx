@@ -49,6 +49,7 @@ export function ImageGallery({
               alt={`${alt} ${index + 1}`}
               fill
               sizes="(max-width: 640px) 33vw, 20vw"
+              draggable={false}
               className={`object-cover ${
                 saleStatus === "SOLD" ? "opacity-70 grayscale-[0.35]" : ""
               }`}
@@ -75,6 +76,8 @@ export function ImageGallery({
           <img
             src={activeUrl}
             alt={alt}
+            draggable={false}
+            data-protect-image=""
             className="max-h-full max-w-full object-contain"
           />
         </button>

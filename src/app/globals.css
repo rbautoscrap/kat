@@ -28,6 +28,16 @@ html {
   text-size-adjust: 100%;
 }
 
+/* Casual image-save hardening for non-admin visitors */
+html.protect-images img,
+html.protect-images picture,
+html.protect-images [data-protect-image] {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
