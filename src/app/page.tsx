@@ -3,11 +3,6 @@ import { HeroBanner } from "@/components/HeroBanner";
 import { ListingSection } from "@/components/ListingSection";
 import { isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
-import {
-  orderByIds,
-  seededShuffle,
-  standByHomeShuffleSeed,
-} from "@/lib/listing-shuffle";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -23,25 +18,6 @@ type HomeListing = Listing & { images: ListingImage[] };
 const coverImageInclude = {
   images: { orderBy: { sortOrder: "asc" as const }, take: 1 },
 };
-
-async function loadStandByHomeListings(): Promise<HomeListing[]> {
-  const idRows = await prisma.listing.findMany({
-    where: { category: "STAND_BY" },
-    select: { id: true },
-    orderBy: { id: "asc" },
-  });
-  const shuffledIds = seededShuffle(
-    idRows.map((row) => row.id),
-    standByHomeShuffleSeed(),
-  ).slice(0, HOME_SECTION_LIMIT);
-  if (shuffledIds.length === 0) return [];
-
-  const rows = await prisma.listing.findMany({
-    where: { id: { in: shuffledIds } },
-    include: coverImageInclude,
-  });
-  return orderByIds(rows, shuffledIds);
-}
 
 async function loadHomeListings(): Promise<
   [HomeListing[], HomeListing[], HomeListing[], HomeListing[]]
@@ -61,12 +37,17 @@ async function loadHomeListings(): Promise<
         take: HOME_SECTION_LIMIT,
       }),
       prisma.listing.findMany({
+        where: { category: "STAND_BY" },
+        include: coverImageInclude,
+        orderBy: { createdAt: "desc" },
+        take: HOME_SECTION_LIMIT,
+      }),
+      prisma.listing.findMany({
         where: { category: "LIVE_AUCTION" },
         include: coverImageInclude,
         orderBy: { createdAt: "desc" },
         take: HOME_SECTION_LIMIT,
       }),
-      loadStandByHomeListings(),
     ]);
   } catch (error) {
     console.error("[HomePage] listing query failed", error);
@@ -79,7 +60,7 @@ export default async function HomePage({ searchParams }: Props) {
   const dbUser = await resolveSessionDbUser();
   const canViewSold = isAdmin(dbUser?.role);
 
-  const [hotDeals, carListings, liveAuction, standBy] =
+  const [hotDeals, carListings, standBy, liveAuction] =
     await loadHomeListings();
 
   const errorMessage =
@@ -114,15 +95,15 @@ export default async function HomePage({ searchParams }: Props) {
         canManageSaleStatus={canViewSold}
       />
       <ListingSection
-        category="LIVE_AUCTION"
-        listings={liveAuction}
+        category="STAND_BY"
+        listings={standBy}
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
       />
       <ListingSection
-        category="STAND_BY"
-        listings={standBy}
+        category="LIVE_AUCTION"
+        listings={liveAuction}
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
