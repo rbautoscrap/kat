@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { submitPurchaseOffer } from "@/lib/offer-actions";
@@ -93,6 +94,13 @@ export function PurchaseOfferPanel({
             {submitted > 0
               ? ` · ${submitted}/${MAX_OFFERS_PER_LISTING} used`
               : ""}
+            {" · "}
+            <Link
+              href="/offers"
+              className="font-medium text-neutral-600 underline-offset-2 hover:text-neutral-900 hover:underline"
+            >
+              My offers
+            </Link>
           </p>
         </div>
         {success ? (

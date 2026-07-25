@@ -187,6 +187,7 @@ model PurchaseOffer {
   @@index([listingId, ipHash])
   @@index([listingId, deviceId])
   @@index([listingId, createdAt])
+  @@index([userId, createdAt])
 }
 
 model ListingImage {

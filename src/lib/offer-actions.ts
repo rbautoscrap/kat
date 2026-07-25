@@ -114,6 +114,7 @@ export async function submitPurchaseOffer(input: {
     ]);
 
     revalidatePath(`/listings/${listingId}`);
+    revalidatePath("/offers");
     revalidatePath("/admin");
     revalidatePath("/admin/listings");
 
@@ -163,6 +164,7 @@ export async function deletePurchaseOffer(
     await prisma.purchaseOffer.delete({ where: { id: offer.id } });
 
     revalidatePath(`/listings/${offer.listingId}`);
+    revalidatePath("/offers");
     revalidatePath("/admin");
     revalidatePath("/admin/listings");
     return { ok: true };

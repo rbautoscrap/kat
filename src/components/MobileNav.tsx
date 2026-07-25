@@ -155,6 +155,15 @@ export function MobileNav({ user, logoutAction }: Props) {
                     ) : null}
                     <li>
                       <Link
+                        href="/offers"
+                        className="flex min-h-12 items-center px-3 text-[15px] font-medium text-neutral-800"
+                        onClick={() => setOpen(false)}
+                      >
+                        My offers
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
                         href="/profile"
                         className="flex min-h-12 items-center px-3 text-[15px] font-medium text-neutral-800"
                         onClick={() => setOpen(false)}

@@ -64,6 +64,9 @@ export async function Header() {
                     관리자
                   </Link>
                 )}
+                <Link href="/offers" className={accountLinkClass}>
+                  My offers
+                </Link>
                 <Link
                   href="/profile"
                   className={`${accountLinkClass} max-w-[8rem] truncate`}
