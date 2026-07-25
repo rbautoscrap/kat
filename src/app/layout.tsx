@@ -28,11 +28,24 @@ export const metadata: Metadata = {
   title: "KOREA AUTO TRADE",
   description: "Vehicle trading platform",
   icons: {
+    // Version query busts Cloudflare/browser cache of the old Vercel icon.
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/brand/favicon.png", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.ico?v=rbauto-20260725", sizes: "any" },
+      { url: "/favicon.png?v=rbauto-20260725", type: "image/png", sizes: "32x32" },
+      {
+        url: "/brand/favicon.png?v=rbauto-20260725",
+        type: "image/png",
+        sizes: "512x512",
+      },
     ],
-    apple: [{ url: "/brand/favicon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: "/favicon.ico?v=rbauto-20260725",
+    apple: [
+      {
+        url: "/apple-touch-icon.png?v=rbauto-20260725",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
   },
 };
 
