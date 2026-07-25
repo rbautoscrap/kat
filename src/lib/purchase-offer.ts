@@ -49,3 +49,54 @@ export function formatOfferAmount(amount: string, currency: OfferCurrencyCode) {
   });
   return `${CURRENCY_META[currency].symbol}${formatted}`;
 }
+
+export function parseOfferAmount(amount: string): number {
+  const n = Number(String(amount).replace(/,/g, "").trim());
+  return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * Rough KRW equivalent for ranking offers across currencies.
+ * Not a live FX quote — only used to detect "someone bid higher".
+ */
+const APPROX_TO_KRW: Record<OfferCurrencyCode, number> = {
+  KRW: 1,
+  USD: 1350,
+  EUR: 1450,
+};
+
+export function offerToComparableKrw(
+  amount: string,
+  currency: OfferCurrencyCode,
+): number {
+  return parseOfferAmount(amount) * APPROX_TO_KRW[currency];
+}
+
+/** True when another member has a strictly higher offer than this member's best. */
+export function isMemberOutbidByOthers(
+  memberId: string,
+  ownOffers: { amount: string; currency: OfferCurrencyCode }[],
+  allOffers: {
+    userId: string;
+    amount: string;
+    currency: OfferCurrencyCode;
+  }[],
+): boolean {
+  if (!memberId || ownOffers.length === 0) return false;
+
+  const ownBest = Math.max(
+    0,
+    ...ownOffers.map((o) => offerToComparableKrw(o.amount, o.currency)),
+  );
+  if (ownBest <= 0) return false;
+
+  let othersBest = 0;
+  for (const o of allOffers) {
+    if (o.userId === memberId) continue;
+    othersBest = Math.max(
+      othersBest,
+      offerToComparableKrw(o.amount, o.currency),
+    );
+  }
+  return othersBest > ownBest;
+}

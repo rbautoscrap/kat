@@ -19,6 +19,8 @@ type Props = {
   listingId: string;
   /** Member's own offers for this listing (newest first). */
   ownOffers?: OwnOffer[];
+  /** True when another member has submitted a higher offer. */
+  hasHigherOffer?: boolean;
 };
 
 /** Display order: KRW first (default). */
@@ -61,7 +63,11 @@ function formatAmountInput(raw: string, currency: OfferCurrencyCode) {
   return `${intFormatted}.${decimals}`;
 }
 
-export function PurchaseOfferPanel({ listingId, ownOffers = [] }: Props) {
+export function PurchaseOfferPanel({
+  listingId,
+  ownOffers = [],
+  hasHigherOffer = false,
+}: Props) {
   const router = useRouter();
   const submitted = ownOffers.length;
   const remaining = Math.max(0, MAX_OFFERS_PER_LISTING - submitted);
@@ -96,6 +102,15 @@ export function PurchaseOfferPanel({ listingId, ownOffers = [] }: Props) {
           </p>
         ) : null}
       </div>
+
+      {hasHigherOffer ? (
+        <p
+          role="status"
+          className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[12.5px] font-medium leading-snug tracking-wide text-red-700"
+        >
+          A higher offer has been submitted. You may raise your offer.
+        </p>
+      ) : null}
 
       {ownOffers.length > 0 ? (
         <ul className="mb-3 space-y-1 border-b border-[var(--line)] pb-3">

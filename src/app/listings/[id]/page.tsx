@@ -25,6 +25,10 @@ import {
   youtubeEmbedUrl,
 } from "@/lib/listings";
 import { displayAccumulatedDays } from "@/lib/listing-actions";
+import {
+  isMemberOutbidByOthers,
+  type OfferCurrencyCode,
+} from "@/lib/purchase-offer";
 
 export const dynamic = "force-dynamic";
 
@@ -77,18 +81,44 @@ export default async function ListingDetailPage({ params }: Props) {
   }
 
   // Offer amounts are private: only the submitting member (own offers) and admins.
-  const ownOffers =
+  // For outbid detection we load lightweight rows (no other amounts exposed to the client).
+  const listingOffersForCompare =
     isSignedIn && dbUser?.id
       ? await prisma.purchaseOffer.findMany({
-          where: {
-            listingId: listing.id,
-            userId: dbUser.id,
+          where: { listingId: listing.id },
+          select: {
+            userId: true,
+            amount: true,
+            currency: true,
+            createdAt: true,
           },
-          select: { amount: true, currency: true, createdAt: true },
           orderBy: { createdAt: "desc" },
-          take: 3,
+          take: 100,
         })
       : [];
+
+  const ownOffers = dbUser?.id
+    ? listingOffersForCompare
+        .filter((o) => o.userId === dbUser.id)
+        .slice(0, 3)
+        .map((o) => ({
+          amount: o.amount,
+          currency: o.currency as OfferCurrencyCode,
+          createdAt: o.createdAt,
+        }))
+    : [];
+
+  const hasHigherOffer =
+    Boolean(dbUser?.id) &&
+    isMemberOutbidByOthers(
+      dbUser!.id,
+      ownOffers.map((o) => ({ amount: o.amount, currency: o.currency })),
+      listingOffersForCompare.map((o) => ({
+        userId: o.userId,
+        amount: o.amount,
+        currency: o.currency as OfferCurrencyCode,
+      })),
+    );
 
   const adminOffers = adminView
     ? await prisma.purchaseOffer.findMany({
@@ -100,7 +130,6 @@ export default async function ListingDetailPage({ params }: Props) {
         take: 50,
       })
     : [];
-
   const embed = youtubeEmbedUrl(listing.youtubeUrl);
   const wa = listingWhatsAppLink(listing.whatsappNumber, listing.title, {
     listingId: listing.id,
@@ -243,6 +272,7 @@ export default async function ListingDetailPage({ params }: Props) {
         <div className="mb-5">
           <PurchaseOfferPanel
             listingId={listing.id}
+            hasHigherOffer={hasHigherOffer}
             ownOffers={ownOffers.map((o) => ({
               amount: o.amount,
               currency: o.currency,
