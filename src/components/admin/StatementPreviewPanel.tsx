@@ -165,6 +165,14 @@ export function StatementPreviewPanel({ statement }: Props) {
           </button>
           <button
             type="button"
+            onClick={() => window.print()}
+            disabled={busy}
+            className={adminActionBtnClass}
+          >
+            출력
+          </button>
+          <button
+            type="button"
             onClick={onSaveImage}
             disabled={busy}
             className={adminActionBtnClass}
