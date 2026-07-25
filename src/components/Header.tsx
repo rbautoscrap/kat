@@ -64,7 +64,10 @@ export async function Header() {
                     관리자
                   </Link>
                 )}
-                <Link href="/offers" className={accountLinkClass}>
+                <Link
+                  href="/offers"
+                  className="inline-flex h-8 items-center rounded-md px-2.5 text-[13.5px] font-semibold text-[var(--accent)] transition-colors hover:bg-red-50 hover:text-red-700"
+                >
                   My offers
                 </Link>
                 <Link
