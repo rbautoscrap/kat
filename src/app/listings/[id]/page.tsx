@@ -223,42 +223,40 @@ export default async function ListingDetailPage({ params }: Props) {
       ) : null}
 
       <div className="mb-5 overflow-hidden rounded-sm border border-[var(--line)]">
-        <div className="grid sm:grid-cols-[148px_minmax(0,1fr)]">
-          <div className="flex flex-col items-center justify-center border-b border-[var(--line)] bg-neutral-50 px-3 py-3 text-center sm:border-r sm:border-b-0">
-            <ListingContactLinks
-              whatsappHref={wa}
-              inquiryText={kakaoInquiry}
-            />
-          </div>
-
-          <dl className="grid grid-cols-1 sm:grid-cols-2">
-            {shortSpecs.map((item, index) => {
-              const total = shortSpecs.length;
-              const isLeft = index % 2 === 0;
-              const isLast = index === total - 1;
-              const oddLoneLast = total % 2 === 1 && isLast;
-              const lastRowStart = total % 2 === 0 ? total - 2 : total - 1;
-              const inLastRow = index >= lastRowStart;
-              return (
-                <div
-                  key={item.label}
-                  className={`grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] items-center border-[var(--line)] text-[12.5px] sm:grid-cols-[7rem_minmax(0,1fr)] sm:text-[13px] ${
-                    inLastRow ? "" : "border-b"
-                  } ${isLeft && !oddLoneLast ? "sm:border-r" : ""} ${
-                    oddLoneLast ? "sm:col-span-2" : ""
-                  }`}
-                >
-                  <dt className="border-r border-[var(--line)] bg-neutral-50/90 px-2 py-1.5 font-medium tracking-wide text-neutral-500 sm:px-2.5">
-                    {item.label}
-                  </dt>
-                  <dd className="min-w-0 break-words whitespace-pre-wrap px-2 py-1.5 tracking-wide text-neutral-700 sm:px-2.5">
-                    {item.value}
-                  </dd>
-                </div>
-              );
-            })}
-          </dl>
+        <div className="border-b border-[var(--line)] bg-neutral-50 px-3 py-2.5 sm:px-3.5">
+          <ListingContactLinks
+            whatsappHref={wa}
+            inquiryText={kakaoInquiry}
+          />
         </div>
+
+        <dl className="grid grid-cols-1 sm:grid-cols-2">
+          {shortSpecs.map((item, index) => {
+            const total = shortSpecs.length;
+            const isLeft = index % 2 === 0;
+            const isLast = index === total - 1;
+            const oddLoneLast = total % 2 === 1 && isLast;
+            const lastRowStart = total % 2 === 0 ? total - 2 : total - 1;
+            const inLastRow = index >= lastRowStart;
+            return (
+              <div
+                key={item.label}
+                className={`grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] items-center border-[var(--line)] text-[12.5px] sm:grid-cols-[7rem_minmax(0,1fr)] sm:text-[13px] ${
+                  inLastRow ? "" : "border-b"
+                } ${isLeft && !oddLoneLast ? "sm:border-r" : ""} ${
+                  oddLoneLast ? "sm:col-span-2" : ""
+                }`}
+              >
+                <dt className="border-r border-[var(--line)] bg-neutral-50/90 px-2 py-1.5 font-medium tracking-wide text-neutral-500 sm:px-2.5">
+                  {item.label}
+                </dt>
+                <dd className="min-w-0 break-words whitespace-pre-wrap px-2 py-1.5 tracking-wide text-neutral-700 sm:px-2.5">
+                  {item.value}
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
 
         {/* Full-width Notes so long text does not stretch neighboring short cells. */}
         <div className="grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] border-t border-[var(--line)] text-[12.5px] sm:grid-cols-[7rem_minmax(0,1fr)] sm:text-[13px]">
