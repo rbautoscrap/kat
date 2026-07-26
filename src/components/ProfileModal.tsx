@@ -21,6 +21,7 @@ export function ProfileModal({ open, onClose, user }: Props) {
       maxWidthClass="max-w-[26rem]"
       closeLabel="Close profile"
       closeOnBackdrop={false}
+      closeButtonClassName="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--accent)] transition hover:bg-red-50 hover:text-red-700"
     >
       <ProfileForm
         key={`${user.name}-${user.email}`}
