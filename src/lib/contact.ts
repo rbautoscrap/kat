@@ -41,3 +41,32 @@ export const CONTACT_EMAIL =
   process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "rbautoscrap@naver.com";
 
 export const CONTACT_HOURS = "Mon – Fri, 09:00 – 18:00 (KST)";
+
+/** Facebook Page URL */
+export const CONTACT_FACEBOOK_URL = (
+  process.env.NEXT_PUBLIC_FACEBOOK_URL ??
+  "https://www.facebook.com/rbautoscrap"
+).trim();
+
+/**
+ * Facebook Messenger chat URL (m.me / page username).
+ * Default matches the public Facebook Page rbautoscrap.
+ */
+export const CONTACT_MESSENGER_URL = (
+  process.env.NEXT_PUBLIC_MESSENGER_URL ?? "https://m.me/rbautoscrap"
+).trim();
+
+/** Messenger link; optional prefilled text when the client supports it. */
+export function messengerLink(text?: string | null) {
+  const raw = CONTACT_MESSENGER_URL;
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    const msg = text?.trim();
+    if (msg) url.searchParams.set("text", msg);
+    return url.toString();
+  } catch {
+    return null;
+  }
+}

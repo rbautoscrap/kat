@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { kakaoTalkLink } from "@/lib/contact";
+import { kakaoTalkLink, messengerLink } from "@/lib/contact";
 
 type Props = {
   whatsappHref: string | null;
@@ -10,15 +10,15 @@ type Props = {
 };
 
 /**
- * WhatsApp opens with prefilled text.
- * Kakao Open Chat cannot prefill via URL — we copy the inquiry text, then open chat
- * so the user can paste (Ctrl/Cmd+V) once.
+ * WhatsApp / Messenger can carry prefilled text via URL.
+ * Kakao Open Chat cannot — we copy the inquiry text, then open chat for paste.
  */
 export function ListingContactLinks({ whatsappHref, inquiryText }: Props) {
   const kakaoHref = kakaoTalkLink();
+  const messengerHref = messengerLink(inquiryText);
   const [hint, setHint] = useState<string | null>(null);
 
-  if (!whatsappHref && !kakaoHref) {
+  if (!whatsappHref && !kakaoHref && !messengerHref) {
     return (
       <p className="text-[12px] leading-snug tracking-wide text-neutral-500">
         Contact unavailable
@@ -66,14 +66,21 @@ export function ListingContactLinks({ whatsappHref, inquiryText }: Props) {
           KakaoTalk
         </button>
       ) : null}
+      {messengerHref ? (
+        <a
+          href={messengerHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-[#0084FF] px-3 py-2 text-[13px] font-medium tracking-wide text-white transition hover:brightness-95"
+        >
+          <MessengerIcon />
+          Messenger
+        </a>
+      ) : null}
       <p className="text-[11px] leading-snug tracking-wide text-neutral-500">
         {hint
           ? hint
-          : whatsappHref && kakaoHref
-            ? "WhatsApp autofills · Kakao copies message"
-            : whatsappHref
-              ? "WhatsApp opens with vehicle name"
-              : "Copies vehicle info, then opens KakaoTalk"}
+          : "WhatsApp / Messenger autofill · Kakao copies message"}
       </p>
     </div>
   );
@@ -92,6 +99,14 @@ function KakaoTalkIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M12 3.2C7.03 3.2 3 6.42 3 10.4c0 2.52 1.66 4.73 4.16 5.99l-.96 3.55c-.1.37.3.67.62.46l4.2-2.8c.32.03.65.05.98.05 4.97 0 9-3.22 9-7.25S16.97 3.2 12 3.2z" />
+    </svg>
+  );
+}
+
+function MessengerIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 2C6.36 2 2 6.13 2 11.7c0 2.9 1.19 5.4 3.14 7.14V22l3.05-1.67c.9.25 1.85.39 2.81.39 5.64 0 10.2-4.13 10.2-9.02C21.2 6.13 17.64 2 12 2zm1.01 12.16-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z" />
     </svg>
   );
 }
