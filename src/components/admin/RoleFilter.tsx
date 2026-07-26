@@ -10,6 +10,7 @@ type Props = {
   current?: RoleFilterValue;
   counts: Record<RoleFilterValue, number>;
   sort: SortValue;
+  q?: string;
 };
 
 const filters: Array<{ value: RoleFilterValue; label: string }> = [
@@ -23,14 +24,20 @@ export function RoleFilter({
   current = "ALL",
   counts,
   sort,
+  q,
 }: Props) {
+  const baseParams = {
+    sort: sort === "role" ? "role" : undefined,
+    q: q || undefined,
+  };
+
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] px-5 py-3.5">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] px-5 py-3">
       <div className="flex flex-wrap gap-1.5">
         {filters.map((f) => {
           const active = current === f.value;
           const href = buildPageHref("/admin/users", 1, {
-            sort,
+            ...baseParams,
             role: f.value === "ALL" ? undefined : f.value,
           });
           return (
@@ -54,11 +61,11 @@ export function RoleFilter({
         })}
       </div>
 
-      <div className="flex items-center gap-2 text-[12.5px] text-neutral-500">
-        <span className="shrink-0">정렬</span>
+      <div className="flex items-center gap-1.5 text-[12.5px] text-neutral-500">
         <Link
           href={buildPageHref("/admin/users", 1, {
-            sort: "newest",
+            ...baseParams,
+            sort: undefined,
             role: current === "ALL" ? undefined : current,
           })}
           className={`inline-flex h-8 items-center rounded-md border px-3 transition ${
@@ -71,6 +78,7 @@ export function RoleFilter({
         </Link>
         <Link
           href={buildPageHref("/admin/users", 1, {
+            ...baseParams,
             sort: "role",
             role: current === "ALL" ? undefined : current,
           })}

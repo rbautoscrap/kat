@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { DeleteUserButton } from "@/components/admin/DeleteUserButton";
 import { RoleFilter } from "@/components/admin/RoleFilter";
 import { UserAdminNoteButton } from "@/components/admin/UserAdminNoteButton";
+import { UserSearchBar } from "@/components/admin/UserSearchBar";
 import { UserStatusControls } from "@/components/admin/UserStatusControls";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { ROLE_LABELS, STATUS_LABELS } from "@/lib/admin-labels";
@@ -21,6 +22,7 @@ import {
   adminTdClass,
   adminThClass,
 } from "@/lib/admin-ui";
+import { buildUserSearchWhere } from "@/lib/user-search";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +30,12 @@ type RoleFilterValue = "ALL" | Role;
 type SortValue = "newest" | "role";
 
 type Props = {
-  searchParams: Promise<{ page?: string; role?: string; sort?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    role?: string;
+    sort?: string;
+    q?: string;
+  }>;
 };
 
 function parseRole(value?: string): RoleFilterValue {
@@ -48,20 +55,25 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   const page = parsePage(params.page);
   const role = parseRole(params.role);
   const sort = parseSort(params.sort);
+  const q = params.q?.trim() ?? "";
 
-  const where: Prisma.UserWhereInput =
+  const searchWhere = buildUserSearchWhere(q);
+  const roleWhere: Prisma.UserWhereInput =
     role === "ALL" ? {} : { role };
+  const where: Prisma.UserWhereInput = {
+    AND: [roleWhere, searchWhere],
+  };
 
   const [total, pendingCount, grouped] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.count({
       where: {
-        ...where,
-        status: "PENDING",
+        AND: [where, { status: "PENDING" }],
       },
     }),
     prisma.user.groupBy({
       by: ["role"],
+      where: searchWhere,
       _count: { _all: true },
     }),
   ]);
@@ -84,8 +96,8 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   // (SQLite enum string asc puts APPROVED before PENDING).
   const statusRank = (status: string) =>
     status === "PENDING" ? 0 : status === "REJECTED" ? 1 : 2;
-  const roleRank = (role: string) =>
-    role === "ADMIN" ? 0 : role === "AUTHORIZED" ? 1 : 2;
+  const roleRank = (r: string) =>
+    r === "ADMIN" ? 0 : r === "AUTHORIZED" ? 1 : 2;
 
   const allMatching = await prisma.user.findMany({
     where,
@@ -103,8 +115,9 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   const users = allMatching.slice(skip, skip + ADMIN_PAGE_SIZE);
 
   const queryParams = {
-    sort,
+    sort: sort === "role" ? "role" : undefined,
     role: role === "ALL" ? undefined : role,
+    q: q || undefined,
   };
 
   return (
@@ -128,20 +141,25 @@ export default async function AdminUsersPage({ searchParams }: Props) {
         </p>
       </div>
 
-      <RoleFilter current={role} counts={counts} sort={sort} />
+      <UserSearchBar
+        q={q}
+        role={role === "ALL" ? undefined : role}
+        sort={sort}
+      />
+      <RoleFilter current={role} counts={counts} sort={sort} q={q} />
 
       <div className={adminTableScrollClass}>
-        <table className={`${adminTableClass} min-w-[1240px]`}>
+        <table className={`${adminTableClass} min-w-[1180px]`}>
           <colgroup>
-            <col style={{ width: "11%" }} />
             <col style={{ width: "12%" }} />
+            <col style={{ width: "14%" }} />
             <col style={{ width: "13%" }} />
             <col style={{ width: "6%" }} />
             <col style={{ width: "9%" }} />
+            <col style={{ width: "9%" }} />
             <col style={{ width: "8%" }} />
-            <col style={{ width: "8%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "19%" }} />
+            <col style={{ width: "12%" }} />
+            <col style={{ width: "17%" }} />
           </colgroup>
           <thead>
             <tr>
@@ -179,7 +197,10 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                     }`}
                   >
                     <div className="flex min-w-0 items-center gap-1.5">
-                      <span className="truncate font-medium text-neutral-800">
+                      <span
+                        className="truncate font-medium text-neutral-800"
+                        title={user.name}
+                      >
                         {user.name}
                       </span>
                       {isSelf && (
@@ -189,11 +210,15 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                       )}
                     </div>
                   </td>
-                  <td className={`${adminTdClass} truncate text-neutral-600`}>
+                  <td
+                    className={`${adminTdClass} truncate text-neutral-600`}
+                    title={user.email}
+                  >
                     {user.email}
                   </td>
                   <td
                     className={`${adminTdClass} truncate tabular-nums text-neutral-700`}
+                    title={user.phone || undefined}
                   >
                     {user.phone || (
                       <span className="text-neutral-400">—</span>
@@ -227,7 +252,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                       {STATUS_LABELS[user.status]}
                     </span>
                   </td>
-                  <td className={`${adminTdClass} max-w-[11rem]`}>
+                  <td className={`${adminTdClass} max-w-[10rem]`}>
                     <UserAdminNoteButton
                       userId={user.id}
                       userName={user.name}
@@ -266,9 +291,11 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                   colSpan={9}
                   className="px-4 py-10 text-center text-[13.5px] text-neutral-500"
                 >
-                  {role === "ALL"
-                    ? "등록된 회원이 없습니다."
-                    : `${ROLE_LABELS[role]} 회원이 없습니다.`}
+                  {q
+                    ? "검색 조건에 맞는 회원이 없습니다."
+                    : role === "ALL"
+                      ? "등록된 회원이 없습니다."
+                      : `${ROLE_LABELS[role]} 회원이 없습니다.`}
                 </td>
               </tr>
             )}
