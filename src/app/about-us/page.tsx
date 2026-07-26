@@ -7,9 +7,11 @@ import {
   CONTACT_PHONE,
   CONTACT_WHATSAPP,
   kakaoTalkLink,
+  messengerLink,
 } from "@/lib/contact";
 
 const KAKAO_HREF = kakaoTalkLink();
+const MESSENGER_HREF = messengerLink();
 
 const strengths = [
   {
@@ -230,12 +232,21 @@ export default function AboutUsPage() {
               </table>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
+            <p className="mt-4 text-[13px] leading-relaxed tracking-wide text-neutral-600">
+              For urgent matters or inquiries, please use{" "}
+              <span className="font-medium text-neutral-800">KakaoTalk</span> or{" "}
+              <span className="font-medium text-neutral-800">
+                Facebook Messenger
+              </span>
+              .
+            </p>
+
+            <div className="mt-3 flex flex-wrap gap-2">
               <a
                 href={`https://wa.me/${CONTACT_WHATSAPP}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-10 items-center justify-center rounded-md bg-[#25D366] px-4 text-[13.5px] font-medium tracking-wide text-white transition hover:brightness-95"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-md bg-[#25D366] px-4 text-[13.5px] font-medium tracking-wide text-white transition hover:brightness-95"
               >
                 WhatsApp
               </a>
@@ -244,9 +255,20 @@ export default function AboutUsPage() {
                   href={KAKAO_HREF}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex h-10 items-center justify-center rounded-md bg-[#FEE500] px-4 text-[13.5px] font-semibold tracking-wide text-[#191919] transition hover:brightness-95"
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-md bg-[#FEE500] px-4 text-[13.5px] font-semibold tracking-wide text-[#191919] transition hover:brightness-95"
                 >
                   KakaoTalk
+                </a>
+              ) : null}
+              {MESSENGER_HREF ? (
+                <a
+                  href={MESSENGER_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-md bg-[#0084FF] px-4 text-[13.5px] font-medium tracking-wide text-white transition hover:brightness-95"
+                >
+                  <MessengerIcon />
+                  Messenger
                 </a>
               ) : null}
               <a
@@ -268,5 +290,13 @@ function SectionLabel({ children }: { children: ReactNode }) {
     <p className="text-[12px] font-medium tracking-[0.14em] text-neutral-500 uppercase">
       {children}
     </p>
+  );
+}
+
+function MessengerIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 2C6.36 2 2 6.13 2 11.7c0 2.9 1.19 5.4 3.14 7.14V22l3.05-1.67c.9.25 1.85.39 2.81.39 5.64 0 10.2-4.13 10.2-9.02C21.2 6.13 17.64 2 12 2zm1.01 12.16-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z" />
+    </svg>
   );
 }
