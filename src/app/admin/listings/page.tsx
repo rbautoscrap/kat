@@ -12,6 +12,8 @@ import {
 } from "@/components/admin/SaleStatusFilter";
 import { AdminListingSearch } from "@/components/admin/AdminListingSearch";
 import { AdminPagination } from "@/components/admin/AdminPagination";
+import { NewListingModal } from "@/components/admin/NewListingModal";
+import { AdminListingOffersCell } from "@/components/admin/AdminListingOffersCell";
 import { buildListingSearchWhere } from "@/lib/admin-listing-search";
 import {
   ADMIN_PAGE_SIZE,
@@ -35,7 +37,6 @@ import {
   formatCostWon,
   getInventoryCostSummary,
 } from "@/lib/inventory-cost";
-import { AdminListingOffersCell } from "@/components/admin/AdminListingOffersCell";
 
 export const dynamic = "force-dynamic";
 
@@ -374,12 +375,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
             </span>
           </p>
         </div>
-        <Link
-          href="/listings/new"
-          className="inline-flex h-9 shrink-0 items-center rounded-md bg-neutral-800 px-3.5 text-[13px] font-medium text-white hover:bg-neutral-700"
-        >
-          + 매물 등록
-        </Link>
+        <NewListingModal />
       </div>
 
       <AdminListingSearch

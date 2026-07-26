@@ -39,6 +39,8 @@ type Props = {
     storageLocation?: string | null;
     damagesEn?: string | null;
   };
+  /** When set (e.g. modal), shows a cancel control that runs this. */
+  onCancel?: () => void;
 };
 
 const categories = (
@@ -113,7 +115,7 @@ function resolveFuelType(value?: string | null) {
 const selectClass =
   "h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400 focus:bg-white";
 
-export function ListingForm({ listing }: Props) {
+export function ListingForm({ listing, onCancel }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -613,19 +615,31 @@ export function ListingForm({ listing }: Props) {
         <p className="text-[13px] tracking-wide text-neutral-500">{progress}</p>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-neutral-800 px-5 py-2.5 text-[13.5px] font-medium tracking-wide text-white transition hover:bg-neutral-700 disabled:opacity-60"
-      >
-        {pending
-          ? progress?.startsWith("사진 최적화")
-            ? "최적화 중…"
-            : "저장 중…"
-          : listing
-            ? "매물 수정"
-            : "매물 등록"}
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-md bg-neutral-800 px-5 py-2.5 text-[13.5px] font-medium tracking-wide text-white transition hover:bg-neutral-700 disabled:opacity-60"
+        >
+          {pending
+            ? progress?.startsWith("사진 최적화")
+              ? "최적화 중…"
+              : "저장 중…"
+            : listing
+              ? "매물 수정"
+              : "매물 등록"}
+        </button>
+        {onCancel ? (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={onCancel}
+            className="rounded-md border border-neutral-300 bg-white px-5 py-2.5 text-[13.5px] font-medium tracking-wide text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-60"
+          >
+            취소
+          </button>
+        ) : null}
+      </div>
     </form>
   );
 }
