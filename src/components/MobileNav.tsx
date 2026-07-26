@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LoginButton } from "@/components/LoginButton";
+import { AuthEntryButtons } from "@/components/AuthEntryButtons";
 
 const nav = [
   {
@@ -185,21 +185,11 @@ export function MobileNav({ user, logoutAction }: Props) {
                   </>
                 ) : (
                   <>
-                    <li>
-                      <Link
-                        href="/join"
-                        className="flex min-h-12 items-center px-3 text-[15px] font-medium text-neutral-800"
-                        onClick={() => setOpen(false)}
-                      >
-                        Join
-                      </Link>
-                    </li>
-                    <li>
-                      <LoginButton
-                        className="flex min-h-12 w-full items-center bg-neutral-900 px-3 text-left text-[15px] font-medium text-white"
-                        onOpenChange={(isOpen) => {
-                          if (isOpen) setOpen(false);
-                        }}
+                    <li className="flex flex-col">
+                      <AuthEntryButtons
+                        joinClassName="flex min-h-12 w-full items-center px-3 text-left text-[15px] font-medium text-neutral-800"
+                        loginClassName="flex min-h-12 w-full items-center bg-neutral-900 px-3 text-left text-[15px] font-medium text-white"
+                        onModalOpen={() => setOpen(false)}
                       />
                     </li>
                   </>

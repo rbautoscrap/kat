@@ -1,5 +1,9 @@
-import Link from "next/link";
+"use client";
+
+import { useState } from "react";
 import { BackButton } from "@/components/BackButton";
+import { JoinModal } from "@/components/JoinModal";
+import { LoginModal } from "@/components/LoginModal";
 import { LIVE_AUCTION_ACCESS_MESSAGE } from "@/lib/live-auction";
 import { CATEGORY_PATHS } from "@/lib/listings";
 
@@ -14,9 +18,9 @@ export function LiveAuctionGatePanel({
   backHref = CATEGORY_PATHS.LIVE_AUCTION,
   callbackUrl,
 }: Props) {
-  const loginHref = `/login?callbackUrl=${encodeURIComponent(
-    callbackUrl || backHref,
-  )}`;
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
+  const afterLogin = callbackUrl || backHref;
 
   return (
     <div className="site-container py-10 sm:py-14" lang="en">
@@ -31,20 +35,39 @@ export function LiveAuctionGatePanel({
           {LIVE_AUCTION_ACCESS_MESSAGE}
         </p>
         <div className="mt-7 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
-          <Link
-            href={loginHref}
+          <button
+            type="button"
+            onClick={() => setLoginOpen(true)}
             className="inline-flex h-10 items-center justify-center bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-800"
           >
             Login
-          </Link>
-          <Link
-            href="/join"
+          </button>
+          <button
+            type="button"
+            onClick={() => setJoinOpen(true)}
             className="inline-flex h-10 items-center justify-center border border-neutral-300 bg-white px-5 text-[13px] font-medium tracking-wide text-neutral-800 transition hover:border-neutral-400 hover:bg-neutral-50"
           >
             Register
-          </Link>
+          </button>
         </div>
       </div>
+      <LoginModal
+        open={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        callbackUrl={afterLogin}
+        onSwitchToJoin={() => {
+          setLoginOpen(false);
+          setJoinOpen(true);
+        }}
+      />
+      <JoinModal
+        open={joinOpen}
+        onClose={() => setJoinOpen(false)}
+        onSwitchToLogin={() => {
+          setJoinOpen(false);
+          setLoginOpen(true);
+        }}
+      />
     </div>
   );
 }

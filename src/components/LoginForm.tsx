@@ -124,13 +124,22 @@ export function LoginForm({
       </button>
       <p className="text-center text-[13px] text-neutral-600">
         No account?{" "}
-        <Link
-          href="/join"
-          className="font-medium text-neutral-900 underline underline-offset-2"
-          onClick={onJoinClick}
-        >
-          Join
-        </Link>
+        {onJoinClick ? (
+          <button
+            type="button"
+            onClick={onJoinClick}
+            className="font-medium text-neutral-900 underline underline-offset-2"
+          >
+            Join
+          </button>
+        ) : (
+          <Link
+            href="/join"
+            className="font-medium text-neutral-900 underline underline-offset-2"
+          >
+            Join
+          </Link>
+        )}
       </p>
     </form>
   );
