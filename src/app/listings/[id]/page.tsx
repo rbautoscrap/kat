@@ -223,7 +223,7 @@ export default async function ListingDetailPage({ params }: Props) {
       ) : null}
 
       <div className="mb-5 overflow-hidden rounded-sm border border-[var(--line)]">
-        <div className="border-b border-[var(--line)] bg-neutral-50 px-3 py-2.5 sm:px-3.5">
+        <div className="border-b border-[var(--line)] bg-neutral-50 px-2.5 py-2 sm:px-3">
           <ListingContactLinks
             whatsappHref={wa}
             inquiryText={kakaoInquiry}
