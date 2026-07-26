@@ -215,8 +215,6 @@ export default async function ListingDetailPage({ params }: Props) {
 
       {adminView ? (
         <AdminListingCostPanel
-          auctionPrice={listing.auctionPrice}
-          incidentalCost={listing.incidentalCost}
           costPrice={listing.costPrice}
           accumulatedDays={accumulatedDays}
         />
