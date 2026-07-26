@@ -80,6 +80,16 @@ export default async function ListingDetailPage({ params }: Props) {
     );
   }
 
+  // Admin-only analytics: count successful detail views (never shown publicly).
+  if (!adminView) {
+    void prisma.listing
+      .update({
+        where: { id: listing.id },
+        data: { viewCount: { increment: 1 } },
+      })
+      .catch(() => {});
+  }
+
   // Offer amounts are private: only the submitting member (own offers) and admins.
   // For outbid detection we load lightweight rows (no other amounts exposed to the client).
   const listingOffersForCompare =

@@ -86,7 +86,8 @@ function parseSort(value?: string): ListingSort {
     value === "price_desc" ||
     value === "price_asc" ||
     value === "days_desc" ||
-    value === "offers_desc"
+    value === "offers_desc" ||
+    value === "views_desc"
   ) {
     return value;
   }
@@ -194,6 +195,14 @@ export default async function AdminListingsPage({ searchParams }: Props) {
     listings = await prisma.listing.findMany({
       where,
       orderBy: [{ createdAt: "desc" }, { updatedAt: "desc" }],
+      skip,
+      take: ADMIN_PAGE_SIZE,
+      include,
+    });
+  } else if (sort === "views_desc") {
+    listings = await prisma.listing.findMany({
+      where,
+      orderBy: [{ viewCount: "desc" }, { createdAt: "desc" }],
       skip,
       take: ADMIN_PAGE_SIZE,
       include,
@@ -397,14 +406,15 @@ export default async function AdminListingsPage({ searchParams }: Props) {
       <div className={adminTableScrollClass}>
         <table className={adminTableClass}>
           <colgroup>
-            <col style={{ width: "20%" }} />
+            <col style={{ width: "18%" }} />
             <col style={{ width: "9%" }} />
-            <col style={{ width: "12%" }} />
+            <col style={{ width: "11%" }} />
             <col style={{ width: "8%" }} />
+            <col style={{ width: "7%" }} />
+            <col style={{ width: "7%" }} />
             <col style={{ width: "8%" }} />
             <col style={{ width: "9%" }} />
-            <col style={{ width: "10%" }} />
-            <col style={{ width: "24%" }} />
+            <col style={{ width: "23%" }} />
           </colgroup>
           <thead>
             <tr>
@@ -413,6 +423,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
               <th className={adminThClass}>원가</th>
               <th className={`${adminThClass} text-center`}>희망가</th>
               <th className={`${adminThClass} text-center`}>누적일</th>
+              <th className={`${adminThClass} text-center`}>조회</th>
               <th className={adminThClass}>등록자</th>
               <th className={adminThClass}>등록일</th>
               <th className={`${adminThClass} admin-th-actions text-right`}>
@@ -556,6 +567,14 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                         —
                       </span>
                     )}
+                  </td>
+                  <td
+                    className={`${adminTdClass} text-center text-[12.5px] tabular-nums text-neutral-600`}
+                    title="상세 페이지 조회수 (관리자 전용)"
+                  >
+                    {listing.viewCount > 0
+                      ? listing.viewCount.toLocaleString("ko-KR")
+                      : "0"}
                   </td>
                   <td
                     className={`${adminTdClass} truncate text-[13px] text-neutral-600 sm:text-[13.5px]`}

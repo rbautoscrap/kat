@@ -9,7 +9,8 @@ export type ListingSort =
   | "price_desc"
   | "price_asc"
   | "days_desc"
-  | "offers_desc";
+  | "offers_desc"
+  | "views_desc";
 
 type Props = {
   current?: ListingCategory | "ALL";
@@ -36,6 +37,7 @@ const sortOptions: Array<{
   { value: "price_desc", label: "높은원가순" },
   { value: "price_asc", label: "낮은원가순" },
   { value: "days_desc", label: "누적일순" },
+  { value: "views_desc", label: "조회수순" },
   { value: "offers_desc", label: "희망가순", accent: true },
 ];
 
