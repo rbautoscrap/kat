@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { StatementDeleteButton } from "@/components/admin/StatementDeleteButton";
 import { AdminPagination } from "@/components/admin/AdminPagination";
+import { NewStatementModal } from "@/components/admin/NewStatementModal";
 import {
   StatementListToolbar,
   type StatementSort,
@@ -21,7 +22,12 @@ import {
   adminThClass,
 } from "@/lib/admin-ui";
 import { prisma } from "@/lib/prisma";
-import { calcStatementTotals } from "@/lib/statement";
+import {
+  calcStatementTotals,
+  defaultIssueDate,
+  type ListingOption,
+  type MemberOption,
+} from "@/lib/statement";
 
 export const dynamic = "force-dynamic";
 
@@ -131,16 +137,51 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
   const pages = totalPages(total, ADMIN_PAGE_SIZE);
   const currentPage = Math.min(page, pages);
 
-  const statements = await prisma.transactionStatement.findMany({
-    where,
-    orderBy: orderByForSort(sort),
-    take: ADMIN_PAGE_SIZE,
-    skip: (currentPage - 1) * ADMIN_PAGE_SIZE,
-    include: {
-      _count: { select: { items: true } },
-      buyerUser: { select: { email: true } },
-    },
-  });
+  const [statements, listingRows, memberRows] = await Promise.all([
+    prisma.transactionStatement.findMany({
+      where,
+      orderBy: orderByForSort(sort),
+      take: ADMIN_PAGE_SIZE,
+      skip: (currentPage - 1) * ADMIN_PAGE_SIZE,
+      include: {
+        _count: { select: { items: true } },
+        buyerUser: { select: { email: true } },
+      },
+    }),
+    prisma.listing.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 500,
+      select: {
+        id: true,
+        serialNumber: true,
+        year: true,
+        make: true,
+        model: true,
+        vin: true,
+        vehicleNumber: true,
+      },
+    }),
+    prisma.user.findMany({
+      where: { status: "APPROVED" },
+      orderBy: { name: "asc" },
+      take: 1000,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+      },
+    }),
+  ]);
+
+  const listings: ListingOption[] = listingRows.map((l) => ({
+    id: l.id,
+    serialNumber: l.serialNumber,
+    label: `${l.year} ${l.make} ${l.model}`,
+    vin: l.vin,
+    vehicleNumber: l.vehicleNumber,
+  }));
+  const members: MemberOption[] = memberRows;
 
   const listParams = {
     q: q || undefined,
@@ -160,12 +201,11 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
             {ADMIN_PAGE_SIZE}건.
           </p>
         </div>
-        <Link
-          href="/admin/statements/new"
-          className="inline-flex h-9 items-center rounded-md bg-neutral-800 px-3.5 text-[13px] font-medium text-white transition hover:bg-neutral-700"
-        >
-          + 새 명세서
-        </Link>
+        <NewStatementModal
+          listings={listings}
+          members={members}
+          defaultIssueDate={defaultIssueDate()}
+        />
       </div>
 
       <StatementListToolbar q={q} sort={sort} vat={vat} />

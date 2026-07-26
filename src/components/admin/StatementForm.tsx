@@ -77,6 +77,8 @@ type Props = {
   members: MemberOption[];
   initial?: StatementView;
   defaultIssueDate: string;
+  /** When set (e.g. modal), cancel runs this instead of navigating to the list. */
+  onCancel?: () => void;
 };
 
 function initialLines(
@@ -127,6 +129,7 @@ export function StatementForm({
   members,
   initial,
   defaultIssueDate,
+  onCancel,
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -683,10 +686,12 @@ export function StatementForm({
         <button
           type="button"
           disabled={pending}
-          onClick={() => router.push("/admin/statements")}
+          onClick={() =>
+            onCancel ? onCancel() : router.push("/admin/statements")
+          }
           className="inline-flex h-10 items-center rounded-md border border-neutral-300 bg-white px-4 text-[13.5px] font-medium text-neutral-700 transition hover:bg-neutral-50"
         >
-          목록
+          {onCancel ? "취소" : "목록"}
         </button>
       </div>
     </form>
