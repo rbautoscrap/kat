@@ -8,9 +8,15 @@ type Props = {
   userId: string;
   userName: string;
   note: string | null;
+  compact?: boolean;
 };
 
-export function UserAdminNoteButton({ userId, userName, note }: Props) {
+export function UserAdminNoteButton({
+  userId,
+  userName,
+  note,
+  compact,
+}: Props) {
   const router = useRouter();
   const titleId = useId();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -58,13 +64,15 @@ export function UserAdminNoteButton({ userId, userName, note }: Props) {
         type="button"
         onClick={() => setOpen(true)}
         title={hasNote ? preview : "비고 작성"}
-        className={`max-w-full truncate text-left text-[12.5px] transition ${
+        className={`max-w-full truncate text-left transition ${
+          compact ? "text-[12px]" : "text-[12.5px]"
+        } ${
           hasNote
             ? "font-medium text-sky-800 hover:text-sky-950"
             : "text-neutral-400 hover:text-neutral-600"
         }`}
       >
-        {hasNote ? preview : "메모 추가"}
+        {hasNote ? preview : compact ? "메모" : "메모 추가"}
       </button>
 
       {open ? (

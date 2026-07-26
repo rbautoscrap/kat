@@ -3,16 +3,31 @@
 import { useTransition } from "react";
 import type { AccountStatus } from "@prisma/client";
 import { setUserAccountStatus } from "@/app/admin/actions";
-import { adminActionBtnClass, adminDangerBtnClass } from "@/lib/admin-ui";
+import {
+  adminActionBtnClass,
+  adminActionBtnCompactClass,
+  adminDangerBtnClass,
+  adminDangerBtnCompactClass,
+} from "@/lib/admin-ui";
 
 type Props = {
   userId: string;
   status: AccountStatus;
   disabled?: boolean;
+  compact?: boolean;
 };
 
-export function UserStatusControls({ userId, status, disabled }: Props) {
+export function UserStatusControls({
+  userId,
+  status,
+  disabled,
+  compact,
+}: Props) {
   const [pending, startTransition] = useTransition();
+  const actionClass = compact ? adminActionBtnCompactClass : adminActionBtnClass;
+  const dangerClass = compact
+    ? adminDangerBtnCompactClass
+    : adminDangerBtnClass;
 
   function setStatus(next: AccountStatus) {
     startTransition(async () => {
@@ -23,11 +38,11 @@ export function UserStatusControls({ userId, status, disabled }: Props) {
 
   if (status === "PENDING") {
     return (
-      <div className="flex flex-wrap items-center justify-end gap-1.5">
+      <>
         <button
           type="button"
           disabled={disabled || pending}
-          className={adminActionBtnClass}
+          className={actionClass}
           onClick={() => setStatus("APPROVED")}
         >
           승인
@@ -35,12 +50,12 @@ export function UserStatusControls({ userId, status, disabled }: Props) {
         <button
           type="button"
           disabled={disabled || pending}
-          className={adminDangerBtnClass}
+          className={dangerClass}
           onClick={() => setStatus("REJECTED")}
         >
           거절
         </button>
-      </div>
+      </>
     );
   }
 
@@ -49,7 +64,7 @@ export function UserStatusControls({ userId, status, disabled }: Props) {
       <button
         type="button"
         disabled={disabled || pending}
-        className={adminActionBtnClass}
+        className={actionClass}
         onClick={() => setStatus("APPROVED")}
       >
         승인
@@ -61,7 +76,7 @@ export function UserStatusControls({ userId, status, disabled }: Props) {
     <button
       type="button"
       disabled={disabled || pending}
-      className={adminDangerBtnClass}
+      className={dangerClass}
       title="로그인 불가 상태로 변경합니다"
       onClick={() => {
         if (!confirm("이 회원의 승인을 취소할까요? 로그인할 수 없게 됩니다.")) {
@@ -70,7 +85,7 @@ export function UserStatusControls({ userId, status, disabled }: Props) {
         setStatus("PENDING");
       }}
     >
-      승인 취소
+      {compact ? "취소" : "승인 취소"}
     </button>
   );
 }

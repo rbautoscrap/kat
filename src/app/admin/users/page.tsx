@@ -8,19 +8,19 @@ import { UserAdminNoteButton } from "@/components/admin/UserAdminNoteButton";
 import { UserSearchBar } from "@/components/admin/UserSearchBar";
 import { UserStatusControls } from "@/components/admin/UserStatusControls";
 import { AdminPagination } from "@/components/admin/AdminPagination";
-import { ROLE_LABELS, STATUS_LABELS } from "@/lib/admin-labels";
+import { ROLE_LABELS } from "@/lib/admin-labels";
 import {
   ADMIN_PAGE_SIZE,
   parsePage,
   totalPages,
 } from "@/lib/admin-pagination";
 import {
-  adminActionBtnClass,
+  adminActionBtnCompactClass,
   adminTableClass,
   adminTableScrollClass,
-  adminTdActionsClass,
-  adminTdClass,
-  adminThClass,
+  adminTdActionsCompactClass,
+  adminTdCompactClass,
+  adminThCompactClass,
 } from "@/lib/admin-ui";
 import { buildUserSearchWhere } from "@/lib/user-search";
 
@@ -149,29 +149,29 @@ export default async function AdminUsersPage({ searchParams }: Props) {
       <RoleFilter current={role} counts={counts} sort={sort} q={q} />
 
       <div className={adminTableScrollClass}>
-        <table className={`${adminTableClass} min-w-[1180px]`}>
+        <table className={`${adminTableClass} min-w-[980px] text-[13px]`}>
           <colgroup>
-            <col style={{ width: "12%" }} />
-            <col style={{ width: "14%" }} />
+            <col style={{ width: "11%" }} />
+            <col style={{ width: "16%" }} />
             <col style={{ width: "13%" }} />
-            <col style={{ width: "6%" }} />
-            <col style={{ width: "9%" }} />
+            <col style={{ width: "5%" }} />
             <col style={{ width: "9%" }} />
             <col style={{ width: "8%" }} />
-            <col style={{ width: "12%" }} />
-            <col style={{ width: "17%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "9%" }} />
+            <col style={{ width: "21%" }} />
           </colgroup>
           <thead>
             <tr>
-              <th className={adminThClass}>이름</th>
-              <th className={adminThClass}>아이디</th>
-              <th className={adminThClass}>연락처</th>
-              <th className={`${adminThClass} text-center`}>매물</th>
-              <th className={adminThClass}>가입일</th>
-              <th className={adminThClass}>역할</th>
-              <th className={adminThClass}>승인</th>
-              <th className={adminThClass}>비고</th>
-              <th className={`${adminThClass} admin-th-actions text-right`}>
+              <th className={adminThCompactClass}>이름</th>
+              <th className={adminThCompactClass}>아이디</th>
+              <th className={adminThCompactClass}>연락처</th>
+              <th className={`${adminThCompactClass} text-center`}>매물</th>
+              <th className={adminThCompactClass}>가입일</th>
+              <th className={adminThCompactClass}>역할</th>
+              <th className={adminThCompactClass}>승인</th>
+              <th className={adminThCompactClass}>비고</th>
+              <th className={`${adminThCompactClass} admin-th-actions text-right`}>
                 작업
               </th>
             </tr>
@@ -190,34 +190,34 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                   }
                 >
                   <td
-                    className={`${adminTdClass} ${
+                    className={`${adminTdCompactClass} ${
                       isPending
-                        ? "border-l-[3px] border-l-amber-500"
-                        : "border-l-[3px] border-l-transparent"
+                        ? "border-l-2 border-l-amber-500"
+                        : "border-l-2 border-l-transparent"
                     }`}
                   >
-                    <div className="flex min-w-0 items-center gap-1.5">
+                    <div className="flex min-w-0 items-center gap-1">
                       <span
                         className="truncate font-medium text-neutral-800"
                         title={user.name}
                       >
                         {user.name}
                       </span>
-                      {isSelf && (
-                        <span className="shrink-0 text-[12px] text-neutral-400">
-                          (본인)
+                      {isSelf ? (
+                        <span className="shrink-0 text-[11px] text-neutral-400">
+                          본인
                         </span>
-                      )}
+                      ) : null}
                     </div>
                   </td>
                   <td
-                    className={`${adminTdClass} truncate text-neutral-600`}
+                    className={`${adminTdCompactClass} truncate text-neutral-600`}
                     title={user.email}
                   >
                     {user.email}
                   </td>
                   <td
-                    className={`${adminTdClass} truncate tabular-nums text-neutral-700`}
+                    className={`${adminTdCompactClass} truncate tabular-nums text-neutral-700`}
                     title={user.phone || undefined}
                   >
                     {user.phone || (
@@ -225,23 +225,23 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                     )}
                   </td>
                   <td
-                    className={`${adminTdClass} text-center tabular-nums text-neutral-700`}
+                    className={`${adminTdCompactClass} text-center tabular-nums text-neutral-700`}
                   >
                     {user._count.listings}
                   </td>
                   <td
-                    className={`${adminTdClass} whitespace-nowrap text-neutral-500`}
+                    className={`${adminTdCompactClass} whitespace-nowrap text-[12.5px] text-neutral-500`}
                   >
                     {user.createdAt.toISOString().slice(0, 10)}
                   </td>
-                  <td className={`${adminTdClass} whitespace-nowrap`}>
-                    <span className="inline-flex rounded-full bg-neutral-100 px-2.5 py-1 text-[12.5px] text-neutral-700">
+                  <td className={`${adminTdCompactClass} whitespace-nowrap`}>
+                    <span className="inline-flex rounded bg-neutral-100 px-1.5 py-0.5 text-[11.5px] text-neutral-700">
                       {ROLE_LABELS[user.role]}
                     </span>
                   </td>
-                  <td className={adminTdClass}>
+                  <td className={adminTdCompactClass}>
                     <span
-                      className={`inline-flex rounded-md border px-2 py-1 text-[12.5px] font-medium ${
+                      className={`inline-flex rounded border px-1.5 py-0.5 text-[11.5px] font-medium ${
                         user.status === "APPROVED"
                           ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                           : user.status === "PENDING"
@@ -249,28 +249,34 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                             : "border-red-200 bg-red-50 text-red-700"
                       }`}
                     >
-                      {STATUS_LABELS[user.status]}
+                      {user.status === "APPROVED"
+                        ? "승인"
+                        : user.status === "PENDING"
+                          ? "대기"
+                          : "거절"}
                     </span>
                   </td>
-                  <td className={`${adminTdClass} max-w-[10rem]`}>
+                  <td className={adminTdCompactClass}>
                     <UserAdminNoteButton
                       userId={user.id}
                       userName={user.name}
                       note={user.adminNote}
+                      compact
                     />
                   </td>
-                  <td className={`${adminTdActionsClass} admin-td-actions`}>
-                    <div className="flex flex-wrap items-center justify-end gap-1.5">
+                  <td className={`${adminTdActionsCompactClass} admin-td-actions`}>
+                    <div className="flex flex-nowrap items-center justify-end gap-1">
                       {user.role !== "ADMIN" ? (
                         <UserStatusControls
                           userId={user.id}
                           status={user.status}
                           disabled={isSelf}
+                          compact
                         />
                       ) : null}
                       <Link
                         href={`/admin/users/${user.id}/edit`}
-                        className={adminActionBtnClass}
+                        className={adminActionBtnCompactClass}
                       >
                         수정
                       </Link>
@@ -279,6 +285,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                         userName={user.name}
                         listingCount={user._count.listings}
                         disabled={isSelf}
+                        compact
                       />
                     </div>
                   </td>
@@ -289,7 +296,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
               <tr>
                 <td
                   colSpan={9}
-                  className="px-4 py-10 text-center text-[13.5px] text-neutral-500"
+                  className="px-4 py-8 text-center text-[13px] text-neutral-500"
                 >
                   {q
                     ? "검색 조건에 맞는 회원이 없습니다."

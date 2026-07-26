@@ -2,13 +2,17 @@
 
 import { useTransition } from "react";
 import { deleteUser } from "@/app/admin/actions";
-import { adminDangerBtnClass } from "@/lib/admin-ui";
+import {
+  adminDangerBtnClass,
+  adminDangerBtnCompactClass,
+} from "@/lib/admin-ui";
 
 type Props = {
   userId: string;
   userName: string;
   listingCount: number;
   disabled?: boolean;
+  compact?: boolean;
 };
 
 export function DeleteUserButton({
@@ -16,6 +20,7 @@ export function DeleteUserButton({
   userName,
   listingCount,
   disabled,
+  compact,
 }: Props) {
   const [pending, startTransition] = useTransition();
 
@@ -23,7 +28,7 @@ export function DeleteUserButton({
     <button
       type="button"
       disabled={disabled || pending}
-      className={adminDangerBtnClass}
+      className={compact ? adminDangerBtnCompactClass : adminDangerBtnClass}
       onClick={() => {
         const listingNote =
           listingCount > 0

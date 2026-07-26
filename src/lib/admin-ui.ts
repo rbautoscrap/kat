@@ -23,6 +23,22 @@ export const adminActionBtnClass =
 export const adminDangerBtnClass =
   "inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-red-200 bg-white px-2.5 text-[12.5px] font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 whitespace-nowrap";
 
+/** Denser controls for compact admin tables (e.g. member list). */
+export const adminActionBtnCompactClass =
+  "inline-flex h-7 shrink-0 items-center justify-center rounded border border-neutral-200 bg-white px-2 text-[12px] font-semibold text-neutral-700 transition hover:bg-neutral-50 whitespace-nowrap";
+
+export const adminDangerBtnCompactClass =
+  "inline-flex h-7 shrink-0 items-center justify-center rounded border border-red-200 bg-white px-2 text-[12px] font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 whitespace-nowrap";
+
+export const adminThCompactClass =
+  "border-b border-[var(--line)] bg-neutral-50/90 px-2.5 py-2 text-[12px] font-semibold text-neutral-600 whitespace-nowrap";
+
+export const adminTdCompactClass =
+  "border-b border-neutral-100 px-2.5 py-2 text-[13px] font-medium leading-snug text-neutral-800 align-middle";
+
+export const adminTdActionsCompactClass =
+  "border-b border-neutral-100 px-2.5 py-2 text-[13px] font-medium leading-snug text-neutral-800 align-middle overflow-visible";
+
 export const adminSelectClass =
   "h-8 max-w-full shrink-0 rounded-md border border-neutral-200 bg-white px-2 text-[12.5px] font-medium text-neutral-700 outline-none focus:border-neutral-400 disabled:opacity-50";
 
