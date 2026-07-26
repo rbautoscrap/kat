@@ -79,7 +79,7 @@ export async function Header() {
                 </Link>
                 <form action={logoutAction}>
                   <button type="submit" className={accountLinkClass}>
-                    Logout
+                    Log out
                   </button>
                 </form>
               </>

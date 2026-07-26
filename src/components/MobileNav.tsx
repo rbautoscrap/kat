@@ -177,7 +177,7 @@ export function MobileNav({ user, logoutAction }: Props) {
                           type="submit"
                           className="flex min-h-12 w-full items-center px-3 text-left text-[15px] font-medium text-neutral-800"
                         >
-                          Logout
+                          Log out
                         </button>
                       </form>
                     </li>
