@@ -187,7 +187,7 @@ export function canManageListings(role?: Role) {
 
 /**
  * Live Auction detail + offers: any signed-in account.
- * Guests are redirected to the login gate on the listing detail page.
+ * Guests see a member-access popup instead of listing details.
  */
 export function canAccessLiveAuction(role?: Role) {
   return Boolean(role);

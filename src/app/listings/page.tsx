@@ -37,6 +37,7 @@ export default async function ListingsPage({ searchParams }: Props) {
   const params = await searchParams;
   const dbUser = await resolveSessionDbUser();
   const canViewSold = isAdmin(dbUser?.role);
+  const isSignedIn = Boolean(dbUser?.id);
   const category = parseCategory(params.category ?? null);
   const q = params.q?.trim() ?? "";
   const page = parsePage(params.page);
@@ -149,6 +150,7 @@ export default async function ListingsPage({ searchParams }: Props) {
                 size={useLargeGrid ? "large" : "default"}
                 canViewSold={canViewSold}
                 canManageSaleStatus={canViewSold}
+                isSignedIn={isSignedIn}
               />
             ))}
           </div>

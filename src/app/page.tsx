@@ -59,6 +59,7 @@ export default async function HomePage({ searchParams }: Props) {
   const params = await searchParams;
   const dbUser = await resolveSessionDbUser();
   const canViewSold = isAdmin(dbUser?.role);
+  const isSignedIn = Boolean(dbUser?.id);
 
   const [hotDeals, carListings, standBy, liveAuction] =
     await loadHomeListings();
@@ -86,6 +87,7 @@ export default async function HomePage({ searchParams }: Props) {
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
+        isSignedIn={isSignedIn}
       />
       <ListingSection
         category="CAR_LISTINGS"
@@ -93,6 +95,7 @@ export default async function HomePage({ searchParams }: Props) {
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
+        isSignedIn={isSignedIn}
       />
       <ListingSection
         category="STAND_BY"
@@ -100,6 +103,7 @@ export default async function HomePage({ searchParams }: Props) {
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
+        isSignedIn={isSignedIn}
       />
       <ListingSection
         category="LIVE_AUCTION"
@@ -107,6 +111,7 @@ export default async function HomePage({ searchParams }: Props) {
         limit={HOME_SECTION_LIMIT}
         canViewSold={canViewSold}
         canManageSaleStatus={canViewSold}
+        isSignedIn={isSignedIn}
       />
     </>
   );

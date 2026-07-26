@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import type { Listing, ListingImage } from "@prisma/client";
 import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl";
 import { ListingThumb } from "@/components/ListingThumb";
+import { LiveAuctionAccessDialog } from "@/components/LiveAuctionAccessDialog";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
 
 type Props = {
@@ -14,11 +16,8 @@ type Props = {
   canViewSold?: boolean;
   /** Admins can set sale status from the public listing grid */
   canManageSaleStatus?: boolean;
-  /**
-   * @deprecated Live Auction access is enforced on the detail page.
-   * Kept optional so existing call sites keep compiling.
-   */
-  canAccessLiveAuction?: boolean;
+  /** Guests see a popup instead of opening Live Auction details. */
+  isSignedIn?: boolean;
 };
 
 export function ListingCard({
@@ -26,13 +25,17 @@ export function ListingCard({
   size = "default",
   canViewSold = false,
   canManageSaleStatus = false,
+  isSignedIn = false,
 }: Props) {
+  const [gateOpen, setGateOpen] = useState(false);
   const thumb = listing.images[0]?.url ?? "/placeholder-car.svg";
   const label = `${listing.year} ${listing.make} ${listing.model}`;
   const large = size === "large";
   const isSold = listing.saleStatus === "SOLD";
   const canOpen = !isSold || canViewSold;
   const detailHref = `/listings/${listing.id}`;
+  const needsLiveAuctionGate =
+    listing.category === "LIVE_AUCTION" && !isSignedIn;
 
   const media = (
     <div className="relative aspect-[3/2] overflow-hidden rounded-[3px] bg-neutral-100">
@@ -78,6 +81,28 @@ export function ListingCard({
         {media}
         {caption}
         {saleControl}
+      </div>
+    );
+  }
+
+  if (needsLiveAuctionGate) {
+    return (
+      <div className="block">
+        <button
+          type="button"
+          className="group block w-full text-left"
+          onClick={() => setGateOpen(true)}
+          aria-label={`${label} — members only`}
+        >
+          {media}
+          {caption}
+        </button>
+        {saleControl}
+        <LiveAuctionAccessDialog
+          open={gateOpen}
+          onClose={() => setGateOpen(false)}
+          callbackUrl={detailHref}
+        />
       </div>
     );
   }
