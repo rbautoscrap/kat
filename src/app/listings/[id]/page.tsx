@@ -22,6 +22,7 @@ import {
   formatOdometerDisplay,
   formatTransmission,
   SALE_STATUS_LABELS,
+  listingKakaoInquiryText,
   listingWhatsAppLink,
   youtubeEmbedUrl,
 } from "@/lib/listings";
@@ -138,9 +139,20 @@ export default async function ListingDetailPage({ params }: Props) {
       })
     : [];
   const embed = youtubeEmbedUrl(listing.youtubeUrl);
-  const wa = listingWhatsAppLink(listing.whatsappNumber, listing.title, {
+  const inquiryOptions = {
     listingId: listing.id,
-  });
+    serialNumber: listing.serialNumber,
+    vin: listing.vin,
+    year: listing.year,
+    make: listing.make,
+    model: listing.model,
+  };
+  const wa = listingWhatsAppLink(
+    listing.whatsappNumber,
+    listing.title,
+    inquiryOptions,
+  );
+  const kakaoInquiry = listingKakaoInquiryText(listing.title, inquiryOptions);
 
   const shortSpecs: { label: string; value: string }[] = [
     { label: "VIN", value: listing.vin || "—" },
@@ -213,7 +225,10 @@ export default async function ListingDetailPage({ params }: Props) {
       <div className="mb-5 overflow-hidden rounded-sm border border-[var(--line)]">
         <div className="grid sm:grid-cols-[148px_minmax(0,1fr)]">
           <div className="flex flex-col items-center justify-center border-b border-[var(--line)] bg-neutral-50 px-3 py-3 text-center sm:border-r sm:border-b-0">
-            <ListingContactLinks whatsappHref={wa} />
+            <ListingContactLinks
+              whatsappHref={wa}
+              inquiryText={kakaoInquiry}
+            />
           </div>
 
           <dl className="grid grid-cols-1 sm:grid-cols-2">

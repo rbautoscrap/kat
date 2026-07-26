@@ -1,12 +1,22 @@
+"use client";
+
+import { useState } from "react";
 import { kakaoTalkLink } from "@/lib/contact";
 
 type Props = {
   whatsappHref: string | null;
+  /** Pre-built inquiry message (vehicle + S/N + VIN + link). */
+  inquiryText: string;
 };
 
-/** WhatsApp + KakaoTalk contact actions for the listing detail panel. */
-export function ListingContactLinks({ whatsappHref }: Props) {
+/**
+ * WhatsApp opens with prefilled text.
+ * Kakao Open Chat cannot prefill via URL — we copy the inquiry text, then open chat
+ * so the user can paste (Ctrl/Cmd+V) once.
+ */
+export function ListingContactLinks({ whatsappHref, inquiryText }: Props) {
   const kakaoHref = kakaoTalkLink();
+  const [hint, setHint] = useState<string | null>(null);
 
   if (!whatsappHref && !kakaoHref) {
     return (
@@ -14,6 +24,23 @@ export function ListingContactLinks({ whatsappHref }: Props) {
         Contact unavailable
       </p>
     );
+  }
+
+  async function openKakaoWithMessage() {
+    if (!kakaoHref) return;
+    setHint(null);
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(inquiryText);
+        setHint("Message copied — paste in KakaoTalk");
+      } else {
+        setHint("Open KakaoTalk and send the vehicle details");
+      }
+    } catch {
+      setHint("Open KakaoTalk and send the vehicle details");
+    }
+    window.open(kakaoHref, "_blank", "noopener,noreferrer");
+    window.setTimeout(() => setHint(null), 5000);
   }
 
   return (
@@ -30,20 +57,23 @@ export function ListingContactLinks({ whatsappHref }: Props) {
         </a>
       ) : null}
       {kakaoHref ? (
-        <a
-          href={kakaoHref}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={() => void openKakaoWithMessage()}
           className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-[#FEE500] px-3 py-2 text-[13px] font-semibold tracking-wide text-[#191919] transition hover:brightness-95"
         >
           <KakaoTalkIcon />
           KakaoTalk
-        </a>
+        </button>
       ) : null}
       <p className="text-[11px] leading-snug tracking-wide text-neutral-500">
-        {whatsappHref
-          ? "WhatsApp opens with vehicle name"
-          : "Opens KakaoTalk chat"}
+        {hint
+          ? hint
+          : whatsappHref && kakaoHref
+            ? "WhatsApp autofills · Kakao copies message"
+            : whatsappHref
+              ? "WhatsApp opens with vehicle name"
+              : "Copies vehicle info, then opens KakaoTalk"}
       </p>
     </div>
   );

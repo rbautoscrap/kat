@@ -66,13 +66,22 @@ export function whatsappLink(phone: string, text: string) {
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
+export type ListingInquiryOptions = {
+  listingUrl?: string | null;
+  serialNumber?: string | null;
+  vin?: string | null;
+  year?: number | null;
+  make?: string | null;
+  model?: string | null;
+};
+
 /**
- * Pre-filled WhatsApp inquiry text for a listing.
- * Vehicle title is always included so the seller knows which unit.
+ * Inquiry message for WhatsApp / KakaoTalk.
+ * Vehicle title (and key identifiers) so the seller knows which unit.
  */
-export function listingWhatsAppInquiryText(
+export function listingInquiryText(
   title: string,
-  options?: { listingUrl?: string | null },
+  options?: ListingInquiryOptions,
 ) {
   const vehicle = title.trim() || "this vehicle";
   const lines = [
@@ -80,12 +89,31 @@ export function listingWhatsAppInquiryText(
     "",
     `Vehicle: ${vehicle}`,
   ];
+  const ym =
+    options?.year && options?.make && options?.model
+      ? `${options.year} ${options.make} ${options.model}`.trim()
+      : "";
+  if (ym && ym.toLowerCase() !== vehicle.toLowerCase()) {
+    lines.push(`Model: ${ym}`);
+  }
+  const sn = options?.serialNumber?.trim();
+  if (sn) lines.push(`S/N: ${sn}`);
+  const vin = options?.vin?.trim();
+  if (vin) lines.push(`VIN: ${vin}`);
   const url = options?.listingUrl?.trim();
   if (url) {
     lines.push(`Link: ${url}`);
   }
   lines.push("", "Please share the price and more details. Thank you.");
   return lines.join("\n");
+}
+
+/** @deprecated Prefer listingInquiryText */
+export function listingWhatsAppInquiryText(
+  title: string,
+  options?: ListingInquiryOptions,
+) {
+  return listingInquiryText(title, options);
 }
 
 /** Public site origin for WhatsApp listing links (server-side). */
@@ -114,9 +142,7 @@ export function getPublicSiteOrigin() {
   return "";
 }
 
-export function listingWhatsAppLink(
-  phone: string,
-  title: string,
+export function resolveListingPublicUrl(
   options?: { listingId?: string; listingUrl?: string | null },
 ) {
   let listingUrl = options?.listingUrl?.trim() || "";
@@ -124,10 +150,40 @@ export function listingWhatsAppLink(
     const origin = getPublicSiteOrigin();
     if (origin) listingUrl = `${origin}/listings/${options.listingId}`;
   }
+  return listingUrl;
+}
+
+export function listingWhatsAppLink(
+  phone: string,
+  title: string,
+  options?: ListingInquiryOptions & {
+    listingId?: string;
+    listingUrl?: string | null;
+  },
+) {
+  const listingUrl = resolveListingPublicUrl(options);
   return whatsappLink(
     phone,
-    listingWhatsAppInquiryText(title, { listingUrl: listingUrl || null }),
+    listingInquiryText(title, {
+      ...options,
+      listingUrl: listingUrl || null,
+    }),
   );
+}
+
+/** Build the same inquiry text used for KakaoTalk clipboard share. */
+export function listingKakaoInquiryText(
+  title: string,
+  options?: ListingInquiryOptions & {
+    listingId?: string;
+    listingUrl?: string | null;
+  },
+) {
+  const listingUrl = resolveListingPublicUrl(options);
+  return listingInquiryText(title, {
+    ...options,
+    listingUrl: listingUrl || null,
+  });
 }
 
 
