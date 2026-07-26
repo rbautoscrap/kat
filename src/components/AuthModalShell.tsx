@@ -12,6 +12,10 @@ type Props = {
   maxWidthClass?: string;
   children: ReactNode;
   closeLabel?: string;
+  /** When false, backdrop clicks do not dismiss (prevents losing form input). */
+  closeOnBackdrop?: boolean;
+  /** Extra classes for the X button (e.g. brand red on Join). */
+  closeButtonClassName?: string;
 };
 
 /**
@@ -24,6 +28,8 @@ export function AuthModalShell({
   maxWidthClass = "max-w-[22.5rem]",
   children,
   closeLabel = "Close",
+  closeOnBackdrop = true,
+  closeButtonClassName,
 }: Props) {
   const [mounted, setMounted] = useState(false);
 
@@ -50,11 +56,10 @@ export function AuthModalShell({
   return createPortal(
     <div className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain">
       <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
-        <button
-          type="button"
+        <div
           className="fixed inset-0 bg-neutral-950/45 backdrop-blur-[2px]"
-          aria-label={closeLabel}
-          onClick={onClose}
+          aria-hidden
+          onClick={closeOnBackdrop ? onClose : undefined}
         />
         <div
           role="dialog"
@@ -66,7 +71,10 @@ export function AuthModalShell({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
+              className={
+                closeButtonClassName ??
+                "inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
+              }
               aria-label={closeLabel}
             >
               <CloseIcon />
