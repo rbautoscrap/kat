@@ -4,6 +4,7 @@ import { canManageListings, isAdmin, signOut } from "@/lib/auth";
 import { AuthEntryButtons } from "@/components/AuthEntryButtons";
 import { MainNav } from "@/components/MainNav";
 import { MobileNav } from "@/components/MobileNav";
+import { ProfileButton } from "@/components/ProfileButton";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 
 async function logoutAction() {
@@ -20,7 +21,13 @@ export async function Header() {
     "inline-flex h-8 items-center rounded-md px-2.5 text-[13.5px] font-semibold text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900";
 
   const mobileUser = dbUser
-    ? { name: dbUser.name, canList, admin }
+    ? {
+        name: dbUser.name,
+        email: dbUser.email,
+        role: dbUser.role,
+        canList,
+        admin,
+      }
     : null;
 
   return (
@@ -71,13 +78,15 @@ export async function Header() {
                 >
                   My offers
                 </Link>
-                <Link
-                  href="/profile"
+                <ProfileButton
+                  user={{
+                    name: dbUser.name,
+                    email: dbUser.email,
+                    role: dbUser.role,
+                  }}
                   className={`${accountLinkClass} max-w-[8rem] truncate`}
                   title={dbUser.name}
-                >
-                  {dbUser.name}
-                </Link>
+                />
                 <form action={logoutAction}>
                   <button type="submit" className={accountLinkClass}>
                     Log out

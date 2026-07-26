@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { AuthEntryButtons } from "@/components/AuthEntryButtons";
+import { ProfileButton } from "@/components/ProfileButton";
 
 const nav = [
   {
@@ -33,6 +34,8 @@ const nav = [
 
 type UserProps = {
   name: string;
+  email: string;
+  role: "MEMBER" | "AUTHORIZED" | "ADMIN";
   canList: boolean;
   admin: boolean;
 } | null;
@@ -164,13 +167,17 @@ export function MobileNav({ user, logoutAction }: Props) {
                       </Link>
                     </li>
                     <li>
-                      <Link
-                        href="/profile"
-                        className="flex min-h-12 items-center px-3 text-[15px] font-medium text-neutral-800"
-                        onClick={() => setOpen(false)}
-                      >
-                        {user.name}
-                      </Link>
+                      <ProfileButton
+                        user={{
+                          name: user.name,
+                          email: user.email,
+                          role: user.role,
+                        }}
+                        className="flex min-h-12 w-full items-center px-3 text-left text-[15px] font-medium text-neutral-800"
+                        onOpenChange={(isOpen) => {
+                          if (isOpen) setOpen(false);
+                        }}
+                      />
                     </li>
                     <li>
                       <form action={logoutAction}>

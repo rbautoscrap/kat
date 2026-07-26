@@ -1,16 +1,22 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Role } from "@prisma/client";
 import { updateProfile } from "@/app/profile/actions";
 
+export type ProfileUser = {
+  name: string;
+  email: string;
+  role: Role;
+};
+
 type Props = {
-  user: {
-    name: string;
-    email: string;
-    role: Role;
-  };
+  user: ProfileUser;
+  /** Compact stacked layout for popup */
+  compact?: boolean;
+  onOffersClick?: () => void;
 };
 
 const ROLE_LABELS_EN: Record<Role, string> = {
@@ -22,37 +28,13 @@ const ROLE_LABELS_EN: Record<Role, string> = {
 const inputClass =
   "h-10 w-full min-w-0 rounded-md border border-neutral-200 bg-white px-3 text-[13.5px] tracking-wide text-neutral-800 outline-none focus:border-neutral-400";
 
+const hintClass =
+  "mt-1 block text-[12px] leading-relaxed tracking-wide text-neutral-400";
+
 const labelClass =
-  "border-[var(--line)] bg-neutral-50/90 px-3.5 py-3.5 text-[13px] font-medium tracking-wide text-neutral-500 sm:border-r";
+  "mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600";
 
-const fieldClass = "min-w-0 px-3.5 py-3.5";
-
-function FieldRow({
-  label,
-  htmlFor,
-  children,
-  last = false,
-}: {
-  label: string;
-  htmlFor?: string;
-  children: ReactNode;
-  last?: boolean;
-}) {
-  return (
-    <div
-      className={`grid grid-cols-1 sm:grid-cols-[9rem_minmax(0,1fr)] ${
-        last ? "" : "border-b border-[var(--line)]"
-      }`}
-    >
-      <label htmlFor={htmlFor} className={`${labelClass} flex items-center`}>
-        {label}
-      </label>
-      <div className={fieldClass}>{children}</div>
-    </div>
-  );
-}
-
-export function ProfileForm({ user }: Props) {
+export function ProfileForm({ user, compact, onOffersClick }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -92,13 +74,28 @@ export function ProfileForm({ user }: Props) {
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="w-full min-w-0 overflow-hidden rounded-sm border border-[var(--line)] bg-white"
-      lang="en"
-    >
-      <div className="w-full min-w-0">
-        <FieldRow label="Name" htmlFor="profile-name">
+    <form onSubmit={onSubmit} className="w-full min-w-0" lang="en">
+      <div className="mb-4">
+        <h1 className="site-heading text-[1.15rem] text-neutral-900">
+          Profile
+        </h1>
+        <p className="mt-1 text-[12.5px] leading-relaxed text-neutral-500">
+          Update your name, login ID, or password.
+        </p>
+        <p className="mt-2 text-[12.5px] text-neutral-500">
+          <Link
+            href="/offers"
+            onClick={onOffersClick}
+            className="font-semibold text-neutral-900 underline-offset-2 hover:underline"
+          >
+            My offers →
+          </Link>
+        </p>
+      </div>
+
+      <div className={compact ? "space-y-3.5" : "space-y-4"}>
+        <label className="block">
+          <span className={labelClass}>Name</span>
           <input
             id="profile-name"
             name="name"
@@ -108,9 +105,10 @@ export function ProfileForm({ user }: Props) {
             autoComplete="name"
             className={inputClass}
           />
-        </FieldRow>
+        </label>
 
-        <FieldRow label="ID" htmlFor="profile-id">
+        <label className="block">
+          <span className={labelClass}>ID</span>
           <input
             id="profile-id"
             name="email"
@@ -121,21 +119,20 @@ export function ProfileForm({ user }: Props) {
             autoComplete="username"
             className={inputClass}
           />
-          <p className="mt-1.5 break-words text-[12px] leading-relaxed tracking-wide text-neutral-400">
+          <span className={hintClass}>
             Used to log in. Separate from your display name.
-          </p>
-        </FieldRow>
+          </span>
+        </label>
 
-        <FieldRow label="Role">
+        <div>
+          <span className={labelClass}>Role</span>
           <span className="inline-flex h-10 max-w-full items-center rounded-md border border-neutral-200 bg-neutral-50 px-3 text-[13.5px] tracking-wide text-neutral-700">
             {ROLE_LABELS_EN[user.role]}
           </span>
-          <p className="mt-1.5 break-words text-[12px] leading-relaxed tracking-wide text-neutral-400">
-            Role changes are managed by an administrator.
-          </p>
-        </FieldRow>
+        </div>
 
-        <FieldRow label="Current password" htmlFor="profile-current-password">
+        <label className="block">
+          <span className={labelClass}>Current password</span>
           <input
             id="profile-current-password"
             name="currentPassword"
@@ -144,35 +141,36 @@ export function ProfileForm({ user }: Props) {
             placeholder="Required only when changing password"
             className={inputClass}
           />
-        </FieldRow>
+        </label>
 
-        <FieldRow label="New password" htmlFor="profile-new-password" last>
+        <label className="block">
+          <span className={labelClass}>New password</span>
           <input
             id="profile-new-password"
             name="password"
             type="password"
             autoComplete="new-password"
             minLength={6}
-            placeholder="Leave blank to keep current password"
+            placeholder="Leave blank to keep current"
             className={inputClass}
           />
-          <p className="mt-1.5 break-words text-[12px] leading-relaxed tracking-wide text-neutral-400">
+          <span className={hintClass}>
             At least 6 characters, mixing letters and numbers.
-          </p>
-        </FieldRow>
+          </span>
+        </label>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] px-4 py-3.5 sm:px-5">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-neutral-100 pt-4">
         <div className="min-h-5 min-w-0 flex-1 text-[13px]">
-          {error && <p className="break-words text-red-600">{error}</p>}
-          {success && !error && (
-            <p className="text-emerald-700">Profile saved successfully.</p>
-          )}
+          {error ? <p className="break-words text-red-600">{error}</p> : null}
+          {success && !error ? (
+            <p className="text-emerald-700">Profile saved.</p>
+          ) : null}
         </div>
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex h-9 shrink-0 min-w-[7rem] items-center justify-center rounded-md bg-neutral-800 px-4 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-700 disabled:opacity-60"
+          className="inline-flex h-9 shrink-0 min-w-[6.5rem] items-center justify-center rounded-md bg-neutral-900 px-4 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-800 disabled:opacity-60"
         >
           {pending ? "Saving…" : "Save"}
         </button>
