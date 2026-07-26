@@ -20,6 +20,8 @@ type Props = {
 
 /**
  * Viewport-centered modal via portal (avoids sticky/blur header clipping fixed UI).
+ * On mobile, the shell is capped to the dynamic viewport and scrolls inside
+ * so tall forms (listing / statement) remain fully usable.
  */
 export function AuthModalShell({
   open,
@@ -39,14 +41,37 @@ export function AuthModalShell({
 
   useEffect(() => {
     if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+
+    const scrollY = window.scrollY;
+    const { body, documentElement } = document;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      paddingRight: body.style.paddingRight,
+    };
+    const scrollbarGap = window.innerWidth - documentElement.clientWidth;
+
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    if (scrollbarGap > 0) {
+      body.style.paddingRight = `${scrollbarGap}px`;
+    }
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = prev;
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      body.style.paddingRight = prev.paddingRight;
+      window.scrollTo(0, scrollY);
       window.removeEventListener("keydown", onKey);
     };
   }, [open, onClose]);
@@ -54,33 +79,39 @@ export function AuthModalShell({
   if (!open || !mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain">
-      <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-[80]">
+      <div
+        className="absolute inset-0 bg-neutral-950/45 backdrop-blur-[2px]"
+        aria-hidden
+        onClick={closeOnBackdrop ? onClose : undefined}
+      />
+      <div className="absolute inset-0 overflow-y-auto overscroll-contain">
         <div
-          className="fixed inset-0 bg-neutral-950/45 backdrop-blur-[2px]"
-          aria-hidden
-          onClick={closeOnBackdrop ? onClose : undefined}
-        />
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={title}
-          className={`relative w-full ${maxWidthClass} rounded-lg border border-neutral-200 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.2)]`}
+          className="flex min-h-[100dvh] items-center justify-center px-3 py-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-6"
         >
-          <div className="flex items-center justify-end px-2.5 pt-2.5">
-            <button
-              type="button"
-              onClick={onClose}
-              className={
-                closeButtonClassName ??
-                "inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
-              }
-              aria-label={closeLabel}
-            >
-              <CloseIcon />
-            </button>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
+            className={`relative flex w-full ${maxWidthClass} max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.2)] sm:max-h-[calc(100dvh-3rem)]`}
+          >
+            <div className="flex shrink-0 items-center justify-end px-2.5 pt-2.5">
+              <button
+                type="button"
+                onClick={onClose}
+                className={
+                  closeButtonClassName ??
+                  "inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
+                }
+                aria-label={closeLabel}
+              >
+                <CloseIcon />
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-1 [-webkit-overflow-scrolling:touch] sm:px-7 sm:pb-7">
+              {children}
+            </div>
           </div>
-          <div className="px-6 pb-7 pt-1 sm:px-7">{children}</div>
         </div>
       </div>
     </div>,
