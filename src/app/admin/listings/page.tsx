@@ -569,7 +569,11 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                     )}
                   </td>
                   <td
-                    className={`${adminTdClass} text-center text-[12.5px] tabular-nums text-neutral-600`}
+                    className={`${adminTdClass} text-center text-[12.5px] tabular-nums ${
+                      listing.viewCount >= 100
+                        ? "font-semibold text-blue-600"
+                        : "text-neutral-600"
+                    }`}
                     title="상세 페이지 조회수 (관리자 전용)"
                   >
                     {listing.viewCount > 0
