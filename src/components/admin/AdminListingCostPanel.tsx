@@ -30,7 +30,7 @@ export function AdminListingCostPanel({
             <span className="font-medium tracking-wide text-amber-900/80">
               원가
             </span>
-            <span className="font-semibold tabular-nums text-neutral-900">
+            <span className="font-semibold tabular-nums text-red-600">
               {formatWon(costPrice)}
             </span>
           </p>
@@ -39,7 +39,7 @@ export function AdminListingCostPanel({
             <span className="font-medium tracking-wide text-amber-900/80">
               누적일
             </span>
-            <span className="font-semibold tabular-nums text-neutral-900">
+            <span className="font-semibold tabular-nums text-red-600">
               {days}
             </span>
           </p>
