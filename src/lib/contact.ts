@@ -17,10 +17,11 @@ export const CONTACT_WHATSAPP =
 
 /**
  * KakaoTalk Open Chat or Channel URL (https://open.kakao.com/... or pf.kakao.com/...).
- * Set NEXT_PUBLIC_KAKAOTALK_URL in the environment to enable KakaoTalk buttons.
+ * Override with NEXT_PUBLIC_KAKAOTALK_URL when needed.
  */
 export const CONTACT_KAKAOTALK_URL = (
-  process.env.NEXT_PUBLIC_KAKAOTALK_URL ?? ""
+  process.env.NEXT_PUBLIC_KAKAOTALK_URL ??
+  "https://open.kakao.com/o/sRRldQFi"
 ).trim();
 
 /** Valid http(s) KakaoTalk chat link, or null when not configured. */
