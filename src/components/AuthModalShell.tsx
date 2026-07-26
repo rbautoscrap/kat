@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/body-scroll-lock";
 
 type Props = {
   open: boolean;
@@ -20,8 +21,7 @@ type Props = {
 
 /**
  * Viewport-centered modal via portal (avoids sticky/blur header clipping fixed UI).
- * On mobile, the shell is capped to the dynamic viewport and scrolls inside
- * so tall forms (listing / statement) remain fully usable.
+ * Shell height is capped to the dynamic viewport; tall content scrolls inside.
  */
 export function AuthModalShell({
   open,
@@ -42,36 +42,13 @@ export function AuthModalShell({
   useEffect(() => {
     if (!open) return;
 
-    const scrollY = window.scrollY;
-    const { body, documentElement } = document;
-    const prev = {
-      overflow: body.style.overflow,
-      position: body.style.position,
-      top: body.style.top,
-      width: body.style.width,
-      paddingRight: body.style.paddingRight,
-    };
-    const scrollbarGap = window.innerWidth - documentElement.clientWidth;
-
-    body.style.overflow = "hidden";
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.width = "100%";
-    if (scrollbarGap > 0) {
-      body.style.paddingRight = `${scrollbarGap}px`;
-    }
-
+    lockBodyScroll();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => {
-      body.style.overflow = prev.overflow;
-      body.style.position = prev.position;
-      body.style.top = prev.top;
-      body.style.width = prev.width;
-      body.style.paddingRight = prev.paddingRight;
-      window.scrollTo(0, scrollY);
+      unlockBodyScroll();
       window.removeEventListener("keydown", onKey);
     };
   }, [open, onClose]);
@@ -79,16 +56,14 @@ export function AuthModalShell({
   if (!open || !mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[80]">
+    <div className="fixed inset-0 z-[100]">
       <div
         className="absolute inset-0 bg-neutral-950/45 backdrop-blur-[2px]"
         aria-hidden
         onClick={closeOnBackdrop ? onClose : undefined}
       />
       <div className="absolute inset-0 overflow-y-auto overscroll-contain">
-        <div
-          className="flex min-h-[100dvh] items-center justify-center px-3 py-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-6"
-        >
+        <div className="flex min-h-[100dvh] items-center justify-center px-3 py-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-6">
           <div
             role="dialog"
             aria-modal="true"

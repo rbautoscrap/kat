@@ -10,14 +10,17 @@ type Mode = "login" | "join" | null;
 type Props = {
   joinClassName?: string;
   loginClassName?: string;
-  /** Called when a modal opens (e.g. close mobile nav). */
+  /** Called when a modal opens (e.g. hide mobile nav panel). */
   onModalOpen?: () => void;
+  /** Called when both auth modals are fully closed. */
+  onModalClose?: () => void;
 };
 
 export function AuthEntryButtons({
   joinClassName,
   loginClassName,
   onModalOpen,
+  onModalClose,
 }: Props) {
   const [mode, setMode] = useState<Mode>(null);
   const pathname = usePathname();
@@ -39,6 +42,11 @@ export function AuthEntryButtons({
     [onModalOpen],
   );
 
+  const close = useCallback(() => {
+    setMode(null);
+    onModalClose?.();
+  }, [onModalClose]);
+
   return (
     <>
       <button
@@ -57,13 +65,13 @@ export function AuthEntryButtons({
       </button>
       <LoginModal
         open={mode === "login"}
-        onClose={() => setMode(null)}
+        onClose={close}
         callbackUrl={callbackUrl}
         onSwitchToJoin={() => setMode("join")}
       />
       <JoinModal
         open={mode === "join"}
-        onClose={() => setMode(null)}
+        onClose={close}
         onSwitchToLogin={() => setMode("login")}
       />
     </>

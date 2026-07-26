@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname, useSearchParams } from "next/navigation";
-import { AuthEntryButtons } from "@/components/AuthEntryButtons";
-import { ProfileButton } from "@/components/ProfileButton";
+import { JoinModal } from "@/components/JoinModal";
+import { LoginModal } from "@/components/LoginModal";
+import { ProfileModal } from "@/components/ProfileModal";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/body-scroll-lock";
 
 const nav = [
   {
@@ -40,6 +43,8 @@ type UserProps = {
   admin: boolean;
 } | null;
 
+type AuthMode = "login" | "join" | null;
+
 type Props = {
   user: UserProps;
   logoutAction: () => Promise<void>;
@@ -47,9 +52,24 @@ type Props = {
 
 export function MobileNav({ user, logoutAction }: Props) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [authMode, setAuthMode] = useState<AuthMode>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get("category");
+
+  const rawCallback =
+    `${pathname}${searchParams?.toString() ? `?${searchParams.toString()}` : ""}` ||
+    "/";
+  const callbackUrl =
+    rawCallback.startsWith("/login") || rawCallback.startsWith("/join")
+      ? "/"
+      : rawCallback;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setOpen(false);
@@ -57,17 +77,168 @@ export function MobileNav({ user, logoutAction }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    lockBodyScroll();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = prev;
+      unlockBodyScroll();
       window.removeEventListener("keydown", onKey);
     };
   }, [open]);
+
+  function openAuth(mode: Exclude<AuthMode, null>) {
+    setAuthMode(mode);
+    setOpen(false);
+  }
+
+  function openProfile() {
+    setProfileOpen(true);
+    setOpen(false);
+  }
+
+  const menu =
+    open && mounted
+      ? createPortal(
+          <div
+            className="fixed inset-0 z-[90] md:hidden"
+            role="dialog"
+            aria-modal
+          >
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/40"
+              aria-label="Close menu overlay"
+              onClick={() => setOpen(false)}
+            />
+            <div
+              id="mobile-nav-panel"
+              className="absolute inset-x-0 top-0 max-h-[100dvh] overflow-y-auto border-b border-[var(--line)] bg-white shadow-lg"
+            >
+              <div className="site-container flex h-14 items-center justify-between">
+                <span className="site-title text-[0.9rem] text-neutral-900">
+                  Menu
+                </span>
+                <button
+                  type="button"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200"
+                  aria-label="Close menu"
+                  onClick={() => setOpen(false)}
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+
+              <nav aria-label="Mobile main" className="site-container pb-4">
+                <ul className="divide-y divide-[var(--line)] border-y border-[var(--line)]">
+                  {nav.map((item) => {
+                    const active =
+                      item.category != null
+                        ? pathname.startsWith("/listings") &&
+                          activeCategory === item.category
+                        : pathname === item.href;
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          className={`flex min-h-12 items-center px-1 text-[15px] font-medium tracking-wide ${
+                            item.hot
+                              ? "text-[var(--accent)]"
+                              : "text-neutral-800"
+                          } ${active ? "bg-neutral-50" : ""}`}
+                          onClick={() => setOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                <ul className="mt-3 divide-y divide-[var(--line)] border border-[var(--line)]">
+                  {user ? (
+                    <>
+                      {user.canList ? (
+                        <li>
+                          <Link
+                            href="/listings/new"
+                            className="flex min-h-12 items-center px-3 text-[15px] font-medium text-neutral-800"
+                            onClick={() => setOpen(false)}
+                          >
+                            + List
+                          </Link>
+                        </li>
+                      ) : null}
+                      {user.admin ? (
+                        <li>
+                          <Link
+                            href="/admin"
+                            className="flex min-h-12 items-center px-3 text-[15px] font-medium text-neutral-800"
+                            onClick={() => setOpen(false)}
+                          >
+                            관리자
+                          </Link>
+                        </li>
+                      ) : null}
+                      <li>
+                        <Link
+                          href="/offers"
+                          className="flex min-h-12 items-center px-3 text-[15px] font-semibold text-[var(--accent)]"
+                          onClick={() => setOpen(false)}
+                        >
+                          My offers
+                        </Link>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          className="flex min-h-12 w-full items-center px-3 text-left text-[15px] font-medium text-neutral-800"
+                          onClick={openProfile}
+                        >
+                          {user.name}
+                        </button>
+                      </li>
+                      <li>
+                        <form action={logoutAction}>
+                          <button
+                            type="submit"
+                            className="flex min-h-12 w-full items-center px-3 text-left text-[15px] font-medium text-neutral-800"
+                          >
+                            Log out
+                          </button>
+                        </form>
+                      </li>
+                    </>
+                  ) : (
+                    <>
+                      <li>
+                        <button
+                          type="button"
+                          className="flex min-h-12 w-full items-center px-3 text-left text-[15px] font-medium text-neutral-800"
+                          onClick={() => openAuth("join")}
+                        >
+                          Join
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          className="flex min-h-12 w-full items-center bg-neutral-900 px-3 text-left text-[15px] font-medium text-white"
+                          onClick={() => openAuth("login")}
+                        >
+                          Login
+                        </button>
+                      </li>
+                    </>
+                  )}
+                </ul>
+              </nav>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
 
   return (
     <div className="md:hidden">
@@ -81,131 +252,34 @@ export function MobileNav({ user, logoutAction }: Props) {
       >
         {open ? <CloseIcon /> : <MenuIcon />}
       </button>
+      {menu}
 
-      {open ? (
-        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal>
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/40"
-            aria-label="Close menu overlay"
-            onClick={() => setOpen(false)}
+      {/* Modals stay mounted outside the menu portal so closing the menu cannot kill them. */}
+      {!user ? (
+        <>
+          <LoginModal
+            open={authMode === "login"}
+            onClose={() => setAuthMode(null)}
+            callbackUrl={callbackUrl}
+            onSwitchToJoin={() => setAuthMode("join")}
           />
-          <div
-            id="mobile-nav-panel"
-            className="absolute inset-x-0 top-0 max-h-[100dvh] overflow-y-auto border-b border-[var(--line)] bg-white shadow-lg"
-          >
-            <div className="site-container flex h-14 items-center justify-between">
-              <span className="site-title text-[0.9rem] text-neutral-900">
-                Menu
-              </span>
-              <button
-                type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-neutral-200"
-                aria-label="Close menu"
-                onClick={() => setOpen(false)}
-              >
-                <CloseIcon />
-              </button>
-            </div>
-
-            <nav aria-label="Mobile main" className="site-container pb-4">
-              <ul className="divide-y divide-[var(--line)] border-y border-[var(--line)]">
-                {nav.map((item) => {
-                  const active =
-                    item.category != null
-                      ? pathname.startsWith("/listings") &&
-                        activeCategory === item.category
-                      : pathname === item.href;
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className={`flex min-h-12 items-center px-1 text-[15px] font-medium tracking-wide ${
-                          item.hot ? "text-[var(--accent)]" : "text-neutral-800"
-                        } ${active ? "bg-neutral-50" : ""}`}
-                        onClick={() => setOpen(false)}
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-
-              <ul className="mt-3 divide-y divide-[var(--line)] border border-[var(--line)]">
-                {user ? (
-                  <>
-                    {user.canList ? (
-                      <li>
-                        <Link
-                          href="/listings/new"
-                          className="flex min-h-12 items-center px-3 text-[15px] font-medium text-neutral-800"
-                          onClick={() => setOpen(false)}
-                        >
-                          + List
-                        </Link>
-                      </li>
-                    ) : null}
-                    {user.admin ? (
-                      <li>
-                        <Link
-                          href="/admin"
-                          className="flex min-h-12 items-center px-3 text-[15px] font-medium text-neutral-800"
-                          onClick={() => setOpen(false)}
-                        >
-                          관리자
-                        </Link>
-                      </li>
-                    ) : null}
-                    <li>
-                      <Link
-                        href="/offers"
-                        className="flex min-h-12 items-center px-3 text-[15px] font-semibold text-[var(--accent)]"
-                        onClick={() => setOpen(false)}
-                      >
-                        My offers
-                      </Link>
-                    </li>
-                    <li>
-                      <ProfileButton
-                        user={{
-                          name: user.name,
-                          email: user.email,
-                          role: user.role,
-                        }}
-                        className="flex min-h-12 w-full items-center px-3 text-left text-[15px] font-medium text-neutral-800"
-                        onOpenChange={(isOpen) => {
-                          if (isOpen) setOpen(false);
-                        }}
-                      />
-                    </li>
-                    <li>
-                      <form action={logoutAction}>
-                        <button
-                          type="submit"
-                          className="flex min-h-12 w-full items-center px-3 text-left text-[15px] font-medium text-neutral-800"
-                        >
-                          Log out
-                        </button>
-                      </form>
-                    </li>
-                  </>
-                ) : (
-                  <>
-                    <li className="flex flex-col">
-                      <AuthEntryButtons
-                        joinClassName="flex min-h-12 w-full items-center px-3 text-left text-[15px] font-medium text-neutral-800"
-                        loginClassName="flex min-h-12 w-full items-center bg-neutral-900 px-3 text-left text-[15px] font-medium text-white"
-                        onModalOpen={() => setOpen(false)}
-                      />
-                    </li>
-                  </>
-                )}
-              </ul>
-            </nav>
-          </div>
-        </div>
-      ) : null}
+          <JoinModal
+            open={authMode === "join"}
+            onClose={() => setAuthMode(null)}
+            onSwitchToLogin={() => setAuthMode("login")}
+          />
+        </>
+      ) : (
+        <ProfileModal
+          open={profileOpen}
+          onClose={() => setProfileOpen(false)}
+          user={{
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          }}
+        />
+      )}
     </div>
   );
 }
