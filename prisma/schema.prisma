@@ -100,6 +100,7 @@ model Listing {
   author           User            @relation(fields: [authorId], references: [id])
   images           ListingImage[]
   purchaseOffers   PurchaseOffer[]
+  views            ListingView[]
   /** Primary listing on a statement (first line item) */
   transactionStatements TransactionStatement[]
   statementItems   TransactionStatementItem[]
@@ -109,6 +110,19 @@ model Listing {
   @@index([authorId])
   @@index([createdAt])
   @@index([viewCount])
+}
+
+/** One counted detail view per client IP (admin analytics only). */
+model ListingView {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  /** Hashed client IP — one view per IP per listing */
+  ipHash    String
+  createdAt DateTime @default(now())
+
+  @@unique([listingId, ipHash])
+  @@index([listingId])
 }
 
 /** Admin-issued transaction statement (거래명세서) */

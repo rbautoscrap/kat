@@ -25,6 +25,7 @@ import {
   youtubeEmbedUrl,
 } from "@/lib/listings";
 import { displayAccumulatedDays } from "@/lib/listing-actions";
+import { recordListingView } from "@/lib/listing-views";
 import {
   isMemberOutbidByOthers,
   type OfferCurrencyCode,
@@ -80,14 +81,9 @@ export default async function ListingDetailPage({ params }: Props) {
     );
   }
 
-  // Admin-only analytics: count successful detail views (never shown publicly).
+  // Admin-only analytics: one counted view per IP (never shown publicly).
   if (!adminView) {
-    void prisma.listing
-      .update({
-        where: { id: listing.id },
-        data: { viewCount: { increment: 1 } },
-      })
-      .catch(() => {});
+    void recordListingView(listing.id);
   }
 
   // Offer amounts are private: only the submitting member (own offers) and admins.
