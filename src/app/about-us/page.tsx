@@ -6,7 +6,10 @@ import {
   CONTACT_HOURS,
   CONTACT_PHONE,
   CONTACT_WHATSAPP,
+  kakaoTalkLink,
 } from "@/lib/contact";
+
+const KAKAO_HREF = kakaoTalkLink();
 
 const strengths = [
   {
@@ -236,6 +239,16 @@ export default function AboutUsPage() {
               >
                 WhatsApp
               </a>
+              {KAKAO_HREF ? (
+                <a
+                  href={KAKAO_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-10 items-center justify-center rounded-md bg-[#FEE500] px-4 text-[13.5px] font-semibold tracking-wide text-[#191919] transition hover:brightness-95"
+                >
+                  KakaoTalk
+                </a>
+              ) : null}
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
                 className="inline-flex h-10 items-center justify-center rounded-md border border-neutral-300 bg-white px-4 text-[13.5px] font-medium tracking-wide text-neutral-800 transition hover:bg-neutral-50"

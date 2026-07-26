@@ -8,6 +8,7 @@ import { AdminListingCostPanel } from "@/components/admin/AdminListingCostPanel"
 import { AdminPurchaseOffersPanel } from "@/components/admin/AdminPurchaseOffersPanel";
 import { DownloadListingImagesButton } from "@/components/admin/DownloadListingImagesButton";
 import { LiveAuctionGatePanel } from "@/components/LiveAuctionGatePanel";
+import { ListingContactLinks } from "@/components/ListingContactLinks";
 import { auth, canAccessLiveAuctionAsSignedIn, isAdmin } from "@/lib/auth";
 import {
   resolveSessionDbUser,
@@ -211,26 +212,8 @@ export default async function ListingDetailPage({ params }: Props) {
 
       <div className="mb-5 overflow-hidden rounded-sm border border-[var(--line)]">
         <div className="grid sm:grid-cols-[148px_minmax(0,1fr)]">
-          <div className="flex flex-col items-center justify-center gap-1.5 border-b border-[var(--line)] bg-neutral-50 px-3 py-3 text-center sm:border-r sm:border-b-0">
-            {wa ? (
-              <>
-                <a
-                  href={wa}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex w-full items-center justify-center rounded-md bg-[#25D366] px-3 py-2 text-[13px] font-medium tracking-wide text-white transition hover:brightness-95"
-                >
-                  WhatsApp
-                </a>
-                <p className="text-[11px] leading-snug tracking-wide text-neutral-500">
-                  Opens with vehicle name
-                </p>
-              </>
-            ) : (
-              <p className="text-[12px] leading-snug tracking-wide text-neutral-500">
-                Contact unavailable
-              </p>
-            )}
+          <div className="flex flex-col items-center justify-center border-b border-[var(--line)] bg-neutral-50 px-3 py-3 text-center sm:border-r sm:border-b-0">
+            <ListingContactLinks whatsappHref={wa} />
           </div>
 
           <dl className="grid grid-cols-1 sm:grid-cols-2">

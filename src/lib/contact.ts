@@ -15,6 +15,27 @@ export const CONTACT_WHATSAPP =
   process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT ??
   (DEFAULT_LISTING_WHATSAPP.replace(/\D/g, "") || "821058172207");
 
+/**
+ * KakaoTalk Open Chat or Channel URL (https://open.kakao.com/... or pf.kakao.com/...).
+ * Set NEXT_PUBLIC_KAKAOTALK_URL in the environment to enable KakaoTalk buttons.
+ */
+export const CONTACT_KAKAOTALK_URL = (
+  process.env.NEXT_PUBLIC_KAKAOTALK_URL ?? ""
+).trim();
+
+/** Valid http(s) KakaoTalk chat link, or null when not configured. */
+export function kakaoTalkLink() {
+  const raw = CONTACT_KAKAOTALK_URL;
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 export const CONTACT_EMAIL =
   process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "rbautoscrap@naver.com";
 
