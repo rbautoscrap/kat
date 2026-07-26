@@ -570,7 +570,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                   </td>
                   <td
                     className={`${adminTdClass} text-center text-[12.5px] tabular-nums ${
-                      listing.viewCount >= 100
+                      listing.viewCount >= 300
                         ? "font-semibold text-blue-600"
                         : "text-neutral-600"
                     }`}
