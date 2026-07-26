@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { canManageListings, isAdmin, signOut } from "@/lib/auth";
+import { LoginButton } from "@/components/LoginButton";
 import { MainNav } from "@/components/MainNav";
 import { MobileNav } from "@/components/MobileNav";
 import { resolveSessionDbUser } from "@/lib/listing-access";
@@ -88,12 +89,15 @@ export async function Header() {
                 <Link href="/join" className={accountLinkClass}>
                   Join
                 </Link>
-                <Link
-                  href="/login"
-                  className="ml-1 inline-flex h-8 items-center rounded-md bg-neutral-900 px-3 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-800"
+                <Suspense
+                  fallback={
+                    <span className="ml-1 inline-flex h-8 items-center rounded-md bg-neutral-900 px-3 text-[13px] font-medium tracking-wide text-white">
+                      Login
+                    </span>
+                  }
                 >
-                  Login
-                </Link>
+                  <LoginButton className="ml-1 inline-flex h-8 items-center rounded-md bg-neutral-900 px-3 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-800" />
+                </Suspense>
               </>
             )}
           </div>

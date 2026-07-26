@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { normalizeLoginId } from "@/lib/login-id";
+import { loginErrorMessage } from "@/lib/login-messages";
 
 type Props = {
   callbackUrl: string;
@@ -11,6 +12,9 @@ type Props = {
   errorMessage?: string | null;
   pending?: boolean;
   registered?: boolean;
+  /** Compact layout inside the popup */
+  compact?: boolean;
+  onJoinClick?: () => void;
 };
 
 export function LoginForm({
@@ -19,6 +23,8 @@ export function LoginForm({
   errorMessage,
   pending,
   registered,
+  compact = false,
+  onJoinClick,
 }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -34,40 +40,54 @@ export function LoginForm({
     );
     const password = String(new FormData(form).get("password") ?? "");
 
-    const result = await signIn("credentials", {
-      email: loginId,
-      password,
-      redirect: false,
-      callbackUrl,
-    });
+    try {
+      const result = await signIn("credentials", {
+        email: loginId,
+        password,
+        redirect: false,
+        callbackUrl,
+      });
 
-    if (!result || result.error) {
-      const code = result?.code || result?.error || "CredentialsSignin";
-      window.location.href = `/login?error=${encodeURIComponent(code)}&callbackUrl=${encodeURIComponent(callbackUrl)}&id=${encodeURIComponent(loginId)}`;
-      return;
+      if (!result || result.error) {
+        const code = result?.code || result?.error || "CredentialsSignin";
+        setLocalError(loginErrorMessage(code));
+        setSubmitting(false);
+        return;
+      }
+
+      window.location.href = result.url || callbackUrl;
+    } catch {
+      setLocalError("Something went wrong. Please try again.");
+      setSubmitting(false);
     }
-
-    window.location.href = result.url || callbackUrl;
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto w-full max-w-sm space-y-4">
-      <h1 className="site-heading text-[1.2rem] text-neutral-800">Login</h1>
+    <form onSubmit={onSubmit} className="w-full space-y-4">
+      <h1
+        className={`site-heading text-neutral-900 ${
+          compact ? "text-[1.15rem]" : "text-[1.2rem]"
+        }`}
+      >
+        Login
+      </h1>
       {pending && (
-        <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5 text-[13.5px] leading-relaxed text-amber-900">
+        <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5 text-[13px] leading-relaxed text-amber-900">
           Account created. An administrator must approve your account before you
           can sign in.
         </p>
       )}
       {registered && !pending && (
-        <p className="text-sm text-emerald-700">
+        <p className="text-[13px] text-emerald-700">
           Account created. Sign in with the ID you just registered.
         </p>
       )}
       {(localError || errorMessage) && (
-        <p className="text-sm text-red-600">{localError || errorMessage}</p>
+        <p className="text-[13px] leading-relaxed text-red-600">
+          {localError || errorMessage}
+        </p>
       )}
-      <label className="block text-sm">
+      <label className="block">
         <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
           ID
         </span>
@@ -78,10 +98,11 @@ export function LoginForm({
           minLength={2}
           defaultValue={defaultId}
           autoComplete="username"
-          className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 text-[13.5px] outline-none focus:border-neutral-400 focus:bg-white"
+          autoFocus={compact}
+          className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/50 px-3 text-[13.5px] outline-none focus:border-neutral-400 focus:bg-white"
         />
       </label>
-      <label className="block text-sm">
+      <label className="block">
         <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
           Password
         </span>
@@ -91,19 +112,23 @@ export function LoginForm({
           required
           minLength={1}
           autoComplete="current-password"
-          className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 text-[13.5px] outline-none focus:border-neutral-400 focus:bg-white"
+          className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/50 px-3 text-[13.5px] outline-none focus:border-neutral-400 focus:bg-white"
         />
       </label>
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-md bg-neutral-800 py-2.5 text-[13.5px] font-medium tracking-wide text-white transition hover:bg-neutral-700 disabled:opacity-60"
+        className="w-full rounded-md bg-neutral-900 py-2.5 text-[13.5px] font-medium tracking-wide text-white transition hover:bg-neutral-800 disabled:opacity-60"
       >
         {submitting ? "Signing in…" : "Login"}
       </button>
-      <p className="text-center text-[13.5px] text-neutral-600">
+      <p className="text-center text-[13px] text-neutral-600">
         No account?{" "}
-        <Link href="/join" className="underline">
+        <Link
+          href="/join"
+          className="font-medium text-neutral-900 underline underline-offset-2"
+          onClick={onJoinClick}
+        >
           Join
         </Link>
       </p>

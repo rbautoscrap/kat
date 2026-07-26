@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { LoginButton } from "@/components/LoginButton";
 
 const nav = [
   {
@@ -194,13 +195,12 @@ export function MobileNav({ user, logoutAction }: Props) {
                       </Link>
                     </li>
                     <li>
-                      <Link
-                        href="/login"
-                        className="flex min-h-12 items-center bg-neutral-900 px-3 text-[15px] font-medium text-white"
-                        onClick={() => setOpen(false)}
-                      >
-                        Login
-                      </Link>
+                      <LoginButton
+                        className="flex min-h-12 w-full items-center bg-neutral-900 px-3 text-left text-[15px] font-medium text-white"
+                        onOpenChange={(isOpen) => {
+                          if (isOpen) setOpen(false);
+                        }}
+                      />
                     </li>
                   </>
                 )}
