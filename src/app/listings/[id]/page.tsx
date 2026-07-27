@@ -17,6 +17,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import {
   CATEGORY_PATHS,
+  formatDisplacementDisplay,
   formatFuelType,
   formatNotesDisplay,
   formatOdometerDisplay,
@@ -157,6 +158,10 @@ export default async function ListingDetailPage({ params }: Props) {
   const shortSpecs: { label: string; value: string }[] = [
     { label: "VIN", value: listing.vin || "—" },
     { label: "Engine Mark", value: listing.engineMark || "—" },
+    {
+      label: "Displacement",
+      value: formatDisplacementDisplay(listing.displacement) || "—",
+    },
     {
       label: "Transmission",
       value: formatTransmission(listing.transmission) || "—",

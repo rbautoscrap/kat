@@ -222,6 +222,14 @@ export function formatOdometerDisplay(value?: string | null) {
   return `${Number(digits).toLocaleString("en-US")} km`;
 }
 
+/** Format displacement (cc) with thousand separators. */
+export function formatDisplacementDisplay(value?: string | null) {
+  if (!value) return "";
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return value.trim();
+  return `${Number(digits).toLocaleString("en-US")} cc`;
+}
+
 /** Public notes: prefer English translation when available. */
 export function formatNotesDisplay(
   damages?: string | null,

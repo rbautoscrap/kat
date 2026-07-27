@@ -329,6 +329,9 @@ export function ListingForm({ listing, onCancel }: Props) {
             defaultValue={listing?.[f.name] ?? undefined}
           />
         ))}
+        <DisplacementField
+          defaultValue={listing?.displacement ?? undefined}
+        />
         <label className="block text-sm">
           <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
             변속기
@@ -727,6 +730,33 @@ function OdometerField({ defaultValue }: { defaultValue?: string }) {
         />
         <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[12.5px] tracking-wide text-neutral-500">
           km
+        </span>
+      </div>
+    </label>
+  );
+}
+
+function DisplacementField({ defaultValue }: { defaultValue?: string }) {
+  const [value, setValue] = useState(() => formatOdometer(defaultValue ?? ""));
+
+  return (
+    <label className="block text-sm">
+      <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
+        배기량
+      </span>
+      <div className="relative">
+        <input
+          name="displacement"
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          placeholder="예: 1,998"
+          value={value}
+          onChange={(e) => setValue(formatOdometer(e.target.value))}
+          className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 py-1 pl-3 pr-11 text-[13.5px] tracking-wide outline-none focus:border-neutral-400 focus:bg-white"
+        />
+        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[12.5px] tracking-wide text-neutral-500">
+          cc
         </span>
       </div>
     </label>
