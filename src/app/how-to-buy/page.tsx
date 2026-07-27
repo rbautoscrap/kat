@@ -1,11 +1,4 @@
 import { BackButton } from "@/components/BackButton";
-import {
-  CONTACT_LINE,
-  CONTACT_WHATSAPP,
-  kakaoTalkLink,
-} from "@/lib/contact";
-
-const KAKAO_HREF = kakaoTalkLink();
 
 const steps = [
   {
@@ -131,32 +124,6 @@ export default function HowToBuyPage() {
               </article>
             );
           })}
-        </div>
-
-        <div className="mt-10 rounded-xl border border-[var(--line)] bg-white px-5 py-5 text-center shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-          <p className="text-[13.5px] tracking-wide text-neutral-700">
-            {CONTACT_LINE}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-            <a
-              href={`https://wa.me/${CONTACT_WHATSAPP}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-full bg-[#25D366] px-4 py-2 text-[12.5px] font-medium tracking-wide text-white transition hover:brightness-95"
-            >
-              Open WhatsApp
-            </a>
-            {KAKAO_HREF ? (
-              <a
-                href={KAKAO_HREF}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-full bg-[#FEE500] px-4 py-2 text-[12.5px] font-semibold tracking-wide text-[#191919] transition hover:brightness-95"
-              >
-                Open KakaoTalk
-              </a>
-            ) : null}
-          </div>
         </div>
       </div>
     </div>
