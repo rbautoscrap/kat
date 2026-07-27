@@ -100,3 +100,32 @@ export function isMemberOutbidByOthers(
   }
   return othersBest > ownBest;
 }
+
+/** Highest comparable KRW among offers on a listing (0 when none). */
+export function highestOfferComparableKrw(
+  offers: { amount: string; currency: OfferCurrencyCode }[],
+): number {
+  if (offers.length === 0) return 0;
+  return Math.max(
+    0,
+    ...offers.map((o) => offerToComparableKrw(o.amount, o.currency)),
+  );
+}
+
+/**
+ * True when the candidate beats every existing offer on the listing
+ * (cross-currency via approximate KRW ranking).
+ */
+export function isOfferAboveCurrentHighest(
+  amount: string,
+  currency: OfferCurrencyCode,
+  existing: { amount: string; currency: OfferCurrencyCode }[],
+): boolean {
+  const highest = highestOfferComparableKrw(existing);
+  if (highest <= 0) return true;
+  return offerToComparableKrw(amount, currency) > highest;
+}
+
+/** Shown when submit is blocked because a higher offer already exists. */
+export const OFFER_BELOW_HIGHEST_MESSAGE =
+  "이미 더 높은 Offer 금액이 있습니다. 더 높은 금액을 입력해 주세요.";

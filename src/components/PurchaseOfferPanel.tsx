@@ -156,6 +156,9 @@ export function PurchaseOfferPanel({
                 amount,
               });
               if (!result.ok) {
+                if (result.code === "BELOW_HIGHEST") {
+                  window.alert(result.error);
+                }
                 setError(result.error);
                 return;
               }

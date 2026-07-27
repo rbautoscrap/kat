@@ -6,7 +6,9 @@ import { resolveSessionDbUser } from "@/lib/listing-access";
 import { prisma } from "@/lib/prisma";
 import {
   formatOfferAmount,
+  isOfferAboveCurrentHighest,
   MAX_OFFERS_PER_LISTING,
+  OFFER_BELOW_HIGHEST_MESSAGE,
   offerInputSchema,
   type OfferCurrencyCode,
 } from "@/lib/purchase-offer";
@@ -23,7 +25,7 @@ export type SubmitOfferResult =
       currency: OfferCurrencyCode;
       remaining: number;
     }
-  | { ok: false; error: string };
+  | { ok: false; error: string; code?: "BELOW_HIGHEST" };
 
 export async function submitPurchaseOffer(input: {
   listingId: string;
@@ -92,6 +94,28 @@ export async function submitPurchaseOffer(input: {
       return {
         ok: false,
         error: `Up to ${MAX_OFFERS_PER_LISTING} offers are allowed from this network for this listing.`,
+      };
+    }
+
+    const existingOffers = await prisma.purchaseOffer.findMany({
+      where: { listingId },
+      select: { amount: true, currency: true },
+      take: 200,
+    });
+    if (
+      !isOfferAboveCurrentHighest(
+        amount,
+        currency,
+        existingOffers.map((o) => ({
+          amount: o.amount,
+          currency: o.currency as OfferCurrencyCode,
+        })),
+      )
+    ) {
+      return {
+        ok: false,
+        code: "BELOW_HIGHEST",
+        error: OFFER_BELOW_HIGHEST_MESSAGE,
       };
     }
 
