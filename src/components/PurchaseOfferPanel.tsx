@@ -9,7 +9,6 @@ import {
 } from "@/lib/offer-actions";
 import {
   CURRENCY_META,
-  MAX_OFFERS_PER_LISTING,
   type OfferCurrencyCode,
 } from "@/lib/purchase-offer";
 
@@ -93,9 +92,7 @@ export function PurchaseOfferPanel({
   hasHigherOffer = false,
 }: Props) {
   const router = useRouter();
-  const submitted = ownOffers.length;
-  const remaining = Math.max(0, MAX_OFFERS_PER_LISTING - submitted);
-  const canSubmit = remaining > 0;
+  const canSubmit = ownOffers.length === 0;
 
   const [currency, setCurrency] = useState<OfferCurrencyCode>("KRW");
   const [amount, setAmount] = useState("");
@@ -155,10 +152,9 @@ export function PurchaseOfferPanel({
             Purchase offer
           </h2>
           <p className="mt-0.5 text-[11.5px] tracking-wide text-neutral-400">
-            Up to {MAX_OFFERS_PER_LISTING} offers per listing
-            {submitted > 0
-              ? ` · ${submitted}/${MAX_OFFERS_PER_LISTING} used`
-              : ""}
+            {ownOffers.length > 0
+              ? "Edit your offer with the pencil icon"
+              : "Submit your purchase offer"}
             {" · "}
             <Link
               href="/offers"
@@ -170,9 +166,7 @@ export function PurchaseOfferPanel({
         </div>
         {success ? (
           <p className="text-[12.5px] tracking-wide text-emerald-700">
-            {success.startsWith("Updated")
-              ? success
-              : `Submitted ${success}${remaining > 0 ? ` · ${remaining} left` : ""}`}
+            {success.startsWith("Updated") ? success : `Submitted ${success}`}
           </p>
         ) : null}
       </div>
@@ -317,11 +311,8 @@ export function PurchaseOfferPanel({
 
       {!canSubmit ? (
         <p className="text-[13px] tracking-wide text-neutral-500">
-          You have used all {MAX_OFFERS_PER_LISTING} offers for this listing.
-          Amounts are visible only to you and the administrator.
-          {ownOffers.length > 0
-            ? " You can still edit an existing offer with the pencil icon."
-            : ""}
+          Amounts are visible only to you and the administrator. Use the pencil
+          icon to update your offer.
         </p>
       ) : (
         <form

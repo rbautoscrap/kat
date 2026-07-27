@@ -2,9 +2,6 @@ import { z } from "zod";
 
 export const OFFER_DEVICE_COOKIE = "kat_offer_device";
 
-/** Max suggested-price submissions per member / device / network per listing. */
-export const MAX_OFFERS_PER_LISTING = 3;
-
 export const OFFER_CURRENCIES = ["USD", "KRW", "EUR"] as const;
 export type OfferCurrencyCode = (typeof OFFER_CURRENCIES)[number];
 
@@ -136,4 +133,4 @@ export function isOfferAboveCurrentHighest(
 
 /** Shown when submit is blocked because a higher offer already exists. */
 export const OFFER_BELOW_HIGHEST_MESSAGE =
-  "이미 더 높은 Offer 금액이 있습니다. 더 높은 금액을 입력해 주세요.";
+  "A higher offer already exists. Please enter a higher amount.";

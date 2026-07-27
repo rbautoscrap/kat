@@ -110,7 +110,6 @@ export default async function ListingDetailPage({ params }: Props) {
   const ownOffers = dbUser?.id
     ? listingOffersForCompare
         .filter((o) => o.userId === dbUser.id)
-        .slice(0, 3)
         .map((o) => ({
           id: o.id,
           amount: o.amount,

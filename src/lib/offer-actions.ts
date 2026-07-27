@@ -7,7 +7,6 @@ import { prisma } from "@/lib/prisma";
 import {
   formatOfferAmount,
   isOfferAboveCurrentHighest,
-  MAX_OFFERS_PER_LISTING,
   OFFER_BELOW_HIGHEST_MESSAGE,
   offerInputSchema,
   updateOfferInputSchema,
@@ -24,7 +23,6 @@ export type SubmitOfferResult =
       ok: true;
       amountLabel: string;
       currency: OfferCurrencyCode;
-      remaining: number;
     }
   | { ok: false; error: string; code?: "BELOW_HIGHEST" };
 
@@ -64,39 +62,19 @@ export async function submitPurchaseOffer(input: {
       };
     }
 
+    const existingOwnCount = await prisma.purchaseOffer.count({
+      where: { listingId, userId },
+    });
+    if (existingOwnCount > 0) {
+      return {
+        ok: false,
+        error: "You already have an offer for this listing. Please edit it instead.",
+      };
+    }
+
     const ip = await resolveClientIp();
     const ipHash = hashClientIp(ip);
     const deviceId = await resolveOfferDeviceId();
-
-    const ipKnown = ip !== "unknown";
-    const [userCount, deviceCount, ipCount] = await Promise.all([
-      prisma.purchaseOffer.count({ where: { listingId, userId } }),
-      prisma.purchaseOffer.count({ where: { listingId, deviceId } }),
-      ipKnown
-        ? prisma.purchaseOffer.count({ where: { listingId, ipHash } })
-        : Promise.resolve(0),
-    ]);
-
-    if (userCount >= MAX_OFFERS_PER_LISTING) {
-      return {
-        ok: false,
-        error: `You can submit up to ${MAX_OFFERS_PER_LISTING} offers for this listing.`,
-      };
-    }
-
-    if (deviceCount >= MAX_OFFERS_PER_LISTING) {
-      return {
-        ok: false,
-        error: `Up to ${MAX_OFFERS_PER_LISTING} offers are allowed from this device for this listing.`,
-      };
-    }
-
-    if (ipKnown && ipCount >= MAX_OFFERS_PER_LISTING) {
-      return {
-        ok: false,
-        error: `Up to ${MAX_OFFERS_PER_LISTING} offers are allowed from this network for this listing.`,
-      };
-    }
 
     const existingOffers = await prisma.purchaseOffer.findMany({
       where: { listingId },
@@ -143,13 +121,10 @@ export async function submitPurchaseOffer(input: {
     revalidatePath("/admin");
     revalidatePath("/admin/listings");
 
-    const remaining = MAX_OFFERS_PER_LISTING - userCount - 1;
-
     return {
       ok: true,
       amountLabel: formatOfferAmount(amount, currency),
       currency,
-      remaining: Math.max(0, remaining),
     };
   } catch (error) {
     console.error("submitPurchaseOffer failed:", error);
