@@ -101,9 +101,8 @@ export default async function ListingDetailPage({ params }: Props) {
               amount: true,
               currency: true,
               createdAt: true,
-              updatedAt: true,
             },
-            orderBy: { updatedAt: "desc" },
+            orderBy: { createdAt: "desc" },
           }),
           prisma.purchaseOffer.findMany({
             where: { listingId: listing.id },
@@ -120,7 +119,7 @@ export default async function ListingDetailPage({ params }: Props) {
     id: o.id,
     amount: o.amount,
     currency: o.currency as OfferCurrencyCode,
-    createdAt: o.updatedAt,
+    createdAt: o.createdAt,
   }));
 
   const hasHigherOffer =

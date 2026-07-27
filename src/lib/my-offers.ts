@@ -91,7 +91,6 @@ export async function loadMyOfferListings(
       amount: true,
       currency: true,
       createdAt: true,
-      updatedAt: true,
       listing: {
         select: {
           id: true,
@@ -102,7 +101,7 @@ export async function loadMyOfferListings(
         },
       },
     },
-    orderBy: { updatedAt: "desc" },
+    orderBy: { createdAt: "desc" },
     take: 500,
   });
 
@@ -121,7 +120,7 @@ export async function loadMyOfferListings(
     const entry = {
       amount: row.amount,
       currency: row.currency as OfferCurrencyCode,
-      activityAt: row.updatedAt ?? row.createdAt,
+      activityAt: row.createdAt,
     };
     if (existing) {
       existing.offers.push(entry);

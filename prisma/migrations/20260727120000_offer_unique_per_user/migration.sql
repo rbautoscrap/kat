@@ -5,12 +5,3 @@ WHERE "rowid" NOT IN (
   FROM "PurchaseOffer"
   GROUP BY "listingId", "userId"
 );
-
--- AlterTable
-ALTER TABLE "PurchaseOffer" ADD COLUMN "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
-
--- CreateIndex
-CREATE INDEX IF NOT EXISTS "PurchaseOffer_listingId_updatedAt_idx" ON "PurchaseOffer"("listingId", "updatedAt");
-
--- CreateIndex
-CREATE INDEX IF NOT EXISTS "PurchaseOffer_userId_updatedAt_idx" ON "PurchaseOffer"("userId", "updatedAt");

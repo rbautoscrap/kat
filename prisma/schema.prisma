@@ -201,15 +201,13 @@ model PurchaseOffer {
   /** Stable browser device cookie — used for abuse analytics */
   deviceId  String
   createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
 
-  /** App enforces one offer per member; unique index applied after data is clean. */
+  /** App enforces one offer per member per listing. */
   @@index([listingId, userId])
   @@index([listingId, ipHash])
   @@index([listingId, deviceId])
   @@index([listingId, createdAt])
-  @@index([listingId, updatedAt])
-  @@index([userId, updatedAt])
+  @@index([userId, createdAt])
 }
 
 model ListingImage {
