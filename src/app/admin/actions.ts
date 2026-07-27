@@ -16,6 +16,7 @@ import { deleteUploadedFiles } from "@/lib/listing-actions";
 import { loginIdSchema, passwordSchema } from "@/lib/login-id";
 import { optionalPhoneSchema } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
+import { phoneKeyFromPhone } from "@/lib/signup-guard";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -358,6 +359,24 @@ export async function updateUser(
     return { ok: false, error: "이미 사용 중인 아이디입니다." };
   }
 
+  const nextPhoneKey = phoneKeyFromPhone(parsed.data.phone ?? null);
+  if (nextPhoneKey) {
+    const phoneTaken = await prisma.user.findFirst({
+      where: {
+        phoneKey: nextPhoneKey,
+        NOT: { id: userId },
+        status: { in: ["PENDING", "APPROVED"] },
+      },
+      select: { id: true },
+    });
+    if (phoneTaken) {
+      return {
+        ok: false,
+        error: "이미 다른 회원에게 등록된 연락처입니다.",
+      };
+    }
+  }
+
   try {
     await prisma.user.update({
       where: { id: userId },
@@ -365,6 +384,7 @@ export async function updateUser(
         name: parsed.data.name,
         email: parsed.data.email,
         phone: parsed.data.phone,
+        phoneKey: nextPhoneKey,
         role: parsed.data.role,
         ...(parsed.data.role === "ADMIN" ? { status: "APPROVED" as const } : {}),
         ...(parsed.data.password

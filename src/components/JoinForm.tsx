@@ -68,7 +68,8 @@ export function JoinForm({ onLoginClick }: Props) {
           className={fieldClass}
         />
         <span className={hintClass}>
-          Used so administrators can reach you about offers.
+          Used so administrators can reach you about offers. One contact number
+          per account.
         </span>
       </label>
       <label className="block">

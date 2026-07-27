@@ -175,6 +175,24 @@ if (push.status !== 0) {
   );
 }
 
+const backfillSignup = path.join(
+  process.cwd(),
+  "scripts",
+  "backfill-signup-keys.mjs",
+);
+if (existsSync(backfillSignup)) {
+  console.log("[start-prod] Backfilling signup phone keys…");
+  const filled = spawnSync(process.execPath, [backfillSignup], {
+    stdio: "inherit",
+    env: process.env,
+  });
+  if (filled.status !== 0) {
+    console.warn(
+      `[start-prod] backfill-signup exited ${filled.status} — continuing`,
+    );
+  }
+}
+
 const ensureAdmin = path.join(process.cwd(), "scripts", "ensure-admin.mjs");
 if (existsSync(ensureAdmin)) {
   console.log("[start-prod] Ensuring ADMIN account…");
