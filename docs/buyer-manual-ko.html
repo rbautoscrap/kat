@@ -51,10 +51,33 @@
       break-after: page;
       min-height: 250mm;
       position: relative;
+      overflow: hidden;
     }
     .page:last-child {
       page-break-after: auto;
       break-after: auto;
+    }
+
+    /* Large faint company watermark on every page */
+    .page::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 78%;
+      max-width: 160mm;
+      aspect-ratio: 1 / 1;
+      transform: translate(-50%, -50%);
+      background: url("rbauto-logo.png") center center / contain no-repeat;
+      opacity: 0.085;
+      pointer-events: none;
+      z-index: 0;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page > * {
+      position: relative;
+      z-index: 1;
     }
 
     .cover {
