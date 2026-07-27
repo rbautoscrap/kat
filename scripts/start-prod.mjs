@@ -168,8 +168,11 @@ const push = spawnSync(process.execPath, [prismaCli, "db", "push", "--skip-gener
   env: process.env,
 });
 if (push.status !== 0) {
-  console.error(`[start-prod] prisma db push failed with code ${push.status}`);
-  process.exit(push.status ?? 1);
+  // Do not keep the site offline for a schema sync failure — Next can still serve
+  // most pages while we inspect logs. Offer features that need new columns may error.
+  console.error(
+    `[start-prod] WARNING: prisma db push failed with code ${push.status} — starting app anyway`,
+  );
 }
 
 const ensureAdmin = path.join(process.cwd(), "scripts", "ensure-admin.mjs");
