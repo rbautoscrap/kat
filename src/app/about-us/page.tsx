@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import { BackButton } from "@/components/BackButton";
+import { ManualDownloads } from "@/components/ManualDownloads";
 import {
   CONTACT_EMAIL,
   CONTACT_HOURS,
@@ -194,7 +195,20 @@ export default function AboutUsPage() {
             </div>
           </section>
 
-          {/* 5. Contact — label/value table */}
+          {/* 5. Buyer manuals */}
+          <section>
+            <SectionLabel>Resources</SectionLabel>
+            <h2 className="site-heading mt-1.5 text-[1.05rem] text-neutral-800 sm:text-[1.15rem]">
+              Buyer manuals
+            </h2>
+            <p className="mt-1.5 text-[13.5px] leading-relaxed tracking-wide text-neutral-600">
+              Download the official guide for browsing inventory, submitting
+              offers, and completing purchases.
+            </p>
+            <ManualDownloads />
+          </section>
+
+          {/* 6. Contact — label/value table */}
           <section>
             <SectionLabel>Contact</SectionLabel>
             <h2 className="site-heading mt-1.5 text-[1.05rem] text-neutral-800 sm:text-[1.15rem]">
