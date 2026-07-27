@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KOREA AUTO TRADE — 바이어 이용 매뉴얼</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 14mm 16mm 14mm;
+    }
+
+    :root {
+      --ink: #141414;
+      --muted: #5c5c5c;
+      --line: #e4e4e4;
+      --paper: #ffffff;
+      --soft: #f6f6f4;
+      --accent: #c41e1e;
+      --steel: #1f2a33;
+      --ok: #1a7a45;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Segoe UI", sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.55;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      word-break: keep-all;
+    }
+
+    h1, h2, h3 {
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    p { margin: 0 0 0.65em; color: var(--muted); }
+    strong { color: var(--ink); font-weight: 700; }
+
+    .page {
+      page-break-after: always;
+      break-after: page;
+      min-height: 250mm;
+      position: relative;
+    }
+    .page:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 262mm;
+      padding: 8mm 2mm 4mm;
+      background: #ffffff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+    .cover-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 8.5pt;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+    .cover-hero { margin-top: 36mm; }
+    .cover-kicker {
+      font-size: 9pt;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+      margin-bottom: 9mm;
+      font-weight: 700;
+    }
+    .cover h1 {
+      font-size: 30pt;
+      line-height: 1.15;
+      color: var(--steel);
+      max-width: 155mm;
+    }
+    .cover-sub {
+      margin-top: 8mm;
+      max-width: 140mm;
+      font-size: 11.5pt;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+    .cover-rule {
+      width: 28mm;
+      height: 2px;
+      background: var(--accent);
+      margin: 10mm 0 8mm;
+      border: 0;
+    }
+    .cover-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6mm;
+      border-top: 1px solid var(--line);
+      padding-top: 7mm;
+      font-size: 8.5pt;
+      color: var(--muted);
+    }
+    .cover-meta strong {
+      display: block;
+      color: var(--ink);
+      font-size: 9.5pt;
+      margin-bottom: 1.5mm;
+      font-weight: 700;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 3.5mm;
+      margin-bottom: 7mm;
+    }
+    .brand {
+      font-size: 11pt;
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .brand span {
+      display: block;
+      font-size: 7.5pt;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-top: 1mm;
+      font-weight: 400;
+    }
+    .doc-label {
+      font-size: 7.5pt;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .eyebrow {
+      font-size: 7.5pt;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 2.5mm;
+      font-weight: 700;
+    }
+    .page h2 {
+      font-size: 17pt;
+      color: var(--steel);
+      margin-bottom: 3mm;
+    }
+    .lede {
+      font-size: 10.5pt;
+      color: var(--muted);
+      max-width: 165mm;
+      margin-bottom: 7mm;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4.5mm;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4mm;
+    }
+
+    .card {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      padding: 5mm 5mm 4.5mm;
+    }
+    .card h3 {
+      font-size: 11pt;
+      color: var(--ink);
+      margin-bottom: 2mm;
+    }
+    .card p { font-size: 9.3pt; margin-bottom: 0; }
+
+    .feature {
+      border-left: 2.5px solid var(--accent);
+      padding: 1mm 0 1mm 4mm;
+      margin-bottom: 4.5mm;
+    }
+    .feature h3 {
+      font-size: 11pt;
+      margin-bottom: 1.5mm;
+      color: var(--ink);
+    }
+    .feature p { margin: 0; font-size: 9.5pt; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4mm;
+    }
+    .step {
+      border: 1px solid var(--line);
+      padding: 4.5mm;
+      min-height: 38mm;
+    }
+    .step-no {
+      font-size: 7.5pt;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 2mm;
+    }
+    .step h3 {
+      font-size: 11.5pt;
+      margin-bottom: 2mm;
+    }
+    .step p { font-size: 9.3pt; margin: 0; }
+    .step .note {
+      margin-top: 2.5mm;
+      font-size: 8.3pt;
+      color: #7a7a7a;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2mm;
+      margin: 3mm 0 6mm;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 1.6mm 3.2mm;
+      font-size: 8.3pt;
+      color: var(--ink);
+    }
+
+    table.guide {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 3mm 0 6mm;
+      font-size: 9.3pt;
+    }
+    table.guide th,
+    table.guide td {
+      border: 1px solid var(--line);
+      padding: 2.8mm 3.2mm;
+      text-align: left;
+      vertical-align: top;
+    }
+    table.guide th {
+      width: 36mm;
+      background: var(--soft);
+      color: var(--ink);
+      font-weight: 700;
+    }
+    table.guide td { color: var(--muted); }
+
+    .callout {
+      background: #152028;
+      color: rgba(255,255,255,0.86);
+      padding: 5mm 5.5mm;
+      margin-top: 6mm;
+    }
+    .callout strong {
+      color: #fff;
+      display: block;
+      font-size: 11pt;
+      margin-bottom: 2mm;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3.5mm;
+      margin-top: 4mm;
+    }
+    .contact-item {
+      border: 1px solid var(--line);
+      padding: 4mm;
+    }
+    .contact-item .label {
+      font-size: 7.5pt;
+      color: var(--muted);
+      margin-bottom: 1.5mm;
+    }
+    .contact-item .value {
+      font-size: 10pt;
+      color: var(--ink);
+      font-weight: 700;
+      word-break: break-all;
+    }
+
+    .footer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 7.5pt;
+      color: #8a8a8a;
+      border-top: 1px solid var(--line);
+      padding-top: 2.5mm;
+    }
+
+    ul.clean {
+      margin: 0;
+      padding-left: 4.5mm;
+      color: var(--muted);
+      font-size: 9.5pt;
+    }
+    ul.clean li { margin-bottom: 1.8mm; }
+    ul.clean li strong { color: var(--ink); }
+
+    .checklist {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5mm 5mm;
+      margin-top: 3mm;
+    }
+    .check {
+      display: flex;
+      gap: 2.5mm;
+      align-items: flex-start;
+      font-size: 9.3pt;
+      color: var(--muted);
+    }
+    .check i {
+      flex: 0 0 3.2mm;
+      width: 3.2mm;
+      height: 3.2mm;
+      margin-top: 1.4mm;
+      border: 1.2px solid var(--ok);
+      border-radius: 0.5mm;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+  <section class="page cover">
+    <div class="cover-top">
+      <div>주식회사 알비오토</div>
+      <div>바이어 이용 매뉴얼 · 2026</div>
+    </div>
+    <div class="cover-hero">
+      <div class="cover-kicker">글로벌 차량 트레이딩 플랫폼</div>
+      <h1>KOREA AUTO TRADE<br />이용 매뉴얼</h1>
+      <hr class="cover-rule" />
+      <p class="cover-sub">
+        해외 바이어를 위한 안내서입니다. 실시간 매물, 투명한 정보 공개,
+        체계적인 구매 프로세스를 한눈에 확인하세요.
+      </p>
+    </div>
+    <div class="cover-meta">
+      <div>
+        <strong>웹사이트</strong>
+        rbautotrade.com
+      </div>
+      <div>
+        <strong>대상</strong>
+        해외 딜러 · 전문 바이어
+      </div>
+      <div>
+        <strong>핵심 가치</strong>
+        투명성 · 신속성 · 신뢰할 수 있는 절차
+      </div>
+      <div>
+        <strong>언어</strong>
+        글로벌 이용을 위한 영문 UI
+      </div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="header">
+      <div class="brand">KOREA AUTO TRADE<span>바이어 이용 매뉴얼</span></div>
+      <div class="doc-label">01 · 플랫폼의 차별점</div>
+    </div>
+
+    <div class="eyebrow">차별화</div>
+    <h2>진지한 바이어를 위한 설계</h2>
+    <p class="lede">
+      KOREA AUTO TRADE는 국경을 넘는 차량 거래의 마찰을 줄이기 위해 만들어졌습니다.
+      실시간 재고, 명확한 매물 정보, 안내된 구매 흐름을 제공합니다.
+    </p>
+
+    <div class="feature">
+      <h3>실시간 매물 등록·업데이트</h3>
+      <p>
+        Hot Deals, Car Listings, Live Auction, Stand by 카테고리에 매물이 지속적으로 등록됩니다.
+        카테고리 페이지는 방문할 때마다 순서가 갱신되어, 항상 같은 최신 매물만 보이는
+        편향을 줄입니다.
+      </p>
+    </div>
+    <div class="feature">
+      <h3>투명한 매물 정보</h3>
+      <p>
+        각 매물 페이지에는 VIN, 변속기, 주행거리, 연료 등 스펙 사양과 상태 노트,
+        사진 갤러리, 영상(있는 경우)이 정리되어 있어 추측이 아닌 사실 기반 판단이 가능합니다.
+      </p>
+    </div>
+    <div class="feature">
+      <h3>회원 희망가(오퍼) 시스템</h3>
+      <p>
+        가입 회원은 매물에 구매 희망가를 제출하고 <strong>My offers</strong>에서 관리할 수 있습니다.
+        채팅만으로 흩어지는 협상보다 명확한 기록를 남깁니다.
+      </p>
+    </div>
+    <div class="feature">
+      <h3>체계적인 구매 안내</h3>
+      <p>
+        How to buy 메뉴에서 가격 확인 → 인보이스 통화 선택 → 계약금 → 출고/선적까지
+        4단계로 안내합니다.
+      </p>
+    </div>
+
+    <div class="callout">
+      <strong>바이어에게 주는 이점</strong>
+      더 빠른 숏리스트, 반복 문의 감소, 해외 딜러가 한국에서 소싱할 때 바로 쓸 수 있는
+      전문적인 프로세스입니다.
+    </div>
+
+    <div class="footer">
+      <span>rbautotrade.com</span>
+      <span>2페이지</span>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="header">
+      <div class="brand">KOREA AUTO TRADE<span>바이어 이용 매뉴얼</span></div>
+      <div class="doc-label">02 · 시작하기</div>
+    </div>
+
+    <div class="eyebrow">접속</div>
+    <h2>3분이면 시작할 수 있습니다</h2>
+    <p class="lede">
+      대부분의 매물 열람은 비회원도 가능합니다. 회원가입 후 희망가 제출,
+      Live Auction 이용, My offers 관리가 가능합니다.
+    </p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-no">STEP 01</div>
+        <h3>웹사이트 접속</h3>
+        <p><strong>rbautotrade.com</strong> 에 PC 또는 모바일로 접속합니다.</p>
+      </div>
+      <div class="step">
+        <div class="step-no">STEP 02</div>
+        <h3>매물 둘러보기</h3>
+        <p>상단 메뉴에서 Hot Deals, Car Listings, Live Auction, Stand by를 이용합니다.</p>
+      </div>
+      <div class="step">
+        <div class="step-no">STEP 03</div>
+        <h3>회원가입</h3>
+        <p><strong>Join</strong>으로 가입 정보를 제출하고, 필요 시 승인 후 이용합니다.</p>
+      </div>
+      <div class="step">
+        <div class="step-no">STEP 04</div>
+        <h3>로그인 후 활동</h3>
+        <p><strong>Login</strong> 후 오퍼 제출, Live Auction 열람, My offers 관리를 진행합니다.</p>
+      </div>
+    </div>
+
+    <h3 style="margin: 7mm 0 3mm; font-size: 12pt;">주요 메뉴 안내</h3>
+    <table class="guide">
+      <tr>
+        <th>Hot Deals</th>
+        <td>주목도가 높은 추천·핵심 매물입니다.</td>
+      </tr>
+      <tr>
+        <th>Car Listings</th>
+        <td>핵심 재고입니다. 방문마다 순서가 섞이며, 원가가 높은 매물이 앞쪽에 올 확률이 높습니다.</td>
+      </tr>
+      <tr>
+        <th>Live Auction</th>
+        <td>회원 전용 경매 매물·오퍼 영역입니다. (로그인 필요)</td>
+      </tr>
+      <tr>
+        <th>Stand by</th>
+        <td>추가 대기 재고이며, 메뉴 클릭 시마다 순서가 랜덤으로 섞입니다.</td>
+      </tr>
+      <tr>
+        <th>How to buy</th>
+        <td>구매·선적까지 공식 4단계 안내입니다.</td>
+      </tr>
+      <tr>
+        <th>About Us</th>
+        <td>회사 소개, 강점, 전체 연락 채널을 확인할 수 있습니다.</td>
+      </tr>
+    </table>
+
+    <div class="footer">
+      <span>rbautotrade.com</span>
+      <span>3페이지</span>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="header">
+      <div class="brand">KOREA AUTO TRADE<span>바이어 이용 매뉴얼</span></div>
+      <div class="doc-label">03 · 매물 탐색과 상세</div>
+    </div>
+
+    <div class="eyebrow">실시간 재고</div>
+    <h2>매물을 찾고 평가하기</h2>
+    <p class="lede">
+      검색과 카테고리로 후보를 고른 뒤, 상세 페이지에서 스펙·미디어·문의 채널을 확인하세요.
+    </p>
+
+    <div class="grid-2" style="margin-bottom: 5mm;">
+      <div class="card">
+        <h3>검색</h3>
+        <p>
+          상단 검색창에서 제조사, 모델, VIN, 시리얼(S/N), 노트 키워드로 찾을 수 있습니다.
+        </p>
+      </div>
+      <div class="card">
+        <h3>판매 상태</h3>
+        <p>
+          판매중 / 예약 / 판매완료 상태가 표시됩니다.
+          예약·판매완료 매물은 열람·오퍼 규칙이 다르게 적용될 수 있습니다.
+        </p>
+      </div>
+    </div>
+
+    <h3 style="font-size: 12pt; margin-bottom: 3mm;">매물 상세에서 확인하는 항목</h3>
+    <ul class="clean">
+      <li><strong>차량 식별</strong> — 제목, 연식/메이커/모델, S/N</li>
+      <li><strong>핵심 스펙</strong> — VIN, 엔진, 변속기, 주행거리, 연료</li>
+      <li><strong>상태 Notes</strong> — 영문 노트 제공 시 함께 표시</li>
+      <li><strong>미디어</strong> — 사진 갤러리 및 YouTube 영상(있는 경우)</li>
+      <li><strong>직접 문의</strong> — WhatsApp, KakaoTalk, Messenger (차량 정보 연계)</li>
+      <li><strong>회원 오퍼</strong> — 로그인 회원의 희망가 제출·확인</li>
+    </ul>
+
+    <div class="pill-row" style="margin-top: 5mm;">
+      <span class="pill">투명한 스펙</span>
+      <span class="pill">사진·영상 증거</span>
+      <span class="pill">원터치 메시징</span>
+      <span class="pill">회원 오퍼 이력</span>
+    </div>
+
+    <div class="callout">
+      <strong>실무 팁</strong>
+      매물 열기 → Notes·미디어 확인 → WhatsApp/Messenger로 문의(차량 문구 자동 포함)하거나,
+      회원 오퍼로 희망가를 남겨 두면 추적이 쉽습니다.
+    </div>
+
+    <div class="footer">
+      <span>rbautotrade.com</span>
+      <span>4페이지</span>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="header">
+      <div class="brand">KOREA AUTO TRADE<span>바이어 이용 매뉴얼</span></div>
+      <div class="doc-label">04 · 투명한 거래 시스템</div>
+    </div>
+
+    <div class="eyebrow">프로세스</div>
+    <h2>명확한 오퍼, 명확한 다음 단계</h2>
+    <p class="lede">
+      메신저 문의는 빠르고, 플랫폼의 구조화된 도구는 가격 협의와 후속 관리를 정리해 줍니다.
+    </p>
+
+    <div class="grid-3" style="margin-bottom: 6mm;">
+      <div class="card">
+        <h3>1. 문의</h3>
+        <p>WhatsApp, KakaoTalk, Messenger로 문의합니다. 매물 버튼이 차량 식별 정보를 함께 전달합니다.</p>
+      </div>
+      <div class="card">
+        <h3>2. 오퍼</h3>
+        <p>회원은 상세 페이지에서 금액·통화를 선택해 구매 희망가를 제출할 수 있습니다.</p>
+      </div>
+      <div class="card">
+        <h3>3. 추적</h3>
+        <p><strong>My offers</strong>에서 진행 중/종료된 오퍼를 한곳에서 확인합니다.</p>
+      </div>
+    </div>
+
+    <h3 style="font-size: 12pt; margin-bottom: 3mm;">Live Auction (회원)</h3>
+    <p>
+      Live Auction 매물은 등록 회원에게 제공됩니다. 비회원은 Login / Register 안내가 표시됩니다.
+      로그인 후에는 경매 매물을 확인하고, 설정된 경우 동일한 오퍼 흐름으로 참여할 수 있습니다.
+    </p>
+
+    <h3 style="font-size: 12pt; margin: 5mm 0 3mm;">투명하게 유지되는 것</h3>
+    <table class="guide">
+      <tr>
+        <th>매물 데이터</th>
+        <td>스펙, 노트, 미디어, 판매 상태가 매물 페이지에 일관되게 표시됩니다.</td>
+      </tr>
+      <tr>
+        <th>커뮤니케이션</th>
+        <td>WhatsApp, KakaoTalk, Messenger, 이메일 등 공식 채널로 동일한 팀에 연락합니다.</td>
+      </tr>
+      <tr>
+        <th>거래 경로</th>
+        <td>How to buy에서 가격 확인 → 인보이스 통화 → 계약금 → 출고/선적을 안내합니다.</td>
+      </tr>
+      <tr>
+        <th>회원 활동</th>
+        <td>오퍼는 계정에 저장되어 후속 대응과 확인이 가능합니다.</td>
+      </tr>
+    </table>
+
+    <div class="footer">
+      <span>rbautotrade.com</span>
+      <span>5페이지</span>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="header">
+      <div class="brand">KOREA AUTO TRADE<span>바이어 이용 매뉴얼</span></div>
+      <div class="doc-label">05 · How to buy</div>
+    </div>
+
+    <div class="eyebrow">안내 체계</div>
+    <h2>선적까지 4단계</h2>
+    <p class="lede">
+      원활한 거래를 위해 아래 순서를 권장합니다. 웹사이트의 <strong>How to buy</strong>에도
+      동일한 안내가 있습니다.
+    </p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-no">STEP 01 · 가격</div>
+        <h3>가격 확인</h3>
+        <p>해당 매물에 대해 WhatsApp 등 공식 채널로 가격을 확인합니다.</p>
+        <p class="note">운송비, 세금, 수출신고필증 비용은 별도입니다.</p>
+      </div>
+      <div class="step">
+        <div class="step-no">STEP 02 · 인보이스</div>
+        <h3>인보이스 발행</h3>
+        <p>서류용 통화를 선택합니다.</p>
+        <p class="note">KRW — 세금계산서/수출신고 · USD — 수출신고</p>
+      </div>
+      <div class="step">
+        <div class="step-no">STEP 03 · 결제</div>
+        <h3>계약금</h3>
+        <p>약정한 입금일을 지켜 주세요. 계약금 확인 후에만 선적이 진행됩니다.</p>
+      </div>
+      <div class="step">
+        <div class="step-no">STEP 04 · 출고</div>
+        <h3>선적</h3>
+        <p>선적비는 바이어 부담입니다. 직접 운송을 주선하거나, 주소·연락처를 공유해 대행을 요청할 수 있습니다.</p>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top: 8mm;">
+      <strong>긴급 문의</strong>
+      시간이 급한 용건은 <strong style="display:inline;font-size:inherit;">카카오톡</strong> 또는
+      <strong style="display:inline;font-size:inherit;">페이스북 메신저</strong>를 이용해 주시면
+      영업시간 내 빠른 응대가 가능합니다.
+    </div>
+
+    <div class="footer">
+      <span>rbautotrade.com</span>
+      <span>6페이지</span>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="header">
+      <div class="brand">KOREA AUTO TRADE<span>바이어 이용 매뉴얼</span></div>
+      <div class="doc-label">06 · 연락처 &amp; 체크리스트</div>
+    </div>
+
+    <div class="eyebrow">지원</div>
+    <h2>공식 연락 채널</h2>
+    <p class="lede">
+      가능하면 매물 페이지의 문의 버튼을 이용해 주세요. 어떤 차량인지 정확히 전달됩니다.
+    </p>
+
+    <div class="contact-grid">
+      <div class="contact-item">
+        <div class="label">이메일</div>
+        <div class="value">rbautoscrap@naver.com</div>
+      </div>
+      <div class="contact-item">
+        <div class="label">전화 / 카카오톡</div>
+        <div class="value">+82 10-5817-2207</div>
+      </div>
+      <div class="contact-item">
+        <div class="label">WhatsApp</div>
+        <div class="value">wa.me · +82 10-5817-2207</div>
+      </div>
+      <div class="contact-item">
+        <div class="label">Facebook Messenger</div>
+        <div class="value">m.me/rbautoscrap</div>
+      </div>
+      <div class="contact-item">
+        <div class="label">카카오톡 오픈채팅</div>
+        <div class="value">open.kakao.com/o/sRRldQFi</div>
+      </div>
+      <div class="contact-item">
+        <div class="label">업무 시간</div>
+        <div class="value">월–금 09:00 – 18:00 (KST)</div>
+      </div>
+    </div>
+
+    <h3 style="font-size: 12pt; margin: 7mm 0 2mm;">바이어 체크리스트</h3>
+    <div class="checklist">
+      <div class="check"><i></i><span>회원 가입 / 승인 완료</span></div>
+      <div class="check"><i></i><span>사진·영상·노트로 후보 매물 선정</span></div>
+      <div class="check"><i></i><span>협상 전 판매 상태 확인</span></div>
+      <div class="check"><i></i><span>S/N 또는 매물 링크로 문의</span></div>
+      <div class="check"><i></i><span>준비되면 회원 오퍼 제출</span></div>
+      <div class="check"><i></i><span>통화·서류 유형 합의</span></div>
+      <div class="check"><i></i><span>약정일에 계약금 입금</span></div>
+      <div class="check"><i></i><span>확인 후 선적 주선</span></div>
+    </div>
+
+    <div class="callout" style="margin-top: 8mm;">
+      <strong>KOREA AUTO TRADE · 주식회사 알비오토</strong>
+      이용해 주셔서 감사합니다. 파트너십·대량 구매는 회사 소개와 목표 시장을 포함하여
+      rbautoscrap@naver.com 으로 문의해 주세요.
+    </div>
+
+    <div class="footer">
+      <span>rbautotrade.com</span>
+      <span>7페이지</span>
+    </div>
+  </section>
+
+</body>
+</html>

@@ -56,16 +56,16 @@
       break-after: auto;
     }
 
-    /* —— Cover —— */
+    /* —— Cover (white) —— */
     .cover {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       min-height: 262mm;
       padding: 8mm 2mm 4mm;
-      background:
-        linear-gradient(165deg, #101820 0%, #1c2b36 48%, #0f171d 100%);
-      color: #f4f4f2;
+      background: #ffffff;
+      color: var(--ink);
+      border: 1px solid var(--line);
     }
     .cover-top {
       display: flex;
@@ -74,28 +74,29 @@
       font-size: 8.5pt;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: rgba(244, 244, 242, 0.55);
+      color: var(--muted);
     }
     .cover-hero { margin-top: 38mm; }
     .cover-kicker {
       font-size: 9pt;
       letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: #e8b4b4;
+      color: var(--accent);
       margin-bottom: 10mm;
+      font-weight: 650;
     }
     .cover h1 {
       font-size: 34pt;
       line-height: 1.05;
-      color: #fff;
-      max-width: 140mm;
+      color: var(--steel);
+      max-width: 150mm;
     }
     .cover-sub {
       margin-top: 8mm;
-      max-width: 125mm;
+      max-width: 130mm;
       font-size: 12pt;
       line-height: 1.5;
-      color: rgba(244, 244, 242, 0.78);
+      color: var(--muted);
     }
     .cover-rule {
       width: 28mm;
@@ -108,14 +109,14 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 6mm;
-      border-top: 1px solid rgba(255,255,255,0.14);
+      border-top: 1px solid var(--line);
       padding-top: 7mm;
       font-size: 8.5pt;
-      color: rgba(244, 244, 242, 0.6);
+      color: var(--muted);
     }
     .cover-meta strong {
       display: block;
-      color: #fff;
+      color: var(--ink);
       font-size: 9.5pt;
       font-family: Georgia, serif;
       margin-bottom: 1.5mm;
