@@ -175,6 +175,20 @@ if (push.status !== 0) {
   );
 }
 
+// Critical: User.phoneKey / signupIp* must exist or admin member pages crash.
+const ensureSignup = path.join(
+  process.cwd(),
+  "scripts",
+  "ensure-signup-columns.mjs",
+);
+if (existsSync(ensureSignup)) {
+  console.log("[start-prod] Ensuring signup columns…");
+  spawnSync(process.execPath, [ensureSignup, "columns"], {
+    stdio: "inherit",
+    env: process.env,
+  });
+}
+
 const backfillSignup = path.join(
   process.cwd(),
   "scripts",
@@ -182,15 +196,18 @@ const backfillSignup = path.join(
 );
 if (existsSync(backfillSignup)) {
   console.log("[start-prod] Backfilling signup phone keys…");
-  const filled = spawnSync(process.execPath, [backfillSignup], {
+  spawnSync(process.execPath, [backfillSignup], {
     stdio: "inherit",
     env: process.env,
   });
-  if (filled.status !== 0) {
-    console.warn(
-      `[start-prod] backfill-signup exited ${filled.status} — continuing`,
-    );
-  }
+}
+
+if (existsSync(ensureSignup)) {
+  console.log("[start-prod] Ensuring signup indexes…");
+  spawnSync(process.execPath, [ensureSignup, "indexes"], {
+    stdio: "inherit",
+    env: process.env,
+  });
 }
 
 const ensureAdmin = path.join(process.cwd(), "scripts", "ensure-admin.mjs");

@@ -14,9 +14,8 @@ import { auth, isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { deleteUploadedFiles } from "@/lib/listing-actions";
 import { loginIdSchema, passwordSchema } from "@/lib/login-id";
-import { optionalPhoneSchema } from "@/lib/phone";
+import { optionalPhoneSchema, phoneKeyFromPhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
-import { phoneKeyFromPhone } from "@/lib/signup-guard";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 

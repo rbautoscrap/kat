@@ -10,6 +10,15 @@ export function normalizePhone(raw: string): string {
   return hasPlus ? `+${digits}` : digits;
 }
 
+/** Digits-only key for duplicate contact checks (min 8 digits). */
+export function phoneKeyFromPhone(
+  phone: string | null | undefined,
+): string | null {
+  if (!phone) return null;
+  const digits = normalizePhone(phone).replace(/\D/g, "");
+  return digits.length >= 8 ? digits : null;
+}
+
 export const phoneSchema = z
   .string()
   .trim()
