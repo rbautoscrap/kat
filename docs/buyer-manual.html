@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KOREA AUTO TRADE — Buyer Manual</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 14mm 16mm 14mm;
+    }
+
+    :root {
+      --ink: #141414;
+      --muted: #5c5c5c;
+      --line: #e4e4e4;
+      --paper: #ffffff;
+      --soft: #f6f6f4;
+      --accent: #c41e1e;
+      --steel: #1f2a33;
+      --ok: #1a7a45;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.45;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    h1, h2, h3 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin: 0;
+    }
+
+    p { margin: 0 0 0.65em; color: var(--muted); }
+    strong { color: var(--ink); font-weight: 650; }
+
+    .page {
+      page-break-after: always;
+      break-after: page;
+      min-height: 250mm;
+      position: relative;
+    }
+    .page:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+
+    /* —— Cover —— */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 262mm;
+      padding: 8mm 2mm 4mm;
+      background:
+        linear-gradient(165deg, #101820 0%, #1c2b36 48%, #0f171d 100%);
+      color: #f4f4f2;
+    }
+    .cover-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 8.5pt;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(244, 244, 242, 0.55);
+    }
+    .cover-hero { margin-top: 38mm; }
+    .cover-kicker {
+      font-size: 9pt;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #e8b4b4;
+      margin-bottom: 10mm;
+    }
+    .cover h1 {
+      font-size: 34pt;
+      line-height: 1.05;
+      color: #fff;
+      max-width: 140mm;
+    }
+    .cover-sub {
+      margin-top: 8mm;
+      max-width: 125mm;
+      font-size: 12pt;
+      line-height: 1.5;
+      color: rgba(244, 244, 242, 0.78);
+    }
+    .cover-rule {
+      width: 28mm;
+      height: 2px;
+      background: var(--accent);
+      margin: 10mm 0 8mm;
+      border: 0;
+    }
+    .cover-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6mm;
+      border-top: 1px solid rgba(255,255,255,0.14);
+      padding-top: 7mm;
+      font-size: 8.5pt;
+      color: rgba(244, 244, 242, 0.6);
+    }
+    .cover-meta strong {
+      display: block;
+      color: #fff;
+      font-size: 9.5pt;
+      font-family: Georgia, serif;
+      margin-bottom: 1.5mm;
+      font-weight: 600;
+    }
+
+    /* —— Inner pages —— */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 3.5mm;
+      margin-bottom: 7mm;
+    }
+    .brand {
+      font-family: Georgia, serif;
+      font-size: 11pt;
+      color: var(--ink);
+    }
+    .brand span {
+      display: block;
+      font-family: "Segoe UI", sans-serif;
+      font-size: 7.5pt;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 1mm;
+    }
+    .doc-label {
+      font-size: 7.5pt;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .eyebrow {
+      font-size: 7.5pt;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 2.5mm;
+      font-weight: 650;
+    }
+    .page h2 {
+      font-size: 18pt;
+      color: var(--steel);
+      margin-bottom: 3mm;
+    }
+    .lede {
+      font-size: 11pt;
+      color: var(--muted);
+      max-width: 160mm;
+      margin-bottom: 7mm;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4.5mm;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4mm;
+    }
+
+    .card {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      padding: 5mm 5mm 4.5mm;
+    }
+    .card h3 {
+      font-size: 11.5pt;
+      color: var(--ink);
+      margin-bottom: 2mm;
+    }
+    .card p { font-size: 9.5pt; margin-bottom: 0; }
+
+    .feature {
+      border-left: 2.5px solid var(--accent);
+      padding: 1mm 0 1mm 4mm;
+      margin-bottom: 4.5mm;
+    }
+    .feature h3 {
+      font-size: 11.5pt;
+      margin-bottom: 1.5mm;
+      color: var(--ink);
+    }
+    .feature p { margin: 0; font-size: 9.8pt; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4mm;
+    }
+    .step {
+      border: 1px solid var(--line);
+      padding: 4.5mm;
+      min-height: 38mm;
+    }
+    .step-no {
+      font-size: 7.5pt;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 2mm;
+    }
+    .step h3 {
+      font-size: 12pt;
+      margin-bottom: 2mm;
+    }
+    .step p { font-size: 9.5pt; margin: 0; }
+    .step .note {
+      margin-top: 2.5mm;
+      font-size: 8.5pt;
+      color: #7a7a7a;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2mm;
+      margin: 3mm 0 6mm;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 1.6mm 3.2mm;
+      font-size: 8.5pt;
+      letter-spacing: 0.04em;
+      color: var(--ink);
+    }
+
+    table.guide {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 3mm 0 6mm;
+      font-size: 9.5pt;
+    }
+    table.guide th,
+    table.guide td {
+      border: 1px solid var(--line);
+      padding: 2.8mm 3.2mm;
+      text-align: left;
+      vertical-align: top;
+    }
+    table.guide th {
+      width: 38mm;
+      background: var(--soft);
+      color: var(--ink);
+      font-weight: 650;
+    }
+    table.guide td { color: var(--muted); }
+
+    .callout {
+      background: #152028;
+      color: rgba(255,255,255,0.82);
+      padding: 5mm 5.5mm;
+      margin-top: 6mm;
+    }
+    .callout strong {
+      color: #fff;
+      display: block;
+      font-family: Georgia, serif;
+      font-size: 11.5pt;
+      margin-bottom: 2mm;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3.5mm;
+      margin-top: 4mm;
+    }
+    .contact-item {
+      border: 1px solid var(--line);
+      padding: 4mm;
+    }
+    .contact-item .label {
+      font-size: 7.5pt;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.5mm;
+    }
+    .contact-item .value {
+      font-size: 10.5pt;
+      color: var(--ink);
+      font-weight: 650;
+      word-break: break-all;
+    }
+
+    .footer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 7.5pt;
+      color: #8a8a8a;
+      border-top: 1px solid var(--line);
+      padding-top: 2.5mm;
+    }
+
+    ul.clean {
+      margin: 0;
+      padding-left: 4.5mm;
+      color: var(--muted);
+      font-size: 9.8pt;
+    }
+    ul.clean li { margin-bottom: 1.8mm; }
+    ul.clean li strong { color: var(--ink); }
+
+    .checklist {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5mm 5mm;
+      margin-top: 3mm;
+    }
+    .check {
+      display: flex;
+      gap: 2.5mm;
+      align-items: flex-start;
+      font-size: 9.5pt;
+      color: var(--muted);
+    }
+    .check i {
+      flex: 0 0 3.2mm;
+      width: 3.2mm;
+      height: 3.2mm;
+      margin-top: 1.2mm;
+      border: 1.2px solid var(--ok);
+      border-radius: 0.5mm;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PAGE 1: Cover -->
+  <section class="page cover">
+    <div class="cover-top">
+      <div>RB Auto Co., Ltd.</div>
+      <div>Buyer Manual · 2026</div>
+    </div>
+    <div class="cover-hero">
+      <div class="cover-kicker">Global Vehicle Trading Platform</div>
+      <h1>KOREA AUTO TRADE</h1>
+      <hr class="cover-rule" />
+      <p class="cover-sub">
+        A clear guide for international buyers — real-time inventory,
+        transparent offers, and a structured path from inquiry to shipment.
+      </p>
+    </div>
+    <div class="cover-meta">
+      <div>
+        <strong>Website</strong>
+        rbautotrade.com
+      </div>
+      <div>
+        <strong>Audience</strong>
+        Overseas dealers &amp; professional buyers
+      </div>
+      <div>
+        <strong>Focus</strong>
+        Transparency · Speed · Reliable process
+      </div>
+      <div>
+        <strong>Language</strong>
+        English interface for global use
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 2: Differentiation -->
+  <section class="page">
+    <div class="header">
+      <div class="brand">KOREA AUTO TRADE<span>Buyer Manual</span></div>
+      <div class="doc-label">01 · Why this platform</div>
+    </div>
+
+    <div class="eyebrow">Differentiation</div>
+    <h2>Built for serious buyers</h2>
+    <p class="lede">
+      KOREA AUTO TRADE is designed to reduce friction in cross-border vehicle trading —
+      with live inventory, clear listing data, and a guided purchase flow.
+    </p>
+
+    <div class="feature">
+      <h3>Real-time listing updates</h3>
+      <p>
+        New units are published continuously across Hot Deals, Car Listings,
+        Live Auction, and Stand by. Category pages refresh order so buyers see
+        relevant stock — not only the newest upload every time.
+      </p>
+    </div>
+    <div class="feature">
+      <h3>Transparent listing information</h3>
+      <p>
+        Each vehicle page presents structured specs (VIN, transmission, odometer, fuel),
+        condition notes, photo galleries, and video when available — so decisions start
+        from facts, not guesswork.
+      </p>
+    </div>
+    <div class="feature">
+      <h3>Member offer system</h3>
+      <p>
+        Registered members can submit purchase offers on listings and track them under
+        <strong>My offers</strong>. This creates a cleaner negotiation trail than
+        scattered chat messages alone.
+      </p>
+    </div>
+    <div class="feature">
+      <h3>Guided buying process</h3>
+      <p>
+        From price check to deposit and shipment, the How to buy flow explains
+        currency options, documents, and shipping responsibility in four clear steps.
+      </p>
+    </div>
+
+    <div class="callout">
+      <strong>What this means for you</strong>
+      Faster shortlisting, fewer repeated questions, and a professional process that
+      scales for overseas dealers sourcing from Korea.
+    </div>
+
+    <div class="footer">
+      <span>rbautotrade.com</span>
+      <span>Page 2</span>
+    </div>
+  </section>
+
+  <!-- PAGE 3: Getting started -->
+  <section class="page">
+    <div class="header">
+      <div class="brand">KOREA AUTO TRADE<span>Buyer Manual</span></div>
+      <div class="doc-label">02 · Getting started</div>
+    </div>
+
+    <div class="eyebrow">Access</div>
+    <h2>Start in three minutes</h2>
+    <p class="lede">
+      Most browsing is open to visitors. Registration unlocks member tools such as
+      purchase offers, Live Auction access, and My offers tracking.
+    </p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-no">Step 01</div>
+        <h3>Open the website</h3>
+        <p>Visit <strong>rbautotrade.com</strong> on desktop or mobile.</p>
+      </div>
+      <div class="step">
+        <div class="step-no">Step 02</div>
+        <h3>Browse inventory</h3>
+        <p>Use the top menu: Hot Deals, Car Listings, Live Auction, Stand by.</p>
+      </div>
+      <div class="step">
+        <div class="step-no">Step 03</div>
+        <h3>Create an account</h3>
+        <p>Tap <strong>Join</strong>, submit your details, then wait for approval if required.</p>
+      </div>
+      <div class="step">
+        <div class="step-no">Step 04</div>
+        <h3>Log in &amp; act</h3>
+        <p>Use <strong>Login</strong> to submit offers, open Live Auction, and manage My offers.</p>
+      </div>
+    </div>
+
+    <h3 style="margin: 7mm 0 3mm; font-size: 12.5pt;">Main menu map</h3>
+    <table class="guide">
+      <tr>
+        <th>Hot Deals</th>
+        <td>Featured / high-priority units highlighted for quick attention.</td>
+      </tr>
+      <tr>
+        <th>Car Listings</th>
+        <td>Core inventory. Order rotates on each visit, with higher-cost units tending to appear earlier.</td>
+      </tr>
+      <tr>
+        <th>Live Auction</th>
+        <td>Member-access auction listings and offers (sign-in required).</td>
+      </tr>
+      <tr>
+        <th>Stand by</th>
+        <td>Additional ready stock; shuffled on each menu visit for fair exposure.</td>
+      </tr>
+      <tr>
+        <th>How to buy</th>
+        <td>Official 4-step purchase &amp; shipment guidance.</td>
+      </tr>
+      <tr>
+        <th>About Us</th>
+        <td>Company profile, strengths, and all contact channels.</td>
+      </tr>
+    </table>
+
+    <div class="footer">
+      <span>rbautotrade.com</span>
+      <span>Page 3</span>
+    </div>
+  </section>
+
+  <!-- PAGE 4: Inventory & listing detail -->
+  <section class="page">
+    <div class="header">
+      <div class="brand">KOREA AUTO TRADE<span>Buyer Manual</span></div>
+      <div class="doc-label">03 · Inventory &amp; listing pages</div>
+    </div>
+
+    <div class="eyebrow">Real-time stock</div>
+    <h2>Find and evaluate units</h2>
+    <p class="lede">
+      Use search and category pages to shortlist vehicles, then open a listing for full detail.
+    </p>
+
+    <div class="grid-2" style="margin-bottom: 5mm;">
+      <div class="card">
+        <h3>Search</h3>
+        <p>
+          The top search bar supports make, model, VIN, serial number (S/N), and notes —
+          useful when you already know a unit reference.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Sale status</h3>
+        <p>
+          Listings may show status such as on sale, reserved, or sold.
+          Reserved / sold units follow platform rules for viewing and offers.
+        </p>
+      </div>
+    </div>
+
+    <h3 style="font-size: 12.5pt; margin-bottom: 3mm;">On every listing detail page</h3>
+    <ul class="clean">
+      <li><strong>Vehicle identity</strong> — title, year / make / model, S/N</li>
+      <li><strong>Key specs</strong> — VIN, engine mark, transmission, odometer, fuel type</li>
+      <li><strong>Condition notes</strong> — English notes when available</li>
+      <li><strong>Media</strong> — photo gallery and YouTube video (when provided)</li>
+      <li><strong>Direct contact</strong> — WhatsApp, KakaoTalk, Facebook Messenger with vehicle context</li>
+      <li><strong>Member offer panel</strong> — submit and review your purchase interest (signed-in members)</li>
+    </ul>
+
+    <div class="pill-row" style="margin-top: 5mm;">
+      <span class="pill">Transparent specs</span>
+      <span class="pill">Photo + video evidence</span>
+      <span class="pill">One-tap messaging</span>
+      <span class="pill">Offer trail for members</span>
+    </div>
+
+    <div class="callout">
+      <strong>Tip for busy importers</strong>
+      Open the listing → check notes &amp; media first → send WhatsApp/Messenger with the
+      auto-filled vehicle text, or place a member offer for a cleaner paper trail.
+    </div>
+
+    <div class="footer">
+      <span>rbautotrade.com</span>
+      <span>Page 4</span>
+    </div>
+  </section>
+
+  <!-- PAGE 5: Transparency & offers -->
+  <section class="page">
+    <div class="header">
+      <div class="brand">KOREA AUTO TRADE<span>Buyer Manual</span></div>
+      <div class="doc-label">04 · Transparent trading system</div>
+    </div>
+
+    <div class="eyebrow">Process integrity</div>
+    <h2>Clear offers. Clear next steps.</h2>
+    <p class="lede">
+      Messaging is fast. The platform also provides structured tools so price discussions
+      and follow-up stay organized.
+    </p>
+
+    <div class="grid-3" style="margin-bottom: 6mm;">
+      <div class="card">
+        <h3>1. Inquire</h3>
+        <p>Ask via WhatsApp, KakaoTalk, or Messenger. Listing buttons attach vehicle identity for you.</p>
+      </div>
+      <div class="card">
+        <h3>2. Offer</h3>
+        <p>Members can submit a purchase offer with amount and currency on the listing page.</p>
+      </div>
+      <div class="card">
+        <h3>3. Track</h3>
+        <p>Open <strong>My offers</strong> to review open / closed interest in one place.</p>
+      </div>
+    </div>
+
+    <h3 style="font-size: 12.5pt; margin-bottom: 3mm;">Live Auction (members)</h3>
+    <p>
+      Live Auction listings are available to registered members. Guests see a clear access
+      message with Login / Register options. Once signed in, you can review auction units
+      and participate through the same offer workflow where enabled.
+    </p>
+
+    <h3 style="font-size: 12.5pt; margin: 5mm 0 3mm;">What stays transparent</h3>
+    <table class="guide">
+      <tr>
+        <th>Listing data</th>
+        <td>Specs, notes, media, and sale status are shown consistently on each vehicle page.</td>
+      </tr>
+      <tr>
+        <th>Communication</th>
+        <td>Multiple official channels — WhatsApp, KakaoTalk, Messenger, email — with the same contact team.</td>
+      </tr>
+      <tr>
+        <th>Commercial path</th>
+        <td>How to buy explains price check → invoice currency → deposit → shipment release.</td>
+      </tr>
+      <tr>
+        <th>Member activity</th>
+        <td>Offers are stored against your account for follow-up and review.</td>
+      </tr>
+    </table>
+
+    <div class="footer">
+      <span>rbautotrade.com</span>
+      <span>Page 5</span>
+    </div>
+  </section>
+
+  <!-- PAGE 6: How to buy -->
+  <section class="page">
+    <div class="header">
+      <div class="brand">KOREA AUTO TRADE<span>Buyer Manual</span></div>
+      <div class="doc-label">05 · How to buy</div>
+    </div>
+
+    <div class="eyebrow">Guidance system</div>
+    <h2>Four steps to shipment</h2>
+    <p class="lede">
+      Follow this sequence for a smooth close. Details also appear on the website under
+      <strong>How to buy</strong>.
+    </p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-no">Step 01 · Price</div>
+        <h3>Receive price</h3>
+        <p>Check pricing via WhatsApp (or other official chat channels) for the specific unit.</p>
+        <p class="note">Transport, taxes, and export declaration fees are charged separately.</p>
+      </div>
+      <div class="step">
+        <div class="step-no">Step 02 · Invoice</div>
+        <h3>Generate invoice</h3>
+        <p>Choose currency for documents:</p>
+        <p class="note">KRW — tax invoice / export declaration · USD — export declaration</p>
+      </div>
+      <div class="step">
+        <div class="step-no">Step 03 · Payment</div>
+        <h3>Deposit</h3>
+        <p>Keep the agreed deposit date. Shipment is arranged only after deposit confirmation.</p>
+      </div>
+      <div class="step">
+        <div class="step-no">Step 04 · Release</div>
+        <h3>Shipment</h3>
+        <p>Buyer is responsible for shipping costs. Arrange transport yourself, or share address/contact for assistance.</p>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top: 8mm;">
+      <strong>Urgent matters</strong>
+      For time-sensitive questions, prefer <strong style="display:inline;font-family:inherit;font-size:inherit;">KakaoTalk</strong>
+      or <strong style="display:inline;font-family:inherit;font-size:inherit;">Facebook Messenger</strong>
+      so the team can respond quickly during business hours.
+    </div>
+
+    <div class="footer">
+      <span>rbautotrade.com</span>
+      <span>Page 6</span>
+    </div>
+  </section>
+
+  <!-- PAGE 7: Contact + checklist -->
+  <section class="page">
+    <div class="header">
+      <div class="brand">KOREA AUTO TRADE<span>Buyer Manual</span></div>
+      <div class="doc-label">06 · Contact &amp; checklist</div>
+    </div>
+
+    <div class="eyebrow">Support</div>
+    <h2>Official contact channels</h2>
+    <p class="lede">
+      Use platform buttons on listing pages when possible — they help identify the exact vehicle.
+    </p>
+
+    <div class="contact-grid">
+      <div class="contact-item">
+        <div class="label">Email</div>
+        <div class="value">rbautoscrap@naver.com</div>
+      </div>
+      <div class="contact-item">
+        <div class="label">Phone / KakaoTalk</div>
+        <div class="value">+82 10-5817-2207</div>
+      </div>
+      <div class="contact-item">
+        <div class="label">WhatsApp</div>
+        <div class="value">wa.me · +82 10-5817-2207</div>
+      </div>
+      <div class="contact-item">
+        <div class="label">Facebook Messenger</div>
+        <div class="value">m.me/rbautoscrap</div>
+      </div>
+      <div class="contact-item">
+        <div class="label">KakaoTalk Open Chat</div>
+        <div class="value">open.kakao.com/o/sRRldQFi</div>
+      </div>
+      <div class="contact-item">
+        <div class="label">Business hours</div>
+        <div class="value">Mon – Fri, 09:00 – 18:00 (KST)</div>
+      </div>
+    </div>
+
+    <h3 style="font-size: 12.5pt; margin: 7mm 0 2mm;">Buyer checklist</h3>
+    <div class="checklist">
+      <div class="check"><i></i><span>Create / approve your member account</span></div>
+      <div class="check"><i></i><span>Shortlist units with photos, video, and notes</span></div>
+      <div class="check"><i></i><span>Confirm sale status before negotiating</span></div>
+      <div class="check"><i></i><span>Send inquiry with S/N or listing link</span></div>
+      <div class="check"><i></i><span>Submit a member offer when ready</span></div>
+      <div class="check"><i></i><span>Agree currency &amp; document type</span></div>
+      <div class="check"><i></i><span>Pay deposit by the agreed date</span></div>
+      <div class="check"><i></i><span>Arrange shipping after confirmation</span></div>
+    </div>
+
+    <div class="callout" style="margin-top: 8mm;">
+      <strong>KOREA AUTO TRADE · RB Auto Co., Ltd.</strong>
+      Thank you for sourcing with us. For partnerships or bulk purchasing programs,
+      email rbautoscrap@naver.com with your company profile and target markets.
+    </div>
+
+    <div class="footer">
+      <span>rbautotrade.com</span>
+      <span>Page 7</span>
+    </div>
+  </section>
+
+</body>
+</html>
