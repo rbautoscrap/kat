@@ -24,33 +24,36 @@ if (!prismaCli || !existsSync(prismaCli)) {
   process.exit(0);
 }
 
-const statements = [
-  // Keep newest row per member+listing (legacy multi-offer rows from old 3-cap).
-  `DELETE FROM "PurchaseOffer"
-   WHERE "rowid" NOT IN (
-     SELECT MAX("rowid") FROM "PurchaseOffer" GROUP BY "listingId", "userId"
-   );`,
-];
+const sqlFile = path.join(process.cwd(), "scripts", "prepare-offers.sql");
+if (!existsSync(sqlFile)) {
+  console.warn("[prepare-db] prepare-offers.sql missing — skipping");
+  process.exit(0);
+}
 
-for (const sql of statements) {
-  console.log("[prepare-db] Running pre-push SQL…");
-  const result = spawnSync(
-    process.execPath,
-    [prismaCli, "db", "execute", "--stdin", "--schema", "prisma/schema.prisma"],
-    {
-      input: sql,
-      encoding: "utf8",
-      env: process.env,
-    },
+console.log("[prepare-db] Deduping PurchaseOffer rows…");
+const result = spawnSync(
+  process.execPath,
+  [
+    prismaCli,
+    "db",
+    "execute",
+    "--file",
+    sqlFile,
+    "--schema",
+    "prisma/schema.prisma",
+  ],
+  {
+    encoding: "utf8",
+    env: process.env,
+  },
+);
+if (result.stdout) process.stdout.write(result.stdout);
+if (result.stderr) process.stderr.write(result.stderr);
+if (result.status !== 0) {
+  // Table may not exist on first boot — continue to db push.
+  console.warn(
+    `[prepare-db] SQL skipped or failed (code ${result.status}) — continuing`,
   );
-  if (result.stdout) process.stdout.write(result.stdout);
-  if (result.stderr) process.stderr.write(result.stderr);
-  if (result.status !== 0) {
-    // Table may not exist on first boot — continue to db push.
-    console.warn(
-      `[prepare-db] SQL skipped or failed (code ${result.status}) — continuing`,
-    );
-  } else {
-    console.log("[prepare-db] OK");
-  }
+} else {
+  console.log("[prepare-db] OK");
 }

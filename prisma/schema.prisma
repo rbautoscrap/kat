@@ -203,8 +203,8 @@ model PurchaseOffer {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  /** One editable offer per member per listing */
-  @@unique([listingId, userId])
+  /** App enforces one offer per member; unique index applied after data is clean. */
+  @@index([listingId, userId])
   @@index([listingId, ipHash])
   @@index([listingId, deviceId])
   @@index([listingId, createdAt])

@@ -10,13 +10,7 @@ WHERE "rowid" NOT IN (
 ALTER TABLE "PurchaseOffer" ADD COLUMN "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 -- CreateIndex
-CREATE UNIQUE INDEX "PurchaseOffer_listingId_userId_key" ON "PurchaseOffer"("listingId", "userId");
-
--- DropIndex
-DROP INDEX IF EXISTS "PurchaseOffer_listingId_userId_idx";
+CREATE INDEX IF NOT EXISTS "PurchaseOffer_listingId_updatedAt_idx" ON "PurchaseOffer"("listingId", "updatedAt");
 
 -- CreateIndex
-CREATE INDEX "PurchaseOffer_listingId_updatedAt_idx" ON "PurchaseOffer"("listingId", "updatedAt");
-
--- CreateIndex
-CREATE INDEX "PurchaseOffer_userId_updatedAt_idx" ON "PurchaseOffer"("userId", "updatedAt");
+CREATE INDEX IF NOT EXISTS "PurchaseOffer_userId_updatedAt_idx" ON "PurchaseOffer"("userId", "updatedAt");

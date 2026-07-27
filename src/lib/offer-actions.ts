@@ -92,8 +92,8 @@ export async function submitPurchaseOffer(input: {
       };
     }
 
-    const existingOwn = await prisma.purchaseOffer.findUnique({
-      where: { listingId_userId: { listingId, userId } },
+    const existingOwn = await prisma.purchaseOffer.findFirst({
+      where: { listingId, userId },
       select: { id: true },
     });
     if (existingOwn) {
