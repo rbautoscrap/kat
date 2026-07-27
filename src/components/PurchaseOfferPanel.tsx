@@ -203,8 +203,8 @@ export function PurchaseOfferPanel({
               <li key={offer.id} className="text-[13px] tracking-wide">
                 {isEditing ? (
                   <div className="rounded-md border border-[var(--line)] bg-neutral-50/80 px-2.5 py-2.5">
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
-                      <div className="min-w-0 sm:max-w-[14rem]">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
+                      <div className="w-full sm:w-[13rem]">
                         <p className="mb-1 text-[10.5px] font-medium tracking-[0.06em] text-neutral-500 uppercase">
                           Amount
                         </p>
@@ -232,7 +232,7 @@ export function PurchaseOfferPanel({
                           />
                         </div>
                       </div>
-                      <div>
+                      <div className="shrink-0">
                         <p className="mb-1 text-[10.5px] font-medium tracking-[0.06em] text-neutral-500 uppercase">
                           Currency
                         </p>
@@ -365,8 +365,8 @@ export function PurchaseOfferPanel({
             });
           }}
         >
-          <div className="grid grid-cols-1 gap-x-3 gap-y-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
-            <div className="min-w-0 sm:max-w-[18rem]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="w-full sm:w-[15rem]">
               <label
                 htmlFor="offer-amount"
                 className="mb-1 block text-[10.5px] font-medium tracking-[0.06em] text-neutral-500 uppercase"

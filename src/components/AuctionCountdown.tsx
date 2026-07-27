@@ -51,9 +51,9 @@ function DigitBlock({
   urgent: boolean;
 }) {
   return (
-    <div className="min-w-0 flex-1 text-center">
+    <div className="w-[3.75rem] shrink-0 text-center sm:w-[4.25rem]">
       <div
-        className={`rounded-sm border bg-neutral-50 px-1 py-2.5 font-mono text-[1.25rem] font-semibold tabular-nums tracking-[0.08em] sm:text-[1.45rem] ${
+        className={`rounded-sm border bg-neutral-50 px-1 py-2 font-mono text-[1.2rem] font-semibold tabular-nums tracking-[0.08em] sm:text-[1.35rem] ${
           urgent
             ? "border-[var(--accent)]/35 text-[var(--accent)]"
             : "border-[var(--line)] text-neutral-800"
@@ -210,7 +210,7 @@ export function AuctionCountdown({
       </div>
 
       <div className="px-3 py-3 sm:px-4 sm:py-3.5">
-        <div className="flex max-w-xl items-end gap-1.5 sm:gap-2">
+        <div className="flex items-end gap-1.5 sm:gap-2">
           {parts.days > 0 ? (
             <>
               <DigitBlock

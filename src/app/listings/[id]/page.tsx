@@ -291,88 +291,55 @@ export default async function ListingDetailPage({ params }: Props) {
           />
         </div>
 
-        {/* Mobile: stacked pairs. Desktop: 4-col table so Notes aligns with VIN gutter. */}
-        <dl className="sm:hidden">
-          {shortSpecs.map((item, index) => (
-            <div
-              key={item.label}
-              className={`grid min-h-[2.5rem] grid-cols-[6.5rem_minmax(0,1fr)] items-stretch border-[var(--line)] text-[12.5px] ${
-                index < shortSpecs.length - 1 ? "border-b" : ""
-              }`}
-            >
-              <dt className="flex items-center border-r border-[var(--line)] bg-neutral-50/90 px-2 py-2 font-medium tracking-wide text-neutral-500">
-                {item.label}
-              </dt>
-              <dd className="flex min-w-0 items-center px-2 py-2 tracking-wide text-neutral-700">
-                <span className="min-w-0 break-words whitespace-pre-wrap">
-                  {item.value}
-                </span>
-              </dd>
-            </div>
-          ))}
-          <div className="grid min-w-0 grid-cols-[6.5rem_minmax(0,1fr)] items-stretch border-t border-[var(--line)] text-[12.5px]">
-            <div className="border-r border-[var(--line)] bg-neutral-50/90 px-2 py-2.5 font-medium tracking-wide text-neutral-500">
+        {/* Specs: paired rows (50/50). Notes full-width below. */}
+        <div className="divide-y divide-[var(--line)] text-[12.5px] sm:text-[13px]">
+          {Array.from(
+            { length: Math.ceil(shortSpecs.length / 2) },
+            (_, row) => {
+              const left = shortSpecs[row * 2];
+              const right = shortSpecs[row * 2 + 1];
+              return (
+                <div
+                  key={left.label}
+                  className="grid grid-cols-1 sm:grid-cols-2"
+                >
+                  <div className="grid min-h-[2.4rem] grid-cols-[6.75rem_minmax(0,1fr)] items-stretch sm:grid-cols-[7rem_minmax(0,1fr)] sm:border-r sm:border-[var(--line)]">
+                    <dt className="flex items-center border-r border-[var(--line)] bg-neutral-50/90 px-2.5 py-2 font-medium tracking-wide text-neutral-500">
+                      {left.label}
+                    </dt>
+                    <dd className="flex min-w-0 items-center px-2.5 py-2 tracking-wide text-neutral-700">
+                      <span className="min-w-0 break-words whitespace-pre-wrap">
+                        {left.value}
+                      </span>
+                    </dd>
+                  </div>
+                  {right ? (
+                    <div className="grid min-h-[2.4rem] grid-cols-[6.75rem_minmax(0,1fr)] items-stretch border-t border-[var(--line)] sm:grid-cols-[7rem_minmax(0,1fr)] sm:border-t-0">
+                      <dt className="flex items-center border-r border-[var(--line)] bg-neutral-50/90 px-2.5 py-2 font-medium tracking-wide text-neutral-500">
+                        {right.label}
+                      </dt>
+                      <dd className="flex min-w-0 items-center px-2.5 py-2 tracking-wide text-neutral-700">
+                        <span className="min-w-0 break-words whitespace-pre-wrap">
+                          {right.value}
+                        </span>
+                      </dd>
+                    </div>
+                  ) : (
+                    <div className="hidden sm:block" />
+                  )}
+                </div>
+              );
+            },
+          )}
+          <div className="grid grid-cols-[6.75rem_minmax(0,1fr)] items-start sm:grid-cols-[7rem_minmax(0,1fr)]">
+            <div className="border-r border-[var(--line)] bg-neutral-50/90 px-2.5 py-2 font-medium tracking-wide text-neutral-500">
               Notes
             </div>
-            <div className="min-h-[3.25rem] min-w-0 break-words whitespace-pre-wrap px-2 py-2.5 leading-relaxed tracking-wide text-neutral-700">
+            <div className="min-w-0 break-words whitespace-pre-wrap px-2.5 py-2 leading-relaxed tracking-wide text-neutral-700">
               {notesValue}
             </div>
           </div>
-        </dl>
-
-        <table className="hidden w-full table-fixed border-collapse text-[13px] sm:table">
-          <colgroup>
-            <col className="w-[7rem]" />
-            <col />
-            <col className="w-[7rem]" />
-            <col />
-          </colgroup>
-          <tbody>
-            {Array.from(
-              { length: Math.ceil(shortSpecs.length / 2) },
-              (_, row) => {
-                const left = shortSpecs[row * 2];
-                const right = shortSpecs[row * 2 + 1];
-                return (
-                  <tr key={left.label} className="border-b border-[var(--line)]">
-                    <th className="border-r border-[var(--line)] bg-neutral-50/90 px-2.5 py-2 text-left align-middle font-medium tracking-wide text-neutral-500">
-                      {left.label}
-                    </th>
-                    <td className="min-w-0 border-r border-[var(--line)] px-2.5 py-2 align-middle tracking-wide break-words whitespace-pre-wrap text-neutral-700">
-                      {left.value}
-                    </td>
-                    {right ? (
-                      <>
-                        <th className="border-r border-[var(--line)] bg-neutral-50/90 px-2.5 py-2 text-left align-middle font-medium tracking-wide text-neutral-500">
-                          {right.label}
-                        </th>
-                        <td className="min-w-0 px-2.5 py-2 align-middle tracking-wide break-words whitespace-pre-wrap text-neutral-700">
-                          {right.value}
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <th className="border-r border-[var(--line)] bg-neutral-50/90" />
-                        <td />
-                      </>
-                    )}
-                  </tr>
-                );
-              },
-            )}
-            <tr className="border-[var(--line)]">
-              <th className="border-r border-[var(--line)] bg-neutral-50/90 px-2.5 py-2.5 text-left align-top font-medium tracking-wide text-neutral-500">
-                Notes
-              </th>
-              <td
-                colSpan={3}
-                className="min-h-[3.25rem] min-w-0 px-2.5 py-2.5 align-top leading-relaxed tracking-wide break-words whitespace-pre-wrap text-neutral-700"
-              >
-                {notesValue}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        </div>
       </div>
 
       {/* Guests see nothing. Members see form or their own offer only. */}
