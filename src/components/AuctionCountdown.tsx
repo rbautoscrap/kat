@@ -135,12 +135,8 @@ export function AuctionCountdown({
   if (compact) {
     return (
       <p
-        className={`mt-1 font-mono text-[11.5px] tabular-nums tracking-wide ${
-          ended
-            ? "text-neutral-400"
-            : urgent
-              ? "font-medium text-[var(--accent)]"
-              : "text-neutral-600"
+        className={`mt-1 font-mono text-[11.5px] font-medium tabular-nums tracking-wide ${
+          ended ? "text-neutral-400" : "text-red-600"
         } ${className}`}
       >
         {ended ? "Auction ended" : `Ends in ${formatCompact(parts)}`}
