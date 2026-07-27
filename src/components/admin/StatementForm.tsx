@@ -12,17 +12,19 @@ import {
   type OfferCurrencyCode,
 } from "@/lib/purchase-offer";
 import {
-  STATEMENT_BANK,
+  STATEMENT_BANK_ACCOUNTS,
   STATEMENT_VAT_RATE,
   calcStatementTotals,
   getStatementLines,
   isExtraLineKey,
+  isStatementBankAccountId,
   newExtraLineKey,
   orphanListingKey,
   parseOrphanListingKey,
   sumLineAmounts,
   type ListingOption,
   type MemberOption,
+  type StatementBankAccountId,
   type StatementView,
 } from "@/lib/statement";
 
@@ -152,6 +154,11 @@ export function StatementForm({
   );
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [includeVat, setIncludeVat] = useState(initial?.includeVat !== false);
+  const [bankAccountId, setBankAccountId] = useState<StatementBankAccountId>(
+    isStatementBankAccountId(initial?.bankAccountId)
+      ? initial.bankAccountId
+      : "KRW_MAIN",
+  );
   const [listingQuery, setListingQuery] = useState("");
   const [memberQuery, setMemberQuery] = useState("");
 
@@ -282,6 +289,9 @@ export function StatementForm({
 
   function onCurrencyChange(next: OfferCurrencyCode) {
     setCurrency(next);
+    if (!initial) {
+      setBankAccountId(next === "KRW" ? "KRW_MAIN" : "FX_HANA");
+    }
     setSelected((prev) =>
       prev.map((s) => ({
         ...s,
@@ -319,6 +329,7 @@ export function StatementForm({
         buyerUserId: buyerUserId || null,
         currency,
         includeVat,
+        bankAccountId,
         issueDate,
         notes: notes || undefined,
       };
@@ -653,11 +664,23 @@ export function StatementForm({
             <span>합계</span>
             <span>{totals.totalLabel}</span>
           </p>
-          <p className="mt-3 border-t border-neutral-200 pt-2 text-[12.5px] text-neutral-500">
-            입금 계좌: {STATEMENT_BANK.bankName} {STATEMENT_BANK.accountNo}{" "}
-            {STATEMENT_BANK.accountHolder}
-          </p>
         </div>
+        <label className="block sm:col-span-2">
+          <span className={labelClass}>입금 계좌</span>
+          <select
+            value={bankAccountId}
+            onChange={(e) =>
+              setBankAccountId(e.target.value as StatementBankAccountId)
+            }
+            className={fieldClass}
+          >
+            {STATEMENT_BANK_ACCOUNTS.map((account) => (
+              <option key={account.id} value={account.id}>
+                {account.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="block sm:col-span-2">
           <span className={labelClass}>비고</span>
           <textarea

@@ -148,6 +148,8 @@ model TransactionStatement {
   currency       OfferCurrency @default(KRW)
   /** true = 10% VAT included in total; false = zero-rated / no VAT */
   includeVat     Boolean       @default(true)
+  /** Deposit bank account key: KRW_MAIN | FX_HANA */
+  bankAccountId  String        @default("KRW_MAIN")
   issueDate      String
   notes          String?
   createdById    String

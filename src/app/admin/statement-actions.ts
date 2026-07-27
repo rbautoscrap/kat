@@ -9,6 +9,7 @@ import { OFFER_CURRENCIES } from "@/lib/purchase-offer";
 import { prisma } from "@/lib/prisma";
 import {
   isExtraLineKey,
+  isStatementBankAccountId,
   parseOrphanListingKey,
   sumLineAmounts,
 } from "@/lib/statement";
@@ -47,6 +48,10 @@ const statementSchema = z.object({
   buyerUserId: z.string().trim().min(1).optional().nullable(),
   currency: z.enum(OFFER_CURRENCIES),
   includeVat: z.boolean(),
+  bankAccountId: z
+    .string()
+    .trim()
+    .refine(isStatementBankAccountId, "입금 계좌를 선택해 주세요."),
   issueDate: z
     .string()
     .trim()
@@ -266,6 +271,7 @@ export async function createStatement(
         amount: totalAmount,
         currency: parsed.data.currency as OfferCurrency,
         includeVat: parsed.data.includeVat,
+        bankAccountId: parsed.data.bankAccountId,
         issueDate: parsed.data.issueDate,
         notes: parsed.data.notes || null,
         createdById: admin.id,
@@ -340,6 +346,7 @@ export async function updateStatement(
           amount: totalAmount,
           currency: parsed.data.currency as OfferCurrency,
           includeVat: parsed.data.includeVat,
+          bankAccountId: parsed.data.bankAccountId,
           issueDate: parsed.data.issueDate,
           notes: parsed.data.notes || null,
           items: {

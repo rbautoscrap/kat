@@ -1,10 +1,10 @@
 import {
-  STATEMENT_BANK,
   STATEMENT_COPY,
   STATEMENT_SELLER,
   STATEMENT_VAT_RATE,
   calcStatementTotals,
   formatStatementAmount,
+  getStatementBankAccount,
   getStatementLines,
   sumLineAmounts,
   type StatementLocale,
@@ -32,12 +32,10 @@ export function StatementDocument({
   const vatPct = Math.round(STATEMENT_VAT_RATE * 100);
   const company =
     locale === "en" ? STATEMENT_SELLER.companyEn : STATEMENT_SELLER.company;
-  const bankName =
-    locale === "en" ? STATEMENT_BANK.bankNameEn : STATEMENT_BANK.bankName;
+  const bank = getStatementBankAccount(statement.bankAccountId);
+  const bankName = locale === "en" ? bank.bankNameEn : bank.bankName;
   const accountHolder =
-    locale === "en"
-      ? STATEMENT_BANK.accountHolderEn
-      : STATEMENT_BANK.accountHolder;
+    locale === "en" ? bank.accountHolderEn : bank.accountHolder;
 
   return (
     <div
@@ -195,7 +193,7 @@ export function StatementDocument({
             <p className="statement-bank-line">
               <span className="statement-bank-label">{t.accountNo}</span>
               <span className="statement-bank-account">
-                {STATEMENT_BANK.accountNo}
+                {bank.accountNo}
               </span>
             </p>
             <p className="statement-bank-line">

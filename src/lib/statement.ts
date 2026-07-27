@@ -15,13 +15,47 @@ export const STATEMENT_SELLER = {
   whatsapp: CONTACT_WHATSAPP,
 } as const;
 
-export const STATEMENT_BANK = {
-  bankName: "KEB하나은행",
-  bankNameEn: "KEB Hana Bank",
-  accountNo: "676-910036-85204",
-  accountHolder: "주식회사 알비오토",
-  accountHolderEn: "RB Auto Co., Ltd.",
-} as const;
+export const STATEMENT_BANK_ACCOUNTS = [
+  {
+    id: "KRW_MAIN",
+    bankName: "KEB하나은행",
+    bankNameEn: "KEB Hana Bank",
+    accountNo: "676-910036-85204",
+    accountHolder: "주식회사 알비오토",
+    accountHolderEn: "RB Auto Co., Ltd.",
+    label: "KEB하나은행 676-910036-85204 주식회사 알비오토",
+    labelEn: "KEB Hana Bank 676-910036-85204 RB Auto Co., Ltd.",
+  },
+  {
+    id: "FX_HANA",
+    bankName: "KEB하나은행",
+    bankNameEn: "KEB Hana Bank",
+    accountNo: "691-910001-78338",
+    accountHolder: "(주)알비오토 외화계좌",
+    accountHolderEn: "RB Auto Co., Ltd. (FX Account)",
+    label: "KEB하나은행 691-910001-78338 (주)알비오토 외화계좌",
+    labelEn: "KEB Hana Bank 691-910001-78338 RB Auto Co., Ltd. (FX)",
+  },
+] as const;
+
+export type StatementBankAccountId =
+  (typeof STATEMENT_BANK_ACCOUNTS)[number]["id"];
+
+export function isStatementBankAccountId(
+  value?: string | null,
+): value is StatementBankAccountId {
+  return STATEMENT_BANK_ACCOUNTS.some((a) => a.id === value);
+}
+
+export function getStatementBankAccount(id?: string | null) {
+  return (
+    STATEMENT_BANK_ACCOUNTS.find((a) => a.id === id) ??
+    STATEMENT_BANK_ACCOUNTS[0]!
+  );
+}
+
+/** @deprecated Prefer getStatementBankAccount / STATEMENT_BANK_ACCOUNTS */
+export const STATEMENT_BANK = STATEMENT_BANK_ACCOUNTS[0]!;
 
 /** VAT rate applied on supply amount when includeVat is true */
 export const STATEMENT_VAT_RATE = 0.1;
@@ -119,6 +153,7 @@ export type StatementView = Pick<
   | "amount"
   | "currency"
   | "includeVat"
+  | "bankAccountId"
   | "issueDate"
   | "notes"
 > & {
