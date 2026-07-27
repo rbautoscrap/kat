@@ -181,13 +181,18 @@ export function PurchaseOfferPanel({
             </Link>
           </p>
         </div>
-        {success ? (
-          <p className="text-[12.5px] tracking-wide text-emerald-700">
-            {success.kind === "updated"
-              ? `Updated ${success.label}`
-              : `Submitted ${success.label}`}
-          </p>
-        ) : null}
+        <div className="flex flex-col items-end gap-1">
+          {auctionEndsAt ? (
+            <AuctionCountdown endsAt={auctionEndsAt} variant="offer" />
+          ) : null}
+          {success ? (
+            <p className="text-[12.5px] tracking-wide text-emerald-700">
+              {success.kind === "updated"
+                ? `Updated ${success.label}`
+                : `Submitted ${success.label}`}
+            </p>
+          ) : null}
+        </div>
       </div>
 
       {hasHigherOffer ? (
@@ -404,11 +409,6 @@ export function PurchaseOfferPanel({
             </div>
 
             <div className="shrink-0">
-              {auctionEndsAt ? (
-                <div className="mb-0.5">
-                  <AuctionCountdown endsAt={auctionEndsAt} variant="offer" />
-                </div>
-              ) : null}
               <p className="mb-1 text-[10.5px] font-medium tracking-[0.06em] text-neutral-500 uppercase">
                 Currency
               </p>
