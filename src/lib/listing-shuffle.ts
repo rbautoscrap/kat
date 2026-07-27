@@ -68,26 +68,52 @@ function parseCostDigits(value?: string | null): number {
 
 /**
  * Seeded order that prefers higher costPrice while still varying each visit.
- * Missing / zero cost tends toward the back.
+ * Brand-new listings get a freshness boost so they are not buried when
+ * costPrice is still empty (common right after registration).
  */
 export function seededCostBiasedOrder(
-  items: Array<{ id: string; costPrice?: string | null }>,
+  items: Array<{
+    id: string;
+    costPrice?: string | null;
+    createdAt?: Date | string | null;
+  }>,
   seed: number,
 ): string[] {
   const rng = mulberry32(seed);
-  const parsed = items.map((item) => ({
-    id: item.id,
-    cost: parseCostDigits(item.costPrice),
-  }));
+  const now = Date.now();
+  const parsed = items.map((item) => {
+    const createdMs = item.createdAt
+      ? new Date(item.createdAt).getTime()
+      : Number.NaN;
+    const ageDays = Number.isFinite(createdMs)
+      ? Math.max(0, (now - createdMs) / (24 * 60 * 60 * 1000))
+      : 999;
+    return {
+      id: item.id,
+      cost: parseCostDigits(item.costPrice),
+      ageDays,
+    };
+  });
   const maxCost = Math.max(1, ...parsed.map((p) => p.cost));
-  // Noise ~45% of max cost: high-cost units stay early, order still refreshes.
-  const noise = maxCost * 0.45;
+  // Noise keeps order fresh without erasing cost / freshness priority.
+  const noise = maxCost * 0.35;
 
   return parsed
-    .map((p) => ({
-      id: p.id,
-      score: p.cost + rng() * noise,
-    }))
+    .map((p) => {
+      // Keep newly registered units on early pages even before cost is entered.
+      const freshBoost =
+        p.ageDays <= 3
+          ? maxCost * 1.2
+          : p.ageDays <= 14
+            ? maxCost * 0.5
+            : 0;
+      // Missing cost → upper-mid band (not last pages).
+      const base = p.cost > 0 ? p.cost : maxCost * 0.55;
+      return {
+        id: p.id,
+        score: base + freshBoost + rng() * noise,
+      };
+    })
     .sort((a, b) => b.score - a.score)
     .map((p) => p.id);
 }

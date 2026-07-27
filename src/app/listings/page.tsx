@@ -84,7 +84,7 @@ export default async function ListingsPage({ searchParams }: Props) {
   if (shuffleMode && shuffleSeed !== null) {
     const idRows = await prisma.listing.findMany({
       where,
-      select: { id: true, costPrice: true },
+      select: { id: true, costPrice: true, createdAt: true },
       orderBy: { id: "asc" },
     });
     const orderedIds =
