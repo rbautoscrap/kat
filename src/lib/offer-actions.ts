@@ -1,5 +1,6 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { auth, isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
@@ -7,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import {
   formatOfferAmount,
   meetsOfferMinimumThreshold,
-  OFFER_BELOW_HIGHEST_MESSAGE,
+  OFFER_BELOW_MIN_THRESHOLD_MESSAGE,
   offerInputSchema,
   updateOfferInputSchema,
   type OfferCurrencyCode,
@@ -24,7 +25,31 @@ export type SubmitOfferResult =
       amountLabel: string;
       currency: OfferCurrencyCode;
     }
-  | { ok: false; error: string; code?: "BELOW_HIGHEST" };
+  | {
+      ok: false;
+      error: string;
+      code?: "BELOW_MIN_THRESHOLD" | "ALREADY_EXISTS";
+    };
+
+function revalidateOfferPaths(listingId: string) {
+  revalidatePath(`/listings/${listingId}`);
+  revalidatePath("/offers");
+  revalidatePath("/admin");
+  revalidatePath("/admin/listings");
+}
+
+async function loadListingOfferAmounts(
+  listingId: string,
+  excludeOfferId?: string,
+) {
+  return prisma.purchaseOffer.findMany({
+    where: {
+      listingId,
+      ...(excludeOfferId ? { NOT: { id: excludeOfferId } } : {}),
+    },
+    select: { amount: true, currency: true },
+  });
+}
 
 export async function submitPurchaseOffer(input: {
   listingId: string;
@@ -37,6 +62,11 @@ export async function submitPurchaseOffer(input: {
       return { ok: false, error: "Please sign in to submit an offer." };
     }
 
+    const dbUser = await resolveSessionDbUser();
+    if (!dbUser) {
+      return { ok: false, error: "Please sign in to submit an offer." };
+    }
+
     const parsed = offerInputSchema.safeParse(input);
     if (!parsed.success) {
       return {
@@ -46,7 +76,7 @@ export async function submitPurchaseOffer(input: {
     }
 
     const { listingId, currency, amount } = parsed.data;
-    const userId = session.user.id;
+    const userId = dbUser.id;
 
     const listing = await prisma.listing.findUnique({
       where: { id: listingId },
@@ -62,25 +92,20 @@ export async function submitPurchaseOffer(input: {
       };
     }
 
-    const existingOwnCount = await prisma.purchaseOffer.count({
-      where: { listingId, userId },
+    const existingOwn = await prisma.purchaseOffer.findUnique({
+      where: { listingId_userId: { listingId, userId } },
+      select: { id: true },
     });
-    if (existingOwnCount > 0) {
+    if (existingOwn) {
       return {
         ok: false,
-        error: "You already have an offer for this listing. Please edit it instead.",
+        code: "ALREADY_EXISTS",
+        error:
+          "You already have an offer for this listing. Please edit it instead.",
       };
     }
 
-    const ip = await resolveClientIp();
-    const ipHash = hashClientIp(ip);
-    const deviceId = await resolveOfferDeviceId();
-
-    const existingOffers = await prisma.purchaseOffer.findMany({
-      where: { listingId },
-      select: { amount: true, currency: true },
-      take: 200,
-    });
+    const existingOffers = await loadListingOfferAmounts(listingId);
     if (
       !meetsOfferMinimumThreshold(
         amount,
@@ -93,10 +118,14 @@ export async function submitPurchaseOffer(input: {
     ) {
       return {
         ok: false,
-        code: "BELOW_HIGHEST",
-        error: OFFER_BELOW_HIGHEST_MESSAGE,
+        code: "BELOW_MIN_THRESHOLD",
+        error: OFFER_BELOW_MIN_THRESHOLD_MESSAGE,
       };
     }
+
+    const ip = await resolveClientIp();
+    const ipHash = hashClientIp(ip);
+    const deviceId = await resolveOfferDeviceId();
 
     await prisma.$transaction([
       prisma.purchaseOffer.create({
@@ -109,17 +138,13 @@ export async function submitPurchaseOffer(input: {
           deviceId,
         },
       }),
-      // Bump listing so admin list can surface recent offers at the top
       prisma.listing.update({
         where: { id: listingId },
         data: { updatedAt: new Date() },
       }),
     ]);
 
-    revalidatePath(`/listings/${listingId}`);
-    revalidatePath("/offers");
-    revalidatePath("/admin");
-    revalidatePath("/admin/listings");
+    revalidateOfferPaths(listingId);
 
     return {
       ok: true,
@@ -127,6 +152,17 @@ export async function submitPurchaseOffer(input: {
       currency,
     };
   } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return {
+        ok: false,
+        code: "ALREADY_EXISTS",
+        error:
+          "You already have an offer for this listing. Please edit it instead.",
+      };
+    }
     console.error("submitPurchaseOffer failed:", error);
     return {
       ok: false,
@@ -141,7 +177,7 @@ export type UpdateOfferResult =
       amountLabel: string;
       currency: OfferCurrencyCode;
     }
-  | { ok: false; error: string; code?: "BELOW_HIGHEST" };
+  | { ok: false; error: string; code?: "BELOW_MIN_THRESHOLD" };
 
 /** Member: update amount/currency on their own offer. */
 export async function updatePurchaseOffer(input: {
@@ -155,6 +191,11 @@ export async function updatePurchaseOffer(input: {
       return { ok: false, error: "Please sign in to update your offer." };
     }
 
+    const dbUser = await resolveSessionDbUser();
+    if (!dbUser) {
+      return { ok: false, error: "Please sign in to update your offer." };
+    }
+
     const parsed = updateOfferInputSchema.safeParse(input);
     if (!parsed.success) {
       return {
@@ -164,7 +205,7 @@ export async function updatePurchaseOffer(input: {
     }
 
     const { offerId, currency, amount } = parsed.data;
-    const userId = session.user.id;
+    const userId = dbUser.id;
 
     const offer = await prisma.purchaseOffer.findUnique({
       where: { id: offerId },
@@ -185,11 +226,10 @@ export async function updatePurchaseOffer(input: {
       };
     }
 
-    const otherOffers = await prisma.purchaseOffer.findMany({
-      where: { listingId: offer.listingId, NOT: { id: offer.id } },
-      select: { amount: true, currency: true },
-      take: 200,
-    });
+    const otherOffers = await loadListingOfferAmounts(
+      offer.listingId,
+      offer.id,
+    );
     if (
       !meetsOfferMinimumThreshold(
         amount,
@@ -202,8 +242,8 @@ export async function updatePurchaseOffer(input: {
     ) {
       return {
         ok: false,
-        code: "BELOW_HIGHEST",
-        error: OFFER_BELOW_HIGHEST_MESSAGE,
+        code: "BELOW_MIN_THRESHOLD",
+        error: OFFER_BELOW_MIN_THRESHOLD_MESSAGE,
       };
     }
 
@@ -218,10 +258,7 @@ export async function updatePurchaseOffer(input: {
       }),
     ]);
 
-    revalidatePath(`/listings/${offer.listingId}`);
-    revalidatePath("/offers");
-    revalidatePath("/admin");
-    revalidatePath("/admin/listings");
+    revalidateOfferPaths(offer.listingId);
 
     return {
       ok: true,
@@ -265,10 +302,7 @@ export async function deletePurchaseOffer(
 
     await prisma.purchaseOffer.delete({ where: { id: offer.id } });
 
-    revalidatePath(`/listings/${offer.listingId}`);
-    revalidatePath("/offers");
-    revalidatePath("/admin");
-    revalidatePath("/admin/listings");
+    revalidateOfferPaths(offer.listingId);
     return { ok: true };
   } catch (error) {
     console.error("deletePurchaseOffer failed:", error);

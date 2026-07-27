@@ -93,12 +93,17 @@ export function PurchaseOfferPanel({
   hasHigherOffer = false,
 }: Props) {
   const router = useRouter();
-  const canSubmit = ownOffers.length === 0;
+  /** After unique constraint, at most one; keep newest if legacy duplicates remain. */
+  const activeOffers = ownOffers.slice(0, 1);
+  const canSubmit = activeOffers.length === 0;
 
   const [currency, setCurrency] = useState<OfferCurrencyCode>("KRW");
   const [amount, setAmount] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [success, setSuccess] = useState<{
+    kind: "submitted" | "updated";
+    label: string;
+  } | null>(null);
   const [pending, startTransition] = useTransition();
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -134,13 +139,14 @@ export function PurchaseOfferPanel({
         amount: editAmount,
       });
       if (!result.ok) {
-        if (result.code === "BELOW_HIGHEST") {
+        if (result.code === "BELOW_MIN_THRESHOLD") {
           setAlertMessage(result.error);
+          return;
         }
         setEditError(result.error);
         return;
       }
-      setSuccess(`Updated ${result.amountLabel}`);
+      setSuccess({ kind: "updated", label: result.amountLabel });
       cancelEdit();
       router.refresh();
     });
@@ -159,9 +165,9 @@ export function PurchaseOfferPanel({
             Purchase offer
           </h2>
           <p className="mt-0.5 text-[11.5px] tracking-wide text-neutral-400">
-            {ownOffers.length > 0
-              ? "Edit your offer with the pencil icon"
-              : "Submit your purchase offer"}
+            {canSubmit
+              ? "Submit your purchase offer"
+              : "Edit your offer with the pencil icon"}
             {" · "}
             <Link
               href="/offers"
@@ -173,7 +179,9 @@ export function PurchaseOfferPanel({
         </div>
         {success ? (
           <p className="text-[12.5px] tracking-wide text-emerald-700">
-            {success.startsWith("Updated") ? success : `Submitted ${success}`}
+            {success.kind === "updated"
+              ? `Updated ${success.label}`
+              : `Submitted ${success.label}`}
           </p>
         ) : null}
       </div>
@@ -187,9 +195,9 @@ export function PurchaseOfferPanel({
         </p>
       ) : null}
 
-      {ownOffers.length > 0 ? (
+      {activeOffers.length > 0 ? (
         <ul className="mb-3 space-y-2 border-b border-[var(--line)] pb-3">
-          {ownOffers.map((offer) => {
+          {activeOffers.map((offer) => {
             const isEditing = editingId === offer.id;
             return (
               <li key={offer.id} className="text-[13px] tracking-wide">
@@ -334,13 +342,14 @@ export function PurchaseOfferPanel({
                 amount,
               });
               if (!result.ok) {
-                if (result.code === "BELOW_HIGHEST") {
+                if (result.code === "BELOW_MIN_THRESHOLD") {
                   setAlertMessage(result.error);
+                  return;
                 }
                 setError(result.error);
                 return;
               }
-              setSuccess(result.amountLabel);
+              setSuccess({ kind: "submitted", label: result.amountLabel });
               setAmount("");
               router.refresh();
             });

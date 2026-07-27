@@ -135,9 +135,6 @@ export function meetsOfferMinimumThreshold(
   return offerToComparableKrw(amount, currency) >= minimum;
 }
 
-/** @deprecated Use meetsOfferMinimumThreshold */
-export const isOfferAboveCurrentHighest = meetsOfferMinimumThreshold;
-
 /** Shown when submit is blocked for being too far below the highest offer. */
-export const OFFER_BELOW_HIGHEST_MESSAGE =
+export const OFFER_BELOW_MIN_THRESHOLD_MESSAGE =
   "Your offer is too low. Please enter at least about 80% of the current highest offer.";

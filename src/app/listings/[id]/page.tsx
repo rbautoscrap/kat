@@ -89,34 +89,39 @@ export default async function ListingDetailPage({ params }: Props) {
     void recordListingView(listing.id);
   }
 
-  // Offer amounts are private: only the submitting member (own offers) and admins.
-  // For outbid detection we load lightweight rows (no other amounts exposed to the client).
-  const listingOffersForCompare =
+  // Own offers are loaded separately so they are never truncated by listing-wide limits.
+  // Rival amounts stay server-side and only feed the outbid flag (never sent to the client).
+  const [ownOfferRows, listingOffersForCompare] =
     isSignedIn && dbUser?.id
-      ? await prisma.purchaseOffer.findMany({
-          where: { listingId: listing.id },
-          select: {
-            id: true,
-            userId: true,
-            amount: true,
-            currency: true,
-            createdAt: true,
-          },
-          orderBy: { createdAt: "desc" },
-          take: 100,
-        })
-      : [];
+      ? await Promise.all([
+          prisma.purchaseOffer.findMany({
+            where: { listingId: listing.id, userId: dbUser.id },
+            select: {
+              id: true,
+              amount: true,
+              currency: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+            orderBy: { updatedAt: "desc" },
+          }),
+          prisma.purchaseOffer.findMany({
+            where: { listingId: listing.id },
+            select: {
+              userId: true,
+              amount: true,
+              currency: true,
+            },
+          }),
+        ])
+      : [[], []];
 
-  const ownOffers = dbUser?.id
-    ? listingOffersForCompare
-        .filter((o) => o.userId === dbUser.id)
-        .map((o) => ({
-          id: o.id,
-          amount: o.amount,
-          currency: o.currency as OfferCurrencyCode,
-          createdAt: o.createdAt,
-        }))
-    : [];
+  const ownOffers = ownOfferRows.map((o) => ({
+    id: o.id,
+    amount: o.amount,
+    currency: o.currency as OfferCurrencyCode,
+    createdAt: o.updatedAt,
+  }));
 
   const hasHigherOffer =
     Boolean(dbUser?.id) &&

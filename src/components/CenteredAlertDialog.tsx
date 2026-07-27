@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/body-scroll-lock";
 
@@ -21,6 +21,8 @@ export function CenteredAlertDialog({
   confirmLabel = "OK",
 }: Props) {
   const [mounted, setMounted] = useState(false);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     setMounted(true);
@@ -31,14 +33,14 @@ export function CenteredAlertDialog({
 
     lockBodyScroll();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" || e.key === "Enter") onClose();
+      if (e.key === "Escape" || e.key === "Enter") onCloseRef.current();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       unlockBodyScroll();
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || !mounted || !message) return null;
 
@@ -47,7 +49,7 @@ export function CenteredAlertDialog({
       <div
         className="absolute inset-0 bg-neutral-950/45 backdrop-blur-[2px]"
         aria-hidden
-        onClick={onClose}
+        onClick={() => onCloseRef.current()}
       />
       <div className="absolute inset-0 flex items-center justify-center px-4 py-6">
         <div
@@ -73,7 +75,7 @@ export function CenteredAlertDialog({
             <button
               type="button"
               autoFocus
-              onClick={onClose}
+              onClick={() => onCloseRef.current()}
               className="inline-flex h-9 min-w-[4.5rem] items-center justify-center rounded-md bg-neutral-900 px-4 text-[13px] font-medium text-white transition hover:bg-neutral-800"
             >
               {confirmLabel}

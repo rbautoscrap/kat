@@ -91,6 +91,7 @@ export async function loadMyOfferListings(
       amount: true,
       currency: true,
       createdAt: true,
+      updatedAt: true,
       listing: {
         select: {
           id: true,
@@ -101,13 +102,17 @@ export async function loadMyOfferListings(
         },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
     take: 500,
   });
 
   type Group = {
     listing: (typeof offers)[number]["listing"];
-    offers: { amount: string; currency: OfferCurrencyCode; createdAt: Date }[];
+    offers: {
+      amount: string;
+      currency: OfferCurrencyCode;
+      activityAt: Date;
+    }[];
   };
 
   const groups = new Map<string, Group>();
@@ -116,7 +121,7 @@ export async function loadMyOfferListings(
     const entry = {
       amount: row.amount,
       currency: row.currency as OfferCurrencyCode,
-      createdAt: row.createdAt,
+      activityAt: row.updatedAt ?? row.createdAt,
     };
     if (existing) {
       existing.offers.push(entry);
@@ -169,7 +174,7 @@ export async function loadMyOfferListings(
         : a,
     );
     const latest = own.reduce((a, b) =>
-      b.createdAt.getTime() > a.createdAt.getTime() ? b : a,
+      b.activityAt.getTime() > a.activityAt.getTime() ? b : a,
     );
 
     const outbid =
@@ -192,7 +197,7 @@ export async function loadMyOfferListings(
       serialNumber: group.listing.serialNumber,
       bestAmountLabel: formatOfferAmount(best.amount, best.currency),
       bestCurrency: best.currency,
-      latestAtLabel: formatOfferTime(latest.createdAt),
+      latestAtLabel: formatOfferTime(latest.activityAt),
       offerCount: own.length,
       outbid,
       ...status,

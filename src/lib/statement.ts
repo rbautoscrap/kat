@@ -54,9 +54,6 @@ export function getStatementBankAccount(id?: string | null) {
   );
 }
 
-/** @deprecated Prefer getStatementBankAccount / STATEMENT_BANK_ACCOUNTS */
-export const STATEMENT_BANK = STATEMENT_BANK_ACCOUNTS[0]!;
-
 /** VAT rate applied on supply amount when includeVat is true */
 export const STATEMENT_VAT_RATE = 0.1;
 

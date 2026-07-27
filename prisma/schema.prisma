@@ -196,17 +196,20 @@ model PurchaseOffer {
   user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   amount    String
   currency  OfferCurrency
-  /** Hashed client IP — blocks multi-account bids from same network */
+  /** Hashed client IP — used for abuse analytics */
   ipHash    String
-  /** Stable browser device cookie — blocks multi-account bids from same browser */
+  /** Stable browser device cookie — used for abuse analytics */
   deviceId  String
   createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
-  @@index([listingId, userId])
+  /** One editable offer per member per listing */
+  @@unique([listingId, userId])
   @@index([listingId, ipHash])
   @@index([listingId, deviceId])
   @@index([listingId, createdAt])
-  @@index([userId, createdAt])
+  @@index([listingId, updatedAt])
+  @@index([userId, updatedAt])
 }
 
 model ListingImage {

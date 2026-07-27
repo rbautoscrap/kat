@@ -288,10 +288,14 @@ export function StatementForm({
   }
 
   function onCurrencyChange(next: OfferCurrencyCode) {
+    const prevDefault: StatementBankAccountId =
+      currency === "KRW" ? "KRW_MAIN" : "FX_HANA";
+    const nextDefault: StatementBankAccountId =
+      next === "KRW" ? "KRW_MAIN" : "FX_HANA";
+    // Only auto-switch when the bank still matches the previous currency default
+    // so a manual bank choice is preserved.
+    setBankAccountId((prev) => (prev === prevDefault ? nextDefault : prev));
     setCurrency(next);
-    if (!initial) {
-      setBankAccountId(next === "KRW" ? "KRW_MAIN" : "FX_HANA");
-    }
     setSelected((prev) =>
       prev.map((s) => ({
         ...s,
