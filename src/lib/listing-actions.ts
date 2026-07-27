@@ -5,6 +5,7 @@ import sharp from "sharp";
 import { z } from "zod";
 import type { ListingCategory } from "@prisma/client";
 import { DEFAULT_LISTING_WHATSAPP } from "@/lib/contact";
+import { parseAuctionEndsAtInput } from "@/lib/format-korea-time";
 import { getAppTempDir, getUploadsDir } from "@/lib/storage-paths";
 import { translateToEnglish } from "@/lib/translate";
 
@@ -199,8 +200,7 @@ const listingFieldsSchema = z.object({
     });
     return;
   }
-  const ends = new Date(raw);
-  if (Number.isNaN(ends.getTime())) {
+  if (!parseAuctionEndsAtInput(raw)) {
     ctx.addIssue({
       code: "custom",
       path: ["auctionEndsAt"],
@@ -254,8 +254,12 @@ export function formDataToListingInput(formData: FormData) {
     : null;
   const auctionEndsAt =
     data.category === "LIVE_AUCTION" && data.auctionEndsAt
-      ? new Date(data.auctionEndsAt)
+      ? parseAuctionEndsAtInput(data.auctionEndsAt)
       : null;
+
+  if (data.category === "LIVE_AUCTION" && !auctionEndsAt) {
+    throw new Error("Live Auction 마감 시간을 설정해 주세요.");
+  }
 
   const { auctionEndsAt: _auctionEndsAtRaw, ...fields } = data;
 

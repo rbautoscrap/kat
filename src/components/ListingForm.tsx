@@ -13,6 +13,10 @@ import type { Listing, ListingImage, ListingCategory } from "@prisma/client";
 import { ADMIN_CATEGORY_LABELS } from "@/lib/admin-labels";
 import { compressImagesForUpload } from "@/lib/browser-compress-image";
 import { DEFAULT_LISTING_WHATSAPP } from "@/lib/contact";
+import {
+  parseAuctionEndsAtInput,
+  toKoreaDatetimeLocalValue,
+} from "@/lib/format-korea-time";
 
 const IMAGE_ACCEPT =
   "image/jpeg,image/png,image/webp,image/gif";
@@ -143,8 +147,7 @@ const AUCTION_CLOCK_PRESETS: AuctionPreset[] = [
 ];
 
 function toDatetimeLocalValue(date: Date) {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return toKoreaDatetimeLocalValue(date);
 }
 
 /** Round up to the next 5-minute mark for quicker, cleaner deadlines. */
@@ -163,23 +166,35 @@ function resolveAuctionPreset(preset: AuctionPreset): Date {
       new Date(Date.now() + preset.minutes * 60 * 1000),
     );
   }
-  const d = new Date();
-  d.setSeconds(0, 0);
-  d.setMilliseconds(0);
-  d.setDate(d.getDate() + preset.dayOffset);
-  d.setHours(preset.hour, preset.minute, 0, 0);
-  // If a "today" clock time already passed, roll to tomorrow.
-  if (d.getTime() <= Date.now()) {
-    d.setDate(d.getDate() + 1);
+
+  // "오늘/내일 HH:mm" as Asia/Seoul wall clock (independent of server TZ).
+  const seoulStamp = toKoreaDatetimeLocalValue(new Date());
+  const [datePart] = seoulStamp.split("T");
+  const [y, mo, d] = datePart.split("-").map(Number);
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  const wallForOffset = (dayOffset: number) => {
+    const day = new Date(Date.UTC(y, mo - 1, d + dayOffset));
+    return `${day.getUTCFullYear()}-${pad(day.getUTCMonth() + 1)}-${pad(day.getUTCDate())}T${pad(preset.hour)}:${pad(preset.minute)}`;
+  };
+
+  let resolved = parseAuctionEndsAtInput(wallForOffset(preset.dayOffset));
+  if (!resolved) {
+    return roundUpToFiveMinutes(new Date(Date.now() + 60 * 60 * 1000));
   }
-  return d;
+  if (resolved.getTime() <= Date.now()) {
+    resolved =
+      parseAuctionEndsAtInput(wallForOffset(preset.dayOffset + 1)) ?? resolved;
+  }
+  return resolved;
 }
 
 function formatAuctionEndsSummary(localValue: string): string {
   if (!localValue) return "";
-  const d = new Date(localValue);
-  if (Number.isNaN(d.getTime())) return "";
+  const d = parseAuctionEndsAtInput(localValue);
+  if (!d) return "";
   return d.toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
     month: "numeric",
     day: "numeric",
     weekday: "short",
@@ -190,8 +205,8 @@ function formatAuctionEndsSummary(localValue: string): string {
 
 function defaultAuctionEndsLocal(existing?: Date | string | null) {
   if (existing) {
-    const d = existing instanceof Date ? existing : new Date(existing);
-    if (!Number.isNaN(d.getTime())) return toDatetimeLocalValue(d);
+    const formatted = toKoreaDatetimeLocalValue(existing);
+    if (formatted) return formatted;
   }
   return toDatetimeLocalValue(
     resolveAuctionPreset({
@@ -309,6 +324,18 @@ export function ListingForm({ listing, onCancel }: Props) {
       return;
     }
     data.set("year", String(yearNum));
+
+    if (category === "LIVE_AUCTION") {
+      const rawEnds = String(data.get("auctionEndsAt") ?? "").trim();
+      const parsedEnds = parseAuctionEndsAtInput(rawEnds);
+      if (!parsedEnds) {
+        setError("Live Auction 마감 시간을 설정해 주세요.");
+        setPending(false);
+        return;
+      }
+      // Send absolute ISO so the server never misreads datetime-local as UTC.
+      data.set("auctionEndsAt", parsedEnds.toISOString());
+    }
 
     // Drop empty file fields so the API does not treat them as uploads
     const coverEntry = data.get("coverImage");
@@ -471,7 +498,7 @@ export function ListingForm({ listing, onCancel }: Props) {
               ) : null}
             </div>
             <p className="mt-0.5 text-[11.5px] tracking-wide text-neutral-500">
-              버튼 한 번으로 설정 · 마감 후 회원에게 숨김 (관리자 조회 가능)
+              버튼 한 번으로 설정 · 한국 시간(KST) 기준 · 마감 후 회원에게 숨김
             </p>
 
             <div className="mt-2.5 grid gap-3 sm:grid-cols-[1fr_14rem] sm:items-end">
