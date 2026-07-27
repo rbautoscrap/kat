@@ -6,7 +6,7 @@ import { resolveSessionDbUser } from "@/lib/listing-access";
 import { prisma } from "@/lib/prisma";
 import {
   formatOfferAmount,
-  isOfferAboveCurrentHighest,
+  meetsOfferMinimumThreshold,
   OFFER_BELOW_HIGHEST_MESSAGE,
   offerInputSchema,
   updateOfferInputSchema,
@@ -82,7 +82,7 @@ export async function submitPurchaseOffer(input: {
       take: 200,
     });
     if (
-      !isOfferAboveCurrentHighest(
+      !meetsOfferMinimumThreshold(
         amount,
         currency,
         existingOffers.map((o) => ({
@@ -191,7 +191,7 @@ export async function updatePurchaseOffer(input: {
       take: 200,
     });
     if (
-      !isOfferAboveCurrentHighest(
+      !meetsOfferMinimumThreshold(
         amount,
         currency,
         otherOffers.map((o) => ({

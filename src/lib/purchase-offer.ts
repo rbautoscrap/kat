@@ -117,20 +117,27 @@ export function highestOfferComparableKrw(
   );
 }
 
+/** Minimum share of the current highest offer required to submit/update. */
+export const OFFER_MIN_RATIO_OF_HIGHEST = 0.8;
+
 /**
- * True when the candidate beats every existing offer on the listing
- * (cross-currency via approximate KRW ranking).
+ * True when the candidate is at least ~80% of the current highest offer
+ * (cross-currency via approximate KRW ranking). Need not beat the top bid.
  */
-export function isOfferAboveCurrentHighest(
+export function meetsOfferMinimumThreshold(
   amount: string,
   currency: OfferCurrencyCode,
   existing: { amount: string; currency: OfferCurrencyCode }[],
 ): boolean {
   const highest = highestOfferComparableKrw(existing);
   if (highest <= 0) return true;
-  return offerToComparableKrw(amount, currency) > highest;
+  const minimum = highest * OFFER_MIN_RATIO_OF_HIGHEST;
+  return offerToComparableKrw(amount, currency) >= minimum;
 }
 
-/** Shown when submit is blocked because a higher offer already exists. */
+/** @deprecated Use meetsOfferMinimumThreshold */
+export const isOfferAboveCurrentHighest = meetsOfferMinimumThreshold;
+
+/** Shown when submit is blocked for being too far below the highest offer. */
 export const OFFER_BELOW_HIGHEST_MESSAGE =
-  "A higher offer already exists. Please enter a higher amount.";
+  "Your offer is too low. Please enter at least about 80% of the current highest offer.";
