@@ -52,6 +52,25 @@ export default async function ListingDetailPage({ params }: Props) {
   const adminView = isAdmin(dbUser?.role ?? session?.user?.role);
   const isSignedIn = Boolean(dbUser?.id || session?.user?.id);
 
+  // Admin opened the listing → clear "new offer" highlight on the admin list.
+  if (adminView) {
+    const latestOffer = await prisma.purchaseOffer.findFirst({
+      where: { listingId: listing.id },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    });
+    if (
+      latestOffer &&
+      (!listing.offersSeenAt ||
+        latestOffer.createdAt.getTime() > listing.offersSeenAt.getTime())
+    ) {
+      await prisma.listing.update({
+        where: { id: listing.id },
+        data: { offersSeenAt: new Date() },
+      });
+    }
+  }
+
   if (
     listing.category === "LIVE_AUCTION" &&
     !canAccessLiveAuctionAsSignedIn(isSignedIn)

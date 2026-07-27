@@ -210,6 +210,19 @@ if (existsSync(ensureSignup)) {
   });
 }
 
+const ensureListing = path.join(
+  process.cwd(),
+  "scripts",
+  "ensure-listing-columns.mjs",
+);
+if (existsSync(ensureListing)) {
+  console.log("[start-prod] Ensuring listing columns…");
+  spawnSync(process.execPath, [ensureListing], {
+    stdio: "inherit",
+    env: process.env,
+  });
+}
+
 const ensureAdmin = path.join(process.cwd(), "scripts", "ensure-admin.mjs");
 if (existsSync(ensureAdmin)) {
   console.log("[start-prod] Ensuring ADMIN account…");

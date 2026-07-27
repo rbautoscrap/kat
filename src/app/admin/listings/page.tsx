@@ -184,6 +184,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
         id: true,
         amount: true,
         currency: true,
+        createdAt: true,
         user: { select: { name: true } },
       },
     },
@@ -431,27 +432,32 @@ export default async function AdminListingsPage({ searchParams }: Props) {
             {listings.map((listing) => {
               const offerCount = listing._count.purchaseOffers;
               const hasOffers = offerCount > 0;
+              const latestOfferAt = listing.purchaseOffers[0]?.createdAt ?? null;
+              const hasUnreadOffers =
+                hasOffers &&
+                Boolean(latestOfferAt) &&
+                (!listing.offersSeenAt ||
+                  latestOfferAt!.getTime() > listing.offersSeenAt.getTime());
               const cost = parseCostPrice(listing.costPrice);
               const tier = costTier(cost);
               const days = displayAccumulatedDays(listing);
 
-              const rowClass =
-                tier === "high"
+              // Unread offers: orange. After admin views the listing: white (unless cost tier).
+              const rowClass = hasUnreadOffers
+                ? "bg-orange-100 hover:bg-orange-100/90"
+                : tier === "high"
                   ? "bg-red-50 hover:bg-red-100/80"
                   : tier === "mid"
                     ? "bg-orange-50 hover:bg-orange-100/70"
-                    : hasOffers
-                      ? "bg-amber-50/90 hover:bg-amber-50"
-                      : "hover:bg-neutral-50/70";
+                    : "bg-white hover:bg-neutral-50/70";
 
-              const edgeClass =
-                tier === "high"
+              const edgeClass = hasUnreadOffers
+                ? "border-l-[3px] border-l-orange-500"
+                : tier === "high"
                   ? "border-l-[3px] border-l-red-600"
                   : tier === "mid"
                     ? "border-l-[3px] border-l-orange-500"
-                    : hasOffers
-                      ? "border-l-[3px] border-l-amber-500"
-                      : "border-l-[3px] border-l-transparent";
+                    : "border-l-[3px] border-l-transparent";
 
               return (
                 <tr key={listing.id} className={rowClass}>
@@ -460,11 +466,13 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                       <Link
                         href={`/listings/${listing.id}`}
                         className={`block truncate text-[13.5px] font-medium leading-snug hover:underline ${
-                          tier === "high"
-                            ? "text-red-900"
-                            : tier === "mid"
-                              ? "text-orange-950"
-                              : "text-neutral-800"
+                          hasUnreadOffers
+                            ? "text-orange-950"
+                            : tier === "high"
+                              ? "text-red-900"
+                              : tier === "mid"
+                                ? "text-orange-950"
+                                : "text-neutral-800"
                         }`}
                         title={listing.title}
                       >
@@ -492,9 +500,13 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                             주의 원가
                           </span>
                         ) : null}
-                        {hasOffers ? (
-                          <span className="inline-flex rounded bg-amber-100 px-1.5 py-0.5 text-[12.5px] font-medium leading-none text-amber-900">
+                        {hasUnreadOffers ? (
+                          <span className="inline-flex rounded bg-orange-200 px-1.5 py-0.5 text-[12.5px] font-medium leading-none text-orange-950">
                             희망가 접수
+                          </span>
+                        ) : hasOffers ? (
+                          <span className="inline-flex rounded bg-neutral-100 px-1.5 py-0.5 text-[12.5px] font-medium leading-none text-neutral-600">
+                            희망가 확인됨
                           </span>
                         ) : null}
                       </div>

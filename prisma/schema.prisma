@@ -103,6 +103,11 @@ model Listing {
   accumulatedDays  String?
   /** Admin-only detail page view counter (not shown publicly) */
   viewCount        Int             @default(0)
+  /**
+   * When an admin last opened this listing after offers arrived.
+   * Rows stay highlighted until this is at/after the newest offer.
+   */
+  offersSeenAt     DateTime?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   authorId         String
