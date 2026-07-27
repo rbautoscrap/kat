@@ -10,6 +10,7 @@ import {
   MAX_OFFERS_PER_LISTING,
   OFFER_BELOW_HIGHEST_MESSAGE,
   offerInputSchema,
+  updateOfferInputSchema,
   type OfferCurrencyCode,
 } from "@/lib/purchase-offer";
 import {
@@ -152,6 +153,108 @@ export async function submitPurchaseOffer(input: {
     };
   } catch (error) {
     console.error("submitPurchaseOffer failed:", error);
+    return {
+      ok: false,
+      error: "Something went wrong. Please try again in a moment.",
+    };
+  }
+}
+
+export type UpdateOfferResult =
+  | {
+      ok: true;
+      amountLabel: string;
+      currency: OfferCurrencyCode;
+    }
+  | { ok: false; error: string; code?: "BELOW_HIGHEST" };
+
+/** Member: update amount/currency on their own offer. */
+export async function updatePurchaseOffer(input: {
+  offerId: string;
+  currency: string;
+  amount: string;
+}): Promise<UpdateOfferResult> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { ok: false, error: "Please sign in to update your offer." };
+    }
+
+    const parsed = updateOfferInputSchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        ok: false,
+        error: parsed.error.issues[0]?.message ?? "Invalid offer.",
+      };
+    }
+
+    const { offerId, currency, amount } = parsed.data;
+    const userId = session.user.id;
+
+    const offer = await prisma.purchaseOffer.findUnique({
+      where: { id: offerId },
+      select: {
+        id: true,
+        userId: true,
+        listingId: true,
+        listing: { select: { saleStatus: true } },
+      },
+    });
+    if (!offer || offer.userId !== userId) {
+      return { ok: false, error: "Offer not found." };
+    }
+    if (offer.listing.saleStatus === "SOLD") {
+      return {
+        ok: false,
+        error: "This vehicle has been sold and offers can no longer be changed.",
+      };
+    }
+
+    const otherOffers = await prisma.purchaseOffer.findMany({
+      where: { listingId: offer.listingId, NOT: { id: offer.id } },
+      select: { amount: true, currency: true },
+      take: 200,
+    });
+    if (
+      !isOfferAboveCurrentHighest(
+        amount,
+        currency,
+        otherOffers.map((o) => ({
+          amount: o.amount,
+          currency: o.currency as OfferCurrencyCode,
+        })),
+      )
+    ) {
+      return {
+        ok: false,
+        code: "BELOW_HIGHEST",
+        error: OFFER_BELOW_HIGHEST_MESSAGE,
+      };
+    }
+
+    await prisma.$transaction([
+      prisma.purchaseOffer.update({
+        where: { id: offer.id },
+        data: { amount, currency },
+      }),
+      prisma.listing.update({
+        where: { id: offer.listingId },
+        data: { updatedAt: new Date() },
+      }),
+    ]);
+
+    revalidatePath(`/listings/${offer.listingId}`);
+    revalidatePath("/offers");
+    revalidatePath("/admin");
+    revalidatePath("/admin/listings");
+
+    return {
+      ok: true,
+      amountLabel: formatOfferAmount(amount, currency),
+      currency,
+    };
+  } catch (error) {
+    console.error("updatePurchaseOffer failed:", error);
     return {
       ok: false,
       error: "Something went wrong. Please try again in a moment.",

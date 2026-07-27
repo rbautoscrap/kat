@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { submitPurchaseOffer } from "@/lib/offer-actions";
+import {
+  submitPurchaseOffer,
+  updatePurchaseOffer,
+} from "@/lib/offer-actions";
 import {
   CURRENCY_META,
   MAX_OFFERS_PER_LISTING,
@@ -11,6 +14,7 @@ import {
 } from "@/lib/purchase-offer";
 
 type OwnOffer = {
+  id: string;
   amount: string;
   currency: OfferCurrencyCode;
   createdAt: string;
@@ -64,6 +68,25 @@ function formatAmountInput(raw: string, currency: OfferCurrencyCode) {
   return `${intFormatted}.${decimals}`;
 }
 
+function PencilIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M4 20h4l10.5-10.5a1.5 1.5 0 0 0 0-2.12L16.62 5.5a1.5 1.5 0 0 0-2.12 0L4 16v4z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M13.5 6.5 17.5 10.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function PurchaseOfferPanel({
   listingId,
   ownOffers = [],
@@ -80,7 +103,49 @@ export function PurchaseOfferPanel({
   const [success, setSuccess] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editCurrency, setEditCurrency] = useState<OfferCurrencyCode>("KRW");
+  const [editAmount, setEditAmount] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+
   const preview = formatPreview(amount, currency);
+  const editPreview = formatPreview(editAmount, editCurrency);
+
+  function beginEdit(offer: OwnOffer) {
+    setEditingId(offer.id);
+    setEditCurrency(offer.currency);
+    setEditAmount(formatAmountInput(offer.amount, offer.currency) ?? offer.amount);
+    setEditError(null);
+    setError(null);
+    setSuccess(null);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditAmount("");
+    setEditError(null);
+  }
+
+  function saveEdit(offerId: string) {
+    setEditError(null);
+    startTransition(async () => {
+      const result = await updatePurchaseOffer({
+        offerId,
+        currency: editCurrency,
+        amount: editAmount,
+      });
+      if (!result.ok) {
+        if (result.code === "BELOW_HIGHEST") {
+          window.alert(result.error);
+        }
+        setEditError(result.error);
+        return;
+      }
+      setSuccess(`Updated ${result.amountLabel}`);
+      cancelEdit();
+      router.refresh();
+    });
+  }
 
   return (
     <section className="rounded-sm border border-[var(--line)] bg-white px-3.5 py-3 sm:px-4">
@@ -105,8 +170,9 @@ export function PurchaseOfferPanel({
         </div>
         {success ? (
           <p className="text-[12.5px] tracking-wide text-emerald-700">
-            Submitted {success}
-            {remaining > 0 ? ` · ${remaining} left` : ""}
+            {success.startsWith("Updated")
+              ? success
+              : `Submitted ${success}${remaining > 0 ? ` · ${remaining} left` : ""}`}
           </p>
         ) : null}
       </div>
@@ -121,20 +187,131 @@ export function PurchaseOfferPanel({
       ) : null}
 
       {ownOffers.length > 0 ? (
-        <ul className="mb-3 space-y-1 border-b border-[var(--line)] pb-3">
-          {ownOffers.map((offer, index) => (
-            <li
-              key={`${offer.createdAt}-${index}`}
-              className="flex flex-wrap items-baseline justify-between gap-x-3 text-[13px] tracking-wide"
-            >
-              <span className="font-medium tabular-nums text-neutral-800">
-                {formatPreview(offer.amount, offer.currency) ?? offer.amount}
-              </span>
-              <span className="text-[12px] text-neutral-400">
-                {offer.createdAt}
-              </span>
-            </li>
-          ))}
+        <ul className="mb-3 space-y-2 border-b border-[var(--line)] pb-3">
+          {ownOffers.map((offer) => {
+            const isEditing = editingId === offer.id;
+            return (
+              <li key={offer.id} className="text-[13px] tracking-wide">
+                {isEditing ? (
+                  <div className="rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-2.5">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                      <div
+                        className="inline-flex h-8 items-center rounded-md border border-neutral-300 bg-white p-0.5"
+                        role="radiogroup"
+                        aria-label="Edit currency"
+                      >
+                        {CURRENCY_OPTIONS.map((code) => {
+                          const selected = editCurrency === code;
+                          return (
+                            <button
+                              key={code}
+                              type="button"
+                              role="radio"
+                              aria-checked={selected}
+                              disabled={pending}
+                              onClick={() => {
+                                setEditCurrency(code);
+                                setEditAmount(
+                                  (prev) =>
+                                    formatAmountInput(prev, code) ?? "",
+                                );
+                              }}
+                              className={`min-w-[2.75rem] rounded-[5px] px-1.5 py-1 text-[11.5px] font-medium tracking-wide transition ${
+                                selected
+                                  ? "bg-neutral-900 text-white"
+                                  : "text-neutral-600 hover:bg-neutral-50"
+                              } disabled:opacity-60`}
+                            >
+                              {CURRENCY_META[code].symbol}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="flex h-8 min-w-0 flex-1 overflow-hidden rounded-md border border-neutral-300 bg-white focus-within:ring-2 focus-within:ring-neutral-800/15 sm:max-w-[12rem]">
+                        <span className="flex w-7 shrink-0 items-center justify-center border-r border-neutral-200 text-[13px] font-semibold text-neutral-800">
+                          {CURRENCY_META[editCurrency].symbol}
+                        </span>
+                        <input
+                          inputMode={
+                            editCurrency === "KRW" ? "numeric" : "decimal"
+                          }
+                          autoComplete="off"
+                          aria-label="Edit offer amount"
+                          value={editAmount}
+                          disabled={pending}
+                          onChange={(e) => {
+                            const formatted = formatAmountInput(
+                              e.target.value,
+                              editCurrency,
+                            );
+                            if (formatted === null) return;
+                            setEditAmount(formatted);
+                          }}
+                          className="h-full min-w-0 flex-1 bg-transparent px-2 text-[13.5px] font-semibold tabular-nums text-neutral-900 outline-none disabled:opacity-60"
+                        />
+                      </div>
+                      <div className="flex gap-1.5">
+                        <button
+                          type="button"
+                          disabled={pending || !editAmount.trim()}
+                          onClick={() => saveEdit(offer.id)}
+                          className="inline-flex h-8 items-center rounded-md bg-neutral-900 px-3 text-[12px] font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
+                        >
+                          {pending ? "…" : "Save"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={pending}
+                          onClick={cancelEdit}
+                          className="inline-flex h-8 items-center rounded-md border border-neutral-300 bg-white px-3 text-[12px] font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-60"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                    {editPreview ? (
+                      <p className="mt-1.5 text-[11.5px] text-neutral-500">
+                        New amount ·{" "}
+                        <span className="font-medium tabular-nums text-neutral-800">
+                          {editPreview}
+                        </span>
+                      </p>
+                    ) : null}
+                    {editError ? (
+                      <p
+                        role="alert"
+                        className="mt-1.5 text-[12px] text-red-600"
+                      >
+                        {editError}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <span className="font-medium tabular-nums text-neutral-800">
+                        {formatPreview(offer.amount, offer.currency) ??
+                          offer.amount}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={pending || Boolean(editingId)}
+                        onClick={() => beginEdit(offer)}
+                        title="Edit offer"
+                        aria-label="Edit offer amount"
+                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <PencilIcon />
+                      </button>
+                    </div>
+                    <span className="text-[12px] text-neutral-400">
+                      {offer.createdAt}
+                    </span>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       ) : null}
 
@@ -142,6 +319,9 @@ export function PurchaseOfferPanel({
         <p className="text-[13px] tracking-wide text-neutral-500">
           You have used all {MAX_OFFERS_PER_LISTING} offers for this listing.
           Amounts are visible only to you and the administrator.
+          {ownOffers.length > 0
+            ? " You can still edit an existing offer with the pencil icon."
+            : ""}
         </p>
       ) : (
         <form
@@ -187,7 +367,7 @@ export function PurchaseOfferPanel({
                       type="button"
                       role="radio"
                       aria-checked={selected}
-                      disabled={pending}
+                      disabled={pending || Boolean(editingId)}
                       onClick={() => {
                         setCurrency(code);
                         setAmount(
@@ -226,7 +406,7 @@ export function PurchaseOfferPanel({
                   aria-label="Desired amount"
                   placeholder={currency === "KRW" ? "100,000" : "12,000"}
                   value={amount}
-                  disabled={pending}
+                  disabled={pending || Boolean(editingId)}
                   onChange={(e) => {
                     const formatted = formatAmountInput(
                       e.target.value,
@@ -254,7 +434,7 @@ export function PurchaseOfferPanel({
 
             <button
               type="submit"
-              disabled={pending || !amount.trim()}
+              disabled={pending || !amount.trim() || Boolean(editingId)}
               className="inline-flex h-9 w-full shrink-0 items-center justify-center rounded-md bg-neutral-900 px-4 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-white sm:mt-[1.375rem] sm:w-auto"
             >
               {pending ? "…" : "Submit"}

@@ -17,25 +17,33 @@ export const CURRENCY_META: Record<
   EUR: { label: "EUR", symbol: "€", hint: "Euro" },
 };
 
+const offerAmountField = z
+  .string()
+  .trim()
+  .min(1, "Please enter an amount.")
+  .transform((v) => v.replace(/,/g, "").replace(/\s/g, ""))
+  .refine((v) => /^\d+(\.\d{1,2})?$/.test(v), {
+    message: "Enter a valid amount (up to 2 decimal places).",
+  })
+  .refine((v) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0;
+  }, "Amount must be greater than 0.")
+  .refine((v) => {
+    const n = Number(v);
+    return n <= 1_000_000_000_000;
+  }, "Amount is too large.");
+
 export const offerInputSchema = z.object({
   listingId: z.string().min(1),
   currency: z.enum(OFFER_CURRENCIES),
-  amount: z
-    .string()
-    .trim()
-    .min(1, "Please enter an amount.")
-    .transform((v) => v.replace(/,/g, "").replace(/\s/g, ""))
-    .refine((v) => /^\d+(\.\d{1,2})?$/.test(v), {
-      message: "Enter a valid amount (up to 2 decimal places).",
-    })
-    .refine((v) => {
-      const n = Number(v);
-      return Number.isFinite(n) && n > 0;
-    }, "Amount must be greater than 0.")
-    .refine((v) => {
-      const n = Number(v);
-      return n <= 1_000_000_000_000;
-    }, "Amount is too large."),
+  amount: offerAmountField,
+});
+
+export const updateOfferInputSchema = z.object({
+  offerId: z.string().min(1),
+  currency: z.enum(OFFER_CURRENCIES),
+  amount: offerAmountField,
 });
 
 export function formatOfferAmount(amount: string, currency: OfferCurrencyCode) {

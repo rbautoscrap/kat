@@ -96,6 +96,7 @@ export default async function ListingDetailPage({ params }: Props) {
       ? await prisma.purchaseOffer.findMany({
           where: { listingId: listing.id },
           select: {
+            id: true,
             userId: true,
             amount: true,
             currency: true,
@@ -111,6 +112,7 @@ export default async function ListingDetailPage({ params }: Props) {
         .filter((o) => o.userId === dbUser.id)
         .slice(0, 3)
         .map((o) => ({
+          id: o.id,
           amount: o.amount,
           currency: o.currency as OfferCurrencyCode,
           createdAt: o.createdAt,
@@ -279,6 +281,7 @@ export default async function ListingDetailPage({ params }: Props) {
             listingId={listing.id}
             hasHigherOffer={hasHigherOffer}
             ownOffers={ownOffers.map((o) => ({
+              id: o.id,
               amount: o.amount,
               currency: o.currency,
               createdAt: o.createdAt
