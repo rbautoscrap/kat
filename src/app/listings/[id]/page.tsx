@@ -278,6 +278,7 @@ export default async function ListingDetailPage({ params }: Props) {
       {listing.category === "LIVE_AUCTION" && listing.auctionEndsAt ? (
         <AuctionCountdown
           endsAt={listing.auctionEndsAt.toISOString()}
+          emphasize={!adminView}
           className={adminView && auctionEnded ? "opacity-90" : undefined}
         />
       ) : null}
@@ -290,43 +291,88 @@ export default async function ListingDetailPage({ params }: Props) {
           />
         </div>
 
-        <dl className="grid grid-cols-1 sm:grid-cols-2">
-          {shortSpecs.map((item, index) => {
-            const total = shortSpecs.length;
-            const isLeft = index % 2 === 0;
-            const isLast = index === total - 1;
-            const oddLoneLast = total % 2 === 1 && isLast;
-            const lastRowStart = total % 2 === 0 ? total - 2 : total - 1;
-            const inLastRow = index >= lastRowStart;
-            return (
-              <div
-                key={item.label}
-                className={`grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] items-center border-[var(--line)] text-[12.5px] sm:grid-cols-[7rem_minmax(0,1fr)] sm:text-[13px] ${
-                  inLastRow ? "" : "border-b"
-                } ${isLeft && !oddLoneLast ? "sm:border-r" : ""} ${
-                  oddLoneLast ? "sm:col-span-2" : ""
-                }`}
-              >
-                <dt className="border-r border-[var(--line)] bg-neutral-50/90 px-2 py-1.5 font-medium tracking-wide text-neutral-500 sm:px-2.5">
-                  {item.label}
-                </dt>
-                <dd className="min-w-0 break-words whitespace-pre-wrap px-2 py-1.5 tracking-wide text-neutral-700 sm:px-2.5">
+        {/* Mobile: stacked pairs. Desktop: 4-col table so Notes aligns with VIN gutter. */}
+        <dl className="sm:hidden">
+          {shortSpecs.map((item, index) => (
+            <div
+              key={item.label}
+              className={`grid min-h-[2.5rem] grid-cols-[6.5rem_minmax(0,1fr)] items-stretch border-[var(--line)] text-[12.5px] ${
+                index < shortSpecs.length - 1 ? "border-b" : ""
+              }`}
+            >
+              <dt className="flex items-center border-r border-[var(--line)] bg-neutral-50/90 px-2 py-2 font-medium tracking-wide text-neutral-500">
+                {item.label}
+              </dt>
+              <dd className="flex min-w-0 items-center px-2 py-2 tracking-wide text-neutral-700">
+                <span className="min-w-0 break-words whitespace-pre-wrap">
                   {item.value}
-                </dd>
-              </div>
-            );
-          })}
+                </span>
+              </dd>
+            </div>
+          ))}
+          <div className="grid min-w-0 grid-cols-[6.5rem_minmax(0,1fr)] items-stretch border-t border-[var(--line)] text-[12.5px]">
+            <div className="border-r border-[var(--line)] bg-neutral-50/90 px-2 py-2.5 font-medium tracking-wide text-neutral-500">
+              Notes
+            </div>
+            <div className="min-h-[3.25rem] min-w-0 break-words whitespace-pre-wrap px-2 py-2.5 leading-relaxed tracking-wide text-neutral-700">
+              {notesValue}
+            </div>
+          </div>
         </dl>
 
-        {/* Full-width Notes so long text does not stretch neighboring short cells. */}
-        <div className="grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] border-t border-[var(--line)] text-[12.5px] sm:grid-cols-[7rem_minmax(0,1fr)] sm:text-[13px]">
-          <div className="border-r border-[var(--line)] bg-neutral-50/90 px-2 py-1.5 font-medium tracking-wide text-neutral-500 sm:px-2.5">
-            Notes
-          </div>
-          <div className="min-w-0 break-words whitespace-pre-wrap px-2 py-1.5 tracking-wide text-neutral-700 sm:px-2.5">
-            {notesValue}
-          </div>
-        </div>
+        <table className="hidden w-full table-fixed border-collapse text-[13px] sm:table">
+          <colgroup>
+            <col className="w-[7rem]" />
+            <col />
+            <col className="w-[7rem]" />
+            <col />
+          </colgroup>
+          <tbody>
+            {Array.from(
+              { length: Math.ceil(shortSpecs.length / 2) },
+              (_, row) => {
+                const left = shortSpecs[row * 2];
+                const right = shortSpecs[row * 2 + 1];
+                return (
+                  <tr key={left.label} className="border-b border-[var(--line)]">
+                    <th className="border-r border-[var(--line)] bg-neutral-50/90 px-2.5 py-2 text-left align-middle font-medium tracking-wide text-neutral-500">
+                      {left.label}
+                    </th>
+                    <td className="min-w-0 border-r border-[var(--line)] px-2.5 py-2 align-middle tracking-wide break-words whitespace-pre-wrap text-neutral-700">
+                      {left.value}
+                    </td>
+                    {right ? (
+                      <>
+                        <th className="border-r border-[var(--line)] bg-neutral-50/90 px-2.5 py-2 text-left align-middle font-medium tracking-wide text-neutral-500">
+                          {right.label}
+                        </th>
+                        <td className="min-w-0 px-2.5 py-2 align-middle tracking-wide break-words whitespace-pre-wrap text-neutral-700">
+                          {right.value}
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <th className="border-r border-[var(--line)] bg-neutral-50/90" />
+                        <td />
+                      </>
+                    )}
+                  </tr>
+                );
+              },
+            )}
+            <tr className="border-[var(--line)]">
+              <th className="border-r border-[var(--line)] bg-neutral-50/90 px-2.5 py-2.5 text-left align-top font-medium tracking-wide text-neutral-500">
+                Notes
+              </th>
+              <td
+                colSpan={3}
+                className="min-h-[3.25rem] min-w-0 px-2.5 py-2.5 align-top leading-relaxed tracking-wide break-words whitespace-pre-wrap text-neutral-700"
+              >
+                {notesValue}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       {/* Guests see nothing. Members see form or their own offer only. */}

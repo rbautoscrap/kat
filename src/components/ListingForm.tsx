@@ -115,18 +115,77 @@ function resolveFuelType(value?: string | null) {
 const selectClass =
   "h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400 focus:bg-white";
 
-const AUCTION_PRESETS = [
-  { label: "1시간", hours: 1 },
-  { label: "3시간", hours: 3 },
-  { label: "6시간", hours: 6 },
-  { label: "12시간", hours: 12 },
-  { label: "1일", hours: 24 },
-  { label: "3일", hours: 72 },
-] as const;
+type AuctionPreset =
+  | { id: string; label: string; kind: "relative"; minutes: number }
+  | {
+      id: string;
+      label: string;
+      kind: "clock";
+      dayOffset: number;
+      hour: number;
+      minute: number;
+    };
+
+const AUCTION_QUICK_PRESETS: AuctionPreset[] = [
+  { id: "m30", label: "30분", kind: "relative", minutes: 30 },
+  { id: "h1", label: "1시간", kind: "relative", minutes: 60 },
+  { id: "h3", label: "3시간", kind: "relative", minutes: 180 },
+  { id: "h6", label: "6시간", kind: "relative", minutes: 360 },
+  { id: "h12", label: "12시간", kind: "relative", minutes: 720 },
+  { id: "d1", label: "1일", kind: "relative", minutes: 1440 },
+];
+
+const AUCTION_CLOCK_PRESETS: AuctionPreset[] = [
+  { id: "today14", label: "오늘 14시", kind: "clock", dayOffset: 0, hour: 14, minute: 0 },
+  { id: "today18", label: "오늘 18시", kind: "clock", dayOffset: 0, hour: 18, minute: 0 },
+  { id: "tomorrow14", label: "내일 14시", kind: "clock", dayOffset: 1, hour: 14, minute: 0 },
+  { id: "tomorrow18", label: "내일 18시", kind: "clock", dayOffset: 1, hour: 18, minute: 0 },
+];
 
 function toDatetimeLocalValue(date: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+/** Round up to the next 5-minute mark for quicker, cleaner deadlines. */
+function roundUpToFiveMinutes(date: Date) {
+  const d = new Date(date);
+  d.setSeconds(0, 0);
+  const mins = d.getMinutes();
+  const rem = mins % 5;
+  if (rem !== 0) d.setMinutes(mins + (5 - rem));
+  return d;
+}
+
+function resolveAuctionPreset(preset: AuctionPreset): Date {
+  if (preset.kind === "relative") {
+    return roundUpToFiveMinutes(
+      new Date(Date.now() + preset.minutes * 60 * 1000),
+    );
+  }
+  const d = new Date();
+  d.setSeconds(0, 0);
+  d.setMilliseconds(0);
+  d.setDate(d.getDate() + preset.dayOffset);
+  d.setHours(preset.hour, preset.minute, 0, 0);
+  // If a "today" clock time already passed, roll to tomorrow.
+  if (d.getTime() <= Date.now()) {
+    d.setDate(d.getDate() + 1);
+  }
+  return d;
+}
+
+function formatAuctionEndsSummary(localValue: string): string {
+  if (!localValue) return "";
+  const d = new Date(localValue);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("ko-KR", {
+    month: "numeric",
+    day: "numeric",
+    weekday: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 function defaultAuctionEndsLocal(existing?: Date | string | null) {
@@ -134,7 +193,14 @@ function defaultAuctionEndsLocal(existing?: Date | string | null) {
     const d = existing instanceof Date ? existing : new Date(existing);
     if (!Number.isNaN(d.getTime())) return toDatetimeLocalValue(d);
   }
-  return toDatetimeLocalValue(new Date(Date.now() + 24 * 60 * 60 * 1000));
+  return toDatetimeLocalValue(
+    resolveAuctionPreset({
+      id: "d1",
+      label: "1일",
+      kind: "relative",
+      minutes: 1440,
+    }),
+  );
 }
 
 export function ListingForm({ listing, onCancel }: Props) {
@@ -160,8 +226,35 @@ export function ListingForm({ listing, onCancel }: Props) {
         ?.auctionEndsAt,
     ),
   );
+  const [auctionPresetId, setAuctionPresetId] = useState<string | null>(() =>
+    listing?.category === "LIVE_AUCTION" &&
+    (listing as { auctionEndsAt?: Date | string | null }).auctionEndsAt
+      ? null
+      : "d1",
+  );
   const coverInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  function applyAuctionPreset(preset: AuctionPreset) {
+    setAuctionEndsAt(toDatetimeLocalValue(resolveAuctionPreset(preset)));
+    setAuctionPresetId(preset.id);
+  }
+
+  function onCategoryChange(next: ListingCategory) {
+    setCategory(next);
+    if (
+      next === "LIVE_AUCTION" &&
+      !(listing as { auctionEndsAt?: Date | string | null } | undefined)
+        ?.auctionEndsAt
+    ) {
+      applyAuctionPreset({
+        id: "d1",
+        label: "1일",
+        kind: "relative",
+        minutes: 1440,
+      });
+    }
+  }
 
   const applyCoverFile = useCallback(
     (file: File | null) => {
@@ -336,7 +429,9 @@ export function ListingForm({ listing, onCancel }: Props) {
             name="category"
             required
             value={category}
-            onChange={(e) => setCategory(e.target.value as ListingCategory)}
+            onChange={(e) =>
+              onCategoryChange(e.target.value as ListingCategory)
+            }
             className={selectClass}
           >
             {categories.map((c) => (
@@ -362,50 +457,82 @@ export function ListingForm({ listing, onCancel }: Props) {
             defaultValue={listing?.year?.toString()}
             className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400 focus:bg-white"
           />
-          <span className="mt-1 block text-[11.5px] text-neutral-400">
-            4자리 연도만 입력 (예: 2024)
-          </span>
         </label>
         {category === "LIVE_AUCTION" ? (
-          <div className="sm:col-span-2 rounded-md border border-rose-200 bg-rose-50/40 px-3 py-3">
-            <p className="text-[13px] font-medium tracking-wide text-neutral-700">
-              경매 마감 시간
-            </p>
-            <p className="mt-0.5 text-[12px] tracking-wide text-neutral-500">
-              마감되면 회원 목록에서 자동으로 숨겨집니다. 관리자는 계속 조회·오퍼
-              확인이 가능합니다.
-            </p>
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {AUCTION_PRESETS.map((preset) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() =>
-                    setAuctionEndsAt(
-                      toDatetimeLocalValue(
-                        new Date(Date.now() + preset.hours * 60 * 60 * 1000),
-                      ),
-                    )
-                  }
-                  className="rounded border border-neutral-200 bg-white px-2.5 py-1 text-[12px] tracking-wide text-neutral-700 hover:border-neutral-400"
-                >
-                  {preset.label}
-                </button>
-              ))}
+          <div className="sm:col-span-2 rounded-md border border-rose-200 bg-rose-50/40 px-3 py-3 sm:px-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <p className="text-[13px] font-medium tracking-wide text-neutral-700">
+                경매 마감 시간
+              </p>
+              {auctionEndsAt ? (
+                <p className="text-[12.5px] font-medium tracking-wide text-rose-800">
+                  {formatAuctionEndsSummary(auctionEndsAt)}
+                </p>
+              ) : null}
             </div>
-            <label className="mt-2.5 block text-sm">
-              <span className="mb-1 block text-[12px] font-medium tracking-wide text-neutral-600">
-                마감 일시
-              </span>
-              <input
-                name="auctionEndsAt"
-                type="datetime-local"
-                required
-                value={auctionEndsAt}
-                onChange={(e) => setAuctionEndsAt(e.target.value)}
-                className="h-10 w-full max-w-sm rounded-md border border-neutral-200 bg-white px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400"
-              />
-            </label>
+            <p className="mt-0.5 text-[11.5px] tracking-wide text-neutral-500">
+              버튼 한 번으로 설정 · 마감 후 회원에게 숨김 (관리자 조회 가능)
+            </p>
+
+            <div className="mt-2.5 grid gap-3 sm:grid-cols-[1fr_14rem] sm:items-end">
+              <div className="space-y-2">
+                <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
+                  {AUCTION_QUICK_PRESETS.map((preset) => {
+                    const active = auctionPresetId === preset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => applyAuctionPreset(preset)}
+                        className={`h-9 rounded border text-[12.5px] font-medium tracking-wide transition ${
+                          active
+                            ? "border-rose-700 bg-rose-700 text-white"
+                            : "border-neutral-200 bg-white text-neutral-700 hover:border-rose-300"
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                  {AUCTION_CLOCK_PRESETS.map((preset) => {
+                    const active = auctionPresetId === preset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => applyAuctionPreset(preset)}
+                        className={`h-9 rounded border text-[12.5px] font-medium tracking-wide transition ${
+                          active
+                            ? "border-neutral-800 bg-neutral-800 text-white"
+                            : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400"
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <label className="block text-sm">
+                <span className="mb-1 block text-[12px] font-medium tracking-wide text-neutral-600">
+                  직접 선택
+                </span>
+                <input
+                  name="auctionEndsAt"
+                  type="datetime-local"
+                  required
+                  value={auctionEndsAt}
+                  onChange={(e) => {
+                    setAuctionEndsAt(e.target.value);
+                    setAuctionPresetId(null);
+                  }}
+                  className="h-9 w-full rounded-md border border-neutral-200 bg-white px-2.5 text-[13px] tracking-wide outline-none focus:border-neutral-400"
+                />
+              </label>
+            </div>
           </div>
         ) : null}
         <Field
