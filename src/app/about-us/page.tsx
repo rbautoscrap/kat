@@ -195,9 +195,8 @@ export default function AboutUsPage() {
             <h2 className="site-heading mt-1.5 text-[1.05rem] text-neutral-800 sm:text-[1.15rem]">
               Buyer manuals
             </h2>
-            <p className="mt-1.5 text-[13.5px] leading-relaxed tracking-wide text-neutral-600">
-              Download the official guide for browsing inventory, submitting
-              offers, and completing purchases.
+            <p className="mt-1 text-[13px] leading-relaxed tracking-wide text-neutral-600">
+              Official EN / KO guides for browsing, offers, and purchase steps.
             </p>
             <ManualDownloads />
           </section>
