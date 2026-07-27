@@ -1,8 +1,9 @@
-import type { Listing, ListingImage } from "@prisma/client";
+import type { Listing, ListingImage, Prisma } from "@prisma/client";
 import { HeroBanner } from "@/components/HeroBanner";
 import { ListingSection } from "@/components/ListingSection";
 import { isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
+import { memberListingVisibilityWhere } from "@/lib/live-auction";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -19,31 +20,35 @@ const coverImageInclude = {
   images: { orderBy: { sortOrder: "asc" as const }, take: 1 },
 };
 
-async function loadHomeListings(): Promise<
-  [HomeListing[], HomeListing[], HomeListing[], HomeListing[]]
-> {
+async function loadHomeListings(
+  includeEndedAuctions: boolean,
+): Promise<[HomeListing[], HomeListing[], HomeListing[], HomeListing[]]> {
+  const visibility: Prisma.ListingWhereInput = includeEndedAuctions
+    ? {}
+    : memberListingVisibilityWhere();
+
   try {
     return await Promise.all([
       prisma.listing.findMany({
-        where: { category: "HOT_DEALS" },
+        where: { AND: [{ category: "HOT_DEALS" }, visibility] },
         include: coverImageInclude,
         orderBy: { createdAt: "desc" },
         take: HOME_SECTION_LIMIT,
       }),
       prisma.listing.findMany({
-        where: { category: "CAR_LISTINGS" },
+        where: { AND: [{ category: "CAR_LISTINGS" }, visibility] },
         include: coverImageInclude,
         orderBy: { createdAt: "desc" },
         take: HOME_SECTION_LIMIT,
       }),
       prisma.listing.findMany({
-        where: { category: "STAND_BY" },
+        where: { AND: [{ category: "STAND_BY" }, visibility] },
         include: coverImageInclude,
         orderBy: { createdAt: "desc" },
         take: HOME_SECTION_LIMIT,
       }),
       prisma.listing.findMany({
-        where: { category: "LIVE_AUCTION" },
+        where: { AND: [{ category: "LIVE_AUCTION" }, visibility] },
         include: coverImageInclude,
         orderBy: { createdAt: "desc" },
         take: HOME_SECTION_LIMIT,
@@ -61,8 +66,9 @@ export default async function HomePage({ searchParams }: Props) {
   const canViewSold = isAdmin(dbUser?.role);
   const isSignedIn = Boolean(dbUser?.id);
 
-  const [hotDeals, carListings, standBy, liveAuction] =
-    await loadHomeListings();
+  const [hotDeals, carListings, standBy, liveAuction] = await loadHomeListings(
+    canViewSold,
+  );
 
   const errorMessage =
     params.error === "unauthorized"

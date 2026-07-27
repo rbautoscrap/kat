@@ -5,6 +5,7 @@ import { ListingPagination } from "@/components/ListingPagination";
 import { parsePage } from "@/lib/admin-pagination";
 import { isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
+import { memberListingVisibilityWhere } from "@/lib/live-auction";
 import { buildPublicListingSearchWhere } from "@/lib/listing-search";
 import { prisma } from "@/lib/prisma";
 import {
@@ -47,9 +48,12 @@ export default async function ListingsPage({ searchParams }: Props) {
   const categoryWhere: Prisma.ListingWhereInput = category
     ? { category }
     : {};
+  const visibilityWhere: Prisma.ListingWhereInput = canViewSold
+    ? {}
+    : memberListingVisibilityWhere();
 
   const where: Prisma.ListingWhereInput = {
-    AND: [categoryWhere, searchWhere],
+    AND: [categoryWhere, searchWhere, visibilityWhere],
   };
 
   const fromMenu = Boolean(category) && !q;

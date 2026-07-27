@@ -7,6 +7,7 @@ import { PurchaseOfferPanel } from "@/components/PurchaseOfferPanel";
 import { AdminListingCostPanel } from "@/components/admin/AdminListingCostPanel";
 import { AdminPurchaseOffersPanel } from "@/components/admin/AdminPurchaseOffersPanel";
 import { DownloadListingImagesButton } from "@/components/admin/DownloadListingImagesButton";
+import { AuctionCountdown } from "@/components/AuctionCountdown";
 import { LiveAuctionGatePanel } from "@/components/LiveAuctionGatePanel";
 import { ListingContactLinks } from "@/components/ListingContactLinks";
 import { auth, canAccessLiveAuctionAsSignedIn, isAdmin } from "@/lib/auth";
@@ -14,6 +15,10 @@ import {
   resolveSessionDbUser,
   userCanModifyListing,
 } from "@/lib/listing-access";
+import {
+  isLiveAuctionEnded,
+  LIVE_AUCTION_ENDED_MESSAGE,
+} from "@/lib/live-auction";
 import { prisma } from "@/lib/prisma";
 import {
   CATEGORY_PATHS,
@@ -80,6 +85,27 @@ export default async function ListingDetailPage({ params }: Props) {
         callbackUrl={`/listings/${listing.id}`}
         backHref={CATEGORY_PATHS.LIVE_AUCTION}
       />
+    );
+  }
+
+  const auctionEnded = isLiveAuctionEnded(listing);
+
+  // Ended Live Auction: members cannot view; admins keep full access (offers).
+  if (auctionEnded && !adminView) {
+    return (
+      <div className="site-container py-10" lang="en">
+        <div className="mb-4">
+          <BackButton href={CATEGORY_PATHS.LIVE_AUCTION} />
+        </div>
+        <div className="mx-auto max-w-lg rounded-sm border border-[var(--line)] bg-white px-6 py-10 text-center">
+          <p className="text-[1.1rem] font-medium tracking-[0.14em] uppercase text-neutral-700">
+            Auction ended
+          </p>
+          <p className="mt-3 text-[14px] leading-relaxed tracking-wide text-neutral-500">
+            {LIVE_AUCTION_ENDED_MESSAGE}
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -249,6 +275,13 @@ export default async function ListingDetailPage({ params }: Props) {
         />
       ) : null}
 
+      {listing.category === "LIVE_AUCTION" && listing.auctionEndsAt ? (
+        <AuctionCountdown
+          endsAt={listing.auctionEndsAt.toISOString()}
+          className={adminView && auctionEnded ? "opacity-90" : undefined}
+        />
+      ) : null}
+
       <div className="mb-5 overflow-hidden rounded-sm border border-[var(--line)]">
         <div className="border-b border-[var(--line)] bg-neutral-50 px-2.5 py-2 sm:px-3">
           <ListingContactLinks
@@ -297,7 +330,7 @@ export default async function ListingDetailPage({ params }: Props) {
       </div>
 
       {/* Guests see nothing. Members see form or their own offer only. */}
-      {isSignedIn && listing.saleStatus !== "SOLD" ? (
+      {isSignedIn && listing.saleStatus !== "SOLD" && !auctionEnded ? (
         <div className="mb-5">
           <PurchaseOfferPanel
             listingId={listing.id}

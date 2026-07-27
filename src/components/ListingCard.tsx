@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Listing, ListingImage } from "@prisma/client";
+import { AuctionCountdown } from "@/components/AuctionCountdown";
 import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl";
 import { ListingThumb } from "@/components/ListingThumb";
 import { LiveAuctionAccessDialog } from "@/components/LiveAuctionAccessDialog";
@@ -56,15 +57,27 @@ export function ListingCard({
   );
 
   const caption = (
-    <p
-      className={`mt-2.5 line-clamp-2 break-words font-semibold leading-snug text-neutral-800 ${
-        large
-          ? "min-h-[2.9em] text-[13.5px] sm:text-[14.5px]"
-          : "min-h-[2.8em] text-[13px] sm:text-[14px]"
-      } ${canOpen ? "group-hover:text-neutral-950" : "text-neutral-500"}`}
-    >
-      {label}
-    </p>
+    <>
+      <p
+        className={`mt-2.5 line-clamp-2 break-words font-semibold leading-snug text-neutral-800 ${
+          large
+            ? "min-h-[2.9em] text-[13.5px] sm:text-[14.5px]"
+            : "min-h-[2.8em] text-[13px] sm:text-[14px]"
+        } ${canOpen ? "group-hover:text-neutral-950" : "text-neutral-500"}`}
+      >
+        {label}
+      </p>
+      {listing.category === "LIVE_AUCTION" && listing.auctionEndsAt ? (
+        <AuctionCountdown
+          endsAt={
+            listing.auctionEndsAt instanceof Date
+              ? listing.auctionEndsAt.toISOString()
+              : String(listing.auctionEndsAt)
+          }
+          compact
+        />
+      ) : null}
+    </>
   );
 
   const saleControl = canManageSaleStatus ? (

@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { auth, isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
+import { isLiveAuctionEnded } from "@/lib/live-auction";
 import { prisma } from "@/lib/prisma";
 import {
   formatOfferAmount,
@@ -80,7 +81,12 @@ export async function submitPurchaseOffer(input: {
 
     const listing = await prisma.listing.findUnique({
       where: { id: listingId },
-      select: { id: true, saleStatus: true },
+      select: {
+        id: true,
+        saleStatus: true,
+        category: true,
+        auctionEndsAt: true,
+      },
     });
     if (!listing) {
       return { ok: false, error: "This listing is no longer available." };
@@ -89,6 +95,12 @@ export async function submitPurchaseOffer(input: {
       return {
         ok: false,
         error: "This vehicle has been sold and is no longer accepting offers.",
+      };
+    }
+    if (isLiveAuctionEnded(listing)) {
+      return {
+        ok: false,
+        error: "This live auction has ended and is no longer accepting offers.",
       };
     }
 
@@ -213,7 +225,13 @@ export async function updatePurchaseOffer(input: {
         id: true,
         userId: true,
         listingId: true,
-        listing: { select: { saleStatus: true } },
+        listing: {
+          select: {
+            saleStatus: true,
+            category: true,
+            auctionEndsAt: true,
+          },
+        },
       },
     });
     if (!offer || offer.userId !== userId) {
@@ -223,6 +241,12 @@ export async function updatePurchaseOffer(input: {
       return {
         ok: false,
         error: "This vehicle has been sold and offers can no longer be changed.",
+      };
+    }
+    if (isLiveAuctionEnded(offer.listing)) {
+      return {
+        ok: false,
+        error: "This live auction has ended and offers can no longer be changed.",
       };
     }
 

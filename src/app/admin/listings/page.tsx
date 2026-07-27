@@ -509,6 +509,18 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                             희망가 확인됨
                           </span>
                         ) : null}
+                        {listing.category === "LIVE_AUCTION" &&
+                        listing.auctionEndsAt &&
+                        listing.auctionEndsAt.getTime() <= Date.now() ? (
+                          <span className="inline-flex rounded bg-neutral-800 px-1.5 py-0.5 text-[12.5px] font-medium leading-none text-white">
+                            경매 마감
+                          </span>
+                        ) : listing.category === "LIVE_AUCTION" &&
+                          listing.auctionEndsAt ? (
+                          <span className="inline-flex rounded bg-rose-100 px-1.5 py-0.5 text-[12.5px] font-medium leading-none text-rose-900">
+                            경매 진행
+                          </span>
+                        ) : null}
                       </div>
                     </div>
                   </td>

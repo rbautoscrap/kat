@@ -115,6 +115,28 @@ function resolveFuelType(value?: string | null) {
 const selectClass =
   "h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400 focus:bg-white";
 
+const AUCTION_PRESETS = [
+  { label: "1시간", hours: 1 },
+  { label: "3시간", hours: 3 },
+  { label: "6시간", hours: 6 },
+  { label: "12시간", hours: 12 },
+  { label: "1일", hours: 24 },
+  { label: "3일", hours: 72 },
+] as const;
+
+function toDatetimeLocalValue(date: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function defaultAuctionEndsLocal(existing?: Date | string | null) {
+  if (existing) {
+    const d = existing instanceof Date ? existing : new Date(existing);
+    if (!Number.isNaN(d.getTime())) return toDatetimeLocalValue(d);
+  }
+  return toDatetimeLocalValue(new Date(Date.now() + 24 * 60 * 60 * 1000));
+}
+
 export function ListingForm({ listing, onCancel }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -128,6 +150,15 @@ export function ListingForm({ listing, onCancel }: Props) {
   );
   const [keptGallery, setKeptGallery] = useState<ListingImage[]>(
     () => listing?.images?.slice(1) ?? [],
+  );
+  const [category, setCategory] = useState<ListingCategory>(
+    () => listing?.category ?? "CAR_LISTINGS",
+  );
+  const [auctionEndsAt, setAuctionEndsAt] = useState(() =>
+    defaultAuctionEndsLocal(
+      (listing as { auctionEndsAt?: Date | string | null } | undefined)
+        ?.auctionEndsAt,
+    ),
   );
   const coverInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -304,7 +335,8 @@ export function ListingForm({ listing, onCancel }: Props) {
           <select
             name="category"
             required
-            defaultValue={listing?.category ?? "CAR_LISTINGS"}
+            value={category}
+            onChange={(e) => setCategory(e.target.value as ListingCategory)}
             className={selectClass}
           >
             {categories.map((c) => (
@@ -334,6 +366,48 @@ export function ListingForm({ listing, onCancel }: Props) {
             4자리 연도만 입력 (예: 2024)
           </span>
         </label>
+        {category === "LIVE_AUCTION" ? (
+          <div className="sm:col-span-2 rounded-md border border-rose-200 bg-rose-50/40 px-3 py-3">
+            <p className="text-[13px] font-medium tracking-wide text-neutral-700">
+              경매 마감 시간
+            </p>
+            <p className="mt-0.5 text-[12px] tracking-wide text-neutral-500">
+              마감되면 회원 목록에서 자동으로 숨겨집니다. 관리자는 계속 조회·오퍼
+              확인이 가능합니다.
+            </p>
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
+              {AUCTION_PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() =>
+                    setAuctionEndsAt(
+                      toDatetimeLocalValue(
+                        new Date(Date.now() + preset.hours * 60 * 60 * 1000),
+                      ),
+                    )
+                  }
+                  className="rounded border border-neutral-200 bg-white px-2.5 py-1 text-[12px] tracking-wide text-neutral-700 hover:border-neutral-400"
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <label className="mt-2.5 block text-sm">
+              <span className="mb-1 block text-[12px] font-medium tracking-wide text-neutral-600">
+                마감 일시
+              </span>
+              <input
+                name="auctionEndsAt"
+                type="datetime-local"
+                required
+                value={auctionEndsAt}
+                onChange={(e) => setAuctionEndsAt(e.target.value)}
+                className="h-10 w-full max-w-sm rounded-md border border-neutral-200 bg-white px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400"
+              />
+            </label>
+          </div>
+        ) : null}
         <Field
           label="제조사"
           name="make"

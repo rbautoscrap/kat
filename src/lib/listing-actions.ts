@@ -186,6 +186,27 @@ const listingFieldsSchema = z.object({
   incidentalCost: optionalDigits,
   costPrice: optionalDigits,
   accumulatedDays: optionalDigits,
+  /** ISO / datetime-local string; required for LIVE_AUCTION */
+  auctionEndsAt: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.category !== "LIVE_AUCTION") return;
+  const raw = data.auctionEndsAt?.trim();
+  if (!raw) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["auctionEndsAt"],
+      message: "Live Auction 마감 시간을 설정해 주세요.",
+    });
+    return;
+  }
+  const ends = new Date(raw);
+  if (Number.isNaN(ends.getTime())) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["auctionEndsAt"],
+      message: "마감 시간 형식이 올바르지 않습니다.",
+    });
+  }
 });
 
 export function buildListingTitle(year: number, make: string, model: string) {
@@ -220,6 +241,7 @@ export function formDataToListingInput(formData: FormData) {
     incidentalCost: emptyToUndef(formData.get("incidentalCost")),
     costPrice: emptyToUndef(formData.get("costPrice")),
     accumulatedDays: emptyToUndef(formData.get("accumulatedDays")),
+    auctionEndsAt: emptyToUndef(formData.get("auctionEndsAt")),
   };
   const data = listingFieldsSchema.parse(raw);
   const auction = Number(data.auctionPrice ?? "0") || 0;
@@ -230,9 +252,15 @@ export function formDataToListingInput(formData: FormData) {
   const accumulatedDays = data.inboundDate
     ? String(calcAccumulatedDays(data.inboundDate))
     : null;
+  const auctionEndsAt =
+    data.category === "LIVE_AUCTION" && data.auctionEndsAt
+      ? new Date(data.auctionEndsAt)
+      : null;
+
+  const { auctionEndsAt: _auctionEndsAtRaw, ...fields } = data;
 
   return {
-    ...data,
+    ...fields,
     vin: data.vin ?? null,
     highlights: data.highlights ?? null,
     engineMark: data.engineMark ?? null,
@@ -248,6 +276,7 @@ export function formDataToListingInput(formData: FormData) {
     incidentalCost: data.incidentalCost ?? null,
     costPrice,
     accumulatedDays,
+    auctionEndsAt,
     title: buildListingTitle(data.year, data.make, data.model),
   };
 }
