@@ -171,7 +171,20 @@ export function ListingForm({ listing, onCancel }: Props) {
     setPending(true);
 
     const form = e.currentTarget;
+    if (!form.reportValidity()) {
+      setPending(false);
+      return;
+    }
+
     const data = new FormData(form);
+    const yearDigits = String(data.get("year") ?? "").replace(/\D/g, "");
+    const yearNum = yearDigits.length >= 4 ? Number(yearDigits.slice(0, 4)) : NaN;
+    if (!Number.isFinite(yearNum) || yearNum < 1980 || yearNum > 2100) {
+      setError("연식은 4자리 연도(예: 2024)로 입력해 주세요.");
+      setPending(false);
+      return;
+    }
+    data.set("year", String(yearNum));
 
     // Drop empty file fields so the API does not treat them as uploads
     const coverEntry = data.get("coverImage");
@@ -301,13 +314,26 @@ export function ListingForm({ listing, onCancel }: Props) {
             ))}
           </select>
         </label>
-        <Field
-          label="연식"
-          name="year"
-          type="number"
-          required
-          defaultValue={listing?.year?.toString()}
-        />
+        <label className="block text-sm">
+          <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
+            연식
+          </span>
+          <input
+            name="year"
+            type="number"
+            inputMode="numeric"
+            required
+            min={1980}
+            max={2100}
+            step={1}
+            placeholder="예: 2024"
+            defaultValue={listing?.year?.toString()}
+            className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400 focus:bg-white"
+          />
+          <span className="mt-1 block text-[11.5px] text-neutral-400">
+            4자리 연도만 입력 (예: 2024)
+          </span>
+        </label>
         <Field
           label="제조사"
           name="make"

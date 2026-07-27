@@ -123,11 +123,29 @@ function normalizeFuelType(value: string) {
   return FUEL_LEGACY[value] ?? value;
 }
 
+/** Accept 4-digit years; if YYYYMMDD (or longer) is pasted, use the leading year. */
+function parseListingYear(value: unknown): number | null {
+  if (value == null || value === "") return null;
+  const digits = String(value).replace(/\D/g, "");
+  if (digits.length < 4) return null;
+  const year = Number(digits.slice(0, 4));
+  return Number.isFinite(year) ? year : null;
+}
+
+const listingYearSchema = z.preprocess(
+  (value) => parseListingYear(value),
+  z
+    .number({ error: "연식(연도)을 입력해 주세요." })
+    .int("연식은 정수 연도로 입력해 주세요.")
+    .min(1980, "연식은 1980년 이상이어야 합니다.")
+    .max(2100, "연식은 4자리 연도(예: 2024)로 입력해 주세요."),
+);
+
 const listingFieldsSchema = z.object({
   category: z.enum(["HOT_DEALS", "CAR_LISTINGS", "LIVE_AUCTION", "STAND_BY"]),
-  year: z.coerce.number().int().min(1980).max(2100),
-  make: z.string().min(1),
-  model: z.string().min(1),
+  year: listingYearSchema,
+  make: z.string().min(1, "제조사를 입력해 주세요."),
+  model: z.string().min(1, "모델을 입력해 주세요."),
   vin: z
     .string()
     .optional()
