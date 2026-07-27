@@ -15,9 +15,10 @@ import {
   parseCategory,
 } from "@/lib/listings";
 import {
-  newStandByShuffleSeed,
+  newListingShuffleSeed,
   orderByIds,
-  parseStandByShuffleSeed,
+  parseListingShuffleSeed,
+  seededCostBiasedOrder,
   seededShuffle,
 } from "@/lib/listing-shuffle";
 import type { Prisma } from "@prisma/client";
@@ -54,17 +55,23 @@ export default async function ListingsPage({ searchParams }: Props) {
   const fromMenu = Boolean(category) && !q;
   const isSearch = Boolean(q);
   const pageSize = LISTING_CATEGORY_PAGE_SIZE;
-  const shuffleStandBy = category === "STAND_BY";
+  /** Stand by: pure random. Car Listings: cost-biased random. */
+  const shuffleMode =
+    category === "STAND_BY"
+      ? ("random" as const)
+      : category === "CAR_LISTINGS"
+        ? ("cost_biased" as const)
+        : null;
 
   let shuffleSeed: number | null = null;
-  if (shuffleStandBy) {
-    shuffleSeed = parseStandByShuffleSeed(params.shuffle);
+  if (shuffleMode && category) {
+    shuffleSeed = parseListingShuffleSeed(params.shuffle);
     if (shuffleSeed === null) {
       const sp = new URLSearchParams();
-      sp.set("category", "STAND_BY");
+      sp.set("category", category);
       if (q) sp.set("q", q);
       if (page > 1) sp.set("page", String(page));
-      sp.set("shuffle", String(newStandByShuffleSeed()));
+      sp.set("shuffle", String(newListingShuffleSeed()));
       redirect(`/listings?${sp.toString()}`);
     }
   }
@@ -74,17 +81,20 @@ export default async function ListingsPage({ searchParams }: Props) {
   const currentPage = Math.min(page, totalPageCount);
 
   let listings;
-  if (shuffleStandBy && shuffleSeed !== null) {
+  if (shuffleMode && shuffleSeed !== null) {
     const idRows = await prisma.listing.findMany({
       where,
-      select: { id: true },
+      select: { id: true, costPrice: true },
       orderBy: { id: "asc" },
     });
-    const shuffledIds = seededShuffle(
-      idRows.map((row) => row.id),
-      shuffleSeed,
-    );
-    const pageIds = shuffledIds.slice(
+    const orderedIds =
+      shuffleMode === "cost_biased"
+        ? seededCostBiasedOrder(idRows, shuffleSeed)
+        : seededShuffle(
+            idRows.map((row) => row.id),
+            shuffleSeed,
+          );
+    const pageIds = orderedIds.slice(
       (currentPage - 1) * pageSize,
       currentPage * pageSize,
     );
