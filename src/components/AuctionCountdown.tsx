@@ -117,7 +117,7 @@ export function AuctionCountdown({
   if (variant === "offer") {
     return (
       <p
-        className={`font-mono text-[12px] font-semibold tabular-nums tracking-wide text-red-600 ${className}`}
+        className={`font-mono text-[24px] font-semibold leading-none tabular-nums tracking-wide text-red-600 ${className}`}
         lang="en"
         role="timer"
         aria-live="polite"
