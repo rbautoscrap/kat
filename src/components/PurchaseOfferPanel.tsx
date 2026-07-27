@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { CenteredAlertDialog } from "@/components/CenteredAlertDialog";
 import {
   submitPurchaseOffer,
   updatePurchaseOffer,
@@ -104,6 +105,7 @@ export function PurchaseOfferPanel({
   const [editCurrency, setEditCurrency] = useState<OfferCurrencyCode>("KRW");
   const [editAmount, setEditAmount] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const preview = formatPreview(amount, currency);
   const editPreview = formatPreview(editAmount, editCurrency);
@@ -133,7 +135,7 @@ export function PurchaseOfferPanel({
       });
       if (!result.ok) {
         if (result.code === "BELOW_HIGHEST") {
-          window.alert(result.error);
+          setAlertMessage(result.error);
         }
         setEditError(result.error);
         return;
@@ -146,6 +148,11 @@ export function PurchaseOfferPanel({
 
   return (
     <section className="rounded-sm border border-[var(--line)] bg-white px-3.5 py-3 sm:px-4">
+      <CenteredAlertDialog
+        open={Boolean(alertMessage)}
+        message={alertMessage ?? ""}
+        onClose={() => setAlertMessage(null)}
+      />
       <div className="mb-2.5 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
         <div>
           <h2 className="site-heading text-[13.5px] text-neutral-800">
@@ -328,7 +335,7 @@ export function PurchaseOfferPanel({
               });
               if (!result.ok) {
                 if (result.code === "BELOW_HIGHEST") {
-                  window.alert(result.error);
+                  setAlertMessage(result.error);
                 }
                 setError(result.error);
                 return;
