@@ -7,6 +7,8 @@ type Props = {
   endsAt: string;
   /** Compact label under listing cards */
   compact?: boolean;
+  /** Red inline timer above offer Currency label */
+  variant?: "default" | "offer";
   /** Member detail gets a fuller timer; admin stays compact-inline */
   emphasize?: boolean;
   className?: string;
@@ -82,6 +84,7 @@ function Colon() {
 export function AuctionCountdown({
   endsAt,
   compact = false,
+  variant = "default",
   emphasize = true,
   className = "",
 }: Props) {
@@ -110,6 +113,24 @@ export function AuctionCountdown({
   const ended = parts.totalMs <= 0;
   const urgent = !ended && parts.totalMs < 60 * 60 * 1000;
   const finalMinutes = !ended && parts.totalMs < 10 * 60 * 1000;
+
+  if (variant === "offer") {
+    return (
+      <p
+        className={`font-mono text-[12px] font-semibold tabular-nums tracking-wide text-red-600 ${className}`}
+        lang="en"
+        role="timer"
+        aria-live="polite"
+        aria-label={
+          ended
+            ? "Auction ended"
+            : `Live auction ends in ${formatCompact(parts)}`
+        }
+      >
+        {ended ? "Ended" : formatCompact(parts)}
+      </p>
+    );
+  }
 
   if (compact) {
     return (

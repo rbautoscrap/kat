@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { AuctionCountdown } from "@/components/AuctionCountdown";
 import { CenteredAlertDialog } from "@/components/CenteredAlertDialog";
 import {
   submitPurchaseOffer,
@@ -26,6 +27,8 @@ type Props = {
   ownOffers?: OwnOffer[];
   /** True when another member has submitted a higher offer. */
   hasHigherOffer?: boolean;
+  /** Live Auction deadline — shown in red above Currency. */
+  auctionEndsAt?: string | null;
 };
 
 /** Display order: KRW first (default). */
@@ -91,6 +94,7 @@ export function PurchaseOfferPanel({
   listingId,
   ownOffers = [],
   hasHigherOffer = false,
+  auctionEndsAt = null,
 }: Props) {
   const router = useRouter();
   /** After unique constraint, at most one; keep newest if legacy duplicates remain. */
@@ -400,6 +404,11 @@ export function PurchaseOfferPanel({
             </div>
 
             <div className="shrink-0">
+              {auctionEndsAt ? (
+                <div className="mb-0.5">
+                  <AuctionCountdown endsAt={auctionEndsAt} variant="offer" />
+                </div>
+              ) : null}
               <p className="mb-1 text-[10.5px] font-medium tracking-[0.06em] text-neutral-500 uppercase">
                 Currency
               </p>

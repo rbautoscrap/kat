@@ -229,6 +229,13 @@ export default async function ListingDetailPage({ params }: Props) {
     formatNotesDisplay(listing.damages, listing.damagesEn) || "—";
 
   const accumulatedDays = displayAccumulatedDays(listing);
+  const offerPanelVisible =
+    isSignedIn && listing.saleStatus !== "SOLD" && !auctionEnded;
+  const liveAuctionEndsAt =
+    listing.category === "LIVE_AUCTION" && listing.auctionEndsAt
+      ? listing.auctionEndsAt.toISOString()
+      : null;
+  const showTopAuctionCountdown = Boolean(liveAuctionEndsAt) && !offerPanelVisible;
 
   return (
     <div className="site-container py-6 sm:py-7" lang="en">
@@ -275,9 +282,9 @@ export default async function ListingDetailPage({ params }: Props) {
         />
       ) : null}
 
-      {listing.category === "LIVE_AUCTION" && listing.auctionEndsAt ? (
+      {showTopAuctionCountdown ? (
         <AuctionCountdown
-          endsAt={listing.auctionEndsAt.toISOString()}
+          endsAt={liveAuctionEndsAt!}
           emphasize={!adminView}
           className={adminView && auctionEnded ? "opacity-90" : undefined}
         />
@@ -343,11 +350,12 @@ export default async function ListingDetailPage({ params }: Props) {
       </div>
 
       {/* Guests see nothing. Members see form or their own offer only. */}
-      {isSignedIn && listing.saleStatus !== "SOLD" && !auctionEnded ? (
+      {offerPanelVisible ? (
         <div className="mb-5">
           <PurchaseOfferPanel
             listingId={listing.id}
             hasHigherOffer={hasHigherOffer}
+            auctionEndsAt={liveAuctionEndsAt}
             ownOffers={ownOffers.map((o) => ({
               id: o.id,
               amount: o.amount,
