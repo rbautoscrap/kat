@@ -148,6 +148,20 @@ if (!nextCli || !existsSync(nextCli)) {
   process.exit(1);
 }
 
+const prepareDb = path.join(process.cwd(), "scripts", "prepare-db-for-push.mjs");
+if (existsSync(prepareDb)) {
+  console.log("[start-prod] Preparing DB for schema push…");
+  const prepared = spawnSync(process.execPath, [prepareDb], {
+    stdio: "inherit",
+    env: process.env,
+  });
+  if (prepared.status !== 0) {
+    console.warn(
+      `[start-prod] prepare-db exited ${prepared.status} — continuing to db push`,
+    );
+  }
+}
+
 console.log("[start-prod] Running prisma db push…");
 const push = spawnSync(process.execPath, [prismaCli, "db", "push", "--skip-generate"], {
   stdio: "inherit",
