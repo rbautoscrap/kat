@@ -1,12 +1,7 @@
 import Link from "next/link";
 import type { ListingCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { ADMIN_CATEGORY_LABELS, ROLE_LABELS } from "@/lib/admin-labels";
-import {
-  adminTableClass,
-  adminTdClass,
-  adminThClass,
-} from "@/lib/admin-ui";
+import { ADMIN_CATEGORY_LABELS } from "@/lib/admin-labels";
 import {
   formatCostWon,
   getInventoryCostSummary,
@@ -29,8 +24,6 @@ export default async function AdminOverviewPage() {
     pendingUserCount,
     inventory,
     byCategory,
-    recentUsers,
-    recentListings,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.listing.count(),
@@ -42,21 +35,6 @@ export default async function AdminOverviewPage() {
     prisma.listing.groupBy({
       by: ["category"],
       _count: { _all: true },
-    }),
-    prisma.user.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
-    }),
-    prisma.listing.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: {
-        id: true,
-        title: true,
-        category: true,
-        createdAt: true,
-      },
     }),
   ]);
 
@@ -193,132 +171,6 @@ export default async function AdminOverviewPage() {
           </div>
         </div>
       </section>
-
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-        <section className="admin-panel overflow-hidden">
-          <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-5 py-3">
-            <h2 className="text-[14px] font-semibold tracking-tight text-neutral-900">
-              최근 회원
-            </h2>
-            <Link
-              href="/admin/users"
-              className="text-[12.5px] font-medium text-neutral-500 transition hover:text-neutral-800"
-            >
-              전체
-            </Link>
-          </div>
-          {recentUsers.length === 0 ? (
-            <p className="px-5 py-10 text-center text-[13px] text-neutral-400">
-              회원이 없습니다.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className={`${adminTableClass} min-w-[320px]`}>
-                <colgroup>
-                  <col style={{ width: "42%" }} />
-                  <col style={{ width: "36%" }} />
-                  <col style={{ width: "22%" }} />
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th className={adminThClass}>이름</th>
-                    <th className={adminThClass}>아이디</th>
-                    <th className={`${adminThClass} text-right`}>역할</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentUsers.map((user) => (
-                    <tr key={user.id}>
-                      <td className={adminTdClass}>
-                        <Link
-                          href={`/admin/users/${user.id}/edit`}
-                          className="block truncate font-medium text-neutral-900 hover:underline"
-                          title={user.name}
-                        >
-                          {user.name}
-                        </Link>
-                      </td>
-                      <td
-                        className={`${adminTdClass} truncate text-neutral-500`}
-                        title={user.email}
-                      >
-                        {user.email}
-                      </td>
-                      <td
-                        className={`${adminTdClass} whitespace-nowrap text-right text-[12.5px] text-neutral-600`}
-                      >
-                        {ROLE_LABELS[user.role]}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
-        <section className="admin-panel overflow-hidden">
-          <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-5 py-3">
-            <h2 className="text-[14px] font-semibold tracking-tight text-neutral-900">
-              최근 매물
-            </h2>
-            <Link
-              href="/admin/listings"
-              className="text-[12.5px] font-medium text-neutral-500 transition hover:text-neutral-800"
-            >
-              전체
-            </Link>
-          </div>
-          {recentListings.length === 0 ? (
-            <p className="px-5 py-10 text-center text-[13px] text-neutral-400">
-              매물이 없습니다.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className={`${adminTableClass} min-w-[320px]`}>
-                <colgroup>
-                  <col style={{ width: "52%" }} />
-                  <col style={{ width: "28%" }} />
-                  <col style={{ width: "20%" }} />
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th className={adminThClass}>매물</th>
-                    <th className={adminThClass}>카테고리</th>
-                    <th className={`${adminThClass} text-right`}>등록일</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentListings.map((listing) => (
-                    <tr key={listing.id}>
-                      <td className={adminTdClass}>
-                        <Link
-                          href={`/listings/${listing.id}`}
-                          className="block truncate font-medium text-neutral-900 hover:underline"
-                          title={listing.title}
-                        >
-                          {listing.title}
-                        </Link>
-                      </td>
-                      <td
-                        className={`${adminTdClass} truncate text-neutral-500`}
-                        title={ADMIN_CATEGORY_LABELS[listing.category]}
-                      >
-                        {ADMIN_CATEGORY_LABELS[listing.category]}
-                      </td>
-                      <td
-                        className={`${adminTdClass} whitespace-nowrap text-right tabular-nums text-neutral-500`}
-                      >
-                        {listing.createdAt.toISOString().slice(0, 10)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      </div>
     </div>
   );
 }
