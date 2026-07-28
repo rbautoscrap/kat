@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   createOverseasInvoice,
@@ -79,7 +79,7 @@ export function InvoiceForm({
   const [prepaidLabel, setPrepaidLabel] = useState(
     initial?.prepaidLabel ?? "100% PREPAID",
   );
-  const [listingPick, setListingPick] = useState("");
+  const [listingQuery, setListingQuery] = useState("");
   const [lines, setLines] = useState<Line[]>(() => {
     if (!initial?.items?.length) return [];
     return initial.items
@@ -99,11 +99,31 @@ export function InvoiceForm({
   const dueDate = addDaysToDateString(invoiceDate, termsDays);
   const rateClean = exchangeRate.replace(/,/g, "");
 
-  function addListing() {
-    if (!listingPick) return;
-    if (lines.some((l) => l.lineKey === listingPick)) return;
-    const listing = listings.find((l) => l.id === listingPick);
-    if (!listing) return;
+  const selectedListingIds = useMemo(
+    () =>
+      new Set(
+        lines.filter((l) => l.kind === "listing").map((l) => l.lineKey),
+      ),
+    [lines],
+  );
+
+  const filteredListings = useMemo(() => {
+    const q = listingQuery.trim().toLowerCase();
+    const base = listings;
+    if (!q) return base.slice(0, 60);
+    return base
+      .filter(
+        (l) =>
+          l.label.toLowerCase().includes(q) ||
+          l.serialNumber.toLowerCase().includes(q) ||
+          (l.vin ?? "").toLowerCase().includes(q) ||
+          (l.vehicleNumber ?? "").toLowerCase().includes(q),
+      )
+      .slice(0, 80);
+  }, [listings, listingQuery]);
+
+  function addListing(listing: ListingOption) {
+    if (selectedListingIds.has(listing.id)) return;
     setLines((prev) => [
       ...prev,
       {
@@ -116,7 +136,10 @@ export function InvoiceForm({
         priceKrw: "",
       },
     ]);
-    setListingPick("");
+  }
+
+  function removeListing(listingId: string) {
+    setLines((prev) => prev.filter((row) => row.lineKey !== listingId));
   }
 
   function addExtra() {
@@ -170,9 +193,8 @@ export function InvoiceForm({
     });
   }
 
-  const availableListings = listings.filter(
-    (l) => !lines.some((line) => line.lineKey === l.id),
-  );
+  const listingCount = lines.filter((l) => l.kind === "listing").length;
+  const extraCount = lines.filter((l) => l.kind === "extra").length;
 
   return (
     <form onSubmit={onSubmit} className="space-y-4" lang="en">
@@ -277,27 +299,77 @@ export function InvoiceForm({
         </label>
       </div>
 
+      <div>
+        <label className={labelClass} htmlFor="invoice-listing-search">
+          매물 검색 · 다중 선택
+        </label>
+        <input
+          id="invoice-listing-search"
+          type="search"
+          value={listingQuery}
+          onChange={(e) => setListingQuery(e.target.value)}
+          placeholder="시리얼, 차량명, VIN, 차량번호…"
+          className={fieldClass}
+          autoComplete="off"
+        />
+        <div className="mt-2 max-h-48 overflow-y-auto rounded-md border border-[var(--line)] bg-white">
+          {filteredListings.length === 0 ? (
+            <p className="px-3 py-3 text-[13px] text-neutral-500">
+              {listingQuery.trim()
+                ? "검색 결과가 없습니다."
+                : "등록된 매물이 없습니다."}
+            </p>
+          ) : (
+            <ul className="divide-y divide-[var(--line)]">
+              {filteredListings.map((l) => {
+                const checked = selectedListingIds.has(l.id);
+                return (
+                  <li key={l.id}>
+                    <label className="flex cursor-pointer items-start gap-2.5 px-3 py-2.5 text-[13px] hover:bg-neutral-50">
+                      <input
+                        type="checkbox"
+                        className="mt-0.5"
+                        checked={checked}
+                        onChange={() => {
+                          if (checked) removeListing(l.id);
+                          else addListing(l);
+                        }}
+                      />
+                      <span className="min-w-0">
+                        <span className="font-medium text-neutral-800">
+                          [{l.serialNumber}] {l.label}
+                        </span>
+                        {(l.vin || l.vehicleNumber) && (
+                          <span className="mt-0.5 block text-[12px] text-neutral-500">
+                            {[
+                              l.vin ? `VIN ${l.vin}` : null,
+                              l.vehicleNumber,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+        {!listingQuery.trim() && listings.length > 60 ? (
+          <p className="mt-1.5 text-[11.5px] text-neutral-500">
+            상위 60건만 표시됩니다. 검색어로 더 찾아보세요.
+          </p>
+        ) : null}
+      </div>
+
       <div className="rounded-sm border border-[var(--line)]">
-        <div className="flex flex-wrap items-center gap-2 border-b border-[var(--line)] bg-neutral-50 px-3 py-2">
-          <select
-            value={listingPick}
-            onChange={(e) => setListingPick(e.target.value)}
-            className="h-8 min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2 text-[12.5px]"
-          >
-            <option value="">Select listing…</option>
-            {availableListings.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.label}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={addListing}
-            className="h-8 rounded-md border border-neutral-300 bg-white px-2.5 text-[12px] font-medium"
-          >
-            Add vehicle
-          </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] bg-neutral-50 px-3 py-2">
+          <p className="text-[12px] font-medium text-neutral-600">
+            Line items ({listingCount}
+            {extraCount > 0 ? ` + extra ${extraCount}` : ""})
+          </p>
           <button
             type="button"
             onClick={addExtra}
@@ -310,7 +382,7 @@ export function InvoiceForm({
         <div className="divide-y divide-[var(--line)]">
           {lines.length === 0 ? (
             <p className="px-3 py-4 text-[12.5px] text-neutral-500">
-              Add a vehicle or extra charge line.
+              위에서 매물을 검색·선택하거나 Extra 항목을 추가하세요.
             </p>
           ) : (
             lines.map((line) => {
