@@ -189,6 +189,19 @@ if (existsSync(ensureSignup)) {
   });
 }
 
+const ensureStorage = path.join(
+  process.cwd(),
+  "scripts",
+  "ensure-storage-locations.mjs",
+);
+if (existsSync(ensureStorage)) {
+  console.log("[start-prod] Normalizing storage locations / costPrice…");
+  spawnSync(process.execPath, [ensureStorage], {
+    stdio: "inherit",
+    env: process.env,
+  });
+}
+
 const backfillSignup = path.join(
   process.cwd(),
   "scripts",

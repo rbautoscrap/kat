@@ -37,6 +37,7 @@ import {
   formatCostWon,
   getInventoryCostSummary,
 } from "@/lib/inventory-cost";
+import { canonicalizeStorageLocation } from "@/lib/storage-location";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,7 @@ type Props = {
     page?: string;
     q?: string;
     sale?: string;
+    storage?: string;
   }>;
 };
 
@@ -113,6 +115,25 @@ function parseSale(value?: string): SaleFilter {
   return "ALL";
 }
 
+function storageWhere(value?: string): Prisma.ListingWhereInput {
+  const raw = value?.trim() ?? "";
+  if (!raw) return {};
+  if (raw === "UNASSIGNED" || raw === "미지정") {
+    return {
+      OR: [{ storageLocation: null }, { storageLocation: "" }],
+    };
+  }
+  const canonical = canonicalizeStorageLocation(raw);
+  if (!canonical) return {};
+  if (canonical === "진천사업소") {
+    return { storageLocation: { contains: "진천" } };
+  }
+  if (canonical === "충주사업소") {
+    return { storageLocation: { contains: "충주" } };
+  }
+  return { storageLocation: canonical };
+}
+
 function costSortValue(
   costPrice: string | null | undefined,
   missing: number,
@@ -127,24 +148,26 @@ export default async function AdminListingsPage({ searchParams }: Props) {
   const sale = parseSale(params.sale);
   const page = parsePage(params.page);
   const q = params.q?.trim() ?? "";
+  const storage = params.storage?.trim() ?? "";
 
   const searchWhere = buildListingSearchWhere(q);
   const categoryWhere: Prisma.ListingWhereInput =
     category === "ALL" ? {} : { category };
   const saleWhere: Prisma.ListingWhereInput =
     sale === "ALL" ? {} : { saleStatus: sale };
+  const locationWhere = storageWhere(storage);
 
   const where: Prisma.ListingWhereInput = {
-    AND: [categoryWhere, saleWhere, searchWhere],
+    AND: [categoryWhere, saleWhere, searchWhere, locationWhere],
   };
 
   // Category pill counts: search + sale filter (ignore category)
   const categoryCountWhere: Prisma.ListingWhereInput = {
-    AND: [saleWhere, searchWhere],
+    AND: [saleWhere, searchWhere, locationWhere],
   };
   // Sale pill counts: search + category filter (ignore sale)
   const saleCountWhere: Prisma.ListingWhereInput = {
-    AND: [categoryWhere, searchWhere],
+    AND: [categoryWhere, searchWhere, locationWhere],
   };
 
   const [total, grouped, saleGrouped, offerListingCount, inventory] =
@@ -315,6 +338,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
     category: category === "ALL" ? undefined : category,
     sale: sale === "ALL" ? undefined : sale,
     q: q || undefined,
+    storage: storage || undefined,
   };
 
   return (

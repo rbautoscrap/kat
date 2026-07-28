@@ -150,8 +150,8 @@ export default async function AdminOverviewPage() {
                 key={row.location}
                 href={
                   row.location === "미지정"
-                    ? "/admin/listings?sale=AVAILABLE"
-                    : `/admin/listings?sale=AVAILABLE&q=${encodeURIComponent(row.location)}`
+                    ? "/admin/listings?sale=AVAILABLE&storage=UNASSIGNED"
+                    : `/admin/listings?sale=AVAILABLE&storage=${encodeURIComponent(row.location)}`
                 }
                 className="flex min-w-0 items-baseline justify-between gap-3 rounded-md border border-[var(--line)] bg-white px-3.5 py-2.5 transition hover:bg-neutral-50"
               >

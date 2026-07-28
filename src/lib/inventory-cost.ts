@@ -2,14 +2,17 @@ import "server-only";
 
 import type { ListingSaleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import {
+  STORAGE_LOCATIONS,
+  UNASSIGNED_STORAGE_LABEL,
+  storageLocationLabel,
+} from "@/lib/storage-location";
 
 /** Inventory cost includes on-sale units only; sold (and reserved) are excluded. */
 export const INVENTORY_SALE_STATUSES: ListingSaleStatus[] = ["AVAILABLE"];
 
-/** Known storage locations shown first in admin breakdowns. */
-export const INVENTORY_STORAGE_LOCATIONS = ["진천사업소", "충주사업소"] as const;
-
-export const UNASSIGNED_STORAGE_LABEL = "미지정";
+export const INVENTORY_STORAGE_LOCATIONS = STORAGE_LOCATIONS;
+export { UNASSIGNED_STORAGE_LABEL };
 
 export function parseCostPrice(value?: string | null): number {
   if (!value) return 0;
@@ -21,6 +24,19 @@ export function parseCostPrice(value?: string | null): number {
 
 export function formatCostWon(value: number) {
   return `${value.toLocaleString("ko-KR")}원`;
+}
+
+/** Prefer stored costPrice; fall back to auction + incidental when cost was not synced. */
+export function resolveListingCost(row: {
+  costPrice?: string | null;
+  auctionPrice?: string | null;
+  incidentalCost?: string | null;
+}): number {
+  const stored = parseCostPrice(row.costPrice);
+  if (stored > 0) return stored;
+  const auction = parseCostPrice(row.auctionPrice);
+  const incidental = parseCostPrice(row.incidentalCost);
+  return auction + incidental;
 }
 
 export type InventoryCostByLocation = {
@@ -42,11 +58,6 @@ export type InventoryCostSummary = {
   byLocation: InventoryCostByLocation[];
 };
 
-function normalizeLocation(value?: string | null): string {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : UNASSIGNED_STORAGE_LABEL;
-}
-
 /**
  * Inventory cost for 판매중 (AVAILABLE) listings only.
  * 판매완료 (SOLD) — and 예약완료 (RESERVED) — are excluded from the total.
@@ -55,7 +66,13 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
   const [stockRows, reservedCount, soldCount] = await Promise.all([
     prisma.listing.findMany({
       where: { saleStatus: { in: INVENTORY_SALE_STATUSES } },
-      select: { costPrice: true, saleStatus: true, storageLocation: true },
+      select: {
+        costPrice: true,
+        auctionPrice: true,
+        incidentalCost: true,
+        saleStatus: true,
+        storageLocation: true,
+      },
     }),
     prisma.listing.count({ where: { saleStatus: "RESERVED" } }),
     prisma.listing.count({ where: { saleStatus: "SOLD" } }),
@@ -65,9 +82,9 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
   const locationMap = new Map<string, { total: number; count: number }>();
 
   for (const row of stockRows) {
-    const cost = parseCostPrice(row.costPrice);
+    const cost = resolveListingCost(row);
     total += cost;
-    const location = normalizeLocation(row.storageLocation);
+    const location = storageLocationLabel(row.storageLocation);
     const prev = locationMap.get(location) ?? { total: 0, count: 0 };
     locationMap.set(location, {
       total: prev.total + cost,
@@ -76,7 +93,7 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
   }
 
   const byLocation: InventoryCostByLocation[] = [];
-  for (const known of INVENTORY_STORAGE_LOCATIONS) {
+  for (const known of STORAGE_LOCATIONS) {
     const row = locationMap.get(known);
     byLocation.push({
       location: known,
@@ -92,6 +109,8 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
     return a.localeCompare(b, "ko");
   });
   for (const [location, row] of extras) {
+    // Hide empty unassigned / legacy buckets so completed assignments stay clean.
+    if (row.count <= 0) continue;
     byLocation.push({ location, total: row.total, count: row.count });
   }
 

@@ -8,6 +8,7 @@ import { DEFAULT_LISTING_WHATSAPP } from "@/lib/contact";
 import { parseAuctionEndsAtInput } from "@/lib/format-korea-time";
 import { getAppTempDir, getUploadsDir } from "@/lib/storage-paths";
 import { translateToEnglish } from "@/lib/translate";
+import { canonicalizeStorageLocation } from "@/lib/storage-location";
 
 /** Prefer volume tmp over tiny container /tmp (multipart + libvips). */
 function ensureUploadTempEnv() {
@@ -170,7 +171,11 @@ const listingFieldsSchema = z.object({
   youtubeUrl: z.string().optional(),
   whatsappNumber: z.string().min(6),
   vehicleNumber: z.string().optional(),
-  storageLocation: z.enum(["진천사업소", "충주사업소"]).optional(),
+  storageLocation: z
+    .string()
+    .max(40)
+    .optional()
+    .transform((v) => canonicalizeStorageLocation(v) ?? undefined),
   inboundDate: z
     .string()
     .optional()

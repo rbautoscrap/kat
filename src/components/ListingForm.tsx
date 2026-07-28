@@ -17,6 +17,10 @@ import {
   parseAuctionEndsAtInput,
   toKoreaDatetimeLocalValue,
 } from "@/lib/format-korea-time";
+import {
+  STORAGE_LOCATIONS,
+  canonicalizeStorageLocation,
+} from "@/lib/storage-location";
 
 const IMAGE_ACCEPT =
   "image/jpeg,image/png,image/webp,image/gif";
@@ -99,8 +103,6 @@ const FUEL_TYPES = [
   "Hydrogen",
   "Other",
 ] as const;
-
-const STORAGE_LOCATIONS = ["진천사업소", "충주사업소"] as const;
 
 const FUEL_LEGACY: Record<string, (typeof FUEL_TYPES)[number]> = {
   가솔린: "Gasoline",
@@ -666,12 +668,7 @@ export function ListingForm({ listing, onCancel }: Props) {
             <select
               name="storageLocation"
               defaultValue={
-                listing?.storageLocation &&
-                (STORAGE_LOCATIONS as readonly string[]).includes(
-                  listing.storageLocation,
-                )
-                  ? listing.storageLocation
-                  : ""
+                canonicalizeStorageLocation(listing?.storageLocation) ?? ""
               }
               className={selectClass}
             >
@@ -681,6 +678,19 @@ export function ListingForm({ listing, onCancel }: Props) {
                   {loc}
                 </option>
               ))}
+              {(() => {
+                const current = canonicalizeStorageLocation(
+                  listing?.storageLocation,
+                );
+                if (!current || (STORAGE_LOCATIONS as readonly string[]).includes(current)) {
+                  return null;
+                }
+                return (
+                  <option key={current} value={current}>
+                    {current}
+                  </option>
+                );
+              })()}
             </select>
           </label>
           <InboundDateFields
