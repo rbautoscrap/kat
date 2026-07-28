@@ -42,6 +42,15 @@ export function InvoiceDocument({ invoice }: Props) {
       lang="en"
     >
       <div className="invoice-sheet">
+        <div className="invoice-watermark" aria-hidden="true">
+          <img
+            src="/brand/rbauto-logo.png"
+            alt=""
+            className="invoice-watermark-img"
+            draggable={false}
+          />
+        </div>
+
         <header className="invoice-header">
           <div className="invoice-heading">
             <h1>INVOICE</h1>

@@ -456,11 +456,39 @@ main {
 }
 
 .invoice-sheet {
+  position: relative;
   box-sizing: border-box;
   width: 100%;
+  overflow: hidden;
   padding: 24px 26px 18px;
   background: #fff;
   border: 1px solid #e7e5e4;
+}
+
+.invoice-watermark {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.invoice-watermark-img {
+  width: 78%;
+  max-width: 560px;
+  height: auto;
+  opacity: 0.1;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.invoice-sheet > *:not(.invoice-watermark) {
+  position: relative;
+  z-index: 1;
 }
 
 .invoice-header {
@@ -1251,5 +1279,11 @@ main {
   .invoice-sheet {
     border: none !important;
     padding: 0 !important;
+  }
+
+  .invoice-watermark,
+  .invoice-watermark-img {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
