@@ -161,6 +161,37 @@ export default async function AdminOverviewPage() {
             ))}
           </div>
         </div>
+
+        <div className="border-t border-[var(--line)] px-5 py-3.5">
+          <p className="text-[12px] font-medium text-neutral-500">
+            보관 장소별 재고 원가
+          </p>
+          <div className="mt-2.5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {inventory.byLocation.map((row) => (
+              <Link
+                key={row.location}
+                href={
+                  row.location === "미지정"
+                    ? "/admin/listings?sale=AVAILABLE"
+                    : `/admin/listings?sale=AVAILABLE&q=${encodeURIComponent(row.location)}`
+                }
+                className="flex min-w-0 items-baseline justify-between gap-3 rounded-md border border-[var(--line)] bg-white px-3.5 py-2.5 transition hover:bg-neutral-50"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-[13px] font-medium text-neutral-800">
+                    {row.location}
+                  </span>
+                  <span className="mt-0.5 block text-[11.5px] text-neutral-400">
+                    {row.count.toLocaleString("ko-KR")}대
+                  </span>
+                </span>
+                <span className="shrink-0 text-[13.5px] font-semibold tabular-nums text-neutral-900">
+                  {formatCostWon(row.total)}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
       </section>
 
       <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
