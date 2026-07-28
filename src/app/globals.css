@@ -915,16 +915,9 @@ main {
   justify-content: flex-end;
   gap: 12px;
   margin: 0;
-  padding: 16px 8px 12px 0;
+  padding-top: 12px;
   border-top: 1.5px solid var(--inv-ink);
   font-variant-numeric: tabular-nums;
-  overflow: visible;
-}
-
-.invoice-total-label,
-.invoice-total strong {
-  position: relative;
-  z-index: 1;
 }
 
 .invoice-total-label {
@@ -961,15 +954,6 @@ main {
   height: auto;
   opacity: 0.72;
   transform: rotate(-8deg);
-}
-
-.invoice-stamp-mark-total {
-  right: -4px;
-  top: 50%;
-  width: 148px;
-  height: auto;
-  opacity: 0.68;
-  transform: translateY(-48%) rotate(-10deg);
 }
 
 @media (max-width: 639px) {

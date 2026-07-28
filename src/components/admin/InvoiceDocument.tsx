@@ -193,13 +193,6 @@ export function InvoiceDocument({ invoice }: Props) {
         <div className="invoice-total">
           <span className="invoice-total-label">{totalLabel(currency)}</span>
           <strong>{formatFx(invoice.amount, currency)}</strong>
-          <img
-            src="/brand/rbauto-stamp.png"
-            alt=""
-            className="invoice-stamp-mark invoice-stamp-mark-total"
-            draggable={false}
-            aria-hidden
-          />
         </div>
       </div>
     </div>
