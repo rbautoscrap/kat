@@ -1,3 +1,4 @@
+import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import {
   INVOICE_NOTICES,
   INVOICE_REMITTANCE,
@@ -12,6 +13,20 @@ import {
   type InvoiceView,
 } from "@/lib/overseas-invoice";
 
+const invoiceSans = Source_Sans_3({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-invoice-sans",
+});
+
+const invoiceDisplay = Source_Serif_4({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  display: "swap",
+  variable: "--font-invoice-display",
+});
+
 type Props = {
   invoice: InvoiceView;
 };
@@ -21,17 +36,13 @@ export function InvoiceDocument({ invoice }: Props) {
   const currency = invoice.currency;
 
   return (
-    <div id="invoice-document" className="invoice-document" lang="en">
+    <div
+      id="invoice-document"
+      className={`invoice-document ${invoiceSans.variable} ${invoiceDisplay.variable} ${invoiceSans.className}`}
+      lang="en"
+    >
       <div className="invoice-sheet">
         <header className="invoice-header">
-          <div className="invoice-brand">
-            <img
-              src="/brand/rbauto-logo.png"
-              alt="RBAUTO"
-              className="invoice-logo"
-              draggable={false}
-            />
-          </div>
           <div className="invoice-heading">
             <h1>INVOICE</h1>
             <p className="invoice-company">{INVOICE_SELLER.company}</p>
@@ -135,14 +146,11 @@ export function InvoiceDocument({ invoice }: Props) {
             </tbody>
           </table>
 
-          <div className="invoice-seal-block">
+          <div className="invoice-company-block">
             <p className="invoice-bizno">{INVOICE_SELLER.bizNo}</p>
             <p>{INVOICE_SELLER.companyKo}</p>
             <p>대표이사 {INVOICE_SELLER.ceoKo}</p>
             <p>{INVOICE_SELLER.addressKo}</p>
-            <div className="invoice-seal" aria-hidden>
-              <span>인감</span>
-            </div>
           </div>
         </div>
 
