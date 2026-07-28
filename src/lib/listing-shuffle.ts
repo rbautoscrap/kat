@@ -2,6 +2,7 @@
  * Some category pages shuffle so newer units are not always on top.
  * Category pages use a URL `shuffle` seed (new on each menu click).
  * Car Listings uses a cost-biased shuffle (higher costPrice tends to appear earlier).
+ * Stand by uses newest-first (createdAt desc) — no shuffle.
  */
 
 function mulberry32(seed: number) {

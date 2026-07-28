@@ -20,7 +20,6 @@ import {
   orderByIds,
   parseListingShuffleSeed,
   seededCostBiasedOrder,
-  seededShuffle,
 } from "@/lib/listing-shuffle";
 import type { Prisma } from "@prisma/client";
 
@@ -59,13 +58,9 @@ export default async function ListingsPage({ searchParams }: Props) {
   const fromMenu = Boolean(category) && !q;
   const isSearch = Boolean(q);
   const pageSize = LISTING_CATEGORY_PAGE_SIZE;
-  /** Stand by: pure random. Car Listings: cost-biased random. */
+  /** Car Listings: cost-biased random order per visit. */
   const shuffleMode =
-    category === "STAND_BY"
-      ? ("random" as const)
-      : category === "CAR_LISTINGS"
-        ? ("cost_biased" as const)
-        : null;
+    category === "CAR_LISTINGS" ? ("cost_biased" as const) : null;
 
   let shuffleSeed: number | null = null;
   if (shuffleMode && category) {
@@ -91,13 +86,7 @@ export default async function ListingsPage({ searchParams }: Props) {
       select: { id: true, costPrice: true, createdAt: true },
       orderBy: { id: "asc" },
     });
-    const orderedIds =
-      shuffleMode === "cost_biased"
-        ? seededCostBiasedOrder(idRows, shuffleSeed)
-        : seededShuffle(
-            idRows.map((row) => row.id),
-            shuffleSeed,
-          );
+    const orderedIds = seededCostBiasedOrder(idRows, shuffleSeed);
     const pageIds = orderedIds.slice(
       (currentPage - 1) * pageSize,
       currentPage * pageSize,
