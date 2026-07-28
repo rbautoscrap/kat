@@ -180,13 +180,27 @@ export function InvoiceDocument({ invoice }: Props) {
             <p>{INVOICE_SELLER.companyKo}</p>
             <p>대표이사 {INVOICE_SELLER.ceoKo}</p>
             <p>{INVOICE_SELLER.addressKo}</p>
+            <img
+              src="/brand/rbauto-stamp.png"
+              alt=""
+              className="invoice-stamp-mark invoice-stamp-mark-company"
+              draggable={false}
+              aria-hidden
+            />
           </div>
         </div>
 
-        <p className="invoice-total">
+        <div className="invoice-total">
           <span className="invoice-total-label">{totalLabel(currency)}</span>
           <strong>{formatFx(invoice.amount, currency)}</strong>
-        </p>
+          <img
+            src="/brand/rbauto-stamp.png"
+            alt=""
+            className="invoice-stamp-mark invoice-stamp-mark-total"
+            draggable={false}
+            aria-hidden
+          />
+        </div>
       </div>
     </div>
   );

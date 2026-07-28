@@ -873,10 +873,12 @@ main {
 }
 
 .invoice-company-block {
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 3px;
+  min-height: 118px;
   padding: 14px 16px;
   border: 1px solid var(--inv-line);
   border-radius: 6px;
@@ -886,6 +888,7 @@ main {
   line-height: 1.5;
   letter-spacing: 0;
   color: var(--inv-ink);
+  overflow: hidden;
 }
 
 .invoice-bizno {
@@ -900,18 +903,28 @@ main {
 }
 
 .invoice-company-block p {
+  position: relative;
+  z-index: 1;
   margin: 0;
 }
 
 .invoice-total {
+  position: relative;
   display: flex;
   align-items: baseline;
   justify-content: flex-end;
   gap: 12px;
   margin: 0;
-  padding-top: 12px;
+  padding: 16px 8px 12px 0;
   border-top: 1.5px solid var(--inv-ink);
   font-variant-numeric: tabular-nums;
+  overflow: visible;
+}
+
+.invoice-total-label,
+.invoice-total strong {
+  position: relative;
+  z-index: 1;
 }
 
 .invoice-total-label {
@@ -927,6 +940,36 @@ main {
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--inv-ink);
+}
+
+.invoice-stamp-mark {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  object-fit: contain;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.invoice-stamp-mark-company {
+  right: -6px;
+  bottom: -4px;
+  width: 168px;
+  max-width: 72%;
+  height: auto;
+  opacity: 0.72;
+  transform: rotate(-8deg);
+}
+
+.invoice-stamp-mark-total {
+  right: -4px;
+  top: 50%;
+  width: 148px;
+  height: auto;
+  opacity: 0.68;
+  transform: translateY(-48%) rotate(-10deg);
 }
 
 @media (max-width: 639px) {
@@ -1424,7 +1467,8 @@ main {
   }
 
   .invoice-watermark,
-  .invoice-watermark-img {
+  .invoice-watermark-img,
+  .invoice-stamp-mark {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
