@@ -180,24 +180,12 @@ export function InvoiceDocument({ invoice }: Props) {
             <p>{INVOICE_SELLER.companyKo}</p>
             <p>대표이사 {INVOICE_SELLER.ceoKo}</p>
             <p>{INVOICE_SELLER.addressKo}</p>
-            <div className="invoice-stamp invoice-stamp-company" aria-hidden>
-              <span className="invoice-stamp-inner">
-                <span className="invoice-stamp-name">{INVOICE_SELLER.sealName}</span>
-                <span className="invoice-stamp-sub">인감</span>
-              </span>
-            </div>
           </div>
         </div>
 
         <p className="invoice-total">
           <span className="invoice-total-label">{totalLabel(currency)}</span>
           <strong>{formatFx(invoice.amount, currency)}</strong>
-          <span className="invoice-stamp invoice-stamp-total" aria-hidden>
-            <span className="invoice-stamp-inner">
-              <span className="invoice-stamp-name">{INVOICE_SELLER.sealName}</span>
-              <span className="invoice-stamp-sub">인감</span>
-            </span>
-          </span>
         </p>
       </div>
     </div>
