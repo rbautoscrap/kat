@@ -501,14 +501,31 @@ main {
 
 .invoice-header {
   display: flex;
-  justify-content: flex-end;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
   margin-bottom: 22px;
   padding-bottom: 18px;
   border-bottom: 1px solid var(--inv-line);
 }
 
+.invoice-brand {
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.invoice-logo {
+  display: block;
+  width: 88px;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 .invoice-heading {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   max-width: 460px;
   text-align: right;
 }

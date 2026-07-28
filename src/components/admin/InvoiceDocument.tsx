@@ -75,6 +75,14 @@ export function InvoiceDocument({ invoice }: Props) {
         </div>
 
         <header className="invoice-header">
+          <div className="invoice-brand">
+            <img
+              src="/brand/rbauto-logo.png"
+              alt="RBAUTO"
+              className="invoice-logo"
+              draggable={false}
+            />
+          </div>
           <div className="invoice-heading">
             <p className="invoice-eyebrow">Commercial Invoice</p>
             <h1>INVOICE</h1>
