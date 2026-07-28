@@ -63,6 +63,7 @@ model User {
   createdStatements TransactionStatement[] @relation("StatementCreatedBy")
   /** Statements where this member is the linked buyer */
   purchasedStatements TransactionStatement[] @relation("StatementBuyer")
+  createdOverseasInvoices OverseasInvoice[] @relation("InvoiceCreatedBy")
 
   @@index([signupIpHash])
   @@index([signupDeviceId])
@@ -120,6 +121,7 @@ model Listing {
   /** Primary listing on a statement (first line item) */
   transactionStatements TransactionStatement[]
   statementItems   TransactionStatementItem[]
+  overseasInvoiceItems OverseasInvoiceItem[]
 
   @@index([category, createdAt])
   @@index([saleStatus])
@@ -201,6 +203,56 @@ model TransactionStatementItem {
   sortOrder     Int                  @default(0)
 
   @@index([statementId, sortOrder])
+  @@index([listingId])
+}
+
+/** Overseas commercial invoice (영문 인보이스) — separate from Korean 거래명세서 */
+model OverseasInvoice {
+  id               String        @id @default(cuid())
+  invoiceNo        String        @unique
+  invoiceDate      String
+  terms            String        @default("3days")
+  dueDate          String
+  company          String?
+  consignee        String
+  businessNo       String?
+  finalDestination String?
+  /** Final settlement currency (usually EUR / USD) */
+  currency         OfferCurrency @default(EUR)
+  /** KRW → foreign currency exchange rate */
+  exchangeRate     String
+  prepaidLabel     String        @default("100% PREPAID")
+  /** Sum of line finalPrice values */
+  amount           String
+  createdById      String
+  createdBy        User          @relation("InvoiceCreatedBy", fields: [createdById], references: [id])
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  items            OverseasInvoiceItem[]
+
+  @@index([invoiceDate])
+  @@index([createdAt])
+  @@index([createdById])
+  @@index([consignee])
+}
+
+model OverseasInvoiceItem {
+  id          String          @id @default(cuid())
+  invoiceId   String
+  invoice     OverseasInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  listingId   String?
+  listing     Listing?        @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  isExtra     Boolean         @default(false)
+  description String
+  regNo       String?
+  vin         String?
+  qty         String          @default("1")
+  priceKrw    String
+  rate        String
+  finalPrice  String
+  sortOrder   Int             @default(0)
+
+  @@index([invoiceId, sortOrder])
   @@index([listingId])
 }
 
