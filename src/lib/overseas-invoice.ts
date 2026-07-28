@@ -12,13 +12,11 @@ export const INVOICE_CURRENCIES: InvoiceCurrency[] = ["EUR", "USD"];
 export const INVOICE_SELLER = {
   brand: "RBAUTO",
   company: "RBAUTO SCRAP",
-  address:
-    "82, Taehaksan-ro, Pungse-myeon, Dongnam-gu, Cheonan-si, Chungcheongnam-do post. 31214 Republic of Korea",
+  address: "4, Cheongsu 5-ro, Dongnam-gu, Cheonan-si, Chungcheongnam-do",
   bizNo: "436-87-00501",
   ceoKo: "이근배",
   companyKo: "주식회사 알비오토",
-  addressKo:
-    "충청남도 천안시 동남구 풍세면 태학산로 82 (우 31214)",
+  addressKo: "4, Cheongsu 5-ro, Dongnam-gu, Cheonan-si, Chungcheongnam-do",
 } as const;
 
 export const INVOICE_REMITTANCE = {
