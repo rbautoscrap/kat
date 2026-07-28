@@ -16,6 +16,8 @@ export const INVOICE_SELLER = {
   bizNo: "436-87-00501",
   ceoKo: "이근배",
   companyKo: "주식회사 알비오토",
+  /** Short trade name used on sample seals */
+  sealName: "알비오토",
   addressKo: "4, Cheongsu 5-ro, Dongnam-gu, Cheonan-si, Chungcheongnam-do",
 } as const;
 
