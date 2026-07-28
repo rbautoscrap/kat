@@ -1030,7 +1030,25 @@ main {
   -webkit-user-drag: none;
 }
 
-.statement-sheet > *:not(.statement-accent):not(.statement-watermark) {
+.statement-stamp-mark {
+  position: absolute;
+  right: 12px;
+  bottom: 22px;
+  z-index: 2;
+  width: 240px;
+  max-width: 42%;
+  height: auto;
+  opacity: 0.72;
+  object-fit: contain;
+  transform: rotate(-8deg);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.statement-sheet > *:not(.statement-accent):not(.statement-watermark):not(.statement-stamp-mark) {
   position: relative;
   z-index: 1;
 }

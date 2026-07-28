@@ -213,6 +213,14 @@ export function StatementDocument({
         <p className="statement-footer">
           {includeVat ? t.footerVat(vatPct) : t.footerNoVat}
         </p>
+
+        <img
+          src="/brand/rbauto-stamp.png"
+          alt=""
+          className="statement-stamp-mark"
+          draggable={false}
+          aria-hidden
+        />
       </div>
     </div>
   );
