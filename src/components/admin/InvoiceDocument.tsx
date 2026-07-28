@@ -51,6 +51,12 @@ export function InvoiceDocument({ invoice }: Props) {
         </header>
 
         <table className="invoice-meta" cellSpacing={0} cellPadding={0}>
+          <colgroup>
+            <col className="meta-label" />
+            <col className="meta-value" />
+            <col className="meta-label" />
+            <col className="meta-value" />
+          </colgroup>
           <tbody>
             <tr>
               <th>Invoice#</th>
@@ -80,6 +86,15 @@ export function InvoiceDocument({ invoice }: Props) {
         </table>
 
         <table className="invoice-items" cellSpacing={0} cellPadding={0}>
+          <colgroup>
+            <col className="col-desc" />
+            <col className="col-reg" />
+            <col className="col-vin" />
+            <col className="col-qty" />
+            <col className="col-krw" />
+            <col className="col-rate" />
+            <col className="col-fx" />
+          </colgroup>
           <thead>
             <tr>
               <th className="col-desc">Description</th>
@@ -109,8 +124,8 @@ export function InvoiceDocument({ invoice }: Props) {
         <div className="invoice-notice">
           <div className="invoice-notice-head">Notice</div>
           <ol>
-            {INVOICE_NOTICES.map((text) => (
-              <li key={text}>{text}</li>
+            {INVOICE_NOTICES.map((text, index) => (
+              <li key={index}>{text}</li>
             ))}
           </ol>
         </div>
