@@ -11,7 +11,7 @@ export const INVOICE_CURRENCIES: InvoiceCurrency[] = ["EUR", "USD"];
 
 export const INVOICE_SELLER = {
   brand: "RBAUTO",
-  company: "RBAUTO SCRAP",
+  company: "KOREA AUTO TRADE",
   address: "4, Cheongsu 5-ro, Dongnam-gu, Cheonan-si, Chungcheongnam-do",
   bizNo: "436-87-00501",
   ceoKo: "이근배",
