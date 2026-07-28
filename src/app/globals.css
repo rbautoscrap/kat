@@ -942,6 +942,8 @@ main {
   user-select: none;
   -webkit-user-drag: none;
   object-fit: contain;
+  filter: blur(0.55px) contrast(0.82) saturate(0.55) brightness(1.12);
+  mix-blend-mode: multiply;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
@@ -952,7 +954,7 @@ main {
   width: 168px;
   max-width: 72%;
   height: auto;
-  opacity: 0.72;
+  opacity: 0.38;
   transform: rotate(-8deg);
 }
 
@@ -1038,9 +1040,11 @@ main {
   width: 240px;
   max-width: 42%;
   height: auto;
-  opacity: 0.72;
+  opacity: 0.38;
   object-fit: contain;
   transform: rotate(-8deg);
+  filter: blur(0.55px) contrast(0.82) saturate(0.55) brightness(1.12);
+  mix-blend-mode: multiply;
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
@@ -1432,7 +1436,8 @@ main {
   }
 
   .statement-watermark,
-  .statement-watermark-img {
+  .statement-watermark-img,
+  .statement-stamp-mark {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
