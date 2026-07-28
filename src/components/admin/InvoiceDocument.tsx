@@ -1,4 +1,4 @@
-import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import {
   INVOICE_NOTICES,
   INVOICE_REMITTANCE,
@@ -13,32 +13,55 @@ import {
   type InvoiceView,
 } from "@/lib/overseas-invoice";
 
-const invoiceSans = Source_Sans_3({
+const invoiceFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
-  variable: "--font-invoice-sans",
-});
-
-const invoiceDisplay = Source_Serif_4({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-  display: "swap",
-  variable: "--font-invoice-display",
+  variable: "--font-invoice",
 });
 
 type Props = {
   invoice: InvoiceView;
 };
 
+const REMIT_ROWS = [
+  ["Beneficiary Name", INVOICE_REMITTANCE.beneficiaryName],
+  ["Beneficiary Account No.", INVOICE_REMITTANCE.accountNo],
+  ["Beneficiary Address", INVOICE_REMITTANCE.beneficiaryAddress],
+  ["Bank Name", INVOICE_REMITTANCE.bankName],
+  ["Branch Name", INVOICE_REMITTANCE.branchName],
+  ["Swift Code", INVOICE_REMITTANCE.swiftCode],
+  ["Bank Address", INVOICE_REMITTANCE.bankAddress],
+  ["Bank Telephone no.", INVOICE_REMITTANCE.bankTel],
+] as const;
+
 export function InvoiceDocument({ invoice }: Props) {
   const lines = getInvoiceLines(invoice);
   const currency = invoice.currency;
 
+  const metaPairs = [
+    [
+      ["Invoice#", invoice.invoiceNo],
+      ["Company", invoice.company || "—"],
+    ],
+    [
+      ["Invoice Date", invoice.invoiceDate],
+      ["Consignee", invoice.consignee],
+    ],
+    [
+      ["Terms", invoice.terms],
+      ["Business no.", invoice.businessNo || "—"],
+    ],
+    [
+      ["Due Date", invoice.dueDate],
+      ["Final destination", invoice.finalDestination || "—"],
+    ],
+  ] as const;
+
   return (
     <div
       id="invoice-document"
-      className={`invoice-document ${invoiceSans.variable} ${invoiceDisplay.variable} ${invoiceSans.className}`}
+      className={`invoice-document ${invoiceFont.variable} ${invoiceFont.className}`}
       lang="en"
     >
       <div className="invoice-sheet">
@@ -53,46 +76,25 @@ export function InvoiceDocument({ invoice }: Props) {
 
         <header className="invoice-header">
           <div className="invoice-heading">
+            <p className="invoice-eyebrow">Commercial Invoice</p>
             <h1>INVOICE</h1>
             <p className="invoice-company">{INVOICE_SELLER.company}</p>
             <p className="invoice-address">{INVOICE_SELLER.address}</p>
           </div>
         </header>
 
-        <table className="invoice-meta" cellSpacing={0} cellPadding={0}>
-          <colgroup>
-            <col className="meta-label" />
-            <col className="meta-value" />
-            <col className="meta-label" />
-            <col className="meta-value" />
-          </colgroup>
-          <tbody>
-            <tr>
-              <th>Invoice#</th>
-              <td>{invoice.invoiceNo}</td>
-              <th>Company</th>
-              <td>{invoice.company || "—"}</td>
-            </tr>
-            <tr>
-              <th>Invoice Date</th>
-              <td>{invoice.invoiceDate}</td>
-              <th>Consignee</th>
-              <td>{invoice.consignee}</td>
-            </tr>
-            <tr>
-              <th>Terms</th>
-              <td>{invoice.terms}</td>
-              <th>Business no.</th>
-              <td>{invoice.businessNo || "—"}</td>
-            </tr>
-            <tr>
-              <th>Due Date</th>
-              <td>{invoice.dueDate}</td>
-              <th>Final destination</th>
-              <td>{invoice.finalDestination || "—"}</td>
-            </tr>
-          </tbody>
-        </table>
+        <section className="invoice-meta" aria-label="Invoice details">
+          {metaPairs.map((row, i) => (
+            <div key={i} className="invoice-meta-row">
+              {row.map(([label, value]) => (
+                <div key={label} className="invoice-meta-cell">
+                  <span className="invoice-meta-label">{label}</span>
+                  <span className="invoice-meta-value">{value}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </section>
 
         <table className="invoice-items" cellSpacing={0} cellPadding={0}>
           <colgroup>
@@ -130,38 +132,33 @@ export function InvoiceDocument({ invoice }: Props) {
           </tbody>
         </table>
 
-        <div className="invoice-notice">
+        <section className="invoice-notice" aria-label="Notice">
           <div className="invoice-notice-head">Notice</div>
           <ol>
             {INVOICE_NOTICES.map((text, index) => (
               <li key={index}>{text}</li>
             ))}
           </ol>
-        </div>
+        </section>
 
         <div className="invoice-amount-row">
           <p className="invoice-prepaid">{invoice.prepaidLabel}</p>
           <p className="invoice-amount">
-            {amountLabel(currency)} :{" "}
+            <span className="invoice-amount-label">
+              {amountLabel(currency)}
+            </span>
             <strong>{formatFx(invoice.amount, currency)}</strong>
           </p>
         </div>
 
         <div className="invoice-footer-grid">
           <table className="invoice-remit" cellSpacing={0} cellPadding={0}>
+            <colgroup>
+              <col className="remit-label" />
+              <col className="remit-value" />
+            </colgroup>
             <tbody>
-              {(
-                [
-                  ["Beneficiary Name", INVOICE_REMITTANCE.beneficiaryName],
-                  ["Beneficiary Account No.", INVOICE_REMITTANCE.accountNo],
-                  ["Beneficiary Address", INVOICE_REMITTANCE.beneficiaryAddress],
-                  ["Bank Name", INVOICE_REMITTANCE.bankName],
-                  ["Branch Name", INVOICE_REMITTANCE.branchName],
-                  ["Swift Code", INVOICE_REMITTANCE.swiftCode],
-                  ["Bank Address", INVOICE_REMITTANCE.bankAddress],
-                  ["Bank Telephone no.", INVOICE_REMITTANCE.bankTel],
-                ] as const
-              ).map(([label, value]) => (
+              {REMIT_ROWS.map(([label, value]) => (
                 <tr key={label}>
                   <th>{label}</th>
                   <td>{value}</td>
@@ -179,7 +176,7 @@ export function InvoiceDocument({ invoice }: Props) {
         </div>
 
         <p className="invoice-total">
-          {totalLabel(currency)} :{" "}
+          <span className="invoice-total-label">{totalLabel(currency)}</span>
           <strong>{formatFx(invoice.amount, currency)}</strong>
         </p>
       </div>
