@@ -18,6 +18,7 @@ import {
 import {
   newListingShuffleSeed,
   orderByIds,
+  orderListingsNewestFirst,
   parseListingShuffleSeed,
   seededCostBiasedOrder,
 } from "@/lib/listing-shuffle";
@@ -79,11 +80,19 @@ export default async function ListingsPage({ searchParams }: Props) {
   const totalPageCount = Math.max(1, Math.ceil(total / pageSize));
   const currentPage = Math.min(page, totalPageCount);
 
+  const idSelect = {
+    id: true,
+    costPrice: true,
+    createdAt: true,
+    saleStatus: true,
+    bumpedAt: true,
+  } as const;
+
   let listings;
   if (shuffleMode && shuffleSeed !== null) {
     const idRows = await prisma.listing.findMany({
       where,
-      select: { id: true, costPrice: true, createdAt: true },
+      select: idSelect,
       orderBy: { id: "asc" },
     });
     const orderedIds = seededCostBiasedOrder(idRows, shuffleSeed);
@@ -99,15 +108,23 @@ export default async function ListingsPage({ searchParams }: Props) {
     });
     listings = orderByIds(pageRows, pageIds);
   } else {
-    listings = await prisma.listing.findMany({
+    const idRows = await prisma.listing.findMany({
       where,
+      select: idSelect,
+      orderBy: { id: "asc" },
+    });
+    const orderedIds = orderListingsNewestFirst(idRows);
+    const pageIds = orderedIds.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize,
+    );
+    const pageRows = await prisma.listing.findMany({
+      where: { id: { in: pageIds } },
       include: {
         images: { orderBy: { sortOrder: "asc" }, take: 1 },
       },
-      orderBy: { createdAt: "desc" },
-      take: pageSize,
-      skip: (currentPage - 1) * pageSize,
     });
+    listings = orderByIds(pageRows, pageIds);
   }
 
   const heading = category

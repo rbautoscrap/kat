@@ -4,11 +4,19 @@ import { ListingSection } from "@/components/ListingSection";
 import { isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { memberListingVisibilityWhere } from "@/lib/live-auction";
+import {
+  orderByIds,
+  orderListingsNewestFirst,
+  seededCostBiasedOrder,
+  standByHomeShuffleSeed,
+} from "@/lib/listing-shuffle";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 const HOME_SECTION_LIMIT = 10; // 5 per row × 2 rows
+/** Fetch extra rows so reserved/sold demotion still fills the strip. */
+const HOME_SECTION_FETCH = 40;
 
 type Props = {
   searchParams: Promise<{ error?: string }>;
@@ -20,6 +28,27 @@ const coverImageInclude = {
   images: { orderBy: { sortOrder: "asc" as const }, take: 1 },
 };
 
+async function loadSectionListings(
+  category: "HOT_DEALS" | "CAR_LISTINGS" | "STAND_BY" | "LIVE_AUCTION",
+  visibility: Prisma.ListingWhereInput,
+  mode: "newest" | "cost_biased",
+): Promise<HomeListing[]> {
+  const where: Prisma.ListingWhereInput = {
+    AND: [{ category }, visibility],
+  };
+  const candidates = await prisma.listing.findMany({
+    where,
+    include: coverImageInclude,
+    orderBy: { createdAt: "desc" },
+    take: HOME_SECTION_FETCH,
+  });
+  const orderedIds =
+    mode === "cost_biased"
+      ? seededCostBiasedOrder(candidates, standByHomeShuffleSeed())
+      : orderListingsNewestFirst(candidates);
+  return orderByIds(candidates, orderedIds).slice(0, HOME_SECTION_LIMIT);
+}
+
 async function loadHomeListings(
   includeEndedAuctions: boolean,
 ): Promise<[HomeListing[], HomeListing[], HomeListing[], HomeListing[]]> {
@@ -29,30 +58,10 @@ async function loadHomeListings(
 
   try {
     return await Promise.all([
-      prisma.listing.findMany({
-        where: { AND: [{ category: "HOT_DEALS" }, visibility] },
-        include: coverImageInclude,
-        orderBy: { createdAt: "desc" },
-        take: HOME_SECTION_LIMIT,
-      }),
-      prisma.listing.findMany({
-        where: { AND: [{ category: "CAR_LISTINGS" }, visibility] },
-        include: coverImageInclude,
-        orderBy: { createdAt: "desc" },
-        take: HOME_SECTION_LIMIT,
-      }),
-      prisma.listing.findMany({
-        where: { AND: [{ category: "STAND_BY" }, visibility] },
-        include: coverImageInclude,
-        orderBy: { createdAt: "desc" },
-        take: HOME_SECTION_LIMIT,
-      }),
-      prisma.listing.findMany({
-        where: { AND: [{ category: "LIVE_AUCTION" }, visibility] },
-        include: coverImageInclude,
-        orderBy: { createdAt: "desc" },
-        take: HOME_SECTION_LIMIT,
-      }),
+      loadSectionListings("HOT_DEALS", visibility, "newest"),
+      loadSectionListings("CAR_LISTINGS", visibility, "cost_biased"),
+      loadSectionListings("STAND_BY", visibility, "newest"),
+      loadSectionListings("LIVE_AUCTION", visibility, "newest"),
     ]);
   } catch (error) {
     console.error("[HomePage] listing query failed", error);

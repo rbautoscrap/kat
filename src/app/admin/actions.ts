@@ -271,7 +271,7 @@ export async function deleteListing(listingId: string): Promise<ActionResult> {
   return { ok: true };
 }
 
-/** Move listing to the front as if newly registered (updates createdAt). */
+/** Pin listing to the front for 24 hours via bumpedAt (does not change createdAt). */
 export async function bumpListingToFront(
   listingId: string,
 ): Promise<ActionResult> {
@@ -288,7 +288,7 @@ export async function bumpListingToFront(
   try {
     await prisma.listing.update({
       where: { id: listingId },
-      data: { createdAt: new Date() },
+      data: { bumpedAt: new Date() },
     });
   } catch (error) {
     return {

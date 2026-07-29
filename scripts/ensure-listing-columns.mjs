@@ -24,6 +24,7 @@ async function main() {
     const names = new Set(rows.map((r) => r.name));
     await ensureColumn(prisma, names, "offersSeenAt", "DATETIME");
     await ensureColumn(prisma, names, "auctionEndsAt", "DATETIME");
+    await ensureColumn(prisma, names, "bumpedAt", "DATETIME");
   } finally {
     await prisma.$disconnect();
   }

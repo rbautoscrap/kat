@@ -92,7 +92,7 @@ export function ListingAdminControls({
         <button
           type="button"
           disabled={pending}
-          title="가장 최근에 등록한 것처럼 맨 앞으로 이동합니다"
+          title="24시간 동안 목록 맨 앞으로 이동합니다"
           className={`${adminActionBtnClass} w-full px-1.5`}
           onClick={() => {
             startTransition(async () => {
