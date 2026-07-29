@@ -55,11 +55,12 @@ export function ContactBar() {
             href={CONTACT_FACEBOOK_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#1877F2]/20 text-[#8ab4ff] transition hover:bg-[#1877F2]/35"
-            aria-label="Facebook page"
-            title="Facebook"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#1877F2]/20 px-2.5 py-0.5 text-[11.5px] font-medium text-[#9ec1ff] transition hover:bg-[#1877F2]/35 hover:text-white"
+            aria-label="Facebook — RB AUTO"
+            title="Facebook — RB AUTO"
           >
             <FacebookIcon />
+            Facebook
           </a>
         </div>
       </div>
@@ -93,7 +94,7 @@ function MessengerIcon() {
 
 function FacebookIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M22 12.07C22 6.48 17.52 2 11.93 2S1.86 6.48 1.86 12.07c0 5.02 3.66 9.18 8.44 9.93v-7.02H7.9v-2.91h2.4V9.85c0-2.37 1.41-3.68 3.57-3.68 1.03 0 2.12.19 2.12.19v2.33h-1.2c-1.18 0-1.55.73-1.55 1.48v1.78h2.64l-.42 2.91h-2.22V22c4.78-.75 8.44-4.91 8.44-9.93z" />
     </svg>
   );

@@ -42,10 +42,10 @@ export const CONTACT_EMAIL =
 
 export const CONTACT_HOURS = "Mon – Fri, 09:00 – 18:00 (KST)";
 
-/** Facebook Page URL */
+/** Facebook Page URL (RB AUTO ads / business page) */
 export const CONTACT_FACEBOOK_URL = (
   process.env.NEXT_PUBLIC_FACEBOOK_URL ??
-  "https://www.facebook.com/rbautoscrap"
+  "https://www.facebook.com/people/RB-AUTO/100071434744672/"
 ).trim();
 
 /**
