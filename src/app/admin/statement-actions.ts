@@ -37,6 +37,8 @@ const statementSchema = z.object({
       z.object({
         lineKey: z.string().min(1),
         label: z.string().trim().max(120).optional(),
+        vin: z.string().trim().max(40).optional(),
+        vehicleNumber: z.string().trim().max(40).optional(),
         amount: lineAmountSchema,
       }),
     )
@@ -112,7 +114,13 @@ function listingSnapshot(listing: {
 }
 
 async function buildItemRows(
-  items: Array<{ lineKey: string; label?: string; amount: string }>,
+  items: Array<{
+    lineKey: string;
+    label?: string;
+    vin?: string;
+    vehicleNumber?: string;
+    amount: string;
+  }>,
   opts?: { statementId?: string },
 ) {
   const keys = items.map((i) => i.lineKey);
@@ -149,6 +157,13 @@ async function buildItemRows(
   const rows: BuiltRow[] = [];
 
   for (const [index, item] of items.entries()) {
+    const vinOverride =
+      item.vin !== undefined ? item.vin.trim() || null : undefined;
+    const vehicleNumberOverride =
+      item.vehicleNumber !== undefined
+        ? item.vehicleNumber.trim() || null
+        : undefined;
+
     if (isExtraLineKey(item.lineKey)) {
       const label = item.label?.trim() || "";
       if (!label) {
@@ -161,9 +176,9 @@ async function buildItemRows(
         listingId: null,
         isExtra: true,
         vehicleLabel: label,
-        vin: null,
+        vin: vinOverride ?? null,
         serialNumber: "EXTRA",
-        vehicleNumber: null,
+        vehicleNumber: vehicleNumberOverride ?? null,
         amount: item.amount,
         sortOrder: index,
       });
@@ -183,9 +198,12 @@ async function buildItemRows(
         listingId: null,
         isExtra: existing.isExtra,
         vehicleLabel: existing.vehicleLabel,
-        vin: existing.vin,
+        vin: vinOverride !== undefined ? vinOverride : existing.vin,
         serialNumber: existing.serialNumber,
-        vehicleNumber: existing.vehicleNumber,
+        vehicleNumber:
+          vehicleNumberOverride !== undefined
+            ? vehicleNumberOverride
+            : existing.vehicleNumber,
         amount: item.amount,
         sortOrder: index,
       });
@@ -200,7 +218,13 @@ async function buildItemRows(
     rows.push({
       listingId: listing.id,
       isExtra: false,
-      ...snap,
+      vehicleLabel: snap.vehicleLabel,
+      serialNumber: snap.serialNumber,
+      vin: vinOverride !== undefined ? vinOverride : snap.vin,
+      vehicleNumber:
+        vehicleNumberOverride !== undefined
+          ? vehicleNumberOverride
+          : snap.vehicleNumber,
       amount: item.amount,
       sortOrder: index,
     });

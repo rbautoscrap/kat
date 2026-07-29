@@ -61,8 +61,8 @@ type SelectedLine = {
   kind: "listing" | "extra";
   label: string;
   serialNumber: string;
-  vin: string | null;
-  vehicleNumber: string | null;
+  vin: string;
+  vehicleNumber: string;
   amount: string;
 };
 
@@ -102,8 +102,8 @@ function initialLines(
         kind: "extra" as const,
         label: line.vehicleLabel,
         serialNumber: "EXTRA",
-        vin: null,
-        vehicleNumber: null,
+        vin: line.vin ?? "",
+        vehicleNumber: line.vehicleNumber ?? "",
         amount: formatAmountInput(line.amount, currency) ?? line.amount,
       };
     }
@@ -117,8 +117,8 @@ function initialLines(
       kind: "listing" as const,
       label: opt?.label ?? line.vehicleLabel,
       serialNumber: line.serialNumber,
-      vin: line.vin,
-      vehicleNumber: line.vehicleNumber,
+      vin: line.vin ?? "",
+      vehicleNumber: line.vehicleNumber ?? "",
       amount: formatAmountInput(line.amount, currency) ?? line.amount,
     };
   }),
@@ -244,8 +244,8 @@ export function StatementForm({
           kind: "listing",
           label: listing.label,
           serialNumber: listing.serialNumber,
-          vin: listing.vin,
-          vehicleNumber: listing.vehicleNumber,
+          vin: listing.vin ?? "",
+          vehicleNumber: listing.vehicleNumber ?? "",
           amount: "",
         },
       ]),
@@ -261,8 +261,8 @@ export function StatementForm({
           kind: "extra",
           label: "서비스 비용",
           serialNumber: "EXTRA",
-          vin: null,
-          vehicleNumber: null,
+          vin: "",
+          vehicleNumber: "",
           amount: "",
         },
       ]),
@@ -278,6 +278,12 @@ export function StatementForm({
     if (next === null) return;
     setSelected((prev) =>
       prev.map((s) => (s.lineKey === lineKey ? { ...s, amount: next } : s)),
+    );
+  }
+
+  function updateLineVin(lineKey: string, vin: string) {
+    setSelected((prev) =>
+      prev.map((s) => (s.lineKey === lineKey ? { ...s, vin } : s)),
     );
   }
 
@@ -325,6 +331,8 @@ export function StatementForm({
         items: withExtrasLast(selected).map((s) => ({
           lineKey: s.lineKey,
           label: s.kind === "extra" ? s.label.trim() : undefined,
+          vin: s.vin.trim() || undefined,
+          vehicleNumber: s.vehicleNumber.trim() || undefined,
           amount: s.amount,
         })),
         buyerName,
@@ -464,21 +472,38 @@ export function StatementForm({
                     제거
                   </button>
                 </div>
-                <label className="mt-2 block">
-                  <span className="text-[12px] text-neutral-500">
-                    공급가액 (부가세 별도)
-                  </span>
-                  <input
-                    required
-                    inputMode="decimal"
-                    value={line.amount}
-                    onChange={(e) =>
-                      updateLineAmount(line.lineKey, e.target.value)
-                    }
-                    placeholder="예: 150,000"
-                    className={fieldClass}
-                  />
-                </label>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="text-[12px] text-neutral-500">
+                      VIN (차대번호)
+                    </span>
+                    <input
+                      value={line.vin}
+                      onChange={(e) =>
+                        updateLineVin(line.lineKey, e.target.value)
+                      }
+                      placeholder="수기 입력 가능"
+                      className={fieldClass}
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-[12px] text-neutral-500">
+                      공급가액 (부가세 별도)
+                    </span>
+                    <input
+                      required
+                      inputMode="decimal"
+                      value={line.amount}
+                      onChange={(e) =>
+                        updateLineAmount(line.lineKey, e.target.value)
+                      }
+                      placeholder="예: 150,000"
+                      className={fieldClass}
+                    />
+                  </label>
+                </div>
               </li>
             ))}
           </ul>
