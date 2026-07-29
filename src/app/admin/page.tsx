@@ -52,7 +52,7 @@ export default async function AdminOverviewPage() {
       href: "/admin/listings?sort=offers_desc",
       note:
         offerListingCount > 0
-          ? "희망가 있는 매물"
+          ? "오퍼 있는 매물"
           : "접수된 오퍼 없음",
     },
     {

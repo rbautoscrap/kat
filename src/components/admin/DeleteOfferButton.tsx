@@ -19,12 +19,12 @@ export function DeleteOfferButton({ offerId, label, className }: Props) {
     <button
       type="button"
       disabled={pending}
-      title="희망가 삭제"
-      aria-label={label ? `희망가 삭제: ${label}` : "희망가 삭제"}
+      title="오퍼 삭제"
+      aria-label={label ? `오퍼 삭제: ${label}` : "오퍼 삭제"}
       onClick={() => {
         if (
           !window.confirm(
-            "이 희망가(오퍼)를 삭제할까요?\n삭제 후에는 복구할 수 없습니다.",
+            "이 오퍼를 삭제할까요?\n삭제 후에는 복구할 수 없습니다.",
           )
         ) {
           return;

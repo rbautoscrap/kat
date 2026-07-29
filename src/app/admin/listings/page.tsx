@@ -371,7 +371,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                   })}
                   className="font-medium text-amber-800 underline-offset-2 hover:underline"
                 >
-                  희망가 접수 {offerListingCount.toLocaleString("ko-KR")}건
+                  오퍼 접수 {offerListingCount.toLocaleString("ko-KR")}건
                 </Link>
               </>
             ) : null}
@@ -442,7 +442,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
               <th className={adminThClass}>제목</th>
               <th className={adminThClass}>카테고리</th>
               <th className={adminThClass}>원가</th>
-              <th className={`${adminThClass} text-center`}>희망가</th>
+              <th className={`${adminThClass} text-center`}>오퍼</th>
               <th className={`${adminThClass} text-center`}>누적일</th>
               <th className={`${adminThClass} text-center`}>조회</th>
               <th className={adminThClass}>등록자</th>
@@ -526,11 +526,11 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                         ) : null}
                         {hasUnreadOffers ? (
                           <span className="inline-flex rounded bg-orange-200 px-1.5 py-0.5 text-[12.5px] font-medium leading-none text-orange-950">
-                            희망가 접수
+                            오퍼 접수
                           </span>
                         ) : hasOffers ? (
                           <span className="inline-flex rounded bg-neutral-100 px-1.5 py-0.5 text-[12.5px] font-medium leading-none text-neutral-600">
-                            희망가 확인됨
+                            오퍼 확인됨
                           </span>
                         ) : null}
                         {listing.category === "LIVE_AUCTION" &&
