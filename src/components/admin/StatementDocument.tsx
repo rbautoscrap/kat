@@ -78,7 +78,9 @@ export function StatementDocument({
           </div>
           <div className="statement-meta-chip">
             <span className="statement-meta-label">{t.dueDate}</span>
-            <span className="statement-meta-value">{dueDate}</span>
+            <span className="statement-meta-value statement-meta-due">
+              {dueDate}
+            </span>
           </div>
         </div>
 

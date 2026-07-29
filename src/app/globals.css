@@ -1145,6 +1145,10 @@ main {
   color: #1a1a1a;
 }
 
+.statement-meta-due {
+  color: #dc2626;
+}
+
 .statement-parties {
   width: 100%;
   margin-bottom: 16px;
