@@ -1121,7 +1121,7 @@ main {
 
 .statement-meta-chip {
   display: table-cell;
-  width: 50%;
+  width: 33.333%;
   padding: 10px 12px;
   border: 1px solid #ececec;
   background: #f7f7f7;

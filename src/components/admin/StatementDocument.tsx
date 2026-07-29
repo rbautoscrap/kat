@@ -6,6 +6,7 @@ import {
   formatStatementAmount,
   getStatementBankAccount,
   getStatementLines,
+  statementDueDate,
   sumLineAmounts,
   type StatementLocale,
   type StatementView,
@@ -36,6 +37,7 @@ export function StatementDocument({
   const bankName = locale === "en" ? bank.bankNameEn : bank.bankName;
   const accountHolder =
     locale === "en" ? bank.accountHolderEn : bank.accountHolder;
+  const dueDate = statementDueDate(statement.issueDate);
 
   return (
     <div
@@ -73,6 +75,10 @@ export function StatementDocument({
           <div className="statement-meta-chip">
             <span className="statement-meta-label">{t.issueDate}</span>
             <span className="statement-meta-value">{statement.issueDate}</span>
+          </div>
+          <div className="statement-meta-chip">
+            <span className="statement-meta-label">{t.dueDate}</span>
+            <span className="statement-meta-value">{dueDate}</span>
           </div>
         </div>
 

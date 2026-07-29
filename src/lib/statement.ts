@@ -163,6 +163,7 @@ export const STATEMENT_COPY = {
     subtitle: "Transaction Statement",
     statementNo: "명세서 번호",
     issueDate: "발행일",
+    dueDate: "마감일",
     seller: "공급자",
     buyer: "공급받는자",
     phone: "연락처",
@@ -191,6 +192,7 @@ export const STATEMENT_COPY = {
     subtitle: "거래명세서",
     statementNo: "Statement No.",
     issueDate: "Issue Date",
+    dueDate: "Due Date",
     seller: "Supplier",
     buyer: "Buyer",
     phone: "Phone",
@@ -336,4 +338,19 @@ export function defaultIssueDate() {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+/** Payment / deposit due date shown on the statement (issue date + N days). */
+export const STATEMENT_DUE_DAYS = 3;
+
+export function statementDueDate(
+  issueDate: string,
+  days = STATEMENT_DUE_DAYS,
+): string {
+  const m = issueDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return issueDate;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  d.setUTCDate(d.getUTCDate() + days);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
 }
