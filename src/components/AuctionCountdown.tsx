@@ -97,16 +97,27 @@ export function AuctionCountdown({
   useEffect(() => {
     if (!Number.isFinite(endMs)) return;
 
+    // Already ended when mounted — keep static label, do not refresh-loop.
+    if (endMs - Date.now() <= 0) {
+      setParts(toParts(0));
+      return;
+    }
+
+    let refreshed = false;
+    let id = 0;
     const tick = () => {
       const next = endMs - Date.now();
       setParts(toParts(next));
-      if (next <= 0) {
+      if (next <= 0 && !refreshed) {
+        refreshed = true;
+        window.clearInterval(id);
+        // Refresh once when the timer crosses zero (not every second while ended).
         router.refresh();
       }
     };
 
     tick();
-    const id = window.setInterval(tick, 1000);
+    id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
   }, [endMs, router]);
 
