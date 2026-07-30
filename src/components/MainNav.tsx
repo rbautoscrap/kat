@@ -5,20 +5,20 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 const nav = [
   {
+    href: "/listings?category=LIVE_AUCTION",
+    label: "Live Auction",
+    featured: true,
+    category: "LIVE_AUCTION",
+  },
+  {
     href: "/listings?category=HOT_DEALS",
     label: "HOT DEALS",
-    hot: true,
     category: "HOT_DEALS",
   },
   {
     href: "/listings?category=CAR_LISTINGS",
     label: "Car Listings",
     category: "CAR_LISTINGS",
-  },
-  {
-    href: "/listings?category=LIVE_AUCTION",
-    label: "Live Auction",
-    category: "LIVE_AUCTION",
   },
   {
     href: "/listings?category=STAND_BY",
@@ -50,7 +50,7 @@ export function MainNav() {
           <Link
             key={item.href}
             href={item.href}
-            className={`nav-link ${item.hot ? "nav-link-hot" : ""} ${active ? "is-active" : ""}`}
+            className={`nav-link ${item.featured ? "nav-link-featured" : ""} ${active ? "is-active" : ""}`}
           >
             {item.label}
           </Link>

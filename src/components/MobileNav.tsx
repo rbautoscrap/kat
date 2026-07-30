@@ -11,20 +11,20 @@ import { lockBodyScroll, unlockBodyScroll } from "@/lib/body-scroll-lock";
 
 const nav = [
   {
+    href: "/listings?category=LIVE_AUCTION",
+    label: "Live Auction",
+    featured: true,
+    category: "LIVE_AUCTION",
+  },
+  {
     href: "/listings?category=HOT_DEALS",
     label: "HOT DEALS",
-    hot: true,
     category: "HOT_DEALS",
   },
   {
     href: "/listings?category=CAR_LISTINGS",
     label: "Car Listings",
     category: "CAR_LISTINGS",
-  },
-  {
-    href: "/listings?category=LIVE_AUCTION",
-    label: "Live Auction",
-    category: "LIVE_AUCTION",
   },
   {
     href: "/listings?category=STAND_BY",
@@ -142,10 +142,10 @@ export function MobileNav({ user, logoutAction }: Props) {
                       <li key={item.href}>
                         <Link
                           href={item.href}
-                          className={`flex min-h-12 items-center px-1 text-[15px] font-medium tracking-wide ${
-                            item.hot
-                              ? "text-[var(--accent)]"
-                              : "text-neutral-800"
+                          className={`flex min-h-12 items-center px-1 text-[15px] tracking-wide ${
+                            item.featured
+                              ? "font-semibold text-[var(--accent)]"
+                              : "font-medium text-neutral-800"
                           } ${active ? "bg-neutral-50" : ""}`}
                           onClick={() => setOpen(false)}
                         >

@@ -89,18 +89,24 @@ img {
   border-bottom-color: currentColor;
 }
 
-.nav-link-hot {
+.nav-link-featured {
   color: var(--accent);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-.nav-link-hot:hover,
-.nav-link-hot.is-active {
+.nav-link-featured:hover,
+.nav-link-featured.is-active {
   color: var(--accent);
 }
 
 @media (min-width: 640px) {
   .nav-link {
     font-size: 15px;
+  }
+
+  .nav-link-featured {
+    font-size: 15.5px;
   }
 }
 

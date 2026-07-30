@@ -3,9 +3,9 @@ import Link from "next/link";
 export default function SitemapPage() {
   const links = [
     { href: "/", label: "Home" },
+    { href: "/listings?category=LIVE_AUCTION", label: "Live Auction" },
     { href: "/listings?category=HOT_DEALS", label: "HOT DEALS" },
     { href: "/listings?category=CAR_LISTINGS", label: "Car Listings" },
-    { href: "/listings?category=LIVE_AUCTION", label: "Live Auction" },
     { href: "/listings?category=STAND_BY", label: "Stand by" },
     { href: "/how-to-buy", label: "How to buy" },
     { href: "/about-us", label: "About Us" },
