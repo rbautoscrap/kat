@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { diagnoseLogin } from "@/app/login/actions";
 import { normalizeLoginId } from "@/lib/login-id";
 import { loginErrorMessage } from "@/lib/login-messages";
 
@@ -41,6 +42,14 @@ export function LoginForm({
     const password = String(new FormData(form).get("password") ?? "");
 
     try {
+      // Surface pending / rejected clearly (Auth.js alone often collapses these).
+      const diagnosed = await diagnoseLogin(loginId, password);
+      if (!diagnosed.ok) {
+        setLocalError(loginErrorMessage(diagnosed.reason));
+        setSubmitting(false);
+        return;
+      }
+
       const result = await signIn("credentials", {
         email: loginId,
         password,

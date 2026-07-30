@@ -33,12 +33,11 @@ declare module "@auth/core/jwt" {
 /** How often to re-check user role/status from DB (cuts auth DB load). */
 const JWT_DB_REVALIDATE_MS = 10 * 60 * 1000;
 
-class PendingApprovalError extends CredentialsSignin {
-  code = "pending";
-}
-
-class RejectedAccountError extends CredentialsSignin {
-  code = "rejected";
+/** Set `code` after super() — Auth.js constructor resets it to "credentials". */
+function credentialsError(code: string): CredentialsSignin {
+  const error = new CredentialsSignin();
+  error.code = code;
+  return error;
 }
 
 /** Login accepts any non-empty password; strength is enforced at Join / change. */
@@ -86,15 +85,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const parsed = credentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
 
+        // Rate limiting is applied in diagnoseLogin (client form) and here for
+        // any direct Auth.js credential posts. Soft limit so double-check on
+        // success path rarely trips.
         const ip = await clientIpFromHeaders();
-        const byIp = rateLimit(`login:ip:${ip}`, 20, 15 * 60 * 1000);
+        const byIp = rateLimit(`login:ip:${ip}`, 40, 15 * 60 * 1000);
         const byId = rateLimit(
           `login:id:${parsed.data.email}`,
-          10,
+          20,
           15 * 60 * 1000,
         );
         if (!byIp.ok || !byId.ok) {
-          return null;
+          throw credentialsError("rate_limited");
         }
 
         const result = await verifyCredentials(
@@ -103,9 +105,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (!result.ok) {
-          if (result.reason === "pending") throw new PendingApprovalError();
-          if (result.reason === "rejected") throw new RejectedAccountError();
-          return null;
+          if (result.reason === "pending") throw credentialsError("pending");
+          if (result.reason === "rejected") throw credentialsError("rejected");
+          throw credentialsError("credentials");
         }
 
         return {
