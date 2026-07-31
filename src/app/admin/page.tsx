@@ -10,10 +10,11 @@ import {
 export const dynamic = "force-dynamic";
 
 const CATEGORY_ORDER: ListingCategory[] = [
-  "HOT_DEALS",
-  "CAR_LISTINGS",
   "LIVE_AUCTION",
+  "CAR_LISTINGS",
   "STAND_BY",
+  "HOT_DEALS",
+  "USED_PARTS",
 ];
 
 export default async function AdminOverviewPage() {

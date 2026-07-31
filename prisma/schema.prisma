@@ -24,6 +24,7 @@ enum ListingCategory {
   CAR_LISTINGS
   LIVE_AUCTION
   STAND_BY
+  USED_PARTS
 }
 
 enum OfferCurrency {

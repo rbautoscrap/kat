@@ -27,6 +27,7 @@ import {
   formatNotesDisplay,
   formatOdometerDisplay,
   formatTransmission,
+  isPartsCategory,
   SALE_STATUS_LABELS,
   listingKakaoInquiryText,
   listingWhatsAppLink,
@@ -205,26 +206,52 @@ export default async function ListingDetailPage({ params }: Props) {
   );
   const kakaoInquiry = listingKakaoInquiryText(listing.title, inquiryOptions);
 
-  const shortSpecs: { label: string; value: string }[] = [
-    { label: "VIN", value: listing.vin || "—" },
-    { label: "Engine Mark", value: listing.engineMark || "—" },
-    {
-      label: "Displacement",
-      value: formatDisplacementDisplay(listing.displacement) || "—",
-    },
-    {
-      label: "Transmission",
-      value: formatTransmission(listing.transmission) || "—",
-    },
-    {
-      label: "Odometer",
-      value: formatOdometerDisplay(listing.odometer) || "—",
-    },
-    {
-      label: "Fuel Type",
-      value: formatFuelType(listing.fuelType) || "—",
-    },
-  ];
+  const shortSpecs: { label: string; value: string }[] = isPartsCategory(
+    listing.category,
+  )
+    ? [
+        {
+          label: "Part",
+          value: listing.make || "—",
+        },
+        {
+          label: "Compatible",
+          value:
+            listing.model && listing.model !== "-" ? listing.model : "—",
+        },
+        {
+          label: "Type",
+          value: listing.highlights?.trim() || "—",
+        },
+        {
+          label: "Part No.",
+          value: listing.engineMark?.trim() || "—",
+        },
+        {
+          label: "S/N",
+          value: listing.serialNumber || "—",
+        },
+      ]
+    : [
+        { label: "VIN", value: listing.vin || "—" },
+        { label: "Engine Mark", value: listing.engineMark || "—" },
+        {
+          label: "Displacement",
+          value: formatDisplacementDisplay(listing.displacement) || "—",
+        },
+        {
+          label: "Transmission",
+          value: formatTransmission(listing.transmission) || "—",
+        },
+        {
+          label: "Odometer",
+          value: formatOdometerDisplay(listing.odometer) || "—",
+        },
+        {
+          label: "Fuel Type",
+          value: formatFuelType(listing.fuelType) || "—",
+        },
+      ];
   const notesValue =
     formatNotesDisplay(listing.damages, listing.damagesEn) || "—";
 

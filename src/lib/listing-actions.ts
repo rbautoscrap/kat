@@ -127,9 +127,14 @@ function normalizeFuelType(value: string) {
 
 /** Accept 4-digit years; if YYYYMMDD (or longer) is pasted, use the leading year. */
 function parseListingYear(value: unknown): number | null {
+  if (value === 0 || value === "0") return 0;
   if (value == null || value === "") return null;
   const digits = String(value).replace(/\D/g, "");
-  if (digits.length < 4) return null;
+  if (digits.length < 4) {
+    // Parts listings may send placeholder 0
+    if (digits === "0") return 0;
+    return null;
+  }
   const year = Number(digits.slice(0, 4));
   return Number.isFinite(year) ? year : null;
 }
@@ -139,15 +144,23 @@ const listingYearSchema = z.preprocess(
   z
     .number({ error: "연식(연도)을 입력해 주세요." })
     .int("연식은 정수 연도로 입력해 주세요.")
-    .min(1980, "연식은 1980년 이상이어야 합니다.")
+    .min(0, "연식은 1980년 이상이어야 합니다.")
     .max(2100, "연식은 4자리 연도(예: 2024)로 입력해 주세요."),
 );
 
+const LISTING_CATEGORIES = [
+  "HOT_DEALS",
+  "CAR_LISTINGS",
+  "LIVE_AUCTION",
+  "STAND_BY",
+  "USED_PARTS",
+] as const;
+
 const listingFieldsSchema = z.object({
-  category: z.enum(["HOT_DEALS", "CAR_LISTINGS", "LIVE_AUCTION", "STAND_BY"]),
+  category: z.enum(LISTING_CATEGORIES),
   year: listingYearSchema,
-  make: z.string().min(1, "제조사를 입력해 주세요."),
-  model: z.string().min(1, "모델을 입력해 주세요."),
+  make: z.string().min(1, "제조사/부품명을 입력해 주세요."),
+  model: z.string().min(1, "모델/호환 차종을 입력해 주세요."),
   vin: z
     .string()
     .optional()
@@ -195,6 +208,13 @@ const listingFieldsSchema = z.object({
   /** ISO / datetime-local string; required for LIVE_AUCTION */
   auctionEndsAt: z.string().optional(),
 }).superRefine((data, ctx) => {
+  if (data.category !== "USED_PARTS" && data.year < 1980) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["year"],
+      message: "연식은 1980년 이상이어야 합니다.",
+    });
+  }
   if (data.category !== "LIVE_AUCTION") return;
   const raw = data.auctionEndsAt?.trim();
   if (!raw) {
@@ -214,27 +234,46 @@ const listingFieldsSchema = z.object({
   }
 });
 
-export function buildListingTitle(year: number, make: string, model: string) {
+export function buildListingTitle(
+  year: number,
+  make: string,
+  model: string,
+  category?: ListingCategory,
+) {
+  if (category === "USED_PARTS") {
+    const name = make.trim();
+    const compat = model.trim();
+    if (compat && compat !== "-") return `${name} — ${compat}`;
+    return name;
+  }
   return `${year} ${make} ${model}`.trim();
 }
 
 export function formDataToListingInput(formData: FormData) {
+  const category = String(formData.get("category") ?? "") as ListingCategory;
+  const isParts = category === "USED_PARTS";
   const raw = {
-    category: String(formData.get("category") ?? "") as ListingCategory,
-    year: formData.get("year"),
-    make: String(formData.get("make") ?? ""),
-    model: String(formData.get("model") ?? ""),
-    vin: emptyToUndef(formData.get("vin")),
+    category,
+    year: isParts ? 0 : formData.get("year"),
+    make: String(formData.get("make") ?? "").trim(),
+    model: isParts
+      ? String(formData.get("model") ?? "").trim() || "-"
+      : String(formData.get("model") ?? ""),
+    vin: isParts ? undefined : emptyToUndef(formData.get("vin")),
     highlights: emptyToUndef(formData.get("highlights")),
     engineMark: emptyToUndef(formData.get("engineMark")),
-    displacement: emptyToUndef(formData.get("displacement")),
-    transmission: normalizeTransmission(
-      String(formData.get("transmission") ?? ""),
-    ),
+    displacement: isParts
+      ? undefined
+      : emptyToUndef(formData.get("displacement")),
+    transmission: isParts
+      ? "Other"
+      : normalizeTransmission(String(formData.get("transmission") ?? "")),
     engineStatus: emptyToUndef(formData.get("engineStatus")),
-    odometer: emptyToUndef(formData.get("odometer")),
+    odometer: isParts ? undefined : emptyToUndef(formData.get("odometer")),
     damages: emptyToUndef(formData.get("damages")),
-    fuelType: normalizeFuelType(String(formData.get("fuelType") ?? "")),
+    fuelType: isParts
+      ? "Other"
+      : normalizeFuelType(String(formData.get("fuelType") ?? "")),
     youtubeUrl: emptyToUndef(formData.get("youtubeUrl")),
     whatsappNumber:
       String(formData.get("whatsappNumber") ?? "").trim() ||
@@ -286,7 +325,7 @@ export function formDataToListingInput(formData: FormData) {
     costPrice,
     accumulatedDays,
     auctionEndsAt,
-    title: buildListingTitle(data.year, data.make, data.model),
+    title: buildListingTitle(data.year, data.make, data.model, data.category),
   };
 }
 

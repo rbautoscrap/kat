@@ -1,16 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import type { ListingCategory } from "@prisma/client";
 import { AuthModalShell } from "@/components/AuthModalShell";
 import { ListingForm } from "@/components/ListingForm";
 
 type DialogProps = {
   open: boolean;
   onClose: () => void;
+  defaultCategory?: ListingCategory;
 };
 
 /** Shared create dialog (admin list button or /listings/new). */
-export function ListingCreateDialog({ open, onClose }: DialogProps) {
+export function ListingCreateDialog({
+  open,
+  onClose,
+  defaultCategory,
+}: DialogProps) {
   return (
     <AuthModalShell
       open={open}
@@ -25,11 +31,11 @@ export function ListingCreateDialog({ open, onClose }: DialogProps) {
         매물 등록
       </h2>
       <p className="mt-1 text-[12.5px] text-neutral-500">
-        핫딜, 차량 매물, 스탠바이, Live Auction 카테고리에 차량을 등록할 수
-        있습니다.
+        차량 카테고리와 중고부품(Used Parts)을 등록할 수 있습니다. 중고부품은
+        부품명·사진 중심으로 간단히 등록하세요.
       </p>
       <div className="mt-5">
-        <ListingForm onCancel={onClose} />
+        <ListingForm onCancel={onClose} defaultCategory={defaultCategory} />
       </div>
     </AuthModalShell>
   );

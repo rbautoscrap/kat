@@ -25,6 +25,11 @@ const nav = [
     label: "HOT DEALS",
     category: "HOT_DEALS",
   },
+  {
+    href: "/listings?category=USED_PARTS",
+    label: "Used Parts",
+    category: "USED_PARTS",
+  },
   { href: "/how-to-buy", label: "How to buy" },
   { href: "/about-us", label: "About Us" },
 ];

@@ -28,4 +28,5 @@ export const ADMIN_CATEGORY_LABELS: Record<ListingCategory, string> = {
   CAR_LISTINGS: "차량 매물",
   LIVE_AUCTION: "라이브 경매",
   STAND_BY: "스탠바이",
+  USED_PARTS: "중고부품",
 };

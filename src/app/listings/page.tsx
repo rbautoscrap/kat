@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import { ListingCard } from "@/components/ListingCard";
 import { ListingPagination } from "@/components/ListingPagination";
 import { parsePage } from "@/lib/admin-pagination";
-import { isAdmin } from "@/lib/auth";
+import { canManageListings, isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { memberListingVisibilityWhere } from "@/lib/live-auction";
 import { buildPublicListingSearchWhere } from "@/lib/listing-search";
@@ -39,6 +40,7 @@ export default async function ListingsPage({ searchParams }: Props) {
   const params = await searchParams;
   const dbUser = await resolveSessionDbUser();
   const canViewSold = isAdmin(dbUser?.role);
+  const canList = canManageListings(dbUser?.role);
   const isSignedIn = Boolean(dbUser?.id);
   const category = parseCategory(params.category ?? null);
   const q = params.q?.trim() ?? "";
@@ -140,9 +142,25 @@ export default async function ListingsPage({ searchParams }: Props) {
       <div className="mb-3 sm:mb-4">
         <BackButton href="/" />
       </div>
-      <h1 className="site-heading mb-5 text-[1.1rem] text-neutral-800 sm:mb-6 sm:text-[1.2rem]">
-        {heading}
-      </h1>
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3 sm:mb-6">
+        <h1 className="site-heading text-[1.1rem] text-neutral-800 sm:text-[1.2rem]">
+          {heading}
+        </h1>
+        {category === "USED_PARTS" && canList ? (
+          <Link
+            href="/listings/new?category=USED_PARTS"
+            className="inline-flex h-9 items-center rounded-md bg-neutral-900 px-3.5 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-800"
+          >
+            + List a part
+          </Link>
+        ) : null}
+      </div>
+      {category === "USED_PARTS" ? (
+        <p className="-mt-3 mb-5 text-[13px] tracking-wide text-neutral-500 sm:-mt-4 sm:mb-6">
+          Browse verified used auto parts. Authorized members can list items;
+          everyone else can view and inquire.
+        </p>
+      ) : null}
       {isSearch ? (
         <p className="-mt-4 mb-6 text-[13px] tracking-wide text-neutral-500">
           {total.toLocaleString("en-US")} result{total === 1 ? "" : "s"}

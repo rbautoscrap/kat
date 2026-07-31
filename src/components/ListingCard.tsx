@@ -8,6 +8,7 @@ import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl"
 import { ListingThumb } from "@/components/ListingThumb";
 import { LiveAuctionAccessDialog } from "@/components/LiveAuctionAccessDialog";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
+import { isPartsCategory, listingCardLabel } from "@/lib/listings";
 
 type Props = {
   listing: Listing & { images: ListingImage[] };
@@ -30,9 +31,11 @@ export function ListingCard({
 }: Props) {
   const [gateOpen, setGateOpen] = useState(false);
   const thumb = listing.images[0]?.url ?? "/placeholder-car.svg";
-  const label = `${listing.year} ${listing.make} ${listing.model}`;
+  const label = listingCardLabel(listing);
   const large = size === "large";
   const isSold = listing.saleStatus === "SOLD";
+  const isParts = isPartsCategory(listing.category);
+  const partType = isParts ? listing.highlights?.trim() : "";
   const canOpen = !isSold || canViewSold;
   const detailHref = `/listings/${listing.id}`;
   const needsLiveAuctionGate =
@@ -53,6 +56,11 @@ export function ListingCard({
         } ${isSold ? "opacity-70 grayscale-[0.35]" : ""}`}
       />
       <SaleStatusOverlay status={listing.saleStatus} />
+      {isParts ? (
+        <span className="absolute left-1.5 top-1.5 rounded bg-neutral-900/75 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white">
+          Parts
+        </span>
+      ) : null}
     </div>
   );
 
@@ -67,6 +75,11 @@ export function ListingCard({
       >
         {label}
       </p>
+      {partType ? (
+        <p className="mt-1 text-[11.5px] tracking-wide text-neutral-500">
+          {partType}
+        </p>
+      ) : null}
       {listing.category === "LIVE_AUCTION" && listing.auctionEndsAt ? (
         <AuctionCountdown
           endsAt={

@@ -5,7 +5,41 @@ export const CATEGORY_LABELS: Record<ListingCategory, string> = {
   CAR_LISTINGS: "Car Listings",
   LIVE_AUCTION: "Live Auction",
   STAND_BY: "Stand by",
+  USED_PARTS: "Used Parts",
 };
+
+/** Optional part-type values stored in Listing.highlights for USED_PARTS */
+export const PART_TYPE_OPTIONS = [
+  "Engine",
+  "Transmission",
+  "Body",
+  "Interior",
+  "Electrical",
+  "Suspension / Steering",
+  "Wheels / Tires",
+  "Lights",
+  "Other",
+] as const;
+
+export function isPartsCategory(
+  category: ListingCategory | string | null | undefined,
+): boolean {
+  return category === "USED_PARTS";
+}
+
+/** Card / list label — parts use title; vehicles use year make model. */
+export function listingCardLabel(listing: {
+  category: ListingCategory;
+  year: number;
+  make: string;
+  model: string;
+  title: string;
+}): string {
+  if (isPartsCategory(listing.category)) {
+    return listing.title?.trim() || listing.make;
+  }
+  return `${listing.year} ${listing.make} ${listing.model}`;
+}
 
 /** Public English overlays / badges */
 export const SALE_STATUS_LABELS: Record<ListingSaleStatus, string> = {
@@ -19,6 +53,7 @@ export const CATEGORY_PATHS: Record<ListingCategory, string> = {
   CAR_LISTINGS: "/listings?category=CAR_LISTINGS",
   LIVE_AUCTION: "/listings?category=LIVE_AUCTION",
   STAND_BY: "/listings?category=STAND_BY",
+  USED_PARTS: "/listings?category=USED_PARTS",
 };
 
 /** Home section grid: 5 columns for larger listing tiles */
@@ -38,7 +73,8 @@ export function parseCategory(
     value === "HOT_DEALS" ||
     value === "CAR_LISTINGS" ||
     value === "LIVE_AUCTION" ||
-    value === "STAND_BY"
+    value === "STAND_BY" ||
+    value === "USED_PARTS"
   ) {
     return value;
   }

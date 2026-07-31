@@ -17,6 +17,7 @@ import {
   parseAuctionEndsAtInput,
   toKoreaDatetimeLocalValue,
 } from "@/lib/format-korea-time";
+import { isPartsCategory, PART_TYPE_OPTIONS } from "@/lib/listings";
 import {
   STORAGE_LOCATIONS,
   canonicalizeStorageLocation,
@@ -47,6 +48,8 @@ type Props = {
     storageLocation?: string | null;
     damagesEn?: string | null;
   };
+  /** Prefill category on create (e.g. Used Parts page → + List). */
+  defaultCategory?: ListingCategory;
   /** When set (e.g. modal), shows a cancel control that runs this. */
   onCancel?: () => void;
 };
@@ -220,7 +223,7 @@ function defaultAuctionEndsLocal(existing?: Date | string | null) {
   );
 }
 
-export function ListingForm({ listing, onCancel }: Props) {
+export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -235,8 +238,9 @@ export function ListingForm({ listing, onCancel }: Props) {
     () => listing?.images?.slice(1) ?? [],
   );
   const [category, setCategory] = useState<ListingCategory>(
-    () => listing?.category ?? "CAR_LISTINGS",
+    () => listing?.category ?? defaultCategory ?? "CAR_LISTINGS",
   );
+  const partsMode = isPartsCategory(category);
   const [auctionEndsAt, setAuctionEndsAt] = useState(() =>
     defaultAuctionEndsLocal(
       (listing as { auctionEndsAt?: Date | string | null } | undefined)
@@ -318,14 +322,26 @@ export function ListingForm({ listing, onCancel }: Props) {
     }
 
     const data = new FormData(form);
-    const yearDigits = String(data.get("year") ?? "").replace(/\D/g, "");
-    const yearNum = yearDigits.length >= 4 ? Number(yearDigits.slice(0, 4)) : NaN;
-    if (!Number.isFinite(yearNum) || yearNum < 1980 || yearNum > 2100) {
-      setError("연식은 4자리 연도(예: 2024)로 입력해 주세요.");
-      setPending(false);
-      return;
+    data.set("category", category);
+
+    if (partsMode) {
+      data.set("year", "0");
+      data.set("transmission", "Other");
+      data.set("fuelType", "Other");
+      if (!String(data.get("model") ?? "").trim()) {
+        data.set("model", "-");
+      }
+    } else {
+      const yearDigits = String(data.get("year") ?? "").replace(/\D/g, "");
+      const yearNum =
+        yearDigits.length >= 4 ? Number(yearDigits.slice(0, 4)) : NaN;
+      if (!Number.isFinite(yearNum) || yearNum < 1980 || yearNum > 2100) {
+        setError("연식은 4자리 연도(예: 2024)로 입력해 주세요.");
+        setPending(false);
+        return;
+      }
+      data.set("year", String(yearNum));
     }
-    data.set("year", String(yearNum));
 
     if (category === "LIVE_AUCTION") {
       const rawEnds = String(data.get("auctionEndsAt") ?? "").trim();
@@ -450,7 +466,7 @@ export function ListingForm({ listing, onCancel }: Props) {
       lang="ko"
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm">
+        <label className="block text-sm sm:col-span-2 sm:max-w-xs">
           <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
             카테고리
           </span>
@@ -470,6 +486,62 @@ export function ListingForm({ listing, onCancel }: Props) {
             ))}
           </select>
         </label>
+
+        {partsMode ? (
+          <>
+            <div className="sm:col-span-2 rounded-md border border-emerald-200 bg-emerald-50/50 px-3 py-2.5 text-[12.5px] leading-relaxed text-emerald-950">
+              중고부품은 부품명·사진·설명만 입력하면 등록됩니다. 호환 차종·부품
+              종류는 선택 사항입니다.
+            </div>
+            <Field
+              label="부품명"
+              name="make"
+              required
+              defaultValue={listing?.make}
+              placeholder="예: Front bumper cover"
+            />
+            <Field
+              label="호환 차종"
+              name="model"
+              defaultValue={
+                listing?.model && listing.model !== "-"
+                  ? listing.model
+                  : undefined
+              }
+              placeholder="예: Hyundai Avante AD"
+            />
+            <label className="block text-sm">
+              <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
+                부품 종류
+              </span>
+              <select
+                name="highlights"
+                defaultValue={listing?.highlights ?? ""}
+                className={selectClass}
+              >
+                <option value="">선택 (선택 사항)</option>
+                {PART_TYPE_OPTIONS.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Field
+              label="부품 번호"
+              name="engineMark"
+              defaultValue={listing?.engineMark ?? undefined}
+              placeholder="OEM / 부품번호 (선택)"
+            />
+            <NotesField
+              defaultValue={listing?.damages ?? undefined}
+              translatedEn={listing?.damagesEn ?? undefined}
+              label="상태 · 설명"
+              placeholder="상태, 구성품, 특이사항 등"
+            />
+          </>
+        ) : (
+          <>
         <label className="block text-sm">
           <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
             연식
@@ -483,7 +555,11 @@ export function ListingForm({ listing, onCancel }: Props) {
             max={2100}
             step={1}
             placeholder="예: 2024"
-            defaultValue={listing?.year?.toString()}
+            defaultValue={
+              listing?.year && listing.year >= 1980
+                ? listing.year.toString()
+                : undefined
+            }
             className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400 focus:bg-white"
           />
         </label>
@@ -644,6 +720,8 @@ export function ListingForm({ listing, onCancel }: Props) {
           defaultValue={listing?.whatsappNumber || DEFAULT_LISTING_WHATSAPP}
           placeholder={DEFAULT_LISTING_WHATSAPP}
         />
+          </>
+        )}
       </div>
 
       <div className="rounded-md border border-[var(--line)] bg-neutral-50/40 px-4 py-4">
@@ -940,20 +1018,24 @@ function VinField({ defaultValue }: { defaultValue?: string }) {
 function NotesField({
   defaultValue,
   translatedEn,
+  label = "특이사항",
+  placeholder = "한 줄씩 입력할 수 있습니다.\n예:\n전면 범퍼 스크래치\n휠 기스",
 }: {
   defaultValue?: string;
   translatedEn?: string;
+  label?: string;
+  placeholder?: string;
 }) {
   return (
     <label className="block text-sm sm:col-span-2">
       <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
-        특이사항
+        {label}
       </span>
       <textarea
         name="damages"
         rows={5}
         defaultValue={defaultValue}
-        placeholder={"한 줄씩 입력할 수 있습니다.\n예:\n전면 범퍼 스크래치\n휠 기스"}
+        placeholder={placeholder}
         className="w-full resize-y rounded-md border border-neutral-200 bg-neutral-50/40 px-3 py-2 text-[13.5px] leading-relaxed whitespace-pre-wrap outline-none focus:border-neutral-400 focus:bg-white"
       />
       <span className="mt-1.5 block text-[12px] leading-relaxed tracking-wide text-neutral-400">

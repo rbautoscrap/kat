@@ -1,4 +1,4 @@
-import type { Listing, ListingImage, Prisma } from "@prisma/client";
+import type { Listing, ListingImage, ListingCategory, Prisma } from "@prisma/client";
 import { HeroBanner } from "@/components/HeroBanner";
 import { ListingSection } from "@/components/ListingSection";
 import { isAdmin } from "@/lib/auth";
@@ -29,7 +29,7 @@ const coverImageInclude = {
 };
 
 async function loadSectionListings(
-  category: "HOT_DEALS" | "CAR_LISTINGS" | "STAND_BY" | "LIVE_AUCTION",
+  category: ListingCategory,
   visibility: Prisma.ListingWhereInput,
   mode: "newest" | "cost_biased",
 ): Promise<HomeListing[]> {
@@ -49,23 +49,36 @@ async function loadSectionListings(
   return orderByIds(candidates, orderedIds).slice(0, HOME_SECTION_LIMIT);
 }
 
-async function loadHomeListings(
-  includeEndedAuctions: boolean,
-): Promise<[HomeListing[], HomeListing[], HomeListing[], HomeListing[]]> {
+async function loadHomeListings(includeEndedAuctions: boolean): Promise<{
+  hotDeals: HomeListing[];
+  carListings: HomeListing[];
+  standBy: HomeListing[];
+  liveAuction: HomeListing[];
+  usedParts: HomeListing[];
+}> {
   const visibility: Prisma.ListingWhereInput = includeEndedAuctions
     ? {}
     : memberListingVisibilityWhere();
 
   try {
-    return await Promise.all([
-      loadSectionListings("HOT_DEALS", visibility, "newest"),
-      loadSectionListings("CAR_LISTINGS", visibility, "cost_biased"),
-      loadSectionListings("STAND_BY", visibility, "newest"),
-      loadSectionListings("LIVE_AUCTION", visibility, "newest"),
-    ]);
+    const [hotDeals, carListings, standBy, liveAuction, usedParts] =
+      await Promise.all([
+        loadSectionListings("HOT_DEALS", visibility, "newest"),
+        loadSectionListings("CAR_LISTINGS", visibility, "cost_biased"),
+        loadSectionListings("STAND_BY", visibility, "newest"),
+        loadSectionListings("LIVE_AUCTION", visibility, "newest"),
+        loadSectionListings("USED_PARTS", visibility, "newest"),
+      ]);
+    return { hotDeals, carListings, standBy, liveAuction, usedParts };
   } catch (error) {
     console.error("[HomePage] listing query failed", error);
-    return [[], [], [], []];
+    return {
+      hotDeals: [],
+      carListings: [],
+      standBy: [],
+      liveAuction: [],
+      usedParts: [],
+    };
   }
 }
 
@@ -75,9 +88,8 @@ export default async function HomePage({ searchParams }: Props) {
   const canViewSold = isAdmin(dbUser?.role);
   const isSignedIn = Boolean(dbUser?.id);
 
-  const [hotDeals, carListings, standBy, liveAuction] = await loadHomeListings(
-    canViewSold,
-  );
+  const { hotDeals, carListings, standBy, liveAuction, usedParts } =
+    await loadHomeListings(canViewSold);
 
   const errorMessage =
     params.error === "unauthorized"
@@ -85,6 +97,13 @@ export default async function HomePage({ searchParams }: Props) {
       : params.error === "forbidden"
         ? "Admin access only."
         : null;
+
+  const sectionProps = {
+    limit: HOME_SECTION_LIMIT,
+    canViewSold,
+    canManageSaleStatus: canViewSold,
+    isSignedIn,
+  };
 
   return (
     <>
@@ -97,36 +116,29 @@ export default async function HomePage({ searchParams }: Props) {
       )}
       <HeroBanner />
       <ListingSection
-        category="HOT_DEALS"
-        listings={hotDeals}
-        limit={HOME_SECTION_LIMIT}
-        canViewSold={canViewSold}
-        canManageSaleStatus={canViewSold}
-        isSignedIn={isSignedIn}
+        category="LIVE_AUCTION"
+        listings={liveAuction}
+        {...sectionProps}
       />
       <ListingSection
         category="CAR_LISTINGS"
         listings={carListings}
-        limit={HOME_SECTION_LIMIT}
-        canViewSold={canViewSold}
-        canManageSaleStatus={canViewSold}
-        isSignedIn={isSignedIn}
+        {...sectionProps}
       />
       <ListingSection
         category="STAND_BY"
         listings={standBy}
-        limit={HOME_SECTION_LIMIT}
-        canViewSold={canViewSold}
-        canManageSaleStatus={canViewSold}
-        isSignedIn={isSignedIn}
+        {...sectionProps}
       />
       <ListingSection
-        category="LIVE_AUCTION"
-        listings={liveAuction}
-        limit={HOME_SECTION_LIMIT}
-        canViewSold={canViewSold}
-        canManageSaleStatus={canViewSold}
-        isSignedIn={isSignedIn}
+        category="HOT_DEALS"
+        listings={hotDeals}
+        {...sectionProps}
+      />
+      <ListingSection
+        category="USED_PARTS"
+        listings={usedParts}
+        {...sectionProps}
       />
     </>
   );

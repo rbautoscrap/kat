@@ -77,7 +77,8 @@ function parseCategory(value?: string): ListingCategory | "ALL" {
     value === "HOT_DEALS" ||
     value === "CAR_LISTINGS" ||
     value === "LIVE_AUCTION" ||
-    value === "STAND_BY"
+    value === "STAND_BY" ||
+    value === "USED_PARTS"
   ) {
     return value;
   }
@@ -317,6 +318,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
     CAR_LISTINGS: 0,
     LIVE_AUCTION: 0,
     STAND_BY: 0,
+    USED_PARTS: 0,
   } as Record<ListingCategory | "ALL", number>;
 
   for (const row of grouped) {
