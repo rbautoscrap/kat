@@ -231,6 +231,9 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
   const [coverName, setCoverName] = useState<string | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [photoCount, setPhotoCount] = useState(0);
+  /** Used Parts: single-slot multi upload (first = cover, rest = gallery). */
+  const [partsFiles, setPartsFiles] = useState<File[]>([]);
+  const [partsPreviews, setPartsPreviews] = useState<string[]>([]);
   const [keptCover, setKeptCover] = useState<ListingImage | null>(
     () => listing?.images?.[0] ?? null,
   );
@@ -309,6 +312,24 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
     [],
   );
 
+  const applyPartsFiles = useCallback((files: FileList | File[]) => {
+    const list = Array.from(files).filter(isImageFile);
+    if (list.length === 0) {
+      setError("이미지 파일만 등록할 수 있습니다.");
+      return;
+    }
+    if (list.length > 100) {
+      setError("사진은 최대 100장까지 등록할 수 있습니다.");
+      return;
+    }
+    setError(null);
+    setPartsPreviews((prev) => {
+      for (const url of prev) URL.revokeObjectURL(url);
+      return list.map((file) => URL.createObjectURL(file));
+    });
+    setPartsFiles(list);
+  }, []);
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -377,9 +398,26 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
     let coverFile =
       coverEntry instanceof File && coverEntry.size > 0 ? coverEntry : null;
 
+    if (partsMode) {
+      data.delete("coverImage");
+      data.delete("images");
+      if (partsFiles.length > 0) {
+        coverFile = partsFiles[0] ?? null;
+        galleryFiles = partsFiles.slice(1);
+        if (coverFile) data.set("coverImage", coverFile);
+      } else {
+        coverFile = null;
+        galleryFiles = [];
+      }
+    }
+
     if (!listing) {
       if (!coverFile) {
-        setError("대표(메인) 사진을 등록해 주세요.");
+        setError(
+          partsMode
+            ? "사진을 1장 이상 등록해 주세요."
+            : "대표(메인) 사진을 등록해 주세요.",
+        );
         setPending(false);
         return;
       }
@@ -777,6 +815,132 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
         <input key={img.id} type="hidden" name="keepImageIds" value={img.id} />
       ))}
 
+      {partsMode ? (
+        <div className="space-y-2 text-sm">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <span className="block text-[13px] font-medium tracking-wide text-neutral-600">
+              사진
+              <span className="font-normal text-neutral-400">
+                {" "}
+                · 여러 장 한 번에 선택 · 첫 장이 대표 사진 · 최대 100장
+              </span>
+            </span>
+            {listing &&
+            (keptCover || keptGallery.length > 0 || partsFiles.length > 0) ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (
+                    !confirm(
+                      "선택한 사진과 보관 중인 사진을 모두 삭제할까요?",
+                    )
+                  ) {
+                    return;
+                  }
+                  setKeptCover(null);
+                  setKeptGallery([]);
+                  setPartsFiles([]);
+                  setPartsPreviews((prev) => {
+                    for (const url of prev) URL.revokeObjectURL(url);
+                    return [];
+                  });
+                  setError(null);
+                }}
+                className="inline-flex h-7 shrink-0 items-center rounded-md border border-red-200 bg-white px-2.5 text-[12px] font-medium tracking-wide text-red-700 transition hover:bg-red-50"
+              >
+                사진 전체 삭제
+              </button>
+            ) : null}
+          </div>
+
+          <ImageDropZone
+            inputRef={galleryInputRef}
+            name="partsImages"
+            accept={IMAGE_ACCEPT}
+            multiple
+            browseLabel="사진 선택"
+            hint={
+              partsFiles.length > 0
+                ? `${partsFiles.length}장 선택됨 · 첫 장: 대표 · 다시 선택 가능`
+                : "드래그하여 놓거나 선택 · JPG/PNG/WEBP/GIF · 여러 장"
+            }
+            onFiles={(files) => applyPartsFiles(files)}
+            onInputChange={(e) => {
+              applyPartsFiles(e.target.files ?? []);
+            }}
+          />
+
+          {partsPreviews.length > 0 ? (
+            <div className="mt-2 grid grid-cols-5 gap-1.5 sm:grid-cols-8">
+              {partsPreviews.map((url, index) => (
+                <div key={url} className="relative aspect-square">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt=""
+                    className="h-full w-full rounded-sm border border-neutral-200 object-cover"
+                  />
+                  {index === 0 ? (
+                    <span className="absolute left-0.5 top-0.5 rounded bg-neutral-900/80 px-1 py-0.5 text-[9px] font-semibold text-white">
+                      대표
+                    </span>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {listing && (keptCover || keptGallery.length > 0) ? (
+            <div className="mt-2">
+              <p className="mb-1.5 text-[12px] tracking-wide text-neutral-500">
+                보관 중인 사진
+                {partsFiles.length > 0
+                  ? " · 새 사진을 올리면 대표는 새 첫 장으로 바뀝니다"
+                  : ""}
+              </p>
+              <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-8">
+                {[
+                  ...(keptCover ? [keptCover] : []),
+                  ...keptGallery,
+                ].map((img, index) => (
+                  <div key={img.id} className="relative aspect-square">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.url}
+                      alt=""
+                      className="h-full w-full rounded-sm border border-neutral-200 object-cover"
+                    />
+                    {index === 0 && !partsFiles.length ? (
+                      <span className="absolute left-0.5 top-0.5 rounded bg-neutral-900/80 px-1 py-0.5 text-[9px] font-semibold text-white">
+                        대표
+                      </span>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (keptCover?.id === img.id) {
+                          const [next, ...rest] = keptGallery;
+                          setKeptCover(next ?? null);
+                          setKeptGallery(rest);
+                        } else {
+                          setKeptGallery((prev) =>
+                            prev.filter((item) => item.id !== img.id),
+                          );
+                        }
+                      }}
+                      className="absolute right-0.5 top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/75 text-[12px] leading-none text-white hover:bg-black/90"
+                      aria-label="사진 삭제"
+                      title="삭제"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : (
       <div className="space-y-3 text-sm">
         <div>
           <span className="mb-1 block text-[13px] font-medium tracking-wide text-neutral-600">
@@ -942,6 +1106,7 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
           ) : null}
         </div>
       </div>
+      )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
       {progress && !error ? (
