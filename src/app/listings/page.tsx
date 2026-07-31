@@ -166,9 +166,10 @@ export default async function ListingsPage({ searchParams }: Props) {
         ) : null}
       </div>
       {isPartsGallery ? (
-        <p className="-mt-3 mb-5 text-[13px] tracking-wide text-neutral-500 sm:-mt-4 sm:mb-6">
-          Browse verified used auto parts. Authorized members can list items;
-          everyone else can view and inquire.
+        <p className="-mt-3 mb-5 text-[13px] leading-relaxed tracking-wide text-red-600 sm:-mt-4 sm:mb-6">
+          This message board is a open space for user-to-user transactions.
+          Please note that &quot; Korea Auto Trade &quot; is not involved in any
+          sales or transactions and assumes no liability for trading activities.
         </p>
       ) : null}
       {isSearch ? (
