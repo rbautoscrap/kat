@@ -15,7 +15,7 @@ import {
   LISTING_CATEGORY_PAGE_SIZE,
   LISTING_GRID_CLASS,
   parseCategory,
-  USED_PARTS_GALLERY_GRID_CLASS,
+  USED_PARTS_LIST_CLASS,
   USED_PARTS_PAGE_SIZE,
 } from "@/lib/listings";
 import {
@@ -141,8 +141,8 @@ export default async function ListingsPage({ searchParams }: Props) {
       : "All Listings";
 
   const useLargeGrid = fromMenu || isSearch;
-  const gridClass = isPartsGallery
-    ? USED_PARTS_GALLERY_GRID_CLASS
+  const listClass = isPartsGallery
+    ? USED_PARTS_LIST_CLASS
     : useLargeGrid
       ? LISTING_CATEGORY_GRID_CLASS
       : LISTING_GRID_CLASS;
@@ -186,11 +186,12 @@ export default async function ListingsPage({ searchParams }: Props) {
         </p>
       ) : (
         <>
-          <div className={gridClass}>
+          <div className={listClass}>
             {listings.map((listing) => (
               <ListingCard
                 key={listing.id}
                 listing={listing}
+                layout={isPartsGallery ? "list" : "grid"}
                 size={isPartsGallery || useLargeGrid ? "large" : "default"}
                 canViewSold={canViewSold}
                 canManageSaleStatus={canViewSold}

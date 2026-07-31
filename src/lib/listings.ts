@@ -64,9 +64,9 @@ export const LISTING_GRID_CLASS =
 export const LISTING_CATEGORY_GRID_CLASS =
   "grid grid-cols-2 items-start gap-x-3.5 gap-y-6 sm:grid-cols-3 sm:gap-x-4 md:grid-cols-4 lg:grid-cols-5";
 
-/** Used Parts gallery: 4 columns × 3 rows = 12 per page on desktop */
-export const USED_PARTS_GALLERY_GRID_CLASS =
-  "grid grid-cols-2 items-start gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-6 md:grid-cols-4 md:gap-x-4 md:gap-y-7";
+/** Used Parts vertical list (12 rows per page) */
+export const USED_PARTS_LIST_CLASS =
+  "divide-y-0 border-t border-[var(--line)]";
 
 export const LISTING_CATEGORY_PAGE_SIZE = 20;
 export const USED_PARTS_PAGE_SIZE = 12;

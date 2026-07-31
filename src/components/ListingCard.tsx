@@ -8,12 +8,18 @@ import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl"
 import { ListingThumb } from "@/components/ListingThumb";
 import { LiveAuctionAccessDialog } from "@/components/LiveAuctionAccessDialog";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
-import { isPartsCategory, listingCardLabel } from "@/lib/listings";
+import {
+  formatNotesDisplay,
+  isPartsCategory,
+  listingCardLabel,
+} from "@/lib/listings";
 
 type Props = {
   listing: Listing & { images: ListingImage[] };
   /** Larger tiles for category listing pages */
   size?: "default" | "large";
+  /** Vertical list row (Used Parts) */
+  layout?: "grid" | "list";
   /** Admins may open sold listing details */
   canViewSold?: boolean;
   /** Admins can set sale status from the public listing grid */
@@ -25,6 +31,7 @@ type Props = {
 export function ListingCard({
   listing,
   size = "default",
+  layout = "grid",
   canViewSold = false,
   canManageSaleStatus = false,
   isSignedIn = false,
@@ -39,6 +46,71 @@ export function ListingCard({
   const detailHref = `/listings/${listing.id}`;
   const needsLiveAuctionGate =
     listing.category === "LIVE_AUCTION" && !isSignedIn;
+  const notesPreview = formatNotesDisplay(
+    listing.damages,
+    listing.damagesEn,
+  ).trim();
+
+  if (layout === "list") {
+    const listMedia = (
+      <div className="relative h-[4.75rem] w-[7rem] shrink-0 overflow-hidden rounded-[3px] bg-neutral-100 sm:h-[5.5rem] sm:w-[8.5rem]">
+        <ListingThumb
+          src={thumb}
+          alt={listing.title}
+          sizes="140px"
+          className={`object-cover ${isSold ? "opacity-70 grayscale-[0.35]" : ""}`}
+        />
+        <SaleStatusOverlay status={listing.saleStatus} />
+      </div>
+    );
+
+    const listBody = (
+      <div className="min-w-0 flex-1 py-0.5">
+        <p
+          className={`line-clamp-2 break-words text-[14px] font-semibold leading-snug sm:text-[15px] ${
+            canOpen
+              ? "text-neutral-800 group-hover:text-neutral-950"
+              : "text-neutral-500"
+          }`}
+        >
+          {label}
+        </p>
+        {notesPreview ? (
+          <p className="mt-1 line-clamp-1 text-[12.5px] tracking-wide text-neutral-500">
+            {notesPreview}
+          </p>
+        ) : null}
+        {canManageSaleStatus ? (
+          <div className="mt-1.5 max-w-xs">
+            <ListingSaleStatusControl
+              listingId={listing.id}
+              saleStatus={listing.saleStatus}
+              compact
+            />
+          </div>
+        ) : null}
+      </div>
+    );
+
+    const rowClass =
+      "flex w-full items-start gap-3 border-b border-[var(--line)] px-1 py-3.5 sm:gap-4 sm:px-2 sm:py-4";
+
+    if (!canOpen) {
+      return (
+        <div className={`${rowClass} cursor-default`} aria-label={`${label} — Sold out`}>
+          {listMedia}
+          {listBody}
+        </div>
+      );
+    }
+
+    return (
+      <Link href={detailHref} className={`group ${rowClass}`}>
+        {listMedia}
+        {listBody}
+      </Link>
+    );
+  }
 
   const media = (
     <div className="relative aspect-[3/2] overflow-hidden rounded-[3px] bg-neutral-100">
