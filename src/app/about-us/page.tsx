@@ -63,21 +63,8 @@ export default function AboutUsPage() {
           <BackButton href="/" />
         </div>
 
-        {/* 1. Heading — logo as soft watermark behind the copy */}
-        <header className="relative mb-8 overflow-hidden border-b border-[var(--line)] pb-10 pt-2 sm:mb-10 sm:pb-12 sm:pt-3">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-[8%] flex justify-center sm:top-[4%]"
-          >
-            <Image
-              src="/brand/rbauto-logo.png"
-              alt=""
-              width={520}
-              height={520}
-              priority
-              className="h-[13rem] w-auto object-contain opacity-[0.09] sm:h-[17rem] sm:opacity-[0.08]"
-            />
-          </div>
+        {/* 1. Heading */}
+        <header className="relative mb-8 border-b border-[var(--line)] pb-10 pt-2 sm:mb-10 sm:pb-12 sm:pt-3">
           <div className="relative z-10 mx-auto max-w-2xl text-center">
             <p className="text-[12px] font-medium tracking-[0.14em] text-neutral-500 uppercase">
               About Us
@@ -92,7 +79,22 @@ export default function AboutUsPage() {
           </div>
         </header>
 
-        <div className="mx-auto max-w-3xl space-y-10 sm:space-y-12">
+        {/* Body — large RBAUTO logo watermark behind content */}
+        <div className="relative mx-auto max-w-3xl">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden"
+          >
+            <Image
+              src="/brand/rbauto-logo.png"
+              alt=""
+              width={900}
+              height={900}
+              priority
+              className="h-[min(72vw,28rem)] w-auto max-w-none object-contain opacity-[0.11] sm:h-[32rem] sm:opacity-[0.1]"
+            />
+          </div>
+          <div className="relative z-10 space-y-10 sm:space-y-12">
           {/* 2. Overview */}
           <section>
             <SectionLabel>Company Overview</SectionLabel>
@@ -248,6 +250,7 @@ export default function AboutUsPage() {
               .
             </p>
           </section>
+          </div>
         </div>
       </div>
     </div>
