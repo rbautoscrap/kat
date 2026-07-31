@@ -227,14 +227,14 @@ const listingFieldsSchema = z.object({
       ctx.addIssue({
         code: "custom",
         path: ["model"],
-        message: "판매자명을 입력해 주세요.",
+        message: "Please enter the seller name.",
       });
     }
     if (!data.make.trim()) {
       ctx.addIssue({
         code: "custom",
         path: ["make"],
-        message: "부품명 또는 제목을 입력해 주세요.",
+        message: "Please enter the part name or title.",
       });
     }
     const digits = data.whatsappNumber.replace(/\D/g, "");
@@ -242,7 +242,8 @@ const listingFieldsSchema = z.object({
       ctx.addIssue({
         code: "custom",
         path: ["whatsappNumber"],
-        message: "연락처(전화/WhatsApp)를 입력해 주세요. (숫자 8자리 이상)",
+        message:
+          "Please enter a phone / WhatsApp number (at least 8 digits).",
       });
     }
   }

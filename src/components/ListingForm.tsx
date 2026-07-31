@@ -347,7 +347,7 @@ export function ListingForm({
     (files: FileList | File[]) => {
       const list = Array.from(files).filter(isImageFile);
       if (list.length === 0) {
-        setError("이미지 파일만 등록할 수 있습니다.");
+        setError("Only image files can be uploaded.");
         return;
       }
       const keptCount =
@@ -357,8 +357,8 @@ export function ListingForm({
       if (total > MAX_IMAGES_PER_USED_PARTS) {
         setError(
           keptCount > 0
-            ? `사진은 최대 ${MAX_IMAGES_PER_USED_PARTS}장입니다. (보관 ${keptCount}장 + 새 사진 ${list.length}장)`
-            : `사진은 최대 ${MAX_IMAGES_PER_USED_PARTS}장까지 등록할 수 있습니다.`,
+            ? `Up to ${MAX_IMAGES_PER_USED_PARTS} photos (${keptCount} kept + ${list.length} new).`
+            : `You can upload up to ${MAX_IMAGES_PER_USED_PARTS} photos.`,
         );
         return;
       }
@@ -424,13 +424,13 @@ export function ListingForm({
       data.set("fuelType", "Other");
       const sellerName = String(data.get("model") ?? "").trim();
       if (!sellerName || sellerName === "-") {
-        setError("판매자명을 입력해 주세요.");
+        setError("Please enter the seller name.");
         setPending(false);
         return;
       }
       data.set("model", sellerName);
       if (!String(data.get("make") ?? "").trim()) {
-        setError("부품명 또는 제목을 입력해 주세요.");
+        setError("Please enter the part name or title.");
         setPending(false);
         return;
       }
@@ -439,7 +439,9 @@ export function ListingForm({
         "",
       );
       if (contactDigits.length < 8) {
-        setError("연락처(전화/WhatsApp)를 입력해 주세요. (숫자 8자리 이상)");
+        setError(
+          "Please enter a phone / WhatsApp number (at least 8 digits).",
+        );
         setPending(false);
         return;
       }
@@ -497,7 +499,7 @@ export function ListingForm({
         (coverFile ? 1 : 0) + galleryFiles.length + keptPartsCount;
       if (partsTotal > MAX_IMAGES_PER_USED_PARTS) {
         setError(
-          `사진은 최대 ${MAX_IMAGES_PER_USED_PARTS}장까지 등록할 수 있습니다.`,
+          `You can upload up to ${MAX_IMAGES_PER_USED_PARTS} photos.`,
         );
         setPending(false);
         return;
@@ -508,7 +510,7 @@ export function ListingForm({
       if (!coverFile) {
         setError(
           partsMode
-            ? "사진을 1장 이상 등록해 주세요."
+            ? "Please add at least one photo."
             : "대표(메인) 사진을 등록해 주세요.",
         );
         setPending(false);
@@ -523,7 +525,11 @@ export function ListingForm({
         keptGallery.length === 0 &&
         !hasNewGallery
       ) {
-        setError("사진은 최소 1장 이상 남겨 주세요.");
+        setError(
+          partsMode
+            ? "Please keep at least one photo."
+            : "사진은 최소 1장 이상 남겨 주세요.",
+        );
         setPending(false);
         return;
       }
@@ -535,10 +541,15 @@ export function ListingForm({
         ...galleryFiles,
       ];
       if (toCompress.length > 0) {
-        setProgress(`사진 최적화 중… 0/${toCompress.length}`);
+        const optimizing = partsMode
+          ? (done: number, total: number) =>
+              `Optimizing photos… ${done}/${total}`
+          : (done: number, total: number) =>
+              `사진 최적화 중… ${done}/${total}`;
+        setProgress(optimizing(0, toCompress.length));
         const compressed = await compressImagesForUpload(
           toCompress,
-          (done, total) => setProgress(`사진 최적화 중… ${done}/${total}`),
+          (done, total) => setProgress(optimizing(done, total)),
         );
         let idx = 0;
         if (coverFile) {
@@ -553,10 +564,15 @@ export function ListingForm({
         data.append("images", file);
       }
 
+      const uploadCount = galleryFiles.length + (coverFile ? 1 : 0);
       setProgress(
-        galleryFiles.length + (coverFile ? 1 : 0) > 20
-          ? "서버에 저장 중… 사진이 많아 시간이 걸릴 수 있습니다."
-          : "서버에 저장 중…",
+        partsMode
+          ? uploadCount > 20
+            ? "Saving… Large uploads may take a moment."
+            : "Saving…"
+          : uploadCount > 20
+            ? "서버에 저장 중… 사진이 많아 시간이 걸릴 수 있습니다."
+            : "서버에 저장 중…",
       );
 
       const controller = new AbortController();
@@ -575,11 +591,20 @@ export function ListingForm({
         id?: string;
       };
       if (!res.ok) {
-        setError(json.error ?? "매물 저장에 실패했습니다.");
+        setError(
+          json.error ??
+            (partsMode
+              ? "Could not save the listing."
+              : "매물 저장에 실패했습니다."),
+        );
         return;
       }
       if (!json.id) {
-        setError("매물 저장에 실패했습니다.");
+        setError(
+          partsMode
+            ? "Could not save the listing."
+            : "매물 저장에 실패했습니다.",
+        );
         return;
       }
       router.push(`/listings/${json.id}`);
@@ -588,9 +613,13 @@ export function ListingForm({
       const aborted =
         err instanceof DOMException && err.name === "AbortError";
       setError(
-        aborted
-          ? "저장 시간이 초과되었습니다. 새 사진 수를 줄이거나 다시 시도해 주세요."
-          : "네트워크 오류가 발생했습니다.",
+        partsMode
+          ? aborted
+            ? "Save timed out. Try fewer photos or try again."
+            : "A network error occurred."
+          : aborted
+            ? "저장 시간이 초과되었습니다. 새 사진 수를 줄이거나 다시 시도해 주세요."
+            : "네트워크 오류가 발생했습니다.",
       );
     } finally {
       setPending(false);
@@ -603,18 +632,18 @@ export function ListingForm({
       onSubmit={onSubmit}
       className="space-y-5"
       encType="multipart/form-data"
-      lang="ko"
+      lang={partsMode ? "en" : "ko"}
     >
       <div className="grid gap-4 sm:grid-cols-2">
         {partsMode ? (
           <>
             <input type="hidden" name="category" value="USED_PARTS" />
             <div className="sm:col-span-2 rounded-md border border-emerald-200 bg-emerald-50/50 px-3 py-2.5 text-[12.5px] leading-relaxed text-emerald-950">
-              판매자명·연락처(필수)·부품명(또는 제목)·사진·설명을 입력하면
-              등록됩니다.
+              Enter seller name, contact (required), part name (or title),
+              photos, and description to list.
             </div>
             <Field
-              label="판매자명"
+              label="Seller name"
               name="model"
               required
               defaultValue={
@@ -622,29 +651,30 @@ export function ListingForm({
                   ? listing.model
                   : defaultSellerName
               }
-              placeholder="예: 홍길동"
+              placeholder="e.g. John Kim"
             />
             <Field
-              label="연락처 (전화 / WhatsApp)"
+              label="Contact (Phone / WhatsApp)"
               name="whatsappNumber"
               type="tel"
               required
               defaultValue={listing?.whatsappNumber ?? undefined}
-              placeholder="예: 010-1234-5678"
+              placeholder="e.g. 010-1234-5678"
             />
             <Field
-              label="부품명 또는 제목"
+              label="Part name or title"
               name="make"
               required
               className="sm:col-span-2"
               defaultValue={listing?.make}
-              placeholder="예: 2012 QM6 2.0 Front bumper"
+              placeholder="e.g. 2012 QM6 2.0 Front bumper"
             />
             <NotesField
               defaultValue={listing?.damages ?? undefined}
               translatedEn={listing?.damagesEn ?? undefined}
-              label="상태 · 설명"
-              placeholder="상태, 구성품, 특이사항 등"
+              label="Condition · Description"
+              placeholder="Condition, included parts, notes, etc."
+              hint="Press Enter for a new line. Text is translated to English for the site when saved."
             />
           </>
         ) : (
@@ -925,11 +955,11 @@ export function ListingForm({
         <div className="space-y-2 text-sm">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <span className="block text-[13px] font-medium tracking-wide text-neutral-600">
-              사진
+              Photos
               <span className="font-normal text-neutral-400">
                 {" "}
-                · 여러 장 한 번에 선택 · 드래그 또는 「대표로」로 순서 변경 ·
-                최대 {MAX_IMAGES_PER_USED_PARTS}장
+                · Select multiple · Drag or use Set as cover to reorder · Max{" "}
+                {MAX_IMAGES_PER_USED_PARTS}
               </span>
             </span>
             {listing &&
@@ -939,7 +969,7 @@ export function ListingForm({
                 onClick={() => {
                   if (
                     !confirm(
-                      "선택한 사진과 보관 중인 사진을 모두 삭제할까요?",
+                      "Delete all selected and kept photos?",
                     )
                   ) {
                     return;
@@ -955,7 +985,7 @@ export function ListingForm({
                 }}
                 className="inline-flex h-7 shrink-0 items-center rounded-md border border-red-200 bg-white px-2.5 text-[12px] font-medium tracking-wide text-red-700 transition hover:bg-red-50"
               >
-                사진 전체 삭제
+                Delete all photos
               </button>
             ) : null}
           </div>
@@ -965,11 +995,13 @@ export function ListingForm({
             name="partsImages"
             accept={IMAGE_ACCEPT}
             multiple
-            browseLabel="사진 선택"
+            browseLabel="Select photos"
+            chooseFileLabel="Choose files"
+            dropLabel="Drop photos here"
             hint={
               partsFiles.length > 0
-                ? `${partsFiles.length}장 선택됨 · 대표 변경 가능 · 다시 선택 가능`
-                : "드래그하여 놓거나 선택 · JPG/PNG/WEBP/GIF · 여러 장"
+                ? `${partsFiles.length} selected · Cover can be changed · Select again to replace`
+                : "Drag and drop or browse · JPG/PNG/WEBP/GIF · Multiple"
             }
             onFiles={(files) => applyPartsFiles(files)}
             onInputChange={(e) => {
@@ -1014,7 +1046,7 @@ export function ListingForm({
                   />
                   {index === 0 ? (
                     <span className="absolute left-0.5 top-0.5 rounded bg-neutral-900/80 px-1 py-0.5 text-[9px] font-semibold text-white">
-                      대표
+                      Cover
                     </span>
                   ) : (
                     <button
@@ -1023,7 +1055,7 @@ export function ListingForm({
                       onClick={() => setPartsCoverAt(index)}
                       className="absolute left-0.5 top-0.5 rounded bg-white/90 px-1 py-0.5 text-[9px] font-semibold text-neutral-800 shadow-sm ring-1 ring-neutral-200 hover:bg-white"
                     >
-                      대표로
+                      Set as cover
                     </button>
                   )}
                   <button
@@ -1038,8 +1070,8 @@ export function ListingForm({
                       });
                     }}
                     className="absolute right-0.5 top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/75 text-[12px] leading-none text-white hover:bg-black/90"
-                    aria-label="사진 삭제"
-                    title="삭제"
+                    aria-label="Remove photo"
+                    title="Remove"
                   >
                     ×
                   </button>
@@ -1051,10 +1083,10 @@ export function ListingForm({
           {listing && (keptCover || keptGallery.length > 0) ? (
             <div className="mt-2">
               <p className="mb-1.5 text-[12px] tracking-wide text-neutral-500">
-                보관 중인 사진
+                Kept photos
                 {partsFiles.length > 0
-                  ? " · 새 사진을 올리면 대표는 새 첫 장으로 바뀝니다"
-                  : " · 드래그 또는 「대표로」로 순서 변경"}
+                  ? " · New uploads become the cover first"
+                  : " · Drag or use Set as cover to reorder"}
               </p>
               <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-8">
                 {[
@@ -1093,7 +1125,7 @@ export function ListingForm({
                     />
                     {index === 0 && !partsFiles.length ? (
                       <span className="absolute left-0.5 top-0.5 rounded bg-neutral-900/80 px-1 py-0.5 text-[9px] font-semibold text-white">
-                        대표
+                        Cover
                       </span>
                     ) : null}
                     {index > 0 && partsFiles.length === 0 ? (
@@ -1102,7 +1134,7 @@ export function ListingForm({
                         onClick={() => setKeptPartsCoverAt(index)}
                         className="absolute left-0.5 top-0.5 rounded bg-white/90 px-1 py-0.5 text-[9px] font-semibold text-neutral-800 shadow-sm ring-1 ring-neutral-200 hover:bg-white"
                       >
-                        대표로
+                        Set as cover
                       </button>
                     ) : null}
                     <button
@@ -1119,8 +1151,8 @@ export function ListingForm({
                         }
                       }}
                       className="absolute right-0.5 top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/75 text-[12px] leading-none text-white hover:bg-black/90"
-                      aria-label="사진 삭제"
-                      title="삭제"
+                      aria-label="Remove photo"
+                      title="Remove"
                     >
                       ×
                     </button>
@@ -1310,12 +1342,21 @@ export function ListingForm({
           className="rounded-md bg-neutral-800 px-5 py-2.5 text-[13.5px] font-medium tracking-wide text-white transition hover:bg-neutral-700 disabled:opacity-60"
         >
           {pending
-            ? progress?.startsWith("사진 최적화")
-              ? "최적화 중…"
-              : "저장 중…"
+            ? progress?.startsWith("Optimizing") ||
+              progress?.startsWith("사진 최적화")
+              ? partsMode
+                ? "Optimizing…"
+                : "최적화 중…"
+              : partsMode
+                ? "Saving…"
+                : "저장 중…"
             : listing
-              ? "매물 수정"
-              : "매물 등록"}
+              ? partsMode
+                ? "Save changes"
+                : "매물 수정"
+              : partsMode
+                ? "List part"
+                : "매물 등록"}
         </button>
         {onCancel ? (
           <button
@@ -1324,7 +1365,7 @@ export function ListingForm({
             onClick={onCancel}
             className="rounded-md border border-neutral-300 bg-white px-5 py-2.5 text-[13.5px] font-medium tracking-wide text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-60"
           >
-            취소
+            {partsMode ? "Cancel" : "취소"}
           </button>
         ) : null}
       </div>
@@ -1363,11 +1404,13 @@ function NotesField({
   translatedEn,
   label = "특이사항",
   placeholder = "한 줄씩 입력할 수 있습니다.\n예:\n전면 범퍼 스크래치\n휠 기스",
+  hint,
 }: {
   defaultValue?: string;
   translatedEn?: string;
   label?: string;
   placeholder?: string;
+  hint?: string;
 }) {
   return (
     <label className="block text-sm sm:col-span-2">
@@ -1382,12 +1425,12 @@ function NotesField({
         className="w-full resize-y rounded-md border border-neutral-200 bg-neutral-50/40 px-3 py-2 text-[13.5px] leading-relaxed whitespace-pre-wrap outline-none focus:border-neutral-400 focus:bg-white"
       />
       <span className="mt-1.5 block text-[12px] leading-relaxed tracking-wide text-neutral-400">
-        Enter로 줄바꿈할 수 있습니다. 저장 시 영문으로 번역되어 사이트에
-        노출됩니다.
+        {hint ??
+          "Enter로 줄바꿈할 수 있습니다. 저장 시 영문으로 번역되어 사이트에 노출됩니다."}
         {translatedEn ? (
           <>
             {" "}
-            현재 공개 문구:{" "}
+            {hint ? "Public text: " : "현재 공개 문구: "}
             <span className="whitespace-pre-wrap text-neutral-600">
               {translatedEn}
             </span>
@@ -1681,6 +1724,8 @@ function ImageDropZone({
   onFiles,
   onInputChange,
   className = "",
+  chooseFileLabel = "파일 선택",
+  dropLabel = "여기에 놓아 등록",
 }: {
   inputRef: RefObject<HTMLInputElement | null>;
   name: string;
@@ -1691,6 +1736,8 @@ function ImageDropZone({
   onFiles: (files: File[]) => void;
   onInputChange: (e: ChangeEvent<HTMLInputElement>) => void;
   className?: string;
+  chooseFileLabel?: string;
+  dropLabel?: string;
 }) {
   const [dragOver, setDragOver] = useState(false);
   const dragDepth = useRef(0);
@@ -1739,7 +1786,7 @@ function ImageDropZone({
     >
       <div className="min-w-0 flex-1">
         <p className="truncate text-[12.5px] font-medium tracking-wide text-neutral-800">
-          {dragOver ? "여기에 놓아 등록" : browseLabel}
+          {dragOver ? dropLabel : browseLabel}
         </p>
         <p className="mt-0.5 truncate text-[11.5px] tracking-wide text-neutral-500">
           {hint}
@@ -1750,7 +1797,7 @@ function ImageDropZone({
         onClick={() => inputRef.current?.click()}
         className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-neutral-300 bg-white px-3 text-[12.5px] font-medium tracking-wide text-neutral-800 hover:bg-neutral-50"
       >
-        파일 선택
+        {chooseFileLabel}
       </button>
       <input
         ref={inputRef}

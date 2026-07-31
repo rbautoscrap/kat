@@ -19,22 +19,25 @@ export function ListingCreateDialog({
   defaultCategory,
   defaultSellerName,
 }: DialogProps) {
+  const isParts = defaultCategory === "USED_PARTS";
+
   return (
     <AuthModalShell
       open={open}
       onClose={onClose}
-      title="매물 등록"
+      title={isParts ? "List a part" : "매물 등록"}
       maxWidthClass="max-w-3xl"
-      closeLabel="닫기"
+      closeLabel={isParts ? "Close" : "닫기"}
       closeOnBackdrop={false}
       closeButtonClassName="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--accent)] transition hover:bg-red-50 hover:text-red-700"
     >
       <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
-        매물 등록
+        {isParts ? "List a part" : "매물 등록"}
       </h2>
       <p className="mt-1 text-[12.5px] text-neutral-500">
-        차량 또는 중고부품을 등록할 수 있습니다. 중고부품은 판매자명·연락처·부품명(또는
-        제목)·사진·설명을 입력하면 됩니다.
+        {isParts
+          ? "Enter seller name, contact, part name (or title), photos, and description to list a used part."
+          : "차량 또는 중고부품을 등록할 수 있습니다. 중고부품은 판매자명·연락처·부품명(또는 제목)·사진·설명을 입력하면 됩니다."}
       </p>
       <div className="mt-5">
         <ListingForm
