@@ -25,7 +25,6 @@ const CATEGORIES = [
   "CAR_LISTINGS",
   "LIVE_AUCTION",
   "STAND_BY",
-  "USED_PARTS",
 ] as const;
 const SALE_STATUSES = ["AVAILABLE", "RESERVED", "SOLD"] as const;
 const ACCOUNT_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;

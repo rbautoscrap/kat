@@ -11,6 +11,7 @@ import {
 } from "@/app/admin/actions";
 import {
   ADMIN_CATEGORY_LABELS,
+  ADMIN_MANAGED_CATEGORIES,
   SALE_STATUS_ADMIN_LABELS,
 } from "@/lib/admin-labels";
 import { confirmListingDelete } from "@/lib/confirm-listing-delete";
@@ -20,7 +21,7 @@ import {
   adminSelectClass,
 } from "@/lib/admin-ui";
 
-const categories = Object.keys(ADMIN_CATEGORY_LABELS) as ListingCategory[];
+const categories = [...ADMIN_MANAGED_CATEGORIES];
 const saleStatuses = Object.keys(
   SALE_STATUS_ADMIN_LABELS,
 ) as ListingSaleStatus[];

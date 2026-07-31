@@ -56,7 +56,9 @@ type Props = {
 
 const categories = (
   Object.entries(ADMIN_CATEGORY_LABELS) as [ListingCategory, string][]
-).map(([value, label]) => ({ value, label }));
+)
+  .filter(([value]) => value !== "USED_PARTS")
+  .map(([value, label]) => ({ value, label }));
 
 const textFieldsBeforeTransmission = [
   { name: "engineMark", label: "엔진 형식" },

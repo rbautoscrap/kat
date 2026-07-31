@@ -14,7 +14,6 @@ const CATEGORY_ORDER: ListingCategory[] = [
   "CAR_LISTINGS",
   "STAND_BY",
   "HOT_DEALS",
-  "USED_PARTS",
 ];
 
 export default async function AdminOverviewPage() {
@@ -27,9 +26,14 @@ export default async function AdminOverviewPage() {
     byCategory,
   ] = await Promise.all([
     prisma.user.count(),
-    prisma.listing.count(),
     prisma.listing.count({
-      where: { purchaseOffers: { some: {} } },
+      where: { NOT: { category: "USED_PARTS" } },
+    }),
+    prisma.listing.count({
+      where: {
+        NOT: { category: "USED_PARTS" },
+        purchaseOffers: { some: {} },
+      },
     }),
     prisma.user.count({ where: { status: "PENDING" } }),
     getInventoryCostSummary(),

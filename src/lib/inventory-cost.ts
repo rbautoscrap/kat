@@ -63,9 +63,12 @@ export type InventoryCostSummary = {
  * 판매완료 (SOLD) — and 예약완료 (RESERVED) — are excluded from the total.
  */
 export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
+  const vehicleOnly = { NOT: { category: "USED_PARTS" as const } };
   const [stockRows, reservedCount, soldCount] = await Promise.all([
     prisma.listing.findMany({
-      where: { saleStatus: { in: INVENTORY_SALE_STATUSES } },
+      where: {
+        AND: [{ saleStatus: { in: INVENTORY_SALE_STATUSES } }, vehicleOnly],
+      },
       select: {
         costPrice: true,
         auctionPrice: true,
@@ -74,8 +77,12 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
         storageLocation: true,
       },
     }),
-    prisma.listing.count({ where: { saleStatus: "RESERVED" } }),
-    prisma.listing.count({ where: { saleStatus: "SOLD" } }),
+    prisma.listing.count({
+      where: { AND: [{ saleStatus: "RESERVED" }, vehicleOnly] },
+    }),
+    prisma.listing.count({
+      where: { AND: [{ saleStatus: "SOLD" }, vehicleOnly] },
+    }),
   ]);
 
   let total = 0;

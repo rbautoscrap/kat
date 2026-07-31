@@ -30,3 +30,21 @@ export const ADMIN_CATEGORY_LABELS: Record<ListingCategory, string> = {
   STAND_BY: "스탠바이",
   USED_PARTS: "중고부품",
 };
+
+/** Vehicle categories managed on /admin/listings (Used Parts is peer-to-peer). */
+export const ADMIN_MANAGED_CATEGORIES = [
+  "LIVE_AUCTION",
+  "CAR_LISTINGS",
+  "STAND_BY",
+  "HOT_DEALS",
+] as const satisfies readonly ListingCategory[];
+
+export type AdminManagedCategory = (typeof ADMIN_MANAGED_CATEGORIES)[number];
+
+export function isAdminManagedCategory(
+  category: ListingCategory | string | null | undefined,
+): category is AdminManagedCategory {
+  return (ADMIN_MANAGED_CATEGORIES as readonly string[]).includes(
+    String(category ?? ""),
+  );
+}

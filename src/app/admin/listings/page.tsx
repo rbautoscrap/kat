@@ -77,8 +77,7 @@ function parseCategory(value?: string): ListingCategory | "ALL" {
     value === "HOT_DEALS" ||
     value === "CAR_LISTINGS" ||
     value === "LIVE_AUCTION" ||
-    value === "STAND_BY" ||
-    value === "USED_PARTS"
+    value === "STAND_BY"
   ) {
     return value;
   }
@@ -152,6 +151,10 @@ export default async function AdminListingsPage({ searchParams }: Props) {
   const storage = params.storage?.trim() ?? "";
 
   const searchWhere = buildListingSearchWhere(q);
+  /** Used Parts is peer-to-peer — never listed in admin inventory. */
+  const excludePartsWhere: Prisma.ListingWhereInput = {
+    NOT: { category: "USED_PARTS" },
+  };
   const categoryWhere: Prisma.ListingWhereInput =
     category === "ALL" ? {} : { category };
   const saleWhere: Prisma.ListingWhereInput =
@@ -159,16 +162,22 @@ export default async function AdminListingsPage({ searchParams }: Props) {
   const locationWhere = storageWhere(storage);
 
   const where: Prisma.ListingWhereInput = {
-    AND: [categoryWhere, saleWhere, searchWhere, locationWhere],
+    AND: [
+      excludePartsWhere,
+      categoryWhere,
+      saleWhere,
+      searchWhere,
+      locationWhere,
+    ],
   };
 
   // Category pill counts: search + sale filter (ignore category)
   const categoryCountWhere: Prisma.ListingWhereInput = {
-    AND: [saleWhere, searchWhere, locationWhere],
+    AND: [excludePartsWhere, saleWhere, searchWhere, locationWhere],
   };
   // Sale pill counts: search + category filter (ignore sale)
   const saleCountWhere: Prisma.ListingWhereInput = {
-    AND: [categoryWhere, searchWhere, locationWhere],
+    AND: [excludePartsWhere, categoryWhere, searchWhere, locationWhere],
   };
 
   const [total, grouped, saleGrouped, offerListingCount, inventory] =
