@@ -12,6 +12,7 @@ import {
   formatNotesDisplay,
   isPartsCategory,
   listingCardLabel,
+  listingSellerName,
 } from "@/lib/listings";
 
 type Props = {
@@ -42,6 +43,7 @@ export function ListingCard({
   const large = size === "large";
   const isSold = listing.saleStatus === "SOLD";
   const isParts = isPartsCategory(listing.category);
+  const sellerName = listingSellerName(listing);
   const canOpen = !isSold || canViewSold;
   const detailHref = `/listings/${listing.id}`;
   const needsLiveAuctionGate =
@@ -66,6 +68,11 @@ export function ListingCard({
 
     const listBody = (
       <div className="min-w-0 flex-1 py-0.5">
+        {sellerName ? (
+          <p className="mb-0.5 truncate text-[12.5px] font-medium tracking-wide text-neutral-600">
+            {sellerName}
+          </p>
+        ) : null}
         <p
           className={`line-clamp-2 break-words text-[14px] font-semibold leading-snug sm:text-[15px] ${
             canOpen

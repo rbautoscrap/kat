@@ -41,6 +41,17 @@ export function listingCardLabel(listing: {
   return `${listing.year} ${listing.make} ${listing.model}`;
 }
 
+/** Used Parts stores seller name in `model`. */
+export function listingSellerName(listing: {
+  category: ListingCategory;
+  model: string;
+}): string | null {
+  if (!isPartsCategory(listing.category)) return null;
+  const name = listing.model.trim();
+  if (!name || name === "-") return null;
+  return name;
+}
+
 /** Public English overlays / badges */
 export const SALE_STATUS_LABELS: Record<ListingSaleStatus, string> = {
   AVAILABLE: "Available",
