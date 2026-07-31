@@ -9,6 +9,7 @@ type DialogProps = {
   open: boolean;
   onClose: () => void;
   defaultCategory?: ListingCategory;
+  defaultSellerName?: string;
 };
 
 /** Shared create dialog (admin list button or /listings/new). */
@@ -16,6 +17,7 @@ export function ListingCreateDialog({
   open,
   onClose,
   defaultCategory,
+  defaultSellerName,
 }: DialogProps) {
   return (
     <AuthModalShell
@@ -31,11 +33,15 @@ export function ListingCreateDialog({
         매물 등록
       </h2>
       <p className="mt-1 text-[12.5px] text-neutral-500">
-        차량 또는 중고부품을 등록할 수 있습니다. 중고부품은 부품명·사진·설명만
-        입력하면 됩니다.
+        차량 또는 중고부품을 등록할 수 있습니다. 중고부품은 판매자명·연락처·부품명(또는
+        제목)·사진·설명을 입력하면 됩니다.
       </p>
       <div className="mt-5">
-        <ListingForm onCancel={onClose} defaultCategory={defaultCategory} />
+        <ListingForm
+          onCancel={onClose}
+          defaultCategory={defaultCategory}
+          defaultSellerName={defaultSellerName}
+        />
       </div>
     </AuthModalShell>
   );

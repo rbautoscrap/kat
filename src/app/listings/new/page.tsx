@@ -33,6 +33,7 @@ export default async function NewListingPage({ searchParams }: Props) {
     <NewListingPageClient
       backHref={backHref}
       defaultCategory={defaultCategory}
+      defaultSellerName={dbUser.name}
     />
   );
 }

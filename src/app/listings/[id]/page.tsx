@@ -223,11 +223,15 @@ export default async function ListingDetailPage({ params }: Props) {
       ? `tel:${contactDigits.startsWith("0") ? contactDigits : `+${contactDigits}`}`
       : null;
 
+  const sellerName =
+    listing.model.trim() && listing.model.trim() !== "-"
+      ? listing.model.trim()
+      : null;
   const shortSpecs: { label: string; value: ReactNode }[] = isParts
     ? [
         {
-          label: "Part",
-          value: listing.make || "—",
+          label: "Seller",
+          value: sellerName || "—",
         },
         {
           label: "Contact",
@@ -258,6 +262,10 @@ export default async function ListingDetailPage({ params }: Props) {
             ) : (
               "—"
             ),
+        },
+        {
+          label: "Part",
+          value: listing.make || "—",
         },
       ]
     : [

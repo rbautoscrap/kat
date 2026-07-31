@@ -7,10 +7,15 @@ import { ListingCreateDialog } from "@/components/admin/NewListingModal";
 type Props = {
   backHref: string;
   defaultCategory?: ListingCategory;
+  defaultSellerName?: string;
 };
 
 /** Full-route entry (`/listings/new`) that opens the create modal immediately. */
-export function NewListingPageClient({ backHref, defaultCategory }: Props) {
+export function NewListingPageClient({
+  backHref,
+  defaultCategory,
+  defaultSellerName,
+}: Props) {
   const router = useRouter();
 
   return (
@@ -18,6 +23,7 @@ export function NewListingPageClient({ backHref, defaultCategory }: Props) {
       <ListingCreateDialog
         open
         defaultCategory={defaultCategory}
+        defaultSellerName={defaultSellerName}
         onClose={() => {
           router.push(backHref);
         }}

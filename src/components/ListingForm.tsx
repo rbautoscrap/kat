@@ -46,6 +46,8 @@ function assignInputFiles(
 }
 
 type Props = {
+  /** Prefill seller name on Used Parts create. */
+  defaultSellerName?: string;
   listing?: Listing & {
     images: ListingImage[];
     vin?: string | null;
@@ -229,7 +231,12 @@ function defaultAuctionEndsLocal(existing?: Date | string | null) {
   );
 }
 
-export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
+export function ListingForm({
+  listing,
+  defaultCategory,
+  defaultSellerName,
+  onCancel,
+}: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -367,8 +374,17 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
       data.set("year", "0");
       data.set("transmission", "Other");
       data.set("fuelType", "Other");
-      if (!String(data.get("model") ?? "").trim()) {
-        data.set("model", "-");
+      const sellerName = String(data.get("model") ?? "").trim();
+      if (!sellerName || sellerName === "-") {
+        setError("판매자명을 입력해 주세요.");
+        setPending(false);
+        return;
+      }
+      data.set("model", sellerName);
+      if (!String(data.get("make") ?? "").trim()) {
+        setError("부품명 또는 제목을 입력해 주세요.");
+        setPending(false);
+        return;
       }
       const contactDigits = String(data.get("whatsappNumber") ?? "").replace(
         /\D/g,
@@ -546,14 +562,19 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
           <>
             <input type="hidden" name="category" value="USED_PARTS" />
             <div className="sm:col-span-2 rounded-md border border-emerald-200 bg-emerald-50/50 px-3 py-2.5 text-[12.5px] leading-relaxed text-emerald-950">
-              부품명·연락처(필수)·사진·설명을 입력하면 등록됩니다.
+              판매자명·연락처(필수)·부품명(또는 제목)·사진·설명을 입력하면
+              등록됩니다.
             </div>
             <Field
-              label="부품명"
-              name="make"
+              label="판매자명"
+              name="model"
               required
-              defaultValue={listing?.make}
-              placeholder="예: 2012 QM6 2.0 Front bumper"
+              defaultValue={
+                listing?.model && listing.model !== "-"
+                  ? listing.model
+                  : defaultSellerName
+              }
+              placeholder="예: 홍길동"
             />
             <Field
               label="연락처 (전화 / WhatsApp)"
@@ -562,6 +583,14 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
               required
               defaultValue={listing?.whatsappNumber ?? undefined}
               placeholder="예: 010-1234-5678"
+            />
+            <Field
+              label="부품명 또는 제목"
+              name="make"
+              required
+              className="sm:col-span-2"
+              defaultValue={listing?.make}
+              placeholder="예: 2012 QM6 2.0 Front bumper"
             />
             <NotesField
               defaultValue={listing?.damages ?? undefined}
@@ -1484,6 +1513,7 @@ function Field({
   required,
   defaultValue,
   placeholder,
+  className,
 }: {
   label: string;
   name: string;
@@ -1491,9 +1521,10 @@ function Field({
   required?: boolean;
   defaultValue?: string;
   placeholder?: string;
+  className?: string;
 }) {
   return (
-    <label className="block text-sm">
+    <label className={`block text-sm${className ? ` ${className}` : ""}`}>
       <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
         {label}
       </span>

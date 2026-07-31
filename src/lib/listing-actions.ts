@@ -166,8 +166,8 @@ const LISTING_CATEGORIES = [
 const listingFieldsSchema = z.object({
   category: z.enum(LISTING_CATEGORIES),
   year: listingYearSchema,
-  make: z.string().min(1, "제조사/부품명을 입력해 주세요."),
-  model: z.string().min(1, "모델/호환 차종을 입력해 주세요."),
+  make: z.string().min(1, "제조사/부품명 또는 제목을 입력해 주세요."),
+  model: z.string().min(1, "모델/판매자명을 입력해 주세요."),
   vin: z
     .string()
     .optional()
@@ -223,6 +223,20 @@ const listingFieldsSchema = z.object({
     });
   }
   if (data.category === "USED_PARTS") {
+    if (!data.model.trim() || data.model.trim() === "-") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["model"],
+        message: "판매자명을 입력해 주세요.",
+      });
+    }
+    if (!data.make.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["make"],
+        message: "부품명 또는 제목을 입력해 주세요.",
+      });
+    }
     const digits = data.whatsappNumber.replace(/\D/g, "");
     if (digits.length < 8) {
       ctx.addIssue({
@@ -258,10 +272,8 @@ export function buildListingTitle(
   category?: ListingCategory,
 ) {
   if (category === "USED_PARTS") {
-    const name = make.trim();
-    const compat = model.trim();
-    if (compat && compat !== "-") return `${name} — ${compat}`;
-    return name;
+    // make = part title; model = seller name (not shown in listing title)
+    return make.trim();
   }
   return `${year} ${make} ${model}`.trim();
 }
@@ -274,7 +286,7 @@ export function formDataToListingInput(formData: FormData) {
     year: isParts ? 0 : formData.get("year"),
     make: String(formData.get("make") ?? "").trim(),
     model: isParts
-      ? String(formData.get("model") ?? "").trim() || "-"
+      ? String(formData.get("model") ?? "").trim()
       : String(formData.get("model") ?? ""),
     vin: isParts ? undefined : emptyToUndef(formData.get("vin")),
     highlights: isParts ? undefined : emptyToUndef(formData.get("highlights")),
