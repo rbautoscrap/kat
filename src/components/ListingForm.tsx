@@ -331,6 +331,15 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
       if (!String(data.get("model") ?? "").trim()) {
         data.set("model", "-");
       }
+      const contactDigits = String(data.get("whatsappNumber") ?? "").replace(
+        /\D/g,
+        "",
+      );
+      if (contactDigits.length < 8) {
+        setError("연락처(전화/WhatsApp)를 입력해 주세요. (숫자 8자리 이상)");
+        setPending(false);
+        return;
+      }
     } else {
       const yearDigits = String(data.get("year") ?? "").replace(/\D/g, "");
       const yearNum =
@@ -470,7 +479,7 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
           <>
             <input type="hidden" name="category" value="USED_PARTS" />
             <div className="sm:col-span-2 rounded-md border border-emerald-200 bg-emerald-50/50 px-3 py-2.5 text-[12.5px] leading-relaxed text-emerald-950">
-              부품명과 사진·설명만 입력하면 등록됩니다.
+              부품명·연락처(필수)·사진·설명을 입력하면 등록됩니다.
             </div>
             <Field
               label="부품명"
@@ -478,6 +487,14 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
               required
               defaultValue={listing?.make}
               placeholder="예: 2012 QM6 2.0 Front bumper"
+            />
+            <Field
+              label="연락처 (전화 / WhatsApp)"
+              name="whatsappNumber"
+              type="tel"
+              required
+              defaultValue={listing?.whatsappNumber ?? undefined}
+              placeholder="예: 010-1234-5678"
             />
             <NotesField
               defaultValue={listing?.damages ?? undefined}

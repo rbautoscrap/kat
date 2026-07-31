@@ -215,6 +215,16 @@ const listingFieldsSchema = z.object({
       message: "연식은 1980년 이상이어야 합니다.",
     });
   }
+  if (data.category === "USED_PARTS") {
+    const digits = data.whatsappNumber.replace(/\D/g, "");
+    if (digits.length < 8) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["whatsappNumber"],
+        message: "연락처(전화/WhatsApp)를 입력해 주세요. (숫자 8자리 이상)",
+      });
+    }
+  }
   if (data.category !== "LIVE_AUCTION") return;
   const raw = data.auctionEndsAt?.trim();
   if (!raw) {
@@ -277,9 +287,10 @@ export function formDataToListingInput(formData: FormData) {
       ? "Other"
       : normalizeFuelType(String(formData.get("fuelType") ?? "")),
     youtubeUrl: emptyToUndef(formData.get("youtubeUrl")),
-    whatsappNumber:
-      String(formData.get("whatsappNumber") ?? "").trim() ||
-      DEFAULT_LISTING_WHATSAPP,
+    whatsappNumber: isParts
+      ? String(formData.get("whatsappNumber") ?? "").trim()
+      : String(formData.get("whatsappNumber") ?? "").trim() ||
+        DEFAULT_LISTING_WHATSAPP,
     vehicleNumber: emptyToUndef(formData.get("vehicleNumber")),
     storageLocation: emptyToUndef(formData.get("storageLocation")),
     inboundDate: emptyToUndef(formData.get("inboundDate")),

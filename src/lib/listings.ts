@@ -102,8 +102,12 @@ export function youtubeEmbedUrl(url?: string | null) {
 }
 
 export function whatsappLink(phone: string, text: string) {
-  const digits = phone.replace(/\D/g, "");
+  let digits = phone.replace(/\D/g, "");
   if (digits.length < 8) return null;
+  // Korea local mobile (010…) → international for wa.me
+  if (digits.startsWith("0") && digits.length >= 10) {
+    digits = `82${digits.slice(1)}`;
+  }
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 

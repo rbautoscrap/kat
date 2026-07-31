@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import { ImageGallery } from "@/components/ImageGallery";
@@ -31,6 +32,7 @@ import {
   SALE_STATUS_LABELS,
   listingKakaoInquiryText,
   listingWhatsAppLink,
+  whatsappLink,
   youtubeEmbedUrl,
 } from "@/lib/listings";
 import { displayAccumulatedDays } from "@/lib/listing-actions";
@@ -206,17 +208,56 @@ export default async function ListingDetailPage({ params }: Props) {
   );
   const kakaoInquiry = listingKakaoInquiryText(listing.title, inquiryOptions);
 
-  const shortSpecs: { label: string; value: string }[] = isPartsCategory(
-    listing.category,
-  )
+  const isParts = isPartsCategory(listing.category);
+  const contactDigits = listing.whatsappNumber.replace(/\D/g, "");
+  const contactDisplay = listing.whatsappNumber.trim() || "—";
+  const partsWhatsAppHref =
+    isParts && contactDigits.length >= 8
+      ? whatsappLink(
+          listing.whatsappNumber,
+          `Hello, I am interested in this part: ${listing.title}`,
+        )
+      : null;
+  const partsTelHref =
+    isParts && contactDigits.length >= 8
+      ? `tel:${contactDigits.startsWith("0") ? contactDigits : `+${contactDigits}`}`
+      : null;
+
+  const shortSpecs: { label: string; value: ReactNode }[] = isParts
     ? [
         {
           label: "Part",
           value: listing.make || "—",
         },
         {
-          label: "S/N",
-          value: listing.serialNumber || "—",
+          label: "Contact",
+          value:
+            contactDigits.length >= 8 ? (
+              <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                {partsTelHref ? (
+                  <a
+                    href={partsTelHref}
+                    className="font-medium text-neutral-800 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-600"
+                  >
+                    {contactDisplay}
+                  </a>
+                ) : (
+                  <span>{contactDisplay}</span>
+                )}
+                {partsWhatsAppHref ? (
+                  <a
+                    href={partsWhatsAppHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center rounded bg-[#25D366] px-2 py-0.5 text-[11.5px] font-semibold tracking-wide text-white hover:bg-[#1ebe57]"
+                  >
+                    WhatsApp
+                  </a>
+                ) : null}
+              </span>
+            ) : (
+              "—"
+            ),
         },
       ]
     : [
@@ -241,8 +282,6 @@ export default async function ListingDetailPage({ params }: Props) {
       ];
   const notesValue =
     formatNotesDisplay(listing.damages, listing.damagesEn) || "—";
-
-  const isParts = isPartsCategory(listing.category);
   const accumulatedDays = displayAccumulatedDays(listing);
   const offerPanelVisible =
     !isParts &&
