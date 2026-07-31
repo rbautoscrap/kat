@@ -31,8 +31,8 @@ export function ListingCreateDialog({
         매물 등록
       </h2>
       <p className="mt-1 text-[12.5px] text-neutral-500">
-        차량 카테고리와 중고부품(Used Parts)을 등록할 수 있습니다. 중고부품은
-        부품명·사진 중심으로 간단히 등록하세요.
+        차량 또는 중고부품을 등록할 수 있습니다. 중고부품은 부품명·사진·설명만
+        입력하면 됩니다.
       </p>
       <div className="mt-5">
         <ListingForm onCancel={onClose} defaultCategory={defaultCategory} />

@@ -17,7 +17,7 @@ import {
   parseAuctionEndsAtInput,
   toKoreaDatetimeLocalValue,
 } from "@/lib/format-korea-time";
-import { isPartsCategory, PART_TYPE_OPTIONS } from "@/lib/listings";
+import { isPartsCategory } from "@/lib/listings";
 import {
   STORAGE_LOCATIONS,
   canonicalizeStorageLocation,
@@ -466,6 +466,28 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
       lang="ko"
     >
       <div className="grid gap-4 sm:grid-cols-2">
+        {partsMode ? (
+          <>
+            <input type="hidden" name="category" value="USED_PARTS" />
+            <div className="sm:col-span-2 rounded-md border border-emerald-200 bg-emerald-50/50 px-3 py-2.5 text-[12.5px] leading-relaxed text-emerald-950">
+              부품명과 사진·설명만 입력하면 등록됩니다.
+            </div>
+            <Field
+              label="부품명"
+              name="make"
+              required
+              defaultValue={listing?.make}
+              placeholder="예: 2012 QM6 2.0 Front bumper"
+            />
+            <NotesField
+              defaultValue={listing?.damages ?? undefined}
+              translatedEn={listing?.damagesEn ?? undefined}
+              label="상태 · 설명"
+              placeholder="상태, 구성품, 특이사항 등"
+            />
+          </>
+        ) : (
+          <>
         <label className="block text-sm sm:col-span-2 sm:max-w-xs">
           <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
             카테고리
@@ -486,62 +508,6 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
             ))}
           </select>
         </label>
-
-        {partsMode ? (
-          <>
-            <div className="sm:col-span-2 rounded-md border border-emerald-200 bg-emerald-50/50 px-3 py-2.5 text-[12.5px] leading-relaxed text-emerald-950">
-              중고부품은 부품명·사진·설명만 입력하면 등록됩니다. 호환 차종·부품
-              종류는 선택 사항입니다.
-            </div>
-            <Field
-              label="부품명"
-              name="make"
-              required
-              defaultValue={listing?.make}
-              placeholder="예: Front bumper cover"
-            />
-            <Field
-              label="호환 차종"
-              name="model"
-              defaultValue={
-                listing?.model && listing.model !== "-"
-                  ? listing.model
-                  : undefined
-              }
-              placeholder="예: Hyundai Avante AD"
-            />
-            <label className="block text-sm">
-              <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
-                부품 종류
-              </span>
-              <select
-                name="highlights"
-                defaultValue={listing?.highlights ?? ""}
-                className={selectClass}
-              >
-                <option value="">선택 (선택 사항)</option>
-                {PART_TYPE_OPTIONS.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <Field
-              label="부품 번호"
-              name="engineMark"
-              defaultValue={listing?.engineMark ?? undefined}
-              placeholder="OEM / 부품번호 (선택)"
-            />
-            <NotesField
-              defaultValue={listing?.damages ?? undefined}
-              translatedEn={listing?.damagesEn ?? undefined}
-              label="상태 · 설명"
-              placeholder="상태, 구성품, 특이사항 등"
-            />
-          </>
-        ) : (
-          <>
         <label className="block text-sm">
           <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
             연식

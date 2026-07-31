@@ -215,19 +215,6 @@ export default async function ListingDetailPage({ params }: Props) {
           value: listing.make || "—",
         },
         {
-          label: "Compatible",
-          value:
-            listing.model && listing.model !== "-" ? listing.model : "—",
-        },
-        {
-          label: "Type",
-          value: listing.highlights?.trim() || "—",
-        },
-        {
-          label: "Part No.",
-          value: listing.engineMark?.trim() || "—",
-        },
-        {
           label: "S/N",
           value: listing.serialNumber || "—",
         },

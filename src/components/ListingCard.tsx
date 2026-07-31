@@ -35,7 +35,6 @@ export function ListingCard({
   const large = size === "large";
   const isSold = listing.saleStatus === "SOLD";
   const isParts = isPartsCategory(listing.category);
-  const partType = isParts ? listing.highlights?.trim() : "";
   const canOpen = !isSold || canViewSold;
   const detailHref = `/listings/${listing.id}`;
   const needsLiveAuctionGate =
@@ -75,11 +74,6 @@ export function ListingCard({
       >
         {label}
       </p>
-      {partType ? (
-        <p className="mt-1 text-[11.5px] tracking-wide text-neutral-500">
-          {partType}
-        </p>
-      ) : null}
       {listing.category === "LIVE_AUCTION" && listing.auctionEndsAt ? (
         <AuctionCountdown
           endsAt={

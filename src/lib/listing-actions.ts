@@ -260,8 +260,10 @@ export function formDataToListingInput(formData: FormData) {
       ? String(formData.get("model") ?? "").trim() || "-"
       : String(formData.get("model") ?? ""),
     vin: isParts ? undefined : emptyToUndef(formData.get("vin")),
-    highlights: emptyToUndef(formData.get("highlights")),
-    engineMark: emptyToUndef(formData.get("engineMark")),
+    highlights: isParts ? undefined : emptyToUndef(formData.get("highlights")),
+    engineMark: isParts
+      ? undefined
+      : emptyToUndef(formData.get("engineMark")),
     displacement: isParts
       ? undefined
       : emptyToUndef(formData.get("displacement")),
