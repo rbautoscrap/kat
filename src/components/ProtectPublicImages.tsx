@@ -9,6 +9,8 @@ type Props = {
 
 function isProtectedImageTarget(target: EventTarget | null) {
   if (!(target instanceof Element)) return false;
+  // Allow intentional drag-reorder in editors (e.g. Used Parts photo order).
+  if (target.closest("[data-allow-image-drag]")) return false;
   return Boolean(
     target.closest(
       "img, picture, svg image, [data-protect-image], .protect-image",

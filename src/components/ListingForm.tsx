@@ -45,6 +45,22 @@ function assignInputFiles(
   input.files = dt.files;
 }
 
+function moveItem<T>(list: T[], from: number, to: number): T[] {
+  if (
+    from === to ||
+    from < 0 ||
+    to < 0 ||
+    from >= list.length ||
+    to >= list.length
+  ) {
+    return list;
+  }
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item!);
+  return next;
+}
+
 type Props = {
   /** Prefill seller name on Used Parts create. */
   defaultSellerName?: string;
@@ -247,6 +263,7 @@ export function ListingForm({
   /** Used Parts: single-slot multi upload (first = cover, rest = gallery). */
   const [partsFiles, setPartsFiles] = useState<File[]>([]);
   const [partsPreviews, setPartsPreviews] = useState<string[]>([]);
+  const [partsDragIndex, setPartsDragIndex] = useState<number | null>(null);
   const [keptCover, setKeptCover] = useState<ListingImage | null>(
     () => listing?.images?.[0] ?? null,
   );
@@ -353,6 +370,37 @@ export function ListingForm({
       setPartsFiles(list);
     },
     [keptCover, keptGallery.length],
+  );
+
+  const reorderPartsPhotos = useCallback((from: number, to: number) => {
+    setPartsFiles((prev) => moveItem(prev, from, to));
+    setPartsPreviews((prev) => moveItem(prev, from, to));
+  }, []);
+
+  const setPartsCoverAt = useCallback(
+    (index: number) => {
+      if (index <= 0) return;
+      reorderPartsPhotos(index, 0);
+    },
+    [reorderPartsPhotos],
+  );
+
+  const reorderKeptParts = useCallback(
+    (from: number, to: number) => {
+      const all = [...(keptCover ? [keptCover] : []), ...keptGallery];
+      const next = moveItem(all, from, to);
+      setKeptCover(next[0] ?? null);
+      setKeptGallery(next.slice(1));
+    },
+    [keptCover, keptGallery],
+  );
+
+  const setKeptPartsCoverAt = useCallback(
+    (index: number) => {
+      if (index <= 0) return;
+      reorderKeptParts(index, 0);
+    },
+    [reorderKeptParts],
   );
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -880,8 +928,8 @@ export function ListingForm({
               사진
               <span className="font-normal text-neutral-400">
                 {" "}
-                · 여러 장 한 번에 선택 · 첫 장이 대표 사진 · 최대{" "}
-                {MAX_IMAGES_PER_USED_PARTS}장
+                · 여러 장 한 번에 선택 · 드래그 또는 「대표로」로 순서 변경 ·
+                최대 {MAX_IMAGES_PER_USED_PARTS}장
               </span>
             </span>
             {listing &&
@@ -920,7 +968,7 @@ export function ListingForm({
             browseLabel="사진 선택"
             hint={
               partsFiles.length > 0
-                ? `${partsFiles.length}장 선택됨 · 첫 장: 대표 · 다시 선택 가능`
+                ? `${partsFiles.length}장 선택됨 · 대표 변경 가능 · 다시 선택 가능`
                 : "드래그하여 놓거나 선택 · JPG/PNG/WEBP/GIF · 여러 장"
             }
             onFiles={(files) => applyPartsFiles(files)}
@@ -932,18 +980,69 @@ export function ListingForm({
           {partsPreviews.length > 0 ? (
             <div className="mt-2 grid grid-cols-5 gap-1.5 sm:grid-cols-8">
               {partsPreviews.map((url, index) => (
-                <div key={url} className="relative aspect-square">
+                <div
+                  key={url}
+                  data-allow-image-drag
+                  draggable
+                  onDragStart={(e) => {
+                    if ((e.target as HTMLElement).closest("button")) {
+                      e.preventDefault();
+                      return;
+                    }
+                    setPartsDragIndex(index);
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (partsDragIndex == null) return;
+                    reorderPartsPhotos(partsDragIndex, index);
+                    setPartsDragIndex(null);
+                  }}
+                  onDragEnd={() => setPartsDragIndex(null)}
+                  className={`relative aspect-square cursor-grab active:cursor-grabbing ${
+                    partsDragIndex === index ? "opacity-60" : ""
+                  }`}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={url}
                     alt=""
-                    className="h-full w-full rounded-sm border border-neutral-200 object-cover"
+                    draggable={false}
+                    className="pointer-events-none h-full w-full rounded-sm border border-neutral-200 object-cover"
                   />
                   {index === 0 ? (
                     <span className="absolute left-0.5 top-0.5 rounded bg-neutral-900/80 px-1 py-0.5 text-[9px] font-semibold text-white">
                       대표
                     </span>
-                  ) : null}
+                  ) : (
+                    <button
+                      type="button"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={() => setPartsCoverAt(index)}
+                      className="absolute left-0.5 top-0.5 rounded bg-white/90 px-1 py-0.5 text-[9px] font-semibold text-neutral-800 shadow-sm ring-1 ring-neutral-200 hover:bg-white"
+                    >
+                      대표로
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => {
+                      setPartsFiles((prev) => prev.filter((_, i) => i !== index));
+                      setPartsPreviews((prev) => {
+                        const removed = prev[index];
+                        if (removed) URL.revokeObjectURL(removed);
+                        return prev.filter((_, i) => i !== index);
+                      });
+                    }}
+                    className="absolute right-0.5 top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/75 text-[12px] leading-none text-white hover:bg-black/90"
+                    aria-label="사진 삭제"
+                    title="삭제"
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
             </div>
@@ -955,24 +1054,56 @@ export function ListingForm({
                 보관 중인 사진
                 {partsFiles.length > 0
                   ? " · 새 사진을 올리면 대표는 새 첫 장으로 바뀝니다"
-                  : ""}
+                  : " · 드래그 또는 「대표로」로 순서 변경"}
               </p>
               <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-8">
                 {[
                   ...(keptCover ? [keptCover] : []),
                   ...keptGallery,
                 ].map((img, index) => (
-                  <div key={img.id} className="relative aspect-square">
+                  <div
+                    key={img.id}
+                    data-allow-image-drag
+                    draggable={partsFiles.length === 0}
+                    onDragStart={() => {
+                      if (partsFiles.length === 0) setPartsDragIndex(index);
+                    }}
+                    onDragOver={(e) => {
+                      if (partsFiles.length === 0) e.preventDefault();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (partsFiles.length > 0 || partsDragIndex == null) return;
+                      reorderKeptParts(partsDragIndex, index);
+                      setPartsDragIndex(null);
+                    }}
+                    onDragEnd={() => setPartsDragIndex(null)}
+                    className={`relative aspect-square ${
+                      partsFiles.length === 0
+                        ? "cursor-grab active:cursor-grabbing"
+                        : ""
+                    } ${partsDragIndex === index ? "opacity-60" : ""}`}
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={img.url}
                       alt=""
-                      className="h-full w-full rounded-sm border border-neutral-200 object-cover"
+                      draggable={false}
+                      className="pointer-events-none h-full w-full rounded-sm border border-neutral-200 object-cover"
                     />
                     {index === 0 && !partsFiles.length ? (
                       <span className="absolute left-0.5 top-0.5 rounded bg-neutral-900/80 px-1 py-0.5 text-[9px] font-semibold text-white">
                         대표
                       </span>
+                    ) : null}
+                    {index > 0 && partsFiles.length === 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setKeptPartsCoverAt(index)}
+                        className="absolute left-0.5 top-0.5 rounded bg-white/90 px-1 py-0.5 text-[9px] font-semibold text-neutral-800 shadow-sm ring-1 ring-neutral-200 hover:bg-white"
+                      >
+                        대표로
+                      </button>
                     ) : null}
                     <button
                       type="button"
