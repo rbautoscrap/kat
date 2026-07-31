@@ -17,7 +17,11 @@ import {
   parseAuctionEndsAtInput,
   toKoreaDatetimeLocalValue,
 } from "@/lib/format-korea-time";
-import { isPartsCategory } from "@/lib/listings";
+import {
+  isPartsCategory,
+  MAX_IMAGES_PER_LISTING,
+  MAX_IMAGES_PER_USED_PARTS,
+} from "@/lib/listings";
 import {
   STORAGE_LOCATIONS,
   canonicalizeStorageLocation,
@@ -297,9 +301,10 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
   const applyGalleryFiles = useCallback(
     (files: FileList | File[]) => {
       const list = Array.from(files).filter(isImageFile);
-      if (list.length > 99) {
+      const maxGallery = MAX_IMAGES_PER_LISTING - 1;
+      if (list.length > maxGallery) {
         setError(
-          "추가 사진은 최대 99장까지 선택할 수 있습니다. (대표 사진 포함 100장)",
+          `추가 사진은 최대 ${maxGallery}장까지 선택할 수 있습니다. (대표 사진 포함 ${MAX_IMAGES_PER_LISTING}장)`,
         );
         if (galleryInputRef.current) galleryInputRef.current.value = "";
         setPhotoCount(0);
@@ -314,23 +319,34 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
     [],
   );
 
-  const applyPartsFiles = useCallback((files: FileList | File[]) => {
-    const list = Array.from(files).filter(isImageFile);
-    if (list.length === 0) {
-      setError("이미지 파일만 등록할 수 있습니다.");
-      return;
-    }
-    if (list.length > 100) {
-      setError("사진은 최대 100장까지 등록할 수 있습니다.");
-      return;
-    }
-    setError(null);
-    setPartsPreviews((prev) => {
-      for (const url of prev) URL.revokeObjectURL(url);
-      return list.map((file) => URL.createObjectURL(file));
-    });
-    setPartsFiles(list);
-  }, []);
+  const applyPartsFiles = useCallback(
+    (files: FileList | File[]) => {
+      const list = Array.from(files).filter(isImageFile);
+      if (list.length === 0) {
+        setError("이미지 파일만 등록할 수 있습니다.");
+        return;
+      }
+      const keptCount =
+        (keptCover ? 1 : 0) + keptGallery.length;
+      // New selection replaces cover when present; kept photos remain unless cleared.
+      const total = list.length + keptCount;
+      if (total > MAX_IMAGES_PER_USED_PARTS) {
+        setError(
+          keptCount > 0
+            ? `사진은 최대 ${MAX_IMAGES_PER_USED_PARTS}장입니다. (보관 ${keptCount}장 + 새 사진 ${list.length}장)`
+            : `사진은 최대 ${MAX_IMAGES_PER_USED_PARTS}장까지 등록할 수 있습니다.`,
+        );
+        return;
+      }
+      setError(null);
+      setPartsPreviews((prev) => {
+        for (const url of prev) URL.revokeObjectURL(url);
+        return list.map((file) => URL.createObjectURL(file));
+      });
+      setPartsFiles(list);
+    },
+    [keptCover, keptGallery.length],
+  );
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -410,6 +426,17 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
       } else {
         coverFile = null;
         galleryFiles = [];
+      }
+      const keptPartsCount =
+        (keptCover ? 1 : 0) + keptGallery.length;
+      const partsTotal =
+        (coverFile ? 1 : 0) + galleryFiles.length + keptPartsCount;
+      if (partsTotal > MAX_IMAGES_PER_USED_PARTS) {
+        setError(
+          `사진은 최대 ${MAX_IMAGES_PER_USED_PARTS}장까지 등록할 수 있습니다.`,
+        );
+        setPending(false);
+        return;
       }
     }
 
@@ -824,7 +851,8 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
               사진
               <span className="font-normal text-neutral-400">
                 {" "}
-                · 여러 장 한 번에 선택 · 첫 장이 대표 사진 · 최대 100장
+                · 여러 장 한 번에 선택 · 첫 장이 대표 사진 · 최대{" "}
+                {MAX_IMAGES_PER_USED_PARTS}장
               </span>
             </span>
             {listing &&
@@ -1018,7 +1046,7 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
               추가 사진
               <span className="font-normal text-neutral-400">
                 {" "}
-                · 대표 사진 포함 최대 100장
+                · 대표 사진 포함 최대 {MAX_IMAGES_PER_LISTING}장
                 {listing ? " · 개별 × 또는 전체 삭제" : ""}
               </span>
             </span>

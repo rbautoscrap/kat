@@ -71,6 +71,18 @@ export const USED_PARTS_LIST_CLASS =
 export const LISTING_CATEGORY_PAGE_SIZE = 20;
 export const USED_PARTS_PAGE_SIZE = 12;
 
+/** Vehicle listings may attach many photos; Used Parts is capped lower. */
+export const MAX_IMAGES_PER_LISTING = 100;
+export const MAX_IMAGES_PER_USED_PARTS = 20;
+
+export function maxImagesForCategory(
+  category: ListingCategory | string | null | undefined,
+) {
+  return category === "USED_PARTS"
+    ? MAX_IMAGES_PER_USED_PARTS
+    : MAX_IMAGES_PER_LISTING;
+}
+
 export function parseCategory(
   value: string | null | undefined,
 ): ListingCategory | null {

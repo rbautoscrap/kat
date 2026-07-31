@@ -8,7 +8,14 @@ import { DEFAULT_LISTING_WHATSAPP } from "@/lib/contact";
 import { parseAuctionEndsAtInput } from "@/lib/format-korea-time";
 import { getAppTempDir, getUploadsDir } from "@/lib/storage-paths";
 import { translateToEnglish } from "@/lib/translate";
+import { maxImagesForCategory } from "@/lib/listings";
 import { canonicalizeStorageLocation } from "@/lib/storage-location";
+
+export {
+  MAX_IMAGES_PER_LISTING,
+  MAX_IMAGES_PER_USED_PARTS,
+  maxImagesForCategory,
+} from "@/lib/listings";
 
 /** Prefer volume tmp over tiny container /tmp (multipart + libvips). */
 function ensureUploadTempEnv() {
@@ -399,7 +406,6 @@ function emptyToUndef(value: FormDataEntryValue | null) {
 }
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB (pre-compression upload limit)
-export const MAX_IMAGES_PER_LISTING = 100;
 /** Longest edge after resize — keeps detail for listings without huge files. */
 const MAX_IMAGE_EDGE = 1920;
 /** Mild JPEG quality — visibly clean, meaningfully smaller files. */
@@ -521,19 +527,25 @@ function fileFromForm(entry: FormDataEntryValue | null) {
 }
 
 /** Cover (대표) + gallery uploads. Cover is always first in `urls`. */
-export async function saveListingImageUploads(formData: FormData) {
+export async function saveListingImageUploads(
+  formData: FormData,
+  options?: { maxImages?: number },
+) {
   ensureUploadTempEnv();
   tuneSharpForUploads();
 
+  const maxImages =
+    options?.maxImages ??
+    maxImagesForCategory(String(formData.get("category") ?? ""));
   const coverFile = fileFromForm(formData.get("coverImage"));
   const galleryFiles = formData
     .getAll("images")
     .filter((f): f is File => f instanceof File && f.size > 0);
 
   const total = (coverFile ? 1 : 0) + galleryFiles.length;
-  if (total > MAX_IMAGES_PER_LISTING) {
+  if (total > maxImages) {
     throw new Error(
-      `이미지는 대표 사진 포함 최대 ${MAX_IMAGES_PER_LISTING}장까지 업로드할 수 있습니다.`,
+      `이미지는 대표 사진 포함 최대 ${maxImages}장까지 업로드할 수 있습니다.`,
     );
   }
 

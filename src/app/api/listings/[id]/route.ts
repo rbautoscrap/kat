@@ -5,7 +5,7 @@ import { requireListingModifier } from "@/lib/listing-access";
 import {
   deleteUploadedFiles,
   formDataToListingInput,
-  MAX_IMAGES_PER_LISTING,
+  maxImagesForCategory,
   saveListingImageUploads,
   withPublicNotesTranslation,
 } from "@/lib/listing-actions";
@@ -37,8 +37,9 @@ export async function PUT(request: Request, { params }: Params) {
         }
       : await withPublicNotesTranslation(parsed);
 
+    const maxImages = maxImagesForCategory(data.category ?? existing.category);
     const { coverUrl, galleryUrls, hasUpload } =
-      await saveListingImageUploads(formData);
+      await saveListingImageUploads(formData, { maxImages });
 
     const manageImages = formData.get("manageImages") === "1";
     const keepImageIds = formData
@@ -92,10 +93,10 @@ export async function PUT(request: Request, { params }: Params) {
         );
       }
 
-      if (ordered.length > MAX_IMAGES_PER_LISTING) {
+      if (ordered.length > maxImages) {
         return NextResponse.json(
           {
-            error: `이미지는 최대 ${MAX_IMAGES_PER_LISTING}장까지 등록할 수 있습니다.`,
+            error: `이미지는 최대 ${maxImages}장까지 등록할 수 있습니다.`,
           },
           { status: 400 },
         );

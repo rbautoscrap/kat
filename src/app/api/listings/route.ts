@@ -6,7 +6,7 @@ import { resolveSessionDbUser } from "@/lib/listing-access";
 import {
   formDataToListingInput,
   generateSerialNumber,
-  MAX_IMAGES_PER_LISTING,
+  maxImagesForCategory,
   saveListingImageUploads,
   withPublicNotesTranslation,
 } from "@/lib/listing-actions";
@@ -22,7 +22,10 @@ export async function POST(request: Request) {
     const data = await withPublicNotesTranslation(
       formDataToListingInput(formData),
     );
-    const { coverUrl, urls } = await saveListingImageUploads(formData);
+    const maxImages = maxImagesForCategory(data.category);
+    const { coverUrl, urls } = await saveListingImageUploads(formData, {
+      maxImages,
+    });
 
     if (!coverUrl) {
       return NextResponse.json(
@@ -30,10 +33,10 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    if (urls.length > MAX_IMAGES_PER_LISTING) {
+    if (urls.length > maxImages) {
       return NextResponse.json(
         {
-          error: `이미지는 최대 ${MAX_IMAGES_PER_LISTING}장까지 등록할 수 있습니다.`,
+          error: `이미지는 최대 ${maxImages}장까지 등록할 수 있습니다.`,
         },
         { status: 400 },
       );
