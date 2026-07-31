@@ -690,62 +690,67 @@ export function ListingForm({ listing, defaultCategory, onCancel }: Props) {
         )}
       </div>
 
-      <div className="rounded-md border border-[var(--line)] bg-neutral-50/40 px-4 py-4">
-        <div className="mb-3">
-          <p className="text-[13px] font-medium tracking-wide text-neutral-700">
-            내부 참고 정보
-          </p>
-          <p className="mt-1 text-[12px] leading-relaxed tracking-wide text-neutral-400">
-            외부에 공개되지 않으며, 관리자만 확인할 수 있습니다.
-          </p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            label="차량번호"
-            name="vehicleNumber"
-            defaultValue={listing?.vehicleNumber ?? undefined}
-          />
-          <label className="block text-sm">
-            <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
-              보관장소
-            </span>
-            <select
-              name="storageLocation"
-              defaultValue={
-                canonicalizeStorageLocation(listing?.storageLocation) ?? ""
-              }
-              className={selectClass}
-            >
-              <option value="">선택</option>
-              {STORAGE_LOCATIONS.map((loc) => (
-                <option key={loc} value={loc}>
-                  {loc}
-                </option>
-              ))}
-              {(() => {
-                const current = canonicalizeStorageLocation(
-                  listing?.storageLocation,
-                );
-                if (!current || (STORAGE_LOCATIONS as readonly string[]).includes(current)) {
-                  return null;
+      {!partsMode ? (
+        <div className="rounded-md border border-[var(--line)] bg-neutral-50/40 px-4 py-4">
+          <div className="mb-3">
+            <p className="text-[13px] font-medium tracking-wide text-neutral-700">
+              내부 참고 정보
+            </p>
+            <p className="mt-1 text-[12px] leading-relaxed tracking-wide text-neutral-400">
+              외부에 공개되지 않으며, 관리자만 확인할 수 있습니다.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              label="차량번호"
+              name="vehicleNumber"
+              defaultValue={listing?.vehicleNumber ?? undefined}
+            />
+            <label className="block text-sm">
+              <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
+                보관장소
+              </span>
+              <select
+                name="storageLocation"
+                defaultValue={
+                  canonicalizeStorageLocation(listing?.storageLocation) ?? ""
                 }
-                return (
-                  <option key={current} value={current}>
-                    {current}
+                className={selectClass}
+              >
+                <option value="">선택</option>
+                {STORAGE_LOCATIONS.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
                   </option>
-                );
-              })()}
-            </select>
-          </label>
-          <InboundDateFields
-            inboundDate={listing?.inboundDate ?? undefined}
-          />
-          <InternalCostFields
-            auctionPrice={listing?.auctionPrice ?? undefined}
-            incidentalCost={listing?.incidentalCost ?? undefined}
-          />
+                ))}
+                {(() => {
+                  const current = canonicalizeStorageLocation(
+                    listing?.storageLocation,
+                  );
+                  if (
+                    !current ||
+                    (STORAGE_LOCATIONS as readonly string[]).includes(current)
+                  ) {
+                    return null;
+                  }
+                  return (
+                    <option key={current} value={current}>
+                      {current}
+                    </option>
+                  );
+                })()}
+              </select>
+            </label>
+            <InboundDateFields
+              inboundDate={listing?.inboundDate ?? undefined}
+            />
+            <InternalCostFields
+              auctionPrice={listing?.auctionPrice ?? undefined}
+              incidentalCost={listing?.incidentalCost ?? undefined}
+            />
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {listing ? <input type="hidden" name="manageImages" value="1" /> : null}
       {keptCover ? (
