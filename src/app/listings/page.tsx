@@ -15,6 +15,8 @@ import {
   LISTING_CATEGORY_PAGE_SIZE,
   LISTING_GRID_CLASS,
   parseCategory,
+  USED_PARTS_GALLERY_GRID_CLASS,
+  USED_PARTS_PAGE_SIZE,
 } from "@/lib/listings";
 import {
   newListingShuffleSeed,
@@ -60,7 +62,10 @@ export default async function ListingsPage({ searchParams }: Props) {
 
   const fromMenu = Boolean(category) && !q;
   const isSearch = Boolean(q);
-  const pageSize = LISTING_CATEGORY_PAGE_SIZE;
+  const isPartsGallery = category === "USED_PARTS";
+  const pageSize = isPartsGallery
+    ? USED_PARTS_PAGE_SIZE
+    : LISTING_CATEGORY_PAGE_SIZE;
   /** Car Listings: cost-biased random order per visit. */
   const shuffleMode =
     category === "CAR_LISTINGS" ? ("cost_biased" as const) : null;
@@ -136,6 +141,11 @@ export default async function ListingsPage({ searchParams }: Props) {
       : "All Listings";
 
   const useLargeGrid = fromMenu || isSearch;
+  const gridClass = isPartsGallery
+    ? USED_PARTS_GALLERY_GRID_CLASS
+    : useLargeGrid
+      ? LISTING_CATEGORY_GRID_CLASS
+      : LISTING_GRID_CLASS;
 
   return (
     <div className="site-container py-6 sm:py-8" lang="en">
@@ -146,7 +156,7 @@ export default async function ListingsPage({ searchParams }: Props) {
         <h1 className="site-heading text-[1.1rem] text-neutral-800 sm:text-[1.2rem]">
           {heading}
         </h1>
-        {category === "USED_PARTS" && canList ? (
+        {isPartsGallery && canList ? (
           <Link
             href="/listings/new?category=USED_PARTS"
             className="inline-flex h-9 items-center rounded-md bg-neutral-900 px-3.5 text-[13px] font-medium tracking-wide text-white transition hover:bg-neutral-800"
@@ -155,7 +165,7 @@ export default async function ListingsPage({ searchParams }: Props) {
           </Link>
         ) : null}
       </div>
-      {category === "USED_PARTS" ? (
+      {isPartsGallery ? (
         <p className="-mt-3 mb-5 text-[13px] tracking-wide text-neutral-500 sm:-mt-4 sm:mb-6">
           Browse verified used auto parts. Authorized members can list items;
           everyone else can view and inquire.
@@ -176,16 +186,12 @@ export default async function ListingsPage({ searchParams }: Props) {
         </p>
       ) : (
         <>
-          <div
-            className={
-              useLargeGrid ? LISTING_CATEGORY_GRID_CLASS : LISTING_GRID_CLASS
-            }
-          >
+          <div className={gridClass}>
             {listings.map((listing) => (
               <ListingCard
                 key={listing.id}
                 listing={listing}
-                size={useLargeGrid ? "large" : "default"}
+                size={isPartsGallery || useLargeGrid ? "large" : "default"}
                 canViewSold={canViewSold}
                 canManageSaleStatus={canViewSold}
                 isSignedIn={isSignedIn}
