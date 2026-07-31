@@ -242,9 +242,13 @@ export default async function ListingDetailPage({ params }: Props) {
   const notesValue =
     formatNotesDisplay(listing.damages, listing.damagesEn) || "—";
 
+  const isParts = isPartsCategory(listing.category);
   const accumulatedDays = displayAccumulatedDays(listing);
   const offerPanelVisible =
-    isSignedIn && listing.saleStatus !== "SOLD" && !auctionEnded;
+    !isParts &&
+    isSignedIn &&
+    listing.saleStatus !== "SOLD" &&
+    !auctionEnded;
   const liveAuctionEndsAt =
     listing.category === "LIVE_AUCTION" && listing.auctionEndsAt
       ? listing.auctionEndsAt.toISOString()
@@ -289,7 +293,7 @@ export default async function ListingDetailPage({ params }: Props) {
         ) : null}
       </div>
 
-      {adminView ? (
+      {adminView && !isParts ? (
         <AdminListingCostPanel
           costPrice={listing.costPrice}
           accumulatedDays={accumulatedDays}
@@ -305,12 +309,14 @@ export default async function ListingDetailPage({ params }: Props) {
       ) : null}
 
       <div className="mb-5 overflow-hidden rounded-sm border border-[var(--line)]">
-        <div className="border-b border-[var(--line)] bg-neutral-50 px-2.5 py-2 sm:px-3">
-          <ListingContactLinks
-            whatsappHref={wa}
-            inquiryText={kakaoInquiry}
-          />
-        </div>
+        {!isParts ? (
+          <div className="border-b border-[var(--line)] bg-neutral-50 px-2.5 py-2 sm:px-3">
+            <ListingContactLinks
+              whatsappHref={wa}
+              inquiryText={kakaoInquiry}
+            />
+          </div>
+        ) : null}
 
         {/* Specs: paired rows (50/50). Notes full-width below. */}
         <div className="divide-y divide-[var(--line)] text-[12.5px] sm:text-[13px]">
@@ -383,7 +389,7 @@ export default async function ListingDetailPage({ params }: Props) {
         </div>
       ) : null}
 
-      {adminView ? (
+      {adminView && !isParts ? (
         <AdminPurchaseOffersPanel
           offers={adminOffers.map((offer) => ({
             id: offer.id,
