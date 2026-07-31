@@ -9,6 +9,7 @@ import {
 import { AuthEntryButtons } from "@/components/AuthEntryButtons";
 import { MainNav } from "@/components/MainNav";
 import { MobileNav } from "@/components/MobileNav";
+import { MyPartsNavLink } from "@/components/MyPartsNavLink";
 import { ProfileButton } from "@/components/ProfileButton";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 
@@ -36,6 +37,7 @@ export async function Header() {
         email: dbUser.email,
         role: dbUser.role,
         canList,
+        canListParts,
         listHref,
         admin,
       }
@@ -83,6 +85,11 @@ export async function Header() {
                     관리자
                   </Link>
                 )}
+                {canListParts ? (
+                  <MyPartsNavLink
+                    className={`${accountLinkClass} text-neutral-700`}
+                  />
+                ) : null}
                 <Link
                   href="/offers"
                   className="inline-flex h-8 items-center rounded-md px-2.5 text-[13.5px] font-semibold text-[var(--accent)] transition-colors hover:bg-red-50 hover:text-red-700"

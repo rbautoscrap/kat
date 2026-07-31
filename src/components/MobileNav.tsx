@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { usePathname, useSearchParams } from "next/navigation";
 import { JoinModal } from "@/components/JoinModal";
 import { LoginModal } from "@/components/LoginModal";
+import { MyPartsIcon } from "@/components/MyPartsNavLink";
 import { ProfileModal } from "@/components/ProfileModal";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/body-scroll-lock";
 
@@ -39,6 +40,7 @@ type UserProps = {
   email: string;
   role: "MEMBER" | "AUTHORIZED" | "ADMIN";
   canList: boolean;
+  canListParts?: boolean;
   listHref?: string;
   admin: boolean;
 } | null;
@@ -167,6 +169,18 @@ export function MobileNav({ user, logoutAction }: Props) {
                             onClick={() => setOpen(false)}
                           >
                             + List
+                          </Link>
+                        </li>
+                      ) : null}
+                      {user.canListParts ? (
+                        <li>
+                          <Link
+                            href="/my-parts"
+                            className="flex min-h-12 items-center gap-2 px-3 text-[15px] font-medium text-neutral-800"
+                            onClick={() => setOpen(false)}
+                          >
+                            <MyPartsIcon className="h-4 w-4 shrink-0" />
+                            My parts
                           </Link>
                         </li>
                       ) : null}

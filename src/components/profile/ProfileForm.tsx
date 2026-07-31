@@ -82,7 +82,14 @@ export function ProfileForm({ user, compact, onOffersClick }: Props) {
         <p className="mt-1 text-[12.5px] leading-relaxed text-neutral-500">
           Update your name, login ID, or password.
         </p>
-        <p className="mt-2 text-[12.5px] text-neutral-500">
+        <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] text-neutral-500">
+          <Link
+            href="/my-parts"
+            onClick={onOffersClick}
+            className="font-semibold text-neutral-900 underline-offset-2 hover:underline"
+          >
+            My parts →
+          </Link>
           <Link
             href="/offers"
             onClick={onOffersClick}
