@@ -39,6 +39,7 @@ type UserProps = {
   email: string;
   role: "MEMBER" | "AUTHORIZED" | "ADMIN";
   canList: boolean;
+  listHref?: string;
   admin: boolean;
 } | null;
 
@@ -161,7 +162,7 @@ export function MobileNav({ user, logoutAction }: Props) {
                       {user.canList ? (
                         <li>
                           <Link
-                            href="/listings/new"
+                            href={user.listHref ?? "/listings/new"}
                             className="flex min-h-12 items-center px-3 text-[15px] font-medium text-neutral-800"
                             onClick={() => setOpen(false)}
                           >

@@ -1,11 +1,16 @@
 import Link from "next/link";
-import { canManageListings } from "@/lib/auth";
+import { canListUsedParts, canManageListings } from "@/lib/auth";
 import { CONTACT_LINE } from "@/lib/contact";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 
 export async function HeroBanner() {
   const dbUser = await resolveSessionDbUser();
-  const canList = canManageListings(dbUser?.role);
+  const canListVehicles = canManageListings(dbUser?.role);
+  const canList =
+    canListVehicles || canListUsedParts(dbUser?.role);
+  const listHref = canListVehicles
+    ? "/listings/new"
+    : "/listings/new?category=USED_PARTS";
 
   return (
     <div className="border-b border-[var(--line)] bg-neutral-50/60">
@@ -15,7 +20,7 @@ export async function HeroBanner() {
         </p>
         {canList ? (
           <Link
-            href="/listings/new"
+            href={listHref}
             className="inline-flex h-9 w-full shrink-0 items-center justify-center rounded-md border border-neutral-300 bg-white px-3.5 text-[12.5px] font-medium tracking-wide text-neutral-700 transition hover:border-neutral-400 hover:bg-neutral-50 sm:h-8 sm:w-auto"
           >
             + List

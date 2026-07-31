@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import { NewListingPageClient } from "@/components/NewListingPageClient";
-import { canManageListings, isAdmin } from "@/lib/auth";
+import {
+  canCreateListing,
+  canListUsedParts,
+  canManageListings,
+  isAdmin,
+} from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { CATEGORY_PATHS, parseCategory } from "@/lib/listings";
 
@@ -10,7 +15,7 @@ type Props = {
 
 export default async function NewListingPage({ searchParams }: Props) {
   const params = await searchParams;
-  const defaultCategory = parseCategory(params.category ?? null) ?? undefined;
+  let defaultCategory = parseCategory(params.category ?? null) ?? undefined;
   const newPath = defaultCategory
     ? `/listings/new?category=${defaultCategory}`
     : "/listings/new";
@@ -19,7 +24,14 @@ export default async function NewListingPage({ searchParams }: Props) {
   if (!dbUser) {
     redirect(`/login?callbackUrl=${encodeURIComponent(newPath)}`);
   }
-  if (!canManageListings(dbUser.role)) {
+
+  // Regular members may only open the Used Parts create flow.
+  if (!canManageListings(dbUser.role) && canListUsedParts(dbUser.role)) {
+    if (defaultCategory && defaultCategory !== "USED_PARTS") {
+      redirect("/?error=unauthorized");
+    }
+    defaultCategory = "USED_PARTS";
+  } else if (!canCreateListing(dbUser.role, defaultCategory ?? "CAR_LISTINGS")) {
     redirect("/?error=unauthorized");
   }
 

@@ -4,7 +4,7 @@ import { BackButton } from "@/components/BackButton";
 import { ListingCard } from "@/components/ListingCard";
 import { ListingPagination } from "@/components/ListingPagination";
 import { parsePage } from "@/lib/admin-pagination";
-import { canManageListings, isAdmin } from "@/lib/auth";
+import { canListUsedParts, isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { memberListingVisibilityWhere } from "@/lib/live-auction";
 import { buildPublicListingSearchWhere } from "@/lib/listing-search";
@@ -42,7 +42,7 @@ export default async function ListingsPage({ searchParams }: Props) {
   const params = await searchParams;
   const dbUser = await resolveSessionDbUser();
   const canViewSold = isAdmin(dbUser?.role);
-  const canList = canManageListings(dbUser?.role);
+  const canList = canListUsedParts(dbUser?.role);
   const isSignedIn = Boolean(dbUser?.id);
   const category = parseCategory(params.category ?? null);
   const q = params.q?.trim() ?? "";

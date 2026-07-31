@@ -182,9 +182,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 });
 
-/** Admins and authorized members may create listings. */
+/** Admins and authorized members may create vehicle listings. */
 export function canManageListings(role?: Role) {
   return role === "ADMIN" || role === "AUTHORIZED";
+}
+
+/**
+ * Any signed-in (approved) member may list Used Parts.
+ * Login already blocks PENDING / REJECTED accounts.
+ */
+export function canListUsedParts(role?: Role) {
+  return Boolean(role);
+}
+
+/** Create permission by category — Used Parts is open to all members. */
+export function canCreateListing(
+  role: Role | undefined,
+  category: string | null | undefined,
+) {
+  if (!role) return false;
+  if (category === "USED_PARTS") return canListUsedParts(role);
+  return canManageListings(role);
 }
 
 /**
@@ -207,14 +225,18 @@ export function isAdmin(role?: Role) {
 /**
  * Admins may modify any listing.
  * Authorized members may modify only listings they authored.
+ * Regular members may modify only their own Used Parts listings.
  */
 export function canModifyListing(
   role: Role | undefined,
   userId: string | undefined,
   authorId: string,
+  category?: string | null,
 ) {
   if (!role || !userId) return false;
   if (role === "ADMIN") return true;
-  if (role === "AUTHORIZED" && userId === authorId) return true;
+  if (userId !== authorId) return false;
+  if (role === "AUTHORIZED") return true;
+  if (role === "MEMBER" && category === "USED_PARTS") return true;
   return false;
 }

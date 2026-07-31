@@ -56,7 +56,10 @@ export default async function ListingDetailPage({ params }: Props) {
 
   const session = await auth();
   const dbUser = await resolveSessionDbUser();
-  const canEdit = await userCanModifyListing(listing.authorId);
+  const canEdit = await userCanModifyListing(
+    listing.authorId,
+    listing.category,
+  );
   const adminView = isAdmin(dbUser?.role ?? session?.user?.role);
   const isSignedIn = Boolean(dbUser?.id || session?.user?.id);
 

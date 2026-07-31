@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { canManageListings } from "@/lib/auth";
+import { canCreateListing } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { toApiErrorMessage } from "@/lib/api-error";
 import { resolveSessionDbUser } from "@/lib/listing-access";
@@ -13,7 +13,7 @@ import {
 
 export async function POST(request: Request) {
   const dbUser = await resolveSessionDbUser();
-  if (!dbUser || !canManageListings(dbUser.role)) {
+  if (!dbUser) {
     return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
 
@@ -22,6 +22,9 @@ export async function POST(request: Request) {
     const data = await withPublicNotesTranslation(
       formDataToListingInput(formData),
     );
+    if (!canCreateListing(dbUser.role, data.category)) {
+      return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+    }
     const maxImages = maxImagesForCategory(data.category);
     const { coverUrl, urls } = await saveListingImageUploads(formData, {
       maxImages,

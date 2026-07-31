@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { canManageListings, isAdmin, signOut } from "@/lib/auth";
+import {
+  canListUsedParts,
+  canManageListings,
+  isAdmin,
+  signOut,
+} from "@/lib/auth";
 import { AuthEntryButtons } from "@/components/AuthEntryButtons";
 import { MainNav } from "@/components/MainNav";
 import { MobileNav } from "@/components/MobileNav";
@@ -14,7 +19,12 @@ async function logoutAction() {
 
 export async function Header() {
   const dbUser = await resolveSessionDbUser();
-  const canList = canManageListings(dbUser?.role);
+  const canListVehicles = canManageListings(dbUser?.role);
+  const canListParts = canListUsedParts(dbUser?.role);
+  const canList = canListVehicles || canListParts;
+  const listHref = canListVehicles
+    ? "/listings/new"
+    : "/listings/new?category=USED_PARTS";
   const admin = isAdmin(dbUser?.role);
 
   const accountLinkClass =
@@ -26,6 +36,7 @@ export async function Header() {
         email: dbUser.email,
         role: dbUser.role,
         canList,
+        listHref,
         admin,
       }
     : null;
@@ -63,7 +74,7 @@ export async function Header() {
             {dbUser ? (
               <>
                 {canList && (
-                  <Link href="/listings/new" className={accountLinkClass}>
+                  <Link href={listHref} className={accountLinkClass}>
                     + List
                   </Link>
                 )}

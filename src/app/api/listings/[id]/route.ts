@@ -27,6 +27,13 @@ export async function PUT(request: Request, { params }: Params) {
   try {
     const formData = await request.formData();
     const parsed = formDataToListingInput(formData);
+    // Members may only keep Used Parts listings in that category.
+    if (
+      access.dbUser.role === "MEMBER" &&
+      (existing.category !== "USED_PARTS" || parsed.category !== "USED_PARTS")
+    ) {
+      return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+    }
     // Skip external translate when notes unchanged (avoids long hangs on Railway)
     const notesUnchanged =
       (parsed.damages ?? null) === (existing.damages ?? null);

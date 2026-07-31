@@ -50,15 +50,18 @@ export const resolveSessionDbUser = cache(
 );
 
 /** Whether the current user may edit/delete this listing (DB-backed role + id). */
-export async function userCanModifyListing(authorId: string): Promise<boolean> {
+export async function userCanModifyListing(
+  authorId: string,
+  category?: string | null,
+): Promise<boolean> {
   const dbUser = await resolveSessionDbUser();
   if (!dbUser) return false;
-  return canModifyListing(dbUser.role, dbUser.id, authorId);
+  return canModifyListing(dbUser.role, dbUser.id, authorId, category);
 }
 
 /**
  * Load listing and verify the current user may modify it.
- * Admins: any listing. Authorized: only own (authorId).
+ * Admins: any listing. Authorized: own listings. Members: own Used Parts only.
  */
 export async function requireListingModifier(listingId: string) {
   const dbUser = await resolveSessionDbUser();
@@ -82,7 +85,14 @@ export async function requireListingModifier(listingId: string) {
     };
   }
 
-  if (!canModifyListing(dbUser.role, dbUser.id, listing.authorId)) {
+  if (
+    !canModifyListing(
+      dbUser.role,
+      dbUser.id,
+      listing.authorId,
+      listing.category,
+    )
+  ) {
     return {
       ok: false as const,
       status: 403 as const,
