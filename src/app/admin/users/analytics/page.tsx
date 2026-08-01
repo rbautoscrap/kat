@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { AdminPagination } from "@/components/admin/AdminPagination";
 import { UsersSectionNav } from "@/components/admin/UsersSectionNav";
 import { ROLE_LABELS } from "@/lib/admin-labels";
+import { parsePage, totalPages } from "@/lib/admin-pagination";
 import {
   adminTableClass,
   adminTableScrollClass,
@@ -16,8 +18,10 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+const ANALYTICS_PAGE_SIZE = 20;
+
 type Props = {
-  searchParams: Promise<{ sort?: string }>;
+  searchParams: Promise<{ sort?: string; page?: string }>;
 };
 
 const sortOptions: Array<{ value: EngagementSort; label: string }> = [
@@ -44,10 +48,16 @@ function formatLastLogin(value: Date | null) {
 export default async function AdminUserAnalyticsPage({ searchParams }: Props) {
   const params = await searchParams;
   const sort = parseEngagementSort(params.sort);
-  const [{ rows, totals }, pendingCount] = await Promise.all([
+  const page = parsePage(params.page);
+  const [{ rows: allRows, totals }, pendingCount] = await Promise.all([
     loadMemberEngagement(sort),
     prisma.user.count({ where: { status: "PENDING" } }),
   ]);
+
+  const pages = totalPages(allRows.length, ANALYTICS_PAGE_SIZE);
+  const currentPage = Math.min(page, pages);
+  const skip = (currentPage - 1) * ANALYTICS_PAGE_SIZE;
+  const rows = allRows.slice(skip, skip + ANALYTICS_PAGE_SIZE);
 
   const summary = [
     {
@@ -104,7 +114,8 @@ export default async function AdminUserAnalyticsPage({ searchParams }: Props) {
 
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] px-4 py-2.5 sm:px-5">
         <p className="text-[12px] text-neutral-500">
-          참여도 = 접속 + 오퍼×3 + 구매×10 + 등록매물×2
+          참여도 = 접속 + 오퍼×3 + 구매×10 + 등록매물×2 · 페이지당{" "}
+          {ANALYTICS_PAGE_SIZE}명
         </p>
         <div className="flex flex-wrap gap-1">
           {sortOptions.map((option) => {
@@ -221,6 +232,16 @@ export default async function AdminUserAnalyticsPage({ searchParams }: Props) {
           </tbody>
         </table>
       </div>
+
+      <AdminPagination
+        basePath="/admin/users/analytics"
+        page={currentPage}
+        total={allRows.length}
+        pageSize={ANALYTICS_PAGE_SIZE}
+        params={{
+          sort: sort === "score" ? undefined : sort,
+        }}
+      />
     </div>
   );
 }
