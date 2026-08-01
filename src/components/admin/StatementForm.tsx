@@ -63,6 +63,7 @@ type SelectedLine = {
   serialNumber: string;
   vin: string;
   vehicleNumber: string;
+  qty: string;
   amount: string;
 };
 
@@ -104,6 +105,7 @@ function initialLines(
         serialNumber: "EXTRA",
         vin: line.vin ?? "",
         vehicleNumber: line.vehicleNumber ?? "",
+        qty: line.qty?.trim() || "1",
         amount: formatAmountInput(line.amount, currency) ?? line.amount,
       };
     }
@@ -119,6 +121,7 @@ function initialLines(
       serialNumber: line.serialNumber,
       vin: line.vin ?? "",
       vehicleNumber: line.vehicleNumber ?? "",
+      qty: line.qty?.trim() || "1",
       amount: formatAmountInput(line.amount, currency) ?? line.amount,
     };
   }),
@@ -246,6 +249,7 @@ export function StatementForm({
           serialNumber: listing.serialNumber,
           vin: listing.vin ?? "",
           vehicleNumber: listing.vehicleNumber ?? "",
+          qty: "1",
           amount: "",
         },
       ]),
@@ -263,6 +267,7 @@ export function StatementForm({
           serialNumber: "EXTRA",
           vin: "",
           vehicleNumber: "",
+          qty: "1",
           amount: "",
         },
       ]),
@@ -278,6 +283,14 @@ export function StatementForm({
     if (next === null) return;
     setSelected((prev) =>
       prev.map((s) => (s.lineKey === lineKey ? { ...s, amount: next } : s)),
+    );
+  }
+
+  function updateLineQty(lineKey: string, raw: string) {
+    const cleaned = raw.replace(/[^\d.]/g, "");
+    if (cleaned.split(".").length > 2) return;
+    setSelected((prev) =>
+      prev.map((s) => (s.lineKey === lineKey ? { ...s, qty: cleaned } : s)),
     );
   }
 
@@ -321,6 +334,10 @@ export function StatementForm({
       setError("모든 품목의 공급가액을 입력해 주세요.");
       return;
     }
+    if (selected.some((s) => !s.qty.trim() || Number(s.qty) <= 0)) {
+      setError("모든 품목의 수량을 올바르게 입력해 주세요.");
+      return;
+    }
     if (selected.some((s) => s.kind === "extra" && !s.label.trim())) {
       setError("별도 금액 품목명을 입력해 주세요.");
       return;
@@ -333,6 +350,7 @@ export function StatementForm({
           label: s.kind === "extra" ? s.label.trim() : undefined,
           vin: s.vin.trim() || undefined,
           vehicleNumber: s.vehicleNumber.trim() || undefined,
+          qty: s.qty.trim() || "1",
           amount: s.amount,
         })),
         buyerName,
@@ -472,7 +490,7 @@ export function StatementForm({
                     제거
                   </button>
                 </div>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <div className="mt-2 grid gap-2 sm:grid-cols-3">
                   <label className="block">
                     <span className="text-[12px] text-neutral-500">
                       VIN (차대번호)
@@ -486,6 +504,19 @@ export function StatementForm({
                       className={fieldClass}
                       autoComplete="off"
                       spellCheck={false}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-[12px] text-neutral-500">수량</span>
+                    <input
+                      required
+                      inputMode="decimal"
+                      value={line.qty}
+                      onChange={(e) =>
+                        updateLineQty(line.lineKey, e.target.value)
+                      }
+                      placeholder="1"
+                      className={fieldClass}
                     />
                   </label>
                   <label className="block">

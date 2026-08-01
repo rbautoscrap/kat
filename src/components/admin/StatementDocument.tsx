@@ -156,7 +156,7 @@ export function StatementDocument({
                     </>
                   )}
                 </td>
-                <td className="cell-qty">1</td>
+                <td className="cell-qty">{line.qty?.trim() || "1"}</td>
                 <td className="cell-amount">
                   {formatStatementAmount(line.amount, statement.currency)}
                 </td>

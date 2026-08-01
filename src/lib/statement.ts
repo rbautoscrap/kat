@@ -67,6 +67,8 @@ export type StatementLineItem = {
   vin: string | null;
   serialNumber: string;
   vehicleNumber: string | null;
+  /** Quantity shown on the printed statement */
+  qty?: string;
   amount: string;
   sortOrder?: number;
 };
@@ -244,6 +246,7 @@ export function getStatementLines(statement: StatementView): StatementLineItem[]
       vin: statement.vin,
       serialNumber: statement.serialNumber,
       vehicleNumber: statement.vehicleNumber,
+      qty: "1",
       amount: statement.amount,
       sortOrder: 0,
     },

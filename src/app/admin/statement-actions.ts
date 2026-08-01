@@ -31,6 +31,20 @@ const lineAmountSchema = z
     return Number.isFinite(n) && n > 0;
   }, "금액은 0보다 커야 합니다.");
 
+const lineQtySchema = z
+  .string()
+  .trim()
+  .min(1, "수량을 입력해 주세요.")
+  .max(10, "수량이 너무 깁니다.")
+  .transform((v) => v.replace(/,/g, "").replace(/\s/g, ""))
+  .refine((v) => /^\d+(\.\d{1,2})?$/.test(v), {
+    message: "올바른 수량을 입력해 주세요.",
+  })
+  .refine((v) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0;
+  }, "수량은 0보다 커야 합니다.");
+
 const statementSchema = z.object({
   items: z
     .array(
@@ -39,6 +53,7 @@ const statementSchema = z.object({
         label: z.string().trim().max(120).optional(),
         vin: z.string().trim().max(40).optional(),
         vehicleNumber: z.string().trim().max(40).optional(),
+        qty: lineQtySchema.optional().default("1"),
         amount: lineAmountSchema,
       }),
     )
@@ -68,6 +83,7 @@ type BuiltRow = {
   vin: string | null;
   serialNumber: string;
   vehicleNumber: string | null;
+  qty: string;
   amount: string;
   sortOrder: number;
 };
@@ -119,6 +135,7 @@ async function buildItemRows(
     label?: string;
     vin?: string;
     vehicleNumber?: string;
+    qty?: string;
     amount: string;
   }>,
   opts?: { statementId?: string },
@@ -164,6 +181,8 @@ async function buildItemRows(
         ? item.vehicleNumber.trim() || null
         : undefined;
 
+    const qty = item.qty?.trim() || "1";
+
     if (isExtraLineKey(item.lineKey)) {
       const label = item.label?.trim() || "";
       if (!label) {
@@ -179,6 +198,7 @@ async function buildItemRows(
         vin: vinOverride ?? null,
         serialNumber: "EXTRA",
         vehicleNumber: vehicleNumberOverride ?? null,
+        qty,
         amount: item.amount,
         sortOrder: index,
       });
@@ -204,6 +224,7 @@ async function buildItemRows(
           vehicleNumberOverride !== undefined
             ? vehicleNumberOverride
             : existing.vehicleNumber,
+        qty,
         amount: item.amount,
         sortOrder: index,
       });
@@ -225,6 +246,7 @@ async function buildItemRows(
         vehicleNumberOverride !== undefined
           ? vehicleNumberOverride
           : snap.vehicleNumber,
+      qty,
       amount: item.amount,
       sortOrder: index,
     });

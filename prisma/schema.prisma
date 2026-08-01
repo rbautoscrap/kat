@@ -204,6 +204,8 @@ model TransactionStatementItem {
   vin           String?
   serialNumber  String
   vehicleNumber String?
+  /** Quantity shown on the statement (defaults to 1) */
+  qty           String               @default("1")
   /** Supply amount for this line (before VAT) */
   amount        String
   sortOrder     Int                  @default(0)
