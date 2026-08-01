@@ -21,7 +21,6 @@ type ActionResult = { ok: true } | { ok: false; error: string };
 
 const ROLES = ["MEMBER", "AUTHORIZED", "ADMIN"] as const;
 const CATEGORIES = [
-  "HOT_DEALS",
   "CAR_LISTINGS",
   "LIVE_AUCTION",
   "STAND_BY",

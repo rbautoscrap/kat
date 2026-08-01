@@ -74,7 +74,6 @@ function costTier(cost: number | null): CostTier {
 
 function parseCategory(value?: string): ListingCategory | "ALL" {
   if (
-    value === "HOT_DEALS" ||
     value === "CAR_LISTINGS" ||
     value === "LIVE_AUCTION" ||
     value === "STAND_BY"
@@ -323,7 +322,6 @@ export default async function AdminListingsPage({ searchParams }: Props) {
 
   const counts = {
     ALL: grouped.reduce((sum, row) => sum + row._count._all, 0),
-    HOT_DEALS: 0,
     CAR_LISTINGS: 0,
     LIVE_AUCTION: 0,
     STAND_BY: 0,

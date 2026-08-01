@@ -156,7 +156,6 @@ const listingYearSchema = z.preprocess(
 );
 
 const LISTING_CATEGORIES = [
-  "HOT_DEALS",
   "CAR_LISTINGS",
   "LIVE_AUCTION",
   "STAND_BY",

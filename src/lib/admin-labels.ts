@@ -24,7 +24,6 @@ export const STATUS_LABELS: Record<AccountStatus, string> = {
 };
 
 export const ADMIN_CATEGORY_LABELS: Record<ListingCategory, string> = {
-  HOT_DEALS: "핫딜",
   CAR_LISTINGS: "차량 매물",
   LIVE_AUCTION: "라이브 경매",
   STAND_BY: "스탠바이",
@@ -36,7 +35,6 @@ export const ADMIN_MANAGED_CATEGORIES = [
   "LIVE_AUCTION",
   "CAR_LISTINGS",
   "STAND_BY",
-  "HOT_DEALS",
 ] as const satisfies readonly ListingCategory[];
 
 export type AdminManagedCategory = (typeof ADMIN_MANAGED_CATEGORIES)[number];

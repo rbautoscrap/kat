@@ -1,7 +1,6 @@
 import type { ListingCategory, ListingSaleStatus } from "@prisma/client";
 
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {
-  HOT_DEALS: "HOT DEALS",
   CAR_LISTINGS: "Car Listings",
   LIVE_AUCTION: "Live Auction",
   STAND_BY: "Stand by",
@@ -60,7 +59,6 @@ export const SALE_STATUS_LABELS: Record<ListingSaleStatus, string> = {
 };
 
 export const CATEGORY_PATHS: Record<ListingCategory, string> = {
-  HOT_DEALS: "/listings?category=HOT_DEALS",
   CAR_LISTINGS: "/listings?category=CAR_LISTINGS",
   LIVE_AUCTION: "/listings?category=LIVE_AUCTION",
   STAND_BY: "/listings?category=STAND_BY",
@@ -97,8 +95,9 @@ export function maxImagesForCategory(
 export function parseCategory(
   value: string | null | undefined,
 ): ListingCategory | null {
+  // Legacy Hot Deals URLs resolve to Car Listings.
+  if (value === "HOT_DEALS") return "CAR_LISTINGS";
   if (
-    value === "HOT_DEALS" ||
     value === "CAR_LISTINGS" ||
     value === "LIVE_AUCTION" ||
     value === "STAND_BY" ||

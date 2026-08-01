@@ -20,7 +20,6 @@ enum AccountStatus {
 }
 
 enum ListingCategory {
-  HOT_DEALS
   CAR_LISTINGS
   LIVE_AUCTION
   STAND_BY

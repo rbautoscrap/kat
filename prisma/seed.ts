@@ -66,8 +66,8 @@ const FUELS = [
 ] as const;
 
 const CATEGORIES: Array<{ category: ListingCategory; prefix: string }> = [
-  { category: "HOT_DEALS", prefix: "HD" },
   { category: "CAR_LISTINGS", prefix: "CL" },
+  { category: "LIVE_AUCTION", prefix: "LA" },
   { category: "STAND_BY", prefix: "SB" },
 ];
 

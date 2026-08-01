@@ -50,7 +50,6 @@ async function loadSectionListings(
 }
 
 async function loadHomeListings(includeEndedAuctions: boolean): Promise<{
-  hotDeals: HomeListing[];
   carListings: HomeListing[];
   standBy: HomeListing[];
   liveAuction: HomeListing[];
@@ -61,19 +60,16 @@ async function loadHomeListings(includeEndedAuctions: boolean): Promise<{
     : memberListingVisibilityWhere();
 
   try {
-    const [hotDeals, carListings, standBy, liveAuction, usedParts] =
-      await Promise.all([
-        loadSectionListings("HOT_DEALS", visibility, "newest"),
-        loadSectionListings("CAR_LISTINGS", visibility, "cost_biased"),
-        loadSectionListings("STAND_BY", visibility, "newest"),
-        loadSectionListings("LIVE_AUCTION", visibility, "newest"),
-        loadSectionListings("USED_PARTS", visibility, "newest"),
-      ]);
-    return { hotDeals, carListings, standBy, liveAuction, usedParts };
+    const [carListings, standBy, liveAuction, usedParts] = await Promise.all([
+      loadSectionListings("CAR_LISTINGS", visibility, "cost_biased"),
+      loadSectionListings("STAND_BY", visibility, "newest"),
+      loadSectionListings("LIVE_AUCTION", visibility, "newest"),
+      loadSectionListings("USED_PARTS", visibility, "newest"),
+    ]);
+    return { carListings, standBy, liveAuction, usedParts };
   } catch (error) {
     console.error("[HomePage] listing query failed", error);
     return {
-      hotDeals: [],
       carListings: [],
       standBy: [],
       liveAuction: [],
@@ -88,7 +84,7 @@ export default async function HomePage({ searchParams }: Props) {
   const canViewSold = isAdmin(dbUser?.role);
   const isSignedIn = Boolean(dbUser?.id);
 
-  const { hotDeals, carListings, standBy, liveAuction, usedParts } =
+  const { carListings, standBy, liveAuction, usedParts } =
     await loadHomeListings(canViewSold);
 
   const errorMessage =
@@ -128,11 +124,6 @@ export default async function HomePage({ searchParams }: Props) {
       <ListingSection
         category="STAND_BY"
         listings={standBy}
-        {...sectionProps}
-      />
-      <ListingSection
-        category="HOT_DEALS"
-        listings={hotDeals}
         {...sectionProps}
       />
       <ListingSection

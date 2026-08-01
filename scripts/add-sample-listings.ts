@@ -33,12 +33,12 @@ const extras: Sample[] = [
   { serialNumber: "CL013", category: "CAR_LISTINGS", year: 2016, make: "Chevrolet", model: "Traverse", transmission: "Automatic", fuelType: "Petrol", odometer: "97,800 km", damages: "Side mirror" },
   { serialNumber: "CL014", category: "CAR_LISTINGS", year: 2020, make: "Hyundai", model: "Venue", transmission: "IVT", fuelType: "Petrol", odometer: "39,100 km" },
   { serialNumber: "CL015", category: "CAR_LISTINGS", year: 2017, make: "SsangYong", model: "Tivoli", transmission: "Automatic", fuelType: "Diesel", odometer: "84,600 km" },
-  // HOT DEALS +5
-  { serialNumber: "HD011", category: "HOT_DEALS", year: 2018, make: "BMW", model: "X3 xDrive20d", transmission: "Automatic", fuelType: "Diesel", odometer: "71,500 km", highlights: "AWD" },
-  { serialNumber: "HD012", category: "HOT_DEALS", year: 2020, make: "Mercedes-Benz", model: "C200 W205", transmission: "Automatic", fuelType: "Petrol", odometer: "42,300 km", engineStatus: "Excellent" },
-  { serialNumber: "HD013", category: "HOT_DEALS", year: 2016, make: "Audi", model: "A4 2.0 TFSI", transmission: "S tronic", fuelType: "Petrol", odometer: "108,700 km", damages: "Front lip" },
-  { serialNumber: "HD014", category: "HOT_DEALS", year: 2019, make: "Lexus", model: "NX300h", transmission: "CVT", fuelType: "Hybrid", odometer: "53,900 km" },
-  { serialNumber: "HD015", category: "HOT_DEALS", year: 2021, make: "Genesis", model: "GV70 2.5T", transmission: "Automatic", fuelType: "Petrol", odometer: "31,200 km", engineStatus: "Good" },
+  // CAR LISTINGS extras
+  { serialNumber: "CL011", category: "CAR_LISTINGS", year: 2018, make: "BMW", model: "X3 xDrive20d", transmission: "Automatic", fuelType: "Diesel", odometer: "71,500 km", highlights: "AWD" },
+  { serialNumber: "CL012", category: "CAR_LISTINGS", year: 2020, make: "Mercedes-Benz", model: "C200 W205", transmission: "Automatic", fuelType: "Petrol", odometer: "42,300 km", engineStatus: "Excellent" },
+  { serialNumber: "CL013", category: "CAR_LISTINGS", year: 2016, make: "Audi", model: "A4 2.0 TFSI", transmission: "S tronic", fuelType: "Petrol", odometer: "108,700 km", damages: "Front lip" },
+  { serialNumber: "CL014", category: "CAR_LISTINGS", year: 2019, make: "Lexus", model: "NX300h", transmission: "CVT", fuelType: "Hybrid", odometer: "53,900 km" },
+  { serialNumber: "CL015", category: "CAR_LISTINGS", year: 2021, make: "Genesis", model: "GV70 2.5T", transmission: "Automatic", fuelType: "Petrol", odometer: "31,200 km", engineStatus: "Good" },
   // Stand by +5
   { serialNumber: "SB011", category: "STAND_BY", year: 2014, make: "Toyota", model: "RAV4", transmission: "Automatic", fuelType: "Petrol", odometer: "145,200 km" },
   { serialNumber: "SB012", category: "STAND_BY", year: 2018, make: "Honda", model: "CR-V 1.5T", transmission: "CVT", fuelType: "Petrol", odometer: "76,400 km" },

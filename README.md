@@ -31,7 +31,7 @@ New sign-ups get `MEMBER`. Promote a user in Admin → 회원 관리 by setting 
 
 ## Features
 
-- Home grids: Car Listings / HOT DEALS / Stand by
+- Home grids: Live Auction / Car Listings / Stand by / Used Parts
 - Listing detail: specs table, gallery, YouTube embed, WhatsApp CTA
 - Search + category filters
 - Authorized members: create / edit listings with image upload

@@ -14,7 +14,6 @@ const CATEGORY_ORDER: ListingCategory[] = [
   "LIVE_AUCTION",
   "CAR_LISTINGS",
   "STAND_BY",
-  "HOT_DEALS",
 ];
 
 export default async function AdminOverviewPage() {
