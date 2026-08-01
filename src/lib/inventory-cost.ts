@@ -45,6 +45,9 @@ export type InventoryCostByLocation = {
   count: number;
 };
 
+/** Cost band threshold for dashboard counts (₩5,000,000). */
+export const COST_BAND_5M = 5_000_000;
+
 export type InventoryCostSummary = {
   /** Sum of costPrice for non-sold listings */
   total: number;
@@ -54,6 +57,10 @@ export type InventoryCostSummary = {
   reservedCount: number;
   /** SOLD count (excluded from total) */
   soldCount: number;
+  /** AVAILABLE units with cost ≤ ₩5M */
+  costAtMost5mCount: number;
+  /** AVAILABLE units with cost > ₩5M */
+  costOver5mCount: number;
   /** Cost totals grouped by storageLocation */
   byLocation: InventoryCostByLocation[];
 };
@@ -86,11 +93,15 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
   ]);
 
   let total = 0;
+  let costAtMost5mCount = 0;
+  let costOver5mCount = 0;
   const locationMap = new Map<string, { total: number; count: number }>();
 
   for (const row of stockRows) {
     const cost = resolveListingCost(row);
     total += cost;
+    if (cost <= COST_BAND_5M) costAtMost5mCount += 1;
+    else costOver5mCount += 1;
     const location = storageLocationLabel(row.storageLocation);
     const prev = locationMap.get(location) ?? { total: 0, count: 0 };
     locationMap.set(location, {
@@ -127,6 +138,8 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
     availableCount: stockRows.length,
     reservedCount,
     soldCount,
+    costAtMost5mCount,
+    costOver5mCount,
     byLocation,
   };
 }

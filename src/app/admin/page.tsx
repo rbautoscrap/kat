@@ -50,15 +50,18 @@ export default async function AdminOverviewPage() {
     categoryCounts[row.category] = row._count._all;
   }
 
-  const kpis = [
+  const metrics: Array<{
+    label: string;
+    value: string;
+    href: string;
+    note?: string;
+    emphasize?: boolean;
+  }> = [
     {
-      label: "오퍼 접수",
+      label: "오퍼",
       value: offerListingCount.toLocaleString("ko-KR"),
       href: "/admin/listings?sort=offers_desc",
-      note:
-        offerListingCount > 0
-          ? "오퍼 있는 매물"
-          : "접수된 오퍼 없음",
+      note: "오퍼 있는 매물",
     },
     {
       label: "회원",
@@ -66,8 +69,8 @@ export default async function AdminOverviewPage() {
       href: "/admin/users",
       note:
         pendingUserCount > 0
-          ? `승인 대기 ${pendingUserCount.toLocaleString("ko-KR")}`
-          : "전체 회원",
+          ? `대기 ${pendingUserCount.toLocaleString("ko-KR")}`
+          : undefined,
     },
     {
       label: "매물",
@@ -82,62 +85,71 @@ export default async function AdminOverviewPage() {
       note:
         inventory.soldCount > 0
           ? `완료 ${inventory.soldCount.toLocaleString("ko-KR")}대 제외`
-          : "판매중 기준",
-      compact: true,
+          : "판매중",
+      emphasize: true,
+    },
+    {
+      label: "원가 5백 이하",
+      value: `${inventory.costAtMost5mCount.toLocaleString("ko-KR")}대`,
+      href: "/admin/listings?sale=AVAILABLE",
+      note: "판매중 · ≤500만",
+    },
+    {
+      label: "원가 5백 이상",
+      value: `${inventory.costOver5mCount.toLocaleString("ko-KR")}대`,
+      href: "/admin/listings?sale=AVAILABLE",
+      note: "판매중 · >500만",
     },
   ];
 
   return (
-    <div className="admin-overview space-y-4">
+    <div className="admin-overview space-y-3">
       <section className="admin-panel overflow-hidden">
-        <div className="border-b border-[var(--line)] px-5 py-3.5">
+        <div className="flex items-baseline justify-between gap-3 border-b border-[var(--line)] px-4 py-3 sm:px-5">
           <h2 className="text-[14px] font-semibold tracking-tight text-neutral-900">
-            현황 요약
+            메인 현황
           </h2>
-          <p className="mt-0.5 text-[12.5px] text-neutral-500">
-            핵심 지표만 모아 두었습니다. 카드를 누르면 해당 관리 화면으로
-            이동합니다.
-          </p>
+          <p className="text-[12px] text-neutral-400">판매중 기준 · 중고부품 제외</p>
         </div>
 
-        <div className="admin-overview-kpi-grid grid grid-cols-2 xl:grid-cols-4">
-          {kpis.map((kpi) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
+          {metrics.map((item) => (
             <Link
-              key={kpi.label}
-              href={kpi.href}
-              className="admin-overview-kpi min-h-[6.5rem] px-5 py-4 transition hover:bg-neutral-50/80"
+              key={item.label}
+              href={item.href}
+              className="min-h-[5.5rem] border-b border-r border-[var(--line)] px-4 py-3.5 transition hover:bg-neutral-50/90 sm:px-5"
             >
-              <p className="text-[12px] font-medium text-neutral-500">
-                {kpi.label}
+              <p className="text-[11.5px] font-medium tracking-wide text-neutral-500">
+                {item.label}
               </p>
               <p
-                className={`mt-2 font-semibold tracking-tight text-neutral-900 tabular-nums ${
-                  kpi.compact
-                    ? "text-[1.15rem] leading-snug sm:text-[1.25rem]"
-                    : "text-[1.65rem] leading-none"
+                className={`mt-1.5 font-semibold tracking-tight text-neutral-900 tabular-nums ${
+                  item.emphasize
+                    ? "text-[1.05rem] leading-snug sm:text-[1.1rem]"
+                    : "text-[1.35rem] leading-none"
                 }`}
               >
-                {kpi.value}
+                {item.value}
               </p>
-              <p className="mt-2 truncate text-[12px] text-neutral-400">
-                {kpi.note}
-              </p>
+              {item.note ? (
+                <p className="mt-1.5 truncate text-[11.5px] text-neutral-400">
+                  {item.note}
+                </p>
+              ) : null}
             </Link>
           ))}
         </div>
 
-        <div className="border-t border-[var(--line)] bg-neutral-50/50 px-5 py-3">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4 sm:gap-x-6">
+        <div className="border-t border-[var(--line)] px-4 py-2.5 sm:px-5">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
             {CATEGORY_ORDER.map((category) => (
               <Link
                 key={category}
                 href={`/admin/listings?category=${category}`}
-                className="flex min-w-0 items-baseline justify-between gap-2 text-[13px] transition hover:text-neutral-950"
+                className="inline-flex items-baseline gap-1.5 text-[12.5px] text-neutral-600 transition hover:text-neutral-950"
               >
-                <span className="truncate text-neutral-600">
-                  {ADMIN_CATEGORY_LABELS[category]}
-                </span>
-                <span className="shrink-0 font-semibold tabular-nums text-neutral-900">
+                <span>{ADMIN_CATEGORY_LABELS[category]}</span>
+                <span className="font-semibold tabular-nums text-neutral-900">
                   {categoryCounts[category].toLocaleString("ko-KR")}
                 </span>
               </Link>
@@ -145,35 +157,36 @@ export default async function AdminOverviewPage() {
           </div>
         </div>
 
-        <div className="border-t border-[var(--line)] px-5 py-3.5">
-          <p className="text-[12px] font-medium text-neutral-500">
-            보관 장소별 재고 원가
-          </p>
-          <div className="mt-2.5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {inventory.byLocation.map((row) => (
-              <Link
-                key={row.location}
-                href={
-                  row.location === "미지정"
-                    ? "/admin/listings?sale=AVAILABLE&storage=UNASSIGNED"
-                    : `/admin/listings?sale=AVAILABLE&storage=${encodeURIComponent(row.location)}`
-                }
-                className="flex min-w-0 items-baseline justify-between gap-3 rounded-md border border-[var(--line)] bg-white px-3.5 py-2.5 transition hover:bg-neutral-50"
-              >
-                <span className="min-w-0">
-                  <span className="block truncate text-[13px] font-medium text-neutral-800">
-                    {row.location}
-                  </span>
-                  <span className="mt-0.5 block text-[11.5px] text-neutral-400">
-                    {row.count.toLocaleString("ko-KR")}대
-                  </span>
-                </span>
-                <span className="shrink-0 text-[13.5px] font-semibold tabular-nums text-neutral-900">
-                  {formatCostWon(row.total)}
-                </span>
-              </Link>
-            ))}
+        <div className="border-t border-[var(--line)]">
+          <div className="flex items-baseline justify-between gap-3 px-4 py-2.5 sm:px-5">
+            <p className="text-[12px] font-medium text-neutral-500">
+              보관 장소별 재고
+            </p>
           </div>
+          <ul className="divide-y divide-[var(--line)] border-t border-[var(--line)]">
+            {inventory.byLocation.map((row) => (
+              <li key={row.location}>
+                <Link
+                  href={
+                    row.location === "미지정"
+                      ? "/admin/listings?sale=AVAILABLE&storage=UNASSIGNED"
+                      : `/admin/listings?sale=AVAILABLE&storage=${encodeURIComponent(row.location)}`
+                  }
+                  className="flex items-center justify-between gap-4 px-4 py-2.5 transition hover:bg-neutral-50/80 sm:px-5"
+                >
+                  <span className="min-w-0 truncate text-[13px] text-neutral-700">
+                    {row.location}
+                    <span className="ml-2 text-[12px] text-neutral-400">
+                      {row.count.toLocaleString("ko-KR")}대
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-[13px] font-semibold tabular-nums text-neutral-900">
+                    {formatCostWon(row.total)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
     </div>
