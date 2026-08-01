@@ -6,6 +6,7 @@ import { verifyCredentials } from "@/lib/authenticate";
 import { loginIdSchema } from "@/lib/login-id";
 import { prisma } from "@/lib/prisma";
 import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
+import { recordUserAccess } from "@/lib/user-access";
 
 declare module "next-auth" {
   interface User {
@@ -110,6 +111,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw credentialsError("credentials");
         }
 
+        await recordUserAccess(result.user.id, { force: true });
+
         return {
           id: result.user.id,
           email: result.user.email,
@@ -162,6 +165,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.name = dbUser.name;
           token.email = dbUser.email;
           token.checkedAt = Date.now();
+          // Count ongoing signed-in site use (throttled), not only password login.
+          if (!user) {
+            await recordUserAccess(userId);
+          }
         }
       }
       return token;

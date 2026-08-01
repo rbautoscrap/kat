@@ -67,19 +67,8 @@ export async function verifyCredentials(
     if (user.status === "REJECTED") return { ok: false, reason: "rejected" };
   }
 
-  // Best-effort engagement counters for admin analytics.
-  try {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        loginCount: { increment: 1 },
-        lastLoginAt: new Date(),
-      },
-    });
-  } catch (error) {
-    console.error("[verifyCredentials] login counter update failed", error);
-  }
-
+  // No side effects here — diagnoseLogin and Auth.js both call this.
+  // Access counters are recorded from Auth.js authorize / session activity.
   return {
     ok: true,
     user: {

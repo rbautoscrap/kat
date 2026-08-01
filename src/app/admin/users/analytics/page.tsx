@@ -78,7 +78,8 @@ export default async function AdminUserAnalyticsPage({ searchParams }: Props) {
         <UsersSectionNav active="analytics" pendingCount={pendingCount} />
         <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
           접속·오퍼·구매(거래명세서 연계)를 기준으로 회원 참여도를 한눈에
-          확인합니다. 접속 수는 이번 기능 적용 이후부터 집계됩니다.
+          확인합니다. 접속은 로그인 성공과 로그인 유지 중 사이트 이용(약
+          30분 간격)부터 집계됩니다.
         </p>
       </div>
 
