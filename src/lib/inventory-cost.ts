@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { ListingSaleStatus } from "@prisma/client";
+import { displayAccumulatedDays } from "@/lib/listing-actions";
 import { prisma } from "@/lib/prisma";
 import {
   STORAGE_LOCATIONS,
@@ -48,6 +49,9 @@ export type InventoryCostByLocation = {
 /** Cost band threshold for dashboard counts (₩5,000,000). */
 export const COST_BAND_5M = 5_000_000;
 
+/** Inbound age (days) treated as stagnant / 악성재고 on the admin dashboard. */
+export const STAGNANT_INBOUND_DAYS = 30;
+
 export type InventoryCostSummary = {
   /** Sum of costPrice for non-sold listings */
   total: number;
@@ -61,6 +65,8 @@ export type InventoryCostSummary = {
   costAtMost5mCount: number;
   /** AVAILABLE units with cost > ₩5M */
   costOver5mCount: number;
+  /** AVAILABLE units inbound for ≥ 30 days */
+  stagnantCount: number;
   /** Cost totals grouped by storageLocation */
   byLocation: InventoryCostByLocation[];
 };
@@ -82,6 +88,8 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
         incidentalCost: true,
         saleStatus: true,
         storageLocation: true,
+        inboundDate: true,
+        accumulatedDays: true,
       },
     }),
     prisma.listing.count({
@@ -95,6 +103,7 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
   let total = 0;
   let costAtMost5mCount = 0;
   let costOver5mCount = 0;
+  let stagnantCount = 0;
   const locationMap = new Map<string, { total: number; count: number }>();
 
   for (const row of stockRows) {
@@ -102,6 +111,8 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
     total += cost;
     if (cost <= COST_BAND_5M) costAtMost5mCount += 1;
     else costOver5mCount += 1;
+    const days = displayAccumulatedDays(row);
+    if (days != null && days >= STAGNANT_INBOUND_DAYS) stagnantCount += 1;
     const location = storageLocationLabel(row.storageLocation);
     const prev = locationMap.get(location) ?? { total: 0, count: 0 };
     locationMap.set(location, {
@@ -140,6 +151,7 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
     soldCount,
     costAtMost5mCount,
     costOver5mCount,
+    stagnantCount,
     byLocation,
   };
 }

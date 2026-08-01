@@ -5,6 +5,7 @@ import { ADMIN_CATEGORY_LABELS } from "@/lib/admin-labels";
 import {
   formatCostWon,
   getInventoryCostSummary,
+  STAGNANT_INBOUND_DAYS,
 } from "@/lib/inventory-cost";
 
 export const dynamic = "force-dynamic";
@@ -56,6 +57,7 @@ export default async function AdminOverviewPage() {
     href: string;
     note?: string;
     emphasize?: boolean;
+    danger?: boolean;
   }> = [
     {
       label: "오퍼",
@@ -100,6 +102,13 @@ export default async function AdminOverviewPage() {
       href: "/admin/listings?sale=AVAILABLE",
       note: "판매중 · >500만",
     },
+    {
+      label: "악성재고",
+      value: `${inventory.stagnantCount.toLocaleString("ko-KR")}대`,
+      href: "/admin/listings?sale=AVAILABLE&sort=days_desc",
+      note: `입고 ${STAGNANT_INBOUND_DAYS}일 이상`,
+      danger: true,
+    },
   ];
 
   return (
@@ -112,7 +121,7 @@ export default async function AdminOverviewPage() {
           <p className="text-[12px] text-neutral-400">판매중 기준 · 중고부품 제외</p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
           {metrics.map((item) => (
             <Link
               key={item.label}
@@ -123,16 +132,22 @@ export default async function AdminOverviewPage() {
                 {item.label}
               </p>
               <p
-                className={`mt-1.5 font-semibold tracking-tight text-neutral-900 tabular-nums ${
-                  item.emphasize
-                    ? "text-[1.05rem] leading-snug sm:text-[1.1rem]"
-                    : "text-[1.35rem] leading-none"
+                className={`mt-1.5 font-semibold tracking-tight tabular-nums ${
+                  item.danger
+                    ? "text-[1.35rem] leading-none text-red-600"
+                    : item.emphasize
+                      ? "text-[1.05rem] leading-snug text-neutral-900 sm:text-[1.1rem]"
+                      : "text-[1.35rem] leading-none text-neutral-900"
                 }`}
               >
                 {item.value}
               </p>
               {item.note ? (
-                <p className="mt-1.5 truncate text-[11.5px] text-neutral-400">
+                <p
+                  className={`mt-1.5 truncate text-[11.5px] ${
+                    item.danger ? "text-red-400" : "text-neutral-400"
+                  }`}
+                >
                   {item.note}
                 </p>
               ) : null}
