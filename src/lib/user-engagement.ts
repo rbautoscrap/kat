@@ -70,6 +70,7 @@ export async function loadMemberEngagement(
   };
 }> {
   const users = await prisma.user.findMany({
+    where: { role: { not: "ADMIN" } },
     select: {
       id: true,
       name: true,
