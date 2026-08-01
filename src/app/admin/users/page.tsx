@@ -2,12 +2,13 @@ import Link from "next/link";
 import type { Prisma, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { AdminPagination } from "@/components/admin/AdminPagination";
 import { DeleteUserButton } from "@/components/admin/DeleteUserButton";
 import { RoleFilter } from "@/components/admin/RoleFilter";
 import { UserAdminNoteButton } from "@/components/admin/UserAdminNoteButton";
 import { UserSearchBar } from "@/components/admin/UserSearchBar";
 import { UserStatusControls } from "@/components/admin/UserStatusControls";
-import { AdminPagination } from "@/components/admin/AdminPagination";
+import { UsersSectionNav } from "@/components/admin/UsersSectionNav";
 import { ROLE_LABELS } from "@/lib/admin-labels";
 import {
   ADMIN_PAGE_SIZE,
@@ -123,21 +124,10 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   return (
     <div className="overflow-hidden rounded-sm border border-[var(--line)] bg-white">
       <div className="border-b border-[var(--line)] px-5 py-4">
-        <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
-          회원 관리
-        </h2>
-        <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
+        <UsersSectionNav active="manage" pendingCount={pendingCount} />
+        <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">
           신규 가입은 승인 후에만 로그인할 수 있습니다. 한 페이지에{" "}
           {ADMIN_PAGE_SIZE}개씩 표시됩니다.
-          {pendingCount > 0 ? (
-            <>
-              {" "}
-              · 승인 대기{" "}
-              <span className="font-medium text-amber-800">
-                {pendingCount.toLocaleString("ko-KR")}명
-              </span>
-            </>
-          ) : null}
         </p>
       </div>
 

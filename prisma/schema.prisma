@@ -56,6 +56,10 @@ model User {
   status       AccountStatus   @default(APPROVED)
   /** Admin-only internal memo (shared among admins). */
   adminNote    String?
+  /** Successful sign-in count (admin engagement analytics). */
+  loginCount   Int             @default(0)
+  /** Last successful sign-in time. */
+  lastLoginAt  DateTime?
   createdAt    DateTime        @default(now())
   listings     Listing[]
   purchaseOffers PurchaseOffer[]
