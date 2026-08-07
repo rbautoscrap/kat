@@ -5,20 +5,52 @@ import { hashClientIp } from "@/lib/purchase-offer-server";
 import { clientIpFromHeaders } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 
-/**
- * Count a listing detail view once per client IP.
- * Duplicate clicks from the same IP do not increment viewCount.
- */
-export async function recordListingView(listingId: string) {
-  try {
-    const ip = await clientIpFromHeaders();
-    if (!ip || ip === "unknown") return;
+type RecordOpts = {
+  /** Logged-in member id — counted at most once per listing */
+  userId?: string | null;
+  /** Listing author — own detail views are never counted */
+  authorId?: string | null;
+};
 
-    const ipHash = hashClientIp(ip);
+/**
+ * Count a listing detail view once per visitor fingerprint.
+ * - Same IP → no extra count
+ * - Same member account → no extra count (even from another IP)
+ * - Admin / author views should be skipped by the caller (and authorId here)
+ */
+export async function recordListingView(
+  listingId: string,
+  opts: RecordOpts = {},
+) {
+  try {
+    if (opts.userId && opts.authorId && opts.userId === opts.authorId) {
+      return;
+    }
+
+    const fingerprints: string[] = [];
+    if (opts.userId?.trim()) {
+      fingerprints.push(`u:${opts.userId.trim()}`);
+    }
+
+    const ip = await clientIpFromHeaders();
+    if (ip && ip !== "unknown") {
+      fingerprints.push(hashClientIp(ip));
+    }
+
+    if (fingerprints.length === 0) return;
 
     await prisma.$transaction(async (tx) => {
-      await tx.listingView.create({
-        data: { listingId, ipHash },
+      const existing = await tx.listingView.findFirst({
+        where: {
+          listingId,
+          ipHash: { in: fingerprints },
+        },
+        select: { id: true },
+      });
+      if (existing) return;
+
+      await tx.listingView.createMany({
+        data: fingerprints.map((ipHash) => ({ listingId, ipHash })),
       });
       await tx.listing.update({
         where: { id: listingId },

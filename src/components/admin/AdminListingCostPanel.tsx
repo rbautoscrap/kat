@@ -10,37 +10,68 @@ function formatWon(value?: string | null): string {
 type Props = {
   costPrice?: string | null;
   accumulatedDays?: number | null;
+  /** Unique detail-page views (IP / member deduped). Admin-only. */
+  viewCount?: number | null;
+  /** When false, hide cost / days (e.g. used-parts listings). */
+  showCostFields?: boolean;
 };
 
-/** Admin-only cost / days summary on listing detail (members never see this). */
+/** Admin-only cost / days / views summary on listing detail (members never see this). */
 export function AdminListingCostPanel({
   costPrice,
   accumulatedDays,
+  viewCount = 0,
+  showCostFields = true,
 }: Props) {
   const days =
     accumulatedDays == null
       ? "—"
       : `${accumulatedDays.toLocaleString("ko-KR")}일`;
+  const views = (viewCount ?? 0).toLocaleString("ko-KR");
 
   return (
     <section className="mb-3 rounded-sm border border-amber-200 bg-amber-50/60 px-3 py-2 sm:px-3.5">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
         <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px]">
+          {showCostFields ? (
+            <>
+              <p className="flex items-baseline gap-1.5">
+                <span className="font-medium tracking-wide text-amber-900/80">
+                  원가
+                </span>
+                <span className="font-semibold tabular-nums text-red-600">
+                  {formatWon(costPrice)}
+                </span>
+              </p>
+              <span
+                className="hidden h-3 w-px bg-amber-200 sm:block"
+                aria-hidden
+              />
+              <p className="flex items-baseline gap-1.5">
+                <span className="font-medium tracking-wide text-amber-900/80">
+                  누적일
+                </span>
+                <span className="font-semibold tabular-nums text-red-600">
+                  {days}
+                </span>
+              </p>
+              <span
+                className="hidden h-3 w-px bg-amber-200 sm:block"
+                aria-hidden
+              />
+            </>
+          ) : null}
           <p className="flex items-baseline gap-1.5">
             <span className="font-medium tracking-wide text-amber-900/80">
-              원가
+              조회수
             </span>
-            <span className="font-semibold tabular-nums text-red-600">
-              {formatWon(costPrice)}
-            </span>
-          </p>
-          <span className="hidden h-3 w-px bg-amber-200 sm:block" aria-hidden />
-          <p className="flex items-baseline gap-1.5">
-            <span className="font-medium tracking-wide text-amber-900/80">
-              누적일
-            </span>
-            <span className="font-semibold tabular-nums text-red-600">
-              {days}
+            <span
+              className={`font-semibold tabular-nums ${
+                (viewCount ?? 0) >= 300 ? "text-blue-600" : "text-red-600"
+              }`}
+              title="상세 페이지 고유 조회수 (동일 IP·회원 중복 제외)"
+            >
+              {views}
             </span>
           </p>
         </div>

@@ -135,9 +135,12 @@ export default async function ListingDetailPage({ params }: Props) {
     );
   }
 
-  // Admin-only analytics: one counted view per IP (never shown publicly).
+  // Admin-only analytics: one counted view per IP / member (never shown publicly).
   if (!adminView) {
-    void recordListingView(listing.id);
+    void recordListingView(listing.id, {
+      userId: dbUser?.id,
+      authorId: listing.authorId,
+    });
   }
 
   // Own offers are loaded separately so they are never truncated by listing-wide limits.
@@ -343,10 +346,12 @@ export default async function ListingDetailPage({ params }: Props) {
         ) : null}
       </div>
 
-      {adminView && !isParts ? (
+      {adminView ? (
         <AdminListingCostPanel
           costPrice={listing.costPrice}
           accumulatedDays={accumulatedDays}
+          viewCount={listing.viewCount}
+          showCostFields={!isParts}
         />
       ) : null}
 
