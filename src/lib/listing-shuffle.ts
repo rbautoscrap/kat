@@ -193,10 +193,20 @@ export function seededCostBiasedOrder(
           : 0;
       return {
         id: p.id,
+        statusRank: p.statusRank,
+        bumpActive: p.bumpActive,
+        bumpedMs: Number.isFinite(p.bumpedMs) ? (p.bumpedMs as number) : 0,
         score: base + freshBoost + bumpBoost + bumpRecency + rng() * noise - statusPenalty,
       };
     })
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => {
+      if (a.statusRank !== b.statusRank) return a.statusRank - b.statusRank;
+      if (a.bumpActive !== b.bumpActive) return a.bumpActive ? -1 : 1;
+      if (a.bumpActive && b.bumpActive && a.bumpedMs !== b.bumpedMs) {
+        return b.bumpedMs - a.bumpedMs;
+      }
+      return b.score - a.score;
+    })
     .map((p) => p.id);
 }
 

@@ -5,6 +5,7 @@ import { isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { memberListingVisibilityWhere } from "@/lib/live-auction";
 import {
+  LISTING_BUMP_TTL_MS,
   orderByIds,
   orderListingsNewestFirst,
   seededCostBiasedOrder,
@@ -36,12 +37,26 @@ async function loadSectionListings(
   const where: Prisma.ListingWhereInput = {
     AND: [{ category }, visibility],
   };
-  const candidates = await prisma.listing.findMany({
-    where,
-    include: coverImageInclude,
-    orderBy: { createdAt: "desc" },
-    take: HOME_SECTION_FETCH,
-  });
+  const bumpCutoff = new Date(Date.now() - LISTING_BUMP_TTL_MS);
+  const [bumped, newest] = await Promise.all([
+    prisma.listing.findMany({
+      where: { AND: [where, { bumpedAt: { gte: bumpCutoff } }] },
+      include: coverImageInclude,
+      orderBy: { bumpedAt: "desc" },
+      take: HOME_SECTION_LIMIT,
+    }),
+    prisma.listing.findMany({
+      where,
+      include: coverImageInclude,
+      orderBy: { createdAt: "desc" },
+      take: HOME_SECTION_FETCH,
+    }),
+  ]);
+  const byId = new Map<string, HomeListing>();
+  for (const row of [...bumped, ...newest]) {
+    if (!byId.has(row.id)) byId.set(row.id, row);
+  }
+  const candidates = [...byId.values()];
   const orderedIds =
     mode === "cost_biased"
       ? seededCostBiasedOrder(candidates, standByHomeShuffleSeed())

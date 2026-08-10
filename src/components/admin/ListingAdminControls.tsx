@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import type { ListingCategory, ListingSaleStatus } from "@prisma/client";
 import {
@@ -37,6 +38,7 @@ export function ListingAdminControls({
   category,
   saleStatus,
 }: Props) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   return (
@@ -98,7 +100,11 @@ export function ListingAdminControls({
           onClick={() => {
             startTransition(async () => {
               const result = await bumpListingToFront(listingId);
-              if (!result.ok) alert(result.error);
+              if (!result.ok) {
+                alert(result.error);
+                return;
+              }
+              router.refresh();
             });
           }}
         >

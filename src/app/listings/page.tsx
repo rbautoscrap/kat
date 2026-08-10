@@ -20,6 +20,7 @@ import {
   USED_PARTS_PAGE_SIZE,
 } from "@/lib/listings";
 import {
+  compareListingsForDisplay,
   newListingShuffleSeed,
   orderByIds,
   parseListingShuffleSeed,
@@ -126,15 +127,29 @@ export default async function ListingsPage({ searchParams }: Props) {
         listings = orderByIds(pageRows, pageIds);
       }
     } else {
-      // DB-side pagination — avoids loading every listing id into memory.
-      // AVAILABLE < RESERVED < SOLD alphabetically, then newest first.
-      listings = await prisma.listing.findMany({
+      // Stand by / auction / search: honor 24h 상단 pins (bumpedAt), then newest.
+      const idRows = await prisma.listing.findMany({
         where,
-        include: coverInclude,
-        orderBy: [{ saleStatus: "asc" }, { createdAt: "desc" }],
-        skip: (currentPage - 1) * pageSize,
-        take: pageSize,
+        select: {
+          id: true,
+          saleStatus: true,
+          bumpedAt: true,
+          createdAt: true,
+        },
       });
+      idRows.sort((a, b) => compareListingsForDisplay(a, b));
+      const pageIds = idRows
+        .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+        .map((r) => r.id);
+      if (pageIds.length === 0) {
+        listings = [];
+      } else {
+        const pageRows = await prisma.listing.findMany({
+          where: { id: { in: pageIds } },
+          include: coverInclude,
+        });
+        listings = orderByIds(pageRows, pageIds);
+      }
     }
   } catch (error) {
     console.error("[ListingsPage] query failed", error);

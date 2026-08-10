@@ -38,6 +38,10 @@ import {
   getInventoryCostSummary,
 } from "@/lib/inventory-cost";
 import { canonicalizeStorageLocation } from "@/lib/storage-location";
+import {
+  compareListingsForDisplay,
+  orderByIds,
+} from "@/lib/listing-shuffle";
 
 export const dynamic = "force-dynamic";
 
@@ -226,13 +230,27 @@ export default async function AdminListingsPage({ searchParams }: Props) {
   let listings: AdminListingRow[] = [];
 
   if (sort === "newest") {
-    listings = await prisma.listing.findMany({
+    // Honor admin “상단” (bumpedAt, 24h) — createdAt-only order made the button look broken.
+    const rows = await prisma.listing.findMany({
       where,
-      orderBy: [{ createdAt: "desc" }, { updatedAt: "desc" }],
-      skip,
-      take: ADMIN_PAGE_SIZE,
-      include,
+      select: {
+        id: true,
+        saleStatus: true,
+        bumpedAt: true,
+        createdAt: true,
+      },
     });
+    rows.sort((a, b) => compareListingsForDisplay(a, b));
+    const pageIds = rows.slice(skip, skip + ADMIN_PAGE_SIZE).map((r) => r.id);
+    if (pageIds.length === 0) {
+      listings = [];
+    } else {
+      const pageRows = await prisma.listing.findMany({
+        where: { id: { in: pageIds } },
+        include,
+      });
+      listings = orderByIds(pageRows, pageIds);
+    }
   } else if (sort === "views_desc") {
     listings = await prisma.listing.findMany({
       where,
