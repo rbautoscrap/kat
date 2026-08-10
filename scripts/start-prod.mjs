@@ -175,6 +175,20 @@ if (push.status !== 0) {
   );
 }
 
+// Must run before any Listing findMany — legacy HOT_DEALS values crash Prisma reads.
+const ensureDbRuntime = path.join(
+  process.cwd(),
+  "scripts",
+  "ensure-db-runtime.mjs",
+);
+if (existsSync(ensureDbRuntime)) {
+  console.log("[start-prod] Ensuring DB runtime repairs (HOT_DEALS / columns / WAL)…");
+  spawnSync(process.execPath, [ensureDbRuntime], {
+    stdio: "inherit",
+    env: process.env,
+  });
+}
+
 // Critical: User.phoneKey / signupIp* must exist or admin member pages crash.
 const ensureSignup = path.join(
   process.cwd(),

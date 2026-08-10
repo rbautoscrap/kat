@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { Listing, ListingImage } from "@prisma/client";
 import { BackButton } from "@/components/BackButton";
 import { ListingCard } from "@/components/ListingCard";
 import { ListingPagination } from "@/components/ListingPagination";
@@ -21,7 +22,6 @@ import {
 import {
   newListingShuffleSeed,
   orderByIds,
-  orderListingsNewestFirst,
   parseListingShuffleSeed,
   seededCostBiasedOrder,
 } from "@/lib/listing-shuffle";
@@ -36,6 +36,12 @@ type Props = {
     page?: string;
     shuffle?: string;
   }>;
+};
+
+type ListingWithCover = Listing & { images: ListingImage[] };
+
+const coverInclude = {
+  images: { orderBy: { sortOrder: "asc" as const }, take: 1 },
 };
 
 export default async function ListingsPage({ searchParams }: Props) {
@@ -83,55 +89,59 @@ export default async function ListingsPage({ searchParams }: Props) {
     }
   }
 
-  const total = await prisma.listing.count({ where });
-  const totalPageCount = Math.max(1, Math.ceil(total / pageSize));
-  const currentPage = Math.min(page, totalPageCount);
+  let total = 0;
+  let currentPage = page;
+  let listings: ListingWithCover[] = [];
+  let loadError = false;
 
-  const idSelect = {
-    id: true,
-    costPrice: true,
-    createdAt: true,
-    saleStatus: true,
-    bumpedAt: true,
-  } as const;
+  try {
+    total = await prisma.listing.count({ where });
+    const totalPageCount = Math.max(1, Math.ceil(total / pageSize));
+    currentPage = Math.min(page, totalPageCount);
 
-  let listings;
-  if (shuffleMode && shuffleSeed !== null) {
-    const idRows = await prisma.listing.findMany({
-      where,
-      select: idSelect,
-      orderBy: { id: "asc" },
-    });
-    const orderedIds = seededCostBiasedOrder(idRows, shuffleSeed);
-    const pageIds = orderedIds.slice(
-      (currentPage - 1) * pageSize,
-      currentPage * pageSize,
-    );
-    const pageRows = await prisma.listing.findMany({
-      where: { id: { in: pageIds } },
-      include: {
-        images: { orderBy: { sortOrder: "asc" }, take: 1 },
-      },
-    });
-    listings = orderByIds(pageRows, pageIds);
-  } else {
-    const idRows = await prisma.listing.findMany({
-      where,
-      select: idSelect,
-      orderBy: { id: "asc" },
-    });
-    const orderedIds = orderListingsNewestFirst(idRows);
-    const pageIds = orderedIds.slice(
-      (currentPage - 1) * pageSize,
-      currentPage * pageSize,
-    );
-    const pageRows = await prisma.listing.findMany({
-      where: { id: { in: pageIds } },
-      include: {
-        images: { orderBy: { sortOrder: "asc" }, take: 1 },
-      },
-    });
-    listings = orderByIds(pageRows, pageIds);
+    if (shuffleMode && shuffleSeed !== null) {
+      const idRows = await prisma.listing.findMany({
+        where,
+        select: {
+          id: true,
+          costPrice: true,
+          createdAt: true,
+          saleStatus: true,
+          bumpedAt: true,
+        },
+        orderBy: { id: "asc" },
+      });
+      const orderedIds = seededCostBiasedOrder(idRows, shuffleSeed);
+      const pageIds = orderedIds.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize,
+      );
+      if (pageIds.length === 0) {
+        listings = [];
+      } else {
+        const pageRows = await prisma.listing.findMany({
+          where: { id: { in: pageIds } },
+          include: coverInclude,
+        });
+        listings = orderByIds(pageRows, pageIds);
+      }
+    } else {
+      // DB-side pagination — avoids loading every listing id into memory.
+      // AVAILABLE < RESERVED < SOLD alphabetically, then newest first.
+      listings = await prisma.listing.findMany({
+        where,
+        include: coverInclude,
+        orderBy: [{ saleStatus: "asc" }, { createdAt: "desc" }],
+        skip: (currentPage - 1) * pageSize,
+        take: pageSize,
+      });
+    }
+  } catch (error) {
+    console.error("[ListingsPage] query failed", error);
+    loadError = true;
+    listings = [];
+    total = 0;
+    currentPage = 1;
   }
 
   const heading = category
@@ -181,7 +191,11 @@ export default async function ListingsPage({ searchParams }: Props) {
             : "for make, model, VIN, S/N, or notes"}
         </p>
       ) : null}
-      {listings.length === 0 ? (
+      {loadError ? (
+        <p className="text-[13px] tracking-wide text-neutral-500">
+          Listings are temporarily unavailable. Please try again in a moment.
+        </p>
+      ) : listings.length === 0 ? (
         <p className="text-[13px] tracking-wide text-neutral-500">
           No listings found.
         </p>

@@ -165,9 +165,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.name = dbUser.name;
           token.email = dbUser.email;
           token.checkedAt = Date.now();
-          // Count ongoing signed-in site use (throttled), not only password login.
+          // Fire-and-forget: never block JWT/auth on analytics writes (SQLite locks).
           if (!user) {
-            await recordUserAccess(userId);
+            void recordUserAccess(userId);
           }
         }
       }

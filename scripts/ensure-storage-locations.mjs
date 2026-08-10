@@ -29,7 +29,17 @@ function parseCost(value) {
 const prisma = new PrismaClient();
 
 async function main() {
+  // Only scan rows that still need work — full-table scans on every boot
+  // were locking SQLite long enough to keep the site offline after redeploys.
   const rows = await prisma.listing.findMany({
+    where: {
+      OR: [
+        { storageLocation: { not: null } },
+        { costPrice: null },
+        { costPrice: "" },
+        { costPrice: "0" },
+      ],
+    },
     select: {
       id: true,
       storageLocation: true,
@@ -37,6 +47,7 @@ async function main() {
       auctionPrice: true,
       incidentalCost: true,
     },
+    take: 500,
   });
 
   let locationFixed = 0;
@@ -46,7 +57,7 @@ async function main() {
     const data = {};
     const canonical = canonicalize(row.storageLocation);
     const current = row.storageLocation ?? null;
-    if (canonical !== current) {
+    if (canonical && canonical !== current) {
       data.storageLocation = canonical;
     }
 
