@@ -20,12 +20,10 @@ async function logoutAction() {
 
 export async function Header() {
   const dbUser = await resolveSessionDbUser();
-  const canListVehicles = canManageListings(dbUser?.role);
+  /** + List: ADMIN / AUTHORIZED only — hide from regular members (incl. mobile). */
+  const canList = canManageListings(dbUser?.role);
   const canListParts = canListUsedParts(dbUser?.role);
-  const canList = canListVehicles || canListParts;
-  const listHref = canListVehicles
-    ? "/listings/new"
-    : "/listings/new?category=USED_PARTS";
+  const listHref = "/listings/new";
   const admin = isAdmin(dbUser?.role);
 
   const accountLinkClass =
