@@ -67,6 +67,8 @@ export type InventoryCostSummary = {
   costOver5mCount: number;
   /** AVAILABLE units inbound for ≥ 30 days */
   stagnantCount: number;
+  /** AVAILABLE units with an inbound date recorded */
+  inboundCount: number;
   /** Cost totals grouped by storageLocation */
   byLocation: InventoryCostByLocation[];
 };
@@ -104,6 +106,7 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
   let costAtMost5mCount = 0;
   let costOver5mCount = 0;
   let stagnantCount = 0;
+  let inboundCount = 0;
   const locationMap = new Map<string, { total: number; count: number }>();
 
   for (const row of stockRows) {
@@ -111,6 +114,8 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
     total += cost;
     if (cost <= COST_BAND_5M) costAtMost5mCount += 1;
     else costOver5mCount += 1;
+    const inboundDigits = row.inboundDate?.replace(/\D/g, "") ?? "";
+    if (inboundDigits.length === 8) inboundCount += 1;
     const days = displayAccumulatedDays(row);
     if (days != null && days >= STAGNANT_INBOUND_DAYS) stagnantCount += 1;
     const location = storageLocationLabel(row.storageLocation);
@@ -152,6 +157,7 @@ export async function getInventoryCostSummary(): Promise<InventoryCostSummary> {
     costAtMost5mCount,
     costOver5mCount,
     stagnantCount,
+    inboundCount,
     byLocation,
   };
 }
