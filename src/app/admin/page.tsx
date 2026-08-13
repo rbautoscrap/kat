@@ -112,7 +112,7 @@ export default async function AdminOverviewPage() {
       label: "총재고",
       value: `${inventory.inboundCount.toLocaleString("ko-KR")}대`,
       href: "/admin/listings?sale=AVAILABLE",
-      note: "입고 완료 · 판매중",
+      note: "판매완료 제외 · 입고분",
     },
   ];
 
