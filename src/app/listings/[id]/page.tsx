@@ -338,10 +338,11 @@ export default async function ListingDetailPage({ params }: Props) {
             </p>
           ) : null}
         </div>
-        {canEdit ? (
+        {canEdit || adminView ? (
           <ListingOwnerActions
             listingId={listing.id}
             categoryPath={CATEGORY_PATHS[listing.category]}
+            canBump={adminView}
           />
         ) : null}
       </div>
