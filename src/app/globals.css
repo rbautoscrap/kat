@@ -1458,8 +1458,14 @@ main {
   }
 
   .invoice-print-root {
+    /* Do not use inset:0 — that locks height to one page and clips the table. */
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: 100%;
+    height: auto !important;
     margin: 0;
     padding: 0 !important;
     border: none !important;
@@ -1472,15 +1478,62 @@ main {
     display: none !important;
   }
 
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
   .invoice-document {
     width: 100% !important;
     max-width: 100% !important;
+    height: auto !important;
     margin: 0 !important;
+    overflow: visible !important;
   }
 
   .invoice-sheet {
     border: none !important;
     padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .invoice-watermark {
+    position: fixed;
+    inset: 0;
+  }
+
+  .invoice-items {
+    overflow: visible !important;
+    border-radius: 0 !important;
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  .invoice-items thead {
+    display: table-header-group;
+  }
+
+  .invoice-items tbody {
+    display: table-row-group;
+  }
+
+  .invoice-items tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .invoice-header,
+  .invoice-meta,
+  .invoice-notice,
+  .invoice-amount-row,
+  .invoice-footer-grid,
+  .invoice-total,
+  .invoice-company-block,
+  .invoice-remit {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   .invoice-watermark,
