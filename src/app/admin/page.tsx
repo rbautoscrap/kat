@@ -57,6 +57,7 @@ export default async function AdminOverviewPage() {
     note?: string;
     emphasize?: boolean;
     danger?: boolean;
+    accent?: boolean;
   }> = [
     {
       label: "오퍼",
@@ -109,10 +110,11 @@ export default async function AdminOverviewPage() {
       danger: true,
     },
     {
-      label: "총재고",
+      label: "실재고",
       value: `${inventory.inboundCount.toLocaleString("ko-KR")}대`,
       href: "/admin/listings?sale=AVAILABLE",
       note: "판매완료 제외 · 입고분",
+      accent: true,
     },
   ];
 
@@ -140,9 +142,11 @@ export default async function AdminOverviewPage() {
                 className={`mt-1.5 font-semibold tracking-tight tabular-nums ${
                   item.danger
                     ? "text-[1.35rem] leading-none text-red-600"
-                    : item.emphasize
-                      ? "text-[1.05rem] leading-snug text-neutral-900 sm:text-[1.1rem]"
-                      : "text-[1.35rem] leading-none text-neutral-900"
+                    : item.accent
+                      ? "text-[1.35rem] leading-none text-blue-600"
+                      : item.emphasize
+                        ? "text-[1.05rem] leading-snug text-neutral-900 sm:text-[1.1rem]"
+                        : "text-[1.35rem] leading-none text-neutral-900"
                 }`}
               >
                 {item.value}
