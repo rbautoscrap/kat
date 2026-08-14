@@ -50,17 +50,13 @@ export function ImageGallery({
               fill
               sizes="(max-width: 640px) 33vw, 20vw"
               draggable={false}
-              className={`object-cover ${
-                saleStatus === "SOLD" ? "opacity-70 grayscale-[0.35]" : ""
-              }`}
+              className="object-cover"
               // /uploads are served from Volume via route handler — skip optimizer
               unoptimized={
                 img.url.startsWith("http") || img.url.startsWith("/uploads/")
               }
             />
-            {index === 0 ? (
-              <SaleStatusOverlay status={saleStatus} size="detail" />
-            ) : null}
+            <SaleStatusOverlay status={saleStatus} size="detail" />
           </button>
         ))}
       </div>

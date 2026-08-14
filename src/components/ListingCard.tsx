@@ -60,7 +60,7 @@ export function ListingCard({
           src={thumb}
           alt={listing.title}
           sizes="140px"
-          className={`object-cover ${isSold ? "opacity-70 grayscale-[0.35]" : ""}`}
+          className="object-cover"
         />
         <SaleStatusOverlay status={listing.saleStatus} />
       </div>
@@ -131,11 +131,11 @@ export function ListingCard({
         }
         className={`object-cover transition duration-300 ease-out ${
           canOpen ? "group-hover:scale-[1.02]" : ""
-        } ${isSold ? "opacity-70 grayscale-[0.35]" : ""}`}
+        }`}
       />
       <SaleStatusOverlay status={listing.saleStatus} />
       {isParts ? (
-        <span className="absolute left-1.5 top-1.5 rounded bg-neutral-900/75 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white">
+        <span className="absolute right-1.5 top-1.5 rounded bg-neutral-900/75 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white">
           Parts
         </span>
       ) : null}
