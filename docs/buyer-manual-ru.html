@@ -8,7 +8,7 @@
 ﻿
     @page {
       size: A4;
-      margin: 10mm;
+      margin: 0;
     }
 
     :root {
@@ -27,6 +27,7 @@
     html, body {
       margin: 0;
       padding: 0;
+      width: 210mm;
       color: var(--ink);
       background: var(--paper);
       font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
@@ -47,11 +48,17 @@
     strong { color: var(--ink); font-weight: 650; }
 
     .page {
+      width: 210mm;
+      height: 296mm;
+      max-height: 296mm;
+      min-height: 296mm;
+      margin: 0;
+      padding: 12mm 14mm 14mm;
+      box-sizing: border-box;
       page-break-after: always;
       break-after: page;
-      page-break-inside: avoid;
-      break-inside: avoid;
-      min-height: 0;
+      page-break-inside: auto;
+      break-inside: auto;
       position: relative;
       overflow: hidden;
     }
@@ -88,9 +95,9 @@
       flex-direction: column;
       justify-content: space-between;
       box-sizing: border-box;
-      min-height: 255mm;
-      max-height: 277mm;
-      padding: 6mm 3mm 5mm;
+      min-height: 0;
+      max-height: none;
+      padding: 14mm 16mm 12mm;
       background: #ffffff;
       color: var(--ink);
       border: 1px solid var(--line);
@@ -104,7 +111,7 @@
       text-transform: uppercase;
       color: var(--muted);
     }
-    .cover-hero { margin-top: 38mm; }
+    .cover-hero { margin-top: 22mm; }
     .cover-kicker {
       font-size: 9pt;
       letter-spacing: 0.22em;
@@ -342,9 +349,9 @@
 
     .footer {
       position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      left: 14mm;
+      right: 14mm;
+      bottom: 10mm;
       display: flex;
       justify-content: space-between;
       font-size: 7.5pt;
