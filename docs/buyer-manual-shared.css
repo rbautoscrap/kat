@@ -1,7 +1,7 @@
 ﻿
     @page {
       size: A4;
-      margin: 14mm 14mm 16mm 14mm;
+      margin: 10mm;
     }
 
     :root {
@@ -42,7 +42,9 @@
     .page {
       page-break-after: always;
       break-after: page;
-      min-height: 250mm;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      min-height: 0;
       position: relative;
       overflow: hidden;
     }
@@ -78,8 +80,10 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      min-height: 262mm;
-      padding: 8mm 2mm 4mm;
+      box-sizing: border-box;
+      min-height: 255mm;
+      max-height: 277mm;
+      padding: 6mm 3mm 5mm;
       background: #ffffff;
       color: var(--ink);
       border: 1px solid var(--line);

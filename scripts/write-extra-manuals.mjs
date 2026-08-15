@@ -9,8 +9,8 @@ const rtlExtra = `
     html[dir="rtl"],
     html[dir="rtl"] body {
       font-family: "Segoe UI", "Traditional Arabic", Tahoma, Arial, sans-serif;
-      font-size: 11pt;
-      line-height: 1.75;
+      font-size: 10.8pt;
+      line-height: 1.6;
       letter-spacing: 0 !important;
       word-spacing: 0;
       text-rendering: optimizeLegibility;
@@ -46,14 +46,32 @@ const rtlExtra = `
     html[dir="rtl"] .cover-sub,
     html[dir="rtl"] .check span {
       letter-spacing: 0 !important;
-      line-height: 1.75;
+      line-height: 1.6;
       overflow-wrap: break-word;
       word-break: normal;
     }
-    html[dir="rtl"] .cover-sub { max-width: 155mm; }
-    html[dir="rtl"] .cover-meta { align-items: start; }
-    html[dir="rtl"] .cover-meta > div { min-height: 16mm; }
-    html[dir="rtl"] .cover h1 { max-width: none; }
+    html[dir="rtl"] .page {
+      min-height: 0 !important;
+      max-height: 277mm;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      overflow: hidden;
+    }
+    html[dir="rtl"] .cover {
+      min-height: 0 !important;
+      max-height: 277mm;
+      padding: 5mm 3mm 4mm;
+      gap: 6mm;
+    }
+    html[dir="rtl"] .cover-hero { margin-top: 14mm; }
+    html[dir="rtl"] .cover-sub { max-width: 155mm; margin-top: 5mm; }
+    html[dir="rtl"] .cover-meta { align-items: start; margin-top: auto; }
+    html[dir="rtl"] .cover-meta > div { min-height: 0; }
+    html[dir="rtl"] .cover h1 { max-width: none; font-size: 28pt; }
+    html[dir="rtl"] .page::before {
+      width: 58%;
+      max-width: 120mm;
+    }
     html[dir="rtl"] .feature {
       border-left: none;
       border-right: 2.5px solid var(--accent);
