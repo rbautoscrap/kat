@@ -198,7 +198,8 @@ export default function AboutUsPage() {
               Buyer manuals
             </h2>
             <p className="mt-1 text-[13px] leading-relaxed tracking-wide text-neutral-600">
-              Official EN / KO guides for browsing, offers, and purchase steps.
+              Official EN / KO / RU / ES / AR guides for browsing, offers, and
+              purchase steps.
             </p>
             <ManualDownloads />
           </section>

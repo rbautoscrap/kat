@@ -25,6 +25,27 @@ const MANUALS: ManualItem[] = [
     title: "바이어 매뉴얼 (한국어)",
     langLabel: "KO",
   },
+  {
+    id: "ru",
+    href: "/manuals/kat-manual-ru.pdf",
+    filename: "KAT Manual (Rus).pdf",
+    title: "Руководство покупателя (русский)",
+    langLabel: "RU",
+  },
+  {
+    id: "es",
+    href: "/manuals/kat-manual-es.pdf",
+    filename: "KAT Manual (Esp).pdf",
+    title: "Manual del comprador (Español)",
+    langLabel: "ES",
+  },
+  {
+    id: "ar",
+    href: "/manuals/kat-manual-ar.pdf",
+    filename: "KAT Manual (Ara).pdf",
+    title: "دليل المشتري (العربية)",
+    langLabel: "AR",
+  },
 ];
 
 type ProgressState = {
