@@ -6,15 +6,73 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const css = readFileSync(join(root, "docs", "buyer-manual-shared.css"), "utf8");
 
 const rtlExtra = `
-    html[dir="rtl"] { font-family: "Segoe UI", Tahoma, Arial, sans-serif; }
-    html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3,
-    html[dir="rtl"] .brand, html[dir="rtl"] .cover-meta strong, html[dir="rtl"] .callout strong {
-      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    html[dir="rtl"],
+    html[dir="rtl"] body {
+      font-family: "Segoe UI", "Traditional Arabic", Tahoma, Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.75;
+      letter-spacing: 0 !important;
+      word-spacing: 0;
+      text-rendering: optimizeLegibility;
     }
-    html[dir="rtl"] .feature { border-left: none; border-right: 2.5px solid var(--accent); padding: 1mm 4mm 1mm 0; }
+    html[dir="rtl"] h1,
+    html[dir="rtl"] h2,
+    html[dir="rtl"] h3,
+    html[dir="rtl"] .brand,
+    html[dir="rtl"] .cover-meta strong,
+    html[dir="rtl"] .callout strong,
+    html[dir="rtl"] .step h3,
+    html[dir="rtl"] .card h3,
+    html[dir="rtl"] .feature h3 {
+      font-family: "Segoe UI", "Traditional Arabic", Tahoma, Arial, sans-serif;
+      letter-spacing: 0 !important;
+      line-height: 1.55;
+    }
+    html[dir="rtl"] .cover-top,
+    html[dir="rtl"] .cover-kicker,
+    html[dir="rtl"] .brand span,
+    html[dir="rtl"] .doc-label,
+    html[dir="rtl"] .eyebrow,
+    html[dir="rtl"] .step-no,
+    html[dir="rtl"] .contact-item .label {
+      letter-spacing: 0 !important;
+      text-transform: none !important;
+      line-height: 1.55;
+    }
+    html[dir="rtl"] p,
+    html[dir="rtl"] li,
+    html[dir="rtl"] td,
+    html[dir="rtl"] .lede,
+    html[dir="rtl"] .cover-sub,
+    html[dir="rtl"] .check span {
+      letter-spacing: 0 !important;
+      line-height: 1.75;
+      overflow-wrap: break-word;
+      word-break: normal;
+    }
+    html[dir="rtl"] .cover-sub { max-width: 155mm; }
+    html[dir="rtl"] .cover-meta { align-items: start; }
+    html[dir="rtl"] .cover-meta > div { min-height: 16mm; }
+    html[dir="rtl"] .cover h1 { max-width: none; }
+    html[dir="rtl"] .feature {
+      border-left: none;
+      border-right: 2.5px solid var(--accent);
+      padding: 1mm 4mm 1mm 0;
+    }
     html[dir="rtl"] .doc-label { text-align: left; }
-    html[dir="rtl"] table.guide th, html[dir="rtl"] table.guide td { text-align: right; }
+    html[dir="rtl"] table.guide th,
+    html[dir="rtl"] table.guide td { text-align: right; }
     html[dir="rtl"] ul.clean { padding-left: 0; padding-right: 4.5mm; }
+    html[dir="rtl"] bdi,
+    html[dir="rtl"] .ltr {
+      unicode-bidi: isolate;
+      direction: ltr;
+      letter-spacing: 0;
+    }
+    html[dir="rtl"] h1.ltr,
+    html[dir="rtl"] .value.ltr {
+      display: block;
+    }
 `;
 
 function wrap({ lang, dir, title, body }) {
@@ -422,20 +480,19 @@ const manuals = [
     body: `
   <section class="page cover">
     <div class="cover-top">
-      <div>RB Auto Co., Ltd.</div>
+      <div class="ltr">RB Auto Co., Ltd.</div>
       <div>دليل المشتري · 2026</div>
     </div>
     <div class="cover-hero">
       <div class="cover-kicker">منصة عالمية لتجارة السيارات</div>
-      <h1>KOREA AUTO TRADE</h1>
+      <h1 class="ltr">KOREA AUTO TRADE</h1>
       <hr class="cover-rule" />
       <p class="cover-sub">
-        دليل واضح للمشترين الدوليين — مخزون محدّث، عروض شفافة،
-        ومسار منظم من الاستفسار حتى الشحن.
+        دليل واضح للمشترين الدوليين — مخزون محدّث، عروض شفافة، ومسار منظم من الاستفسار حتى الشحن.
       </p>
     </div>
     <div class="cover-meta">
-      <div><strong>الموقع</strong>rbautotrade.com</div>
+      <div><strong>الموقع</strong><span class="ltr">rbautotrade.com</span></div>
       <div><strong>الجمهور</strong>تجار ومستوردون محترفون في الدول العربية</div>
       <div><strong>التركيز</strong>الشفافية · السرعة · عملية موثوقة</div>
       <div><strong>اللغة</strong>العربية</div>
@@ -444,48 +501,48 @@ const manuals = [
 
   <section class="page">
     <div class="header">
-      <div class="brand">KOREA AUTO TRADE<span>دليل المشتري</span></div>
+      <div class="brand"><span class="ltr">KOREA AUTO TRADE</span><span>دليل المشتري</span></div>
       <div class="doc-label">01 · لماذا منصتنا</div>
     </div>
     <div class="eyebrow">التميّز</div>
     <h2>لماذا منصتنا</h2>
-    <p class="lede">صُممت KOREA AUTO TRADE لتقليل مشكلات التجارة العابرة للحدود: مخزون حي، بيانات واضحة، وعملية شراء موجهة.</p>
-    <div class="feature"><h3>تحديث المخزون فوراً</h3><p>تُنشر الوحدات الجديدة باستمرار في Car Listings وLive Auction وStand by وUsed Parts. يتغيّر ترتيب الصفحة عند كل إعادة تحميل حتى ترى كل السيارات لا قائمة ثابتة واحدة.</p></div>
+    <p class="lede">صُممت <bdi class="ltr">KOREA AUTO TRADE</bdi> لتقليل مشكلات التجارة العابرة للحدود: مخزون حي، بيانات واضحة، وعملية شراء موجهة.</p>
+    <div class="feature"><h3>تحديث المخزون فوراً</h3><p>تُنشر الوحدات الجديدة باستمرار في <bdi class="ltr">Car Listings</bdi> و<bdi class="ltr">Live Auction</bdi> و<bdi class="ltr">Stand by</bdi> و<bdi class="ltr">Used Parts</bdi>. يتغيّر ترتيب الصفحة عند كل إعادة تحميل حتى ترى كل السيارات لا قائمة ثابتة واحدة.</p></div>
     <div class="feature"><h3>معلومات شفافة</h3><p>كل إعلان يعرض المواصفات (VIN، ناقل الحركة، العداد، الوقود) وملاحظات الحالة والصور والفيديو إن وُجد — لتقرر بناءً على حقائق.</p></div>
-    <div class="feature"><h3>نظام عروض الأعضاء</h3><p>يقدّم الأعضاء عروضاً على صفحة الإعلان ويتابعونها في <strong>My offers</strong>. يبقى سجل التفاوض واضحاً، أكثر من رسائل يمكن حذفها.</p></div>
-    <div class="feature"><h3>عملية شراء موجهة</h3><p>من التحقق من السعر إلى العربون والشحن، يشرح How to buy العملة والمستندات ومسؤولية الشحن في أربع خطوات.</p></div>
+    <div class="feature"><h3>نظام عروض الأعضاء</h3><p>يقدّم الأعضاء عروضاً على صفحة الإعلان ويتابعونها في <strong class="ltr">My offers</strong>. يبقى سجل التفاوض واضحاً، أكثر من رسائل يمكن حذفها.</p></div>
+    <div class="feature"><h3>عملية شراء موجهة</h3><p>من التحقق من السعر إلى العربون والشحن، يشرح <bdi class="ltr">How to buy</bdi> العملة والمستندات ومسؤولية الشحن في أربع خطوات.</p></div>
     <div class="callout"><strong>ماذا يعني ذلك لك</strong>فرز أسرع، أسئلة أقل تكراراً، وعملية احترافية للمستوردين من كوريا.</div>
     <div class="footer"><span>rbautotrade.com</span><span>ص 2</span></div>
   </section>
 
   <section class="page">
     <div class="header">
-      <div class="brand">KOREA AUTO TRADE<span>دليل المشتري</span></div>
+      <div class="brand"><span class="ltr">KOREA AUTO TRADE</span><span>دليل المشتري</span></div>
       <div class="doc-label">02 · البدء</div>
     </div>
     <div class="eyebrow">الوصول</div>
     <h2>ابدأ خلال ثلاث دقائق</h2>
-    <p class="lede">معظم الميزات تعمل دون تسجيل. التسجيل يفتح العروض وLive Auction ومتابعة My offers.</p>
+    <p class="lede">معظم الميزات تعمل دون تسجيل. التسجيل يفتح العروض و<bdi class="ltr">Live Auction</bdi> ومتابعة <bdi class="ltr">My offers</bdi>.</p>
     <div class="steps">
-      <div class="step"><div class="step-no">الخطوة 01</div><h3>افتح الموقع</h3><p>زر <strong>rbautotrade.com</strong> من الحاسوب أو الجوال.</p></div>
-      <div class="step"><div class="step-no">الخطوة 02</div><h3>تصفّح المخزون</h3><p>القائمة العلوية: Live Auction، Car Listings، Stand by، Used Parts.</p></div>
-      <div class="step"><div class="step-no">الخطوة 03</div><h3>أنشئ حساباً</h3><p>اضغط <strong>Join</strong> وأرسل بياناتك وانتظر الموافقة إن لزم.</p></div>
-      <div class="step"><div class="step-no">الخطوة 04</div><h3>سجّل الدخول</h3><p>عبر <strong>Login</strong> أرسل العروض وافتح Live Auction وأدر My offers.</p></div>
+      <div class="step"><div class="step-no">الخطوة 01</div><h3>افتح الموقع</h3><p>زر <strong class="ltr">rbautotrade.com</strong> من الحاسوب أو الجوال.</p></div>
+      <div class="step"><div class="step-no">الخطوة 02</div><h3>تصفّح المخزون</h3><p>القائمة العلوية: <bdi class="ltr">Live Auction</bdi>، <bdi class="ltr">Car Listings</bdi>، <bdi class="ltr">Stand by</bdi>، <bdi class="ltr">Used Parts</bdi>.</p></div>
+      <div class="step"><div class="step-no">الخطوة 03</div><h3>أنشئ حساباً</h3><p>اضغط <strong class="ltr">Join</strong> وأرسل بياناتك وانتظر الموافقة إن لزم.</p></div>
+      <div class="step"><div class="step-no">الخطوة 04</div><h3>سجّل الدخول</h3><p>عبر <strong class="ltr">Login</strong> أرسل العروض وافتح <bdi class="ltr">Live Auction</bdi> وأدر <bdi class="ltr">My offers</bdi>.</p></div>
     </div>
     <h3 style="margin: 7mm 0 3mm; font-size: 12.5pt;">خريطة القائمة</h3>
     <table class="guide">
-      <tr><th>Car Listings</th><td>المخزون الأساسي. يتغيّر الترتيب في كل زيارة، وغالباً تظهر الوحدات الأعلى تكلفة أولاً.</td></tr>
-      <tr><th>Live Auction</th><td>مزادات وعروض للأعضاء (يتطلب تسجيل الدخول).</td></tr>
-      <tr><th>Stand by</th><td>مخزون جاهز إضافي؛ يُخلط عند كل دخول للقائمة.</td></tr>
-      <tr><th>How to buy</th><td>دليل رسمي من 4 خطوات للشراء والشحن.</td></tr>
-      <tr><th>About Us</th><td>ملف الشركة ونقاط القوة وكل قنوات التواصل.</td></tr>
+      <tr><th class="ltr">Car Listings</th><td>المخزون الأساسي. يتغيّر الترتيب في كل زيارة، وغالباً تظهر الوحدات الأعلى تكلفة أولاً.</td></tr>
+      <tr><th class="ltr">Live Auction</th><td>مزادات وعروض للأعضاء (يتطلب تسجيل الدخول).</td></tr>
+      <tr><th class="ltr">Stand by</th><td>مخزون جاهز إضافي؛ يُخلط عند كل دخول للقائمة.</td></tr>
+      <tr><th class="ltr">How to buy</th><td>دليل رسمي من 4 خطوات للشراء والشحن.</td></tr>
+      <tr><th class="ltr">About Us</th><td>ملف الشركة ونقاط القوة وكل قنوات التواصل.</td></tr>
     </table>
     <div class="footer"><span>rbautotrade.com</span><span>ص 3</span></div>
   </section>
 
   <section class="page">
     <div class="header">
-      <div class="brand">KOREA AUTO TRADE<span>دليل المشتري</span></div>
+      <div class="brand"><span class="ltr">KOREA AUTO TRADE</span><span>دليل المشتري</span></div>
       <div class="doc-label">03 · المخزون والصفحات</div>
     </div>
     <div class="eyebrow">مخزون حي</div>
@@ -516,7 +573,7 @@ const manuals = [
 
   <section class="page">
     <div class="header">
-      <div class="brand">KOREA AUTO TRADE<span>دليل المشتري</span></div>
+      <div class="brand"><span class="ltr">KOREA AUTO TRADE</span><span>دليل المشتري</span></div>
       <div class="doc-label">04 · تجارة شفافة</div>
     </div>
     <div class="eyebrow">سلامة العملية</div>
@@ -525,15 +582,15 @@ const manuals = [
     <div class="grid-3" style="margin-bottom: 6mm;">
       <div class="card"><h3>1. استفسر</h3><p>واتساب أو كاكاو أو ماسنجر. أزرار الإعلان ترفق هوية السيارة.</p></div>
       <div class="card"><h3>2. قدّم عرضاً</h3><p>يضع الأعضاء المبلغ والعملة في صفحة الإعلان.</p></div>
-      <div class="card"><h3>3. تابع</h3><p>في <strong>My offers</strong> ترى الاهتمامات المفتوحة والمغلقة.</p></div>
+      <div class="card"><h3>3. تابع</h3><p>في <strong class="ltr">My offers</strong> ترى الاهتمامات المفتوحة والمغلقة.</p></div>
     </div>
-    <h3 style="font-size: 12.5pt; margin-bottom: 3mm;">Live Auction (للأعضاء)</h3>
-    <p>مزادات Live Auction للأعضاء المسجّلين. الزوار يرون Login / Register. بعد الدخول يمكن مراجعة الوحدات والمشاركة بنفس مسار العروض.</p>
+    <h3 style="font-size: 12.5pt; margin-bottom: 3mm;"><span class="ltr">Live Auction</span> (للأعضاء)</h3>
+    <p>مزادات <bdi class="ltr">Live Auction</bdi> للأعضاء المسجّلين. الزوار يرون <bdi class="ltr">Login / Register</bdi>. بعد الدخول يمكن مراجعة الوحدات والمشاركة بنفس مسار العروض.</p>
     <h3 style="font-size: 12.5pt; margin: 5mm 0 3mm;">ما يبقى شفافاً</h3>
     <table class="guide">
       <tr><th>بيانات الإعلان</th><td>المواصفات والملاحظات والوسائط والحالة تظهر بشكل موحّد.</td></tr>
       <tr><th>التواصل</th><td>قنوات رسمية — واتساب، كاكاو، ماسنجر، بريد — نفس الفريق.</td></tr>
-      <tr><th>المسار التجاري</th><td>How to buy: السعر → عملة الفاتورة → العربون → الإفراج للشحن.</td></tr>
+      <tr><th>المسار التجاري</th><td><bdi class="ltr">How to buy</bdi>: السعر → عملة الفاتورة → العربون → الإفراج للشحن.</td></tr>
       <tr><th>نشاط العضو</th><td>تُحفظ كل العروض في حسابك للمتابعة.</td></tr>
     </table>
     <div class="footer"><span>rbautotrade.com</span><span>ص 5</span></div>
@@ -541,12 +598,12 @@ const manuals = [
 
   <section class="page">
     <div class="header">
-      <div class="brand">KOREA AUTO TRADE<span>دليل المشتري</span></div>
+      <div class="brand"><span class="ltr">KOREA AUTO TRADE</span><span>دليل المشتري</span></div>
       <div class="doc-label">05 · كيف تشتري</div>
     </div>
     <div class="eyebrow">نظام الإرشاد</div>
     <h2>أربع خطوات حتى الشحن</h2>
-    <p class="lede">اتبع هذه العملية. التفاصيل أيضاً في الموقع ضمن <strong>How to buy</strong>.</p>
+    <p class="lede">اتبع هذه العملية. التفاصيل أيضاً في الموقع ضمن <strong class="ltr">How to buy</strong>.</p>
     <div class="steps">
       <div class="step"><div class="step-no">الخطوة 01 · السعر</div><h3>استلام السعر</h3><p>تحقق من سعر الوحدة عبر واتساب أو قناة رسمية أخرى.</p><p class="note">النقل والضرائب وشهادة التصدير تُحسب بشكل منفصل.</p></div>
       <div class="step"><div class="step-no">الخطوة 02 · الفاتورة</div><h3>إصدار الفاتورة</h3><p>اختر عملة المستندات:</p><p class="note">KRW — فاتورة ضريبية / بيان تصدير · USD — بيان تصدير</p></div>
@@ -559,18 +616,18 @@ const manuals = [
 
   <section class="page">
     <div class="header">
-      <div class="brand">KOREA AUTO TRADE<span>دليل المشتري</span></div>
+      <div class="brand"><span class="ltr">KOREA AUTO TRADE</span><span>دليل المشتري</span></div>
       <div class="doc-label">06 · التواصل والقائمة</div>
     </div>
     <div class="eyebrow">الدعم</div>
     <h2>قنوات التواصل الرسمية</h2>
     <p class="lede">استخدم أزرار صفحة الإعلان إن أمكن — تساعد على تحديد السيارة بدقة.</p>
     <div class="contact-grid">
-      <div class="contact-item"><div class="label">البريد</div><div class="value">rbautoscrap@naver.com</div></div>
-      <div class="contact-item"><div class="label">الهاتف / KakaoTalk</div><div class="value">+82 10-5817-2207</div></div>
-      <div class="contact-item"><div class="label">WhatsApp</div><div class="value">wa.me · +82 10-5817-2207</div></div>
-      <div class="contact-item"><div class="label">Facebook Messenger</div><div class="value">m.me/rbautoscrap</div></div>
-      <div class="contact-item"><div class="label">KakaoTalk Open Chat</div><div class="value">open.kakao.com/o/sRRldQFi</div></div>
+      <div class="contact-item"><div class="label">البريد</div><div class="value ltr">rbautoscrap@naver.com</div></div>
+      <div class="contact-item"><div class="label">الهاتف / KakaoTalk</div><div class="value ltr">+82 10-5817-2207</div></div>
+      <div class="contact-item"><div class="label">WhatsApp</div><div class="value ltr">wa.me · +82 10-5817-2207</div></div>
+      <div class="contact-item"><div class="label">Facebook Messenger</div><div class="value ltr">m.me/rbautoscrap</div></div>
+      <div class="contact-item"><div class="label">KakaoTalk Open Chat</div><div class="value ltr">open.kakao.com/o/sRRldQFi</div></div>
       <div class="contact-item"><div class="label">ساعات العمل</div><div class="value">الإثنين – الجمعة، 09:00 – 18:00 (KST)</div></div>
     </div>
     <h3 style="font-size: 12.5pt; margin: 7mm 0 2mm;">قائمة المشتري</h3>
