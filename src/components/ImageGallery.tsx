@@ -2,19 +2,22 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import type { ListingSaleStatus } from "@prisma/client";
+import type { ListingCategory, ListingSaleStatus } from "@prisma/client";
+import { AuctionImageBadge } from "@/components/AuctionImageBadge";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
 
 type Props = {
   images: { id: string; url: string }[];
   alt: string;
   saleStatus?: ListingSaleStatus;
+  category?: ListingCategory | null;
 };
 
 export function ImageGallery({
   images,
   alt,
   saleStatus = "AVAILABLE",
+  category,
 }: Props) {
   const [activeUrl, setActiveUrl] = useState<string | null>(null);
 
@@ -57,6 +60,9 @@ export function ImageGallery({
               }
             />
             <SaleStatusOverlay status={saleStatus} size="detail" />
+            {category === "LIVE_AUCTION" ? (
+              <AuctionImageBadge size="detail" />
+            ) : null}
           </button>
         ))}
       </div>

@@ -489,6 +489,7 @@ export default async function ListingDetailPage({ params }: Props) {
             images={listing.images}
             alt={listing.title}
             saleStatus={listing.saleStatus}
+            category={listing.category}
           />
         </section>
       )}

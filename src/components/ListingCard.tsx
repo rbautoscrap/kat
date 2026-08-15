@@ -7,6 +7,7 @@ import { AuctionCountdown } from "@/components/AuctionCountdown";
 import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl";
 import { ListingThumb } from "@/components/ListingThumb";
 import { LiveAuctionAccessDialog } from "@/components/LiveAuctionAccessDialog";
+import { AuctionImageBadge } from "@/components/AuctionImageBadge";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
 import {
   formatNotesDisplay,
@@ -63,6 +64,9 @@ export function ListingCard({
           className="object-cover"
         />
         <SaleStatusOverlay status={listing.saleStatus} />
+        {listing.category === "LIVE_AUCTION" ? (
+          <AuctionImageBadge />
+        ) : null}
       </div>
     );
 
@@ -134,6 +138,7 @@ export function ListingCard({
         }`}
       />
       <SaleStatusOverlay status={listing.saleStatus} />
+      {listing.category === "LIVE_AUCTION" ? <AuctionImageBadge /> : null}
       {isParts ? (
         <span className="absolute right-1.5 top-1.5 rounded bg-neutral-900/75 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white">
           Parts
