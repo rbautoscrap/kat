@@ -113,7 +113,7 @@ export function HolidayNoticeDialog() {
                 onChange={(e) => setDontShowAgain(e.target.checked)}
                 className="h-3.5 w-3.5 rounded border-neutral-300 text-neutral-900 accent-neutral-900"
               />
-              다시 보지 않기
+              다시 보지 않기 · Don't show again
             </label>
 
             <div className="mt-5 flex justify-end">
