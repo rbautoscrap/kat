@@ -1213,19 +1213,19 @@ main {
 }
 
 .statement-items .col-item {
-  width: 60%;
+  width: 40%;
 }
 
 .statement-items .col-detail {
-  width: 10%;
+  width: 15%;
 }
 
 .statement-items .col-qty {
-  width: 10%;
+  width: 15%;
 }
 
 .statement-items .col-amount {
-  width: 20%;
+  width: 30%;
 }
 
 .statement-items th,
