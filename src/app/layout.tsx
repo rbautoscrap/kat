@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { ProtectPublicImages } from "@/components/ProtectPublicImages";
 import { SiteSearchBar } from "@/components/SiteSearchBar";
 import { Footer } from "@/components/Footer";
+import { HolidayNoticeDialog } from "@/components/HolidayNoticeDialog";
 import { isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import "./globals.css";
@@ -73,6 +74,7 @@ export default async function RootLayout({
         className={`${pretendard.className} flex min-h-full flex-col bg-white text-[16px] text-neutral-800 antialiased`}
       >
         <ProtectPublicImages allowImageSave={allowImageSave} />
+        <HolidayNoticeDialog />
         <Header />
         <Suspense fallback={<SiteSearchBarFallback />}>
           <SiteSearchBar />
