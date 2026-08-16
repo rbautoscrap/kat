@@ -1213,11 +1213,11 @@ main {
 }
 
 .statement-items .col-item {
-  width: 28%;
+  width: 50%;
 }
 
 .statement-items .col-detail {
-  width: 34%;
+  width: 12%;
 }
 
 .statement-items .col-qty {
