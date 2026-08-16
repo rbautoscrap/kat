@@ -1208,24 +1208,34 @@ main {
   width: 100%;
   margin-bottom: 12px;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
   font-size: 12.5px;
 }
 
-.statement-items .col-item {
+.statement-items .col-item,
+.statement-items .cell-item {
   width: 40%;
 }
 
-.statement-items .col-detail {
-  width: 15%;
+.statement-items .col-detail,
+.statement-items .cell-detail {
+  width: auto;
 }
 
-.statement-items .col-qty {
-  width: 15%;
+.statement-items .col-qty,
+.statement-items th:nth-child(3),
+.statement-items .cell-qty {
+  width: 1%;
+  white-space: nowrap;
+  word-break: normal;
 }
 
-.statement-items .col-amount {
-  width: 30%;
+.statement-items .col-amount,
+.statement-items th:nth-child(4),
+.statement-items .cell-amount {
+  width: 1%;
+  white-space: nowrap;
+  word-break: normal;
 }
 
 .statement-items th,
