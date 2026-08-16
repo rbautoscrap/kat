@@ -104,16 +104,21 @@ export function HolidayNoticeDialog() {
 
             <label
               htmlFor={checkboxId}
-              className="mt-5 flex cursor-pointer items-center gap-2.5 text-[13px] text-neutral-600"
+              className="mt-5 flex cursor-pointer items-start gap-2.5 text-[13px] text-neutral-600"
             >
               <input
                 id={checkboxId}
                 type="checkbox"
                 checked={dontShowAgain}
                 onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="h-3.5 w-3.5 rounded border-neutral-300 text-neutral-900 accent-neutral-900"
+                className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-neutral-300 text-neutral-900 accent-neutral-900"
               />
-              다시 보지 않기 · Don't show again
+              <span className="leading-snug">
+                다시 보지 않기
+                <span className="mt-0.5 block text-[12.5px] text-neutral-500">
+                  Don't show again
+                </span>
+              </span>
             </label>
 
             <div className="mt-5 flex justify-end">
