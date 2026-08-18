@@ -8,10 +8,10 @@ type Props = {
 export function ListingImageWatermark({ size = "card" }: Props) {
   const scale =
     size === "lightbox"
-      ? "h-[52%] w-[52%] max-h-72 max-w-72"
+      ? "h-[78%] w-[78%] max-h-[28rem] max-w-[28rem]"
       : size === "detail"
-        ? "h-[68%] w-[68%]"
-        : "h-[70%] w-[70%]";
+        ? "h-[88%] w-[88%]"
+        : "h-[90%] w-[90%]";
 
   return (
     <div
