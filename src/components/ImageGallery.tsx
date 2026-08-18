@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { ListingCategory, ListingSaleStatus } from "@prisma/client";
 import { AuctionImageBadge } from "@/components/AuctionImageBadge";
-import { ListingImageWatermark } from "@/components/ListingImageWatermark";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
 
 type Props = {
@@ -60,9 +59,6 @@ export function ImageGallery({
                 img.url.startsWith("http") || img.url.startsWith("/uploads/")
               }
             />
-            {category === "CAR_LISTINGS" ? (
-              <ListingImageWatermark size="detail" />
-            ) : null}
             <SaleStatusOverlay status={saleStatus} size="detail" />
             {category === "LIVE_AUCTION" ? (
               <AuctionImageBadge size="detail" />
@@ -78,19 +74,14 @@ export function ImageGallery({
           onClick={() => setActiveUrl(null)}
           aria-label="Close enlarged photo"
         >
-          <span className="relative inline-flex max-h-full max-w-full">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={activeUrl}
-              alt={alt}
-              draggable={false}
-              data-protect-image=""
-              className="max-h-full max-w-full object-contain"
-            />
-            {category === "CAR_LISTINGS" ? (
-              <ListingImageWatermark size="lightbox" />
-            ) : null}
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={activeUrl}
+            alt={alt}
+            draggable={false}
+            data-protect-image=""
+            className="max-h-full max-w-full object-contain"
+          />
         </button>
       )}
     </>
