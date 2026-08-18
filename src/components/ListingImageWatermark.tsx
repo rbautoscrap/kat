@@ -23,7 +23,7 @@ export function ListingImageWatermark({ size = "card" }: Props) {
         src="/brand/rbauto-logo.png"
         alt=""
         draggable={false}
-        className={`select-none object-contain opacity-[0.28] mix-blend-multiply ${scale}`}
+        className={`select-none object-contain opacity-[0.14] mix-blend-multiply ${scale}`}
       />
     </div>
   );
