@@ -8,10 +8,10 @@ type Props = {
 export function ListingImageWatermark({ size = "card" }: Props) {
   const scale =
     size === "lightbox"
-      ? "h-[78%] w-[78%] max-h-[28rem] max-w-[28rem]"
+      ? "h-[92%] w-[92%] max-h-none max-w-none"
       : size === "detail"
-        ? "h-[88%] w-[88%]"
-        : "h-[90%] w-[90%]";
+        ? "h-[98%] w-[98%]"
+        : "h-full w-full";
 
   return (
     <div
@@ -23,7 +23,7 @@ export function ListingImageWatermark({ size = "card" }: Props) {
         src="/brand/rbauto-logo.png"
         alt=""
         draggable={false}
-        className={`select-none object-contain opacity-[0.14] mix-blend-multiply ${scale}`}
+        className={`select-none object-contain opacity-[0.09] mix-blend-multiply ${scale}`}
       />
     </div>
   );
