@@ -8,6 +8,7 @@ import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl"
 import { ListingThumb } from "@/components/ListingThumb";
 import { LiveAuctionAccessDialog } from "@/components/LiveAuctionAccessDialog";
 import { AuctionImageBadge } from "@/components/AuctionImageBadge";
+import { ListingImageWatermark } from "@/components/ListingImageWatermark";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
 import {
   formatNotesDisplay,
@@ -63,6 +64,9 @@ export function ListingCard({
           sizes="140px"
           className="object-cover"
         />
+        {listing.category === "CAR_LISTINGS" ? (
+          <ListingImageWatermark />
+        ) : null}
         <SaleStatusOverlay status={listing.saleStatus} />
         {listing.category === "LIVE_AUCTION" ? (
           <AuctionImageBadge />
@@ -137,6 +141,9 @@ export function ListingCard({
           canOpen ? "group-hover:scale-[1.02]" : ""
         }`}
       />
+      {listing.category === "CAR_LISTINGS" ? (
+        <ListingImageWatermark />
+      ) : null}
       <SaleStatusOverlay status={listing.saleStatus} />
       {listing.category === "LIVE_AUCTION" ? <AuctionImageBadge /> : null}
       {isParts ? (
