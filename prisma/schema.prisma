@@ -216,6 +216,8 @@ model TransactionStatementItem {
   shippedDate   String               @default("")
   /** Daily sales report memo */
   reportNote    String               @default("")
+  /** When true, this line appears on the receivable ledgers */
+  inReceivableLedger Boolean         @default(false)
   sortOrder     Int                  @default(0)
 
   @@index([statementId, sortOrder])

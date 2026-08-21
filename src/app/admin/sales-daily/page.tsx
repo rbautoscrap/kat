@@ -4,7 +4,6 @@ import { koreaTodayDate } from "@/lib/format-korea-time";
 import { prisma } from "@/lib/prisma";
 import {
   buildSaleRow,
-  isUnpaidRow,
   type DailySaleRow,
 } from "@/lib/sales-daily";
 import { isStatementExtraLine } from "@/lib/statement";
@@ -52,6 +51,7 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
           shipmentType: item.shipmentType,
           shippedDate: item.shippedDate,
           reportNote: item.reportNote,
+          inReceivableLedger: item.inReceivableLedger,
         }),
       );
     }
@@ -61,10 +61,16 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
     (row) => row.issueDate === date && row.currency === "KRW",
   );
   const receivables = allRows.filter(
-    (row) => row.currency === "KRW" && isUnpaidRow(row),
+    (row) => row.currency === "KRW" && row.inReceivableLedger,
   );
   const fxReceivables = allRows.filter(
-    (row) => row.currency !== "KRW" && isUnpaidRow(row),
+    (row) => row.currency !== "KRW" && row.inReceivableLedger,
+  );
+  const addableKrw = allRows.filter(
+    (row) => row.currency === "KRW" && !row.inReceivableLedger,
+  );
+  const addableFx = allRows.filter(
+    (row) => row.currency !== "KRW" && !row.inReceivableLedger,
   );
 
   return (
@@ -75,8 +81,7 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
             일일판매현황
           </h2>
           <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
-            거래명세서 기준으로 당일 판매와 미수금을 확인하고, 입금·송품·발송을
-            바로 기록합니다.
+            거래명세서의 당일 판매를 불러오고, 미수금은 아래에서 직접 등록합니다.
           </p>
         </div>
         <DailySalesToolbar date={date} />
@@ -93,6 +98,8 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
         daySales={daySales}
         receivables={receivables}
         fxReceivables={fxReceivables}
+        addableKrw={addableKrw}
+        addableFx={addableFx}
       />
     </div>
   );

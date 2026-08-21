@@ -92,3 +92,32 @@ export async function updateSaleTracking(
   revalidatePath("/admin/sales-daily");
   return { ok: true };
 }
+
+export async function setReceivableLedger(
+  itemId: string,
+  listed: boolean,
+): Promise<SaleTrackingResult> {
+  await requireAdmin();
+  const id = itemId.trim();
+  if (!id) return { ok: false, error: "항목을 찾을 수 없습니다." };
+
+  try {
+    await prisma.transactionStatementItem.update({
+      where: { id },
+      data: listed
+        ? { inReceivableLedger: true }
+        : {
+            inReceivableLedger: false,
+            paidAmount: "",
+            shipmentType: "",
+            shippedDate: "",
+            reportNote: "",
+          },
+    });
+  } catch {
+    return { ok: false, error: "미수 원장을 변경하지 못했습니다." };
+  }
+
+  revalidatePath("/admin/sales-daily");
+  return { ok: true };
+}

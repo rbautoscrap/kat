@@ -2,7 +2,10 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { updateSaleTracking } from "@/app/admin/sales-daily/actions";
+import {
+  setReceivableLedger,
+  updateSaleTracking,
+} from "@/app/admin/sales-daily/actions";
 import {
   SALE_SHIPMENT_TYPES,
   buyerSummaries,
@@ -19,13 +22,22 @@ type Props = {
   daySales: DailySaleRow[];
   receivables: DailySaleRow[];
   fxReceivables: DailySaleRow[];
+  addableKrw: DailySaleRow[];
+  addableFx: DailySaleRow[];
 };
 
 function applyPatch(
   rows: DailySaleRow[],
   itemId: string,
   patch: Partial<
-    Pick<DailySaleRow, "paidAmount" | "shipmentType" | "shippedDate" | "reportNote">
+    Pick<
+      DailySaleRow,
+      | "paidAmount"
+      | "shipmentType"
+      | "shippedDate"
+      | "reportNote"
+      | "inReceivableLedger"
+    >
   >,
 ) {
   return rows.map((row) => {
@@ -39,15 +51,23 @@ function applyPatch(
   });
 }
 
+function optionLabel(row: DailySaleRow) {
+  return `${row.issueDate} · ${row.buyerName} · ${row.vehicleLabel}`;
+}
+
 export function DailySalesReport({
   date,
   daySales: initialDaySales,
   receivables: initialReceivables,
   fxReceivables: initialFx,
+  addableKrw: initialAddableKrw,
+  addableFx: initialAddableFx,
 }: Props) {
   const [daySales, setDaySales] = useState(initialDaySales);
   const [receivables, setReceivables] = useState(initialReceivables);
   const [fxReceivables, setFxReceivables] = useState(initialFx);
+  const [addableKrw, setAddableKrw] = useState(initialAddableKrw);
+  const [addableFx, setAddableFx] = useState(initialAddableFx);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
 
@@ -60,6 +80,8 @@ export function DailySalesReport({
     setDaySales((rows) => applyPatch(rows, itemId, patch));
     setReceivables((rows) => applyPatch(rows, itemId, patch));
     setFxReceivables((rows) => applyPatch(rows, itemId, patch));
+    setAddableKrw((rows) => applyPatch(rows, itemId, patch));
+    setAddableFx((rows) => applyPatch(rows, itemId, patch));
   }
 
   function save(
@@ -72,6 +94,69 @@ export function DailySalesReport({
     syncAll(itemId, patch);
     startTransition(async () => {
       const result = await updateSaleTracking({ itemId, ...patch });
+      if (!result.ok) setError(result.error);
+    });
+  }
+
+  function addToLedger(row: DailySaleRow) {
+    setError("");
+    setDaySales((rows) =>
+      applyPatch(rows, row.itemId, { inReceivableLedger: true }),
+    );
+    if (row.currency === "KRW") {
+      setReceivables((rows) =>
+        rows.some((r) => r.itemId === row.itemId)
+          ? rows
+          : [...rows, { ...row, inReceivableLedger: true }],
+      );
+      setAddableKrw((rows) => rows.filter((r) => r.itemId !== row.itemId));
+    } else {
+      setFxReceivables((rows) =>
+        rows.some((r) => r.itemId === row.itemId)
+          ? rows
+          : [...rows, { ...row, inReceivableLedger: true }],
+      );
+      setAddableFx((rows) => rows.filter((r) => r.itemId !== row.itemId));
+    }
+    startTransition(async () => {
+      const result = await setReceivableLedger(row.itemId, true);
+      if (!result.ok) setError(result.error);
+    });
+  }
+
+  function removeFromLedger(row: DailySaleRow) {
+    setError("");
+    const cleared = {
+      ...row,
+      inReceivableLedger: false,
+      paidAmount: "",
+      shipmentType: "",
+      shippedDate: "",
+      reportNote: "",
+      remaining: row.total,
+    };
+    setDaySales((rows) =>
+      applyPatch(rows, row.itemId, {
+        inReceivableLedger: false,
+        paidAmount: "",
+        shipmentType: "",
+        shippedDate: "",
+        reportNote: "",
+      }),
+    );
+    setReceivables((rows) => rows.filter((r) => r.itemId !== row.itemId));
+    setFxReceivables((rows) => rows.filter((r) => r.itemId !== row.itemId));
+    if (row.currency === "KRW") {
+      setAddableKrw((rows) =>
+        rows.some((r) => r.itemId === row.itemId) ? rows : [...rows, cleared],
+      );
+    } else {
+      setAddableFx((rows) =>
+        rows.some((r) => r.itemId === row.itemId) ? rows : [...rows, cleared],
+      );
+    }
+    startTransition(async () => {
+      const result = await setReceivableLedger(row.itemId, false);
       if (!result.ok) setError(result.error);
     });
   }
@@ -110,6 +195,7 @@ export function DailySalesReport({
         pending={pending}
         onPatch={syncAll}
         onSave={save}
+        onAdd={addToLedger}
         empty="해당일 판매 명세서가 없습니다."
       />
 
@@ -120,8 +206,10 @@ export function DailySalesReport({
         pending={pending}
         onPatch={syncAll}
         onSave={save}
+        onRemove={removeFromLedger}
+        addable={addableKrw}
         highlightUnpaid
-        empty="미수 항목이 없습니다."
+        empty="등록된 미수 항목이 없습니다. 오른쪽에서 명세서 품목을 등록하세요."
       />
 
       <div className="daily-sales-bottom">
@@ -132,9 +220,11 @@ export function DailySalesReport({
           pending={pending}
           onPatch={syncAll}
           onSave={save}
+          onRemove={removeFromLedger}
+          addable={addableFx}
           highlightUnpaid
           fx
-          empty="외화 미수 항목이 없습니다."
+          empty="등록된 외화 미수 항목이 없습니다."
         />
 
         <aside className="daily-sales-side">
@@ -218,6 +308,9 @@ function ReportTable({
   pending,
   onPatch,
   onSave,
+  onAdd,
+  onRemove,
+  addable,
   highlightUnpaid,
   fx,
   empty,
@@ -238,15 +331,29 @@ function ReportTable({
       Pick<DailySaleRow, "paidAmount" | "shipmentType" | "shippedDate" | "reportNote">
     >,
   ) => void;
+  onAdd?: (row: DailySaleRow) => void;
+  onRemove?: (row: DailySaleRow) => void;
+  addable?: DailySaleRow[];
   highlightUnpaid?: boolean;
   fx?: boolean;
   empty: string;
 }) {
   const currency = rows[0]?.currency ?? "KRW";
+  const showActions = Boolean(onAdd || onRemove);
+  const colSpan = showActions ? 13 : 12;
 
   return (
     <section className="daily-sales-section">
-      <h2>{title}</h2>
+      <div className="daily-sales-section-head">
+        <h2>{title}</h2>
+        {addable && onAdd ? (
+          <AddReceivableControl
+            addable={addable}
+            pending={pending}
+            onAdd={onAdd}
+          />
+        ) : null}
+      </div>
       <div className="daily-sales-scroll">
         <table className="daily-sales-table">
           <colgroup>
@@ -262,6 +369,7 @@ function ReportTable({
             <col className="col-ship" />
             <col className="col-date" />
             <col className="col-note" />
+            {showActions ? <col className="col-action" /> : null}
           </colgroup>
           <thead>
             <tr>
@@ -277,12 +385,15 @@ function ReportTable({
               <th>송품구분</th>
               <th>발송일자</th>
               <th>비고</th>
+              {showActions ? (
+                <th className="daily-sales-no-print">관리</th>
+              ) : null}
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={12} className="daily-sales-empty">
+                <td colSpan={colSpan} className="daily-sales-empty">
                   {empty}
                 </td>
               </tr>
@@ -385,6 +496,33 @@ function ReportTable({
                         }}
                       />
                     </td>
+                    {showActions ? (
+                      <td className="daily-sales-no-print is-center">
+                        {onAdd && !row.inReceivableLedger ? (
+                          <button
+                            type="button"
+                            className="daily-sales-mini-btn"
+                            disabled={pending}
+                            onClick={() => onAdd(row)}
+                          >
+                            미수 등록
+                          </button>
+                        ) : null}
+                        {onAdd && row.inReceivableLedger ? (
+                          <span className="daily-sales-muted">등록됨</span>
+                        ) : null}
+                        {onRemove ? (
+                          <button
+                            type="button"
+                            className="daily-sales-mini-btn is-quiet"
+                            disabled={pending}
+                            onClick={() => onRemove(row)}
+                          >
+                            제외
+                          </button>
+                        ) : null}
+                      </td>
+                    ) : null}
                   </tr>
                 );
               })
@@ -408,7 +546,7 @@ function ReportTable({
               <td className="is-num is-strong">
                 {formatSaleMoney(totals.total, currency)}
               </td>
-              <td colSpan={3} />
+              <td colSpan={showActions ? 4 : 3} />
             </tr>
           </tfoot>
         </table>
@@ -419,5 +557,52 @@ function ReportTable({
         </p>
       ) : null}
     </section>
+  );
+}
+
+function AddReceivableControl({
+  addable,
+  pending,
+  onAdd,
+}: {
+  addable: DailySaleRow[];
+  pending: boolean;
+  onAdd: (row: DailySaleRow) => void;
+}) {
+  const [itemId, setItemId] = useState("");
+  if (addable.length === 0) return null;
+
+  return (
+    <form
+      className="daily-sales-add daily-sales-no-print"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const row = addable.find((r) => r.itemId === itemId);
+        if (!row) return;
+        onAdd(row);
+        setItemId("");
+      }}
+    >
+      <select
+        value={itemId}
+        disabled={pending}
+        onChange={(e) => setItemId(e.target.value)}
+        aria-label="미수 등록할 품목"
+      >
+        <option value="">명세서 품목 선택</option>
+        {addable.map((row) => (
+          <option key={row.itemId} value={row.itemId}>
+            {optionLabel(row)}
+          </option>
+        ))}
+      </select>
+      <button
+        type="submit"
+        className="daily-sales-mini-btn"
+        disabled={pending || !itemId}
+      >
+        등록
+      </button>
+    </form>
   );
 }

@@ -30,6 +30,7 @@ export type DailySaleRow = {
   shipmentType: string;
   shippedDate: string;
   reportNote: string;
+  inReceivableLedger: boolean;
 };
 
 export type DailySaleTotals = {
@@ -105,6 +106,7 @@ export function buildSaleRow(args: {
   shipmentType: string | null | undefined;
   shippedDate: string | null | undefined;
   reportNote: string | null | undefined;
+  inReceivableLedger?: boolean;
 }): DailySaleRow {
   const totals = calcStatementTotals(
     args.supplyAmount,
@@ -133,6 +135,7 @@ export function buildSaleRow(args: {
     shipmentType: args.shipmentType?.trim() ?? "",
     shippedDate: args.shippedDate?.trim() ?? "",
     reportNote: args.reportNote?.trim() ?? "",
+    inReceivableLedger: args.inReceivableLedger === true,
   };
 }
 
