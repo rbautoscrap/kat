@@ -1592,7 +1592,7 @@ main {
 .daily-sales-print-root {
   border: 1px solid var(--line, #e5e5e5);
   background: #f5f5f5;
-  padding: 12px 14px 16px;
+  padding: 8px 10px 10px;
 }
 
 .daily-sales-preview-bar {
@@ -1600,26 +1600,26 @@ main {
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-bottom: 8px;
 }
 
 .daily-sales-document {
   background: #fff;
-  padding: 16px 18px 20px;
+  padding: 10px 12px 12px;
 }
 
 .daily-sales-print-title {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .daily-sales-print-title h1 {
   margin: 0;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.03em;
   color: #111;
@@ -1627,7 +1627,7 @@ main {
 
 .daily-sales-print-title p {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   color: #525252;
 }
 
@@ -1636,8 +1636,8 @@ main {
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 12px 16px;
-  margin-bottom: 16px;
+  gap: 8px 16px;
+  margin-bottom: 10px;
 }
 
 .daily-sales-toolbar {
@@ -1665,15 +1665,11 @@ main {
   color: #171717;
 }
 
-.daily-sales-print-title {
-  display: none;
-}
-
 .daily-sales-kpis {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 18px;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
 @media (min-width: 900px) {
@@ -1685,21 +1681,20 @@ main {
 .daily-sales-kpi {
   border: 1px solid #e5e5e5;
   background: #fff;
-  padding: 10px 12px;
-  min-height: 64px;
+  padding: 6px 10px;
 }
 
 .daily-sales-kpi span {
   display: block;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
   color: #737373;
 }
 
 .daily-sales-kpi strong {
   display: block;
-  margin-top: 4px;
-  font-size: 17px;
+  margin-top: 2px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
@@ -1716,7 +1711,7 @@ main {
 }
 
 .daily-sales-section {
-  margin-bottom: 22px;
+  margin-bottom: 10px;
 }
 
 .daily-sales-section-head {
@@ -1724,13 +1719,13 @@ main {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 12px;
-  margin-bottom: 8px;
+  gap: 4px 10px;
+  margin-bottom: 4px;
 }
 
 .daily-sales-section-head h2 {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #111;
@@ -1744,7 +1739,7 @@ main {
 }
 
 .daily-sales-add select {
-  height: 30px;
+  height: 26px;
   max-width: 320px;
   border: 1px solid #d4d4d4;
   border-radius: 6px;
@@ -1758,7 +1753,7 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 28px;
+  height: 26px;
   padding: 0 8px;
   border: 1px solid #d4d4d4;
   border-radius: 6px;
@@ -1792,7 +1787,7 @@ main {
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 12px;
-  line-height: 1.35;
+  line-height: 1.25;
 }
 
 .daily-sales-table .col-buyer { width: 16%; }
@@ -1803,9 +1798,9 @@ main {
 .daily-sales-table th,
 .daily-sales-table td {
   border: 1px solid #e5e5e5;
-  padding: 6px 7px;
+  padding: 3px 6px;
   vertical-align: middle;
-  height: 38px;
+  height: 28px;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -1846,12 +1841,14 @@ main {
 .daily-sales-table .is-strong { font-weight: 700; }
 .daily-sales-table .is-remain { color: #b45309; }
 .daily-sales-table .is-name {
-  min-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .daily-sales-plate {
-  display: block;
-  margin-top: 1px;
+  display: inline;
+  margin-left: 6px;
   font-size: 11px;
   color: #737373;
   font-weight: 400;
@@ -1860,7 +1857,7 @@ main {
 .daily-sales-table .daily-sales-empty {
   text-align: center;
   color: #737373;
-  height: 56px;
+  height: 32px;
 }
 
 .daily-sales-table tfoot td {
@@ -1876,16 +1873,16 @@ main {
 .daily-sales-link:hover { text-decoration: underline; }
 
 .daily-sales-table .is-edit {
-  padding: 4px;
+  padding: 2px 4px;
 }
 
 .daily-sales-table .is-edit input,
 .daily-sales-table .is-edit select {
   width: 100%;
-  height: 28px;
+  height: 22px;
   border: 1px solid transparent;
   background: transparent;
-  padding: 0 6px;
+  padding: 0 4px;
   font-size: 12px;
   color: inherit;
   outline: none;
@@ -1904,32 +1901,32 @@ main {
 }
 
 .daily-sales-fx-note {
-  margin: 6px 0 0;
-  font-size: 12px;
+  margin: 4px 0 8px;
+  font-size: 11px;
   color: #737373;
 }
 
 .daily-sales-side {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 @media (min-width: 800px) {
   .daily-sales-side {
     grid-template-columns: 1fr 1fr;
-    align-items: start;
+    align-items: stretch;
   }
 }
 
 .daily-sales-side-card {
   border: 1px solid #e5e5e5;
   background: #fff;
-  padding: 12px 14px;
+  padding: 8px 10px;
 }
 
 .daily-sales-side-card h3 {
-  margin: 0 0 10px;
-  font-size: 13px;
+  margin: 0 0 6px;
+  font-size: 12.5px;
   font-weight: 700;
 }
 
@@ -1939,8 +1936,8 @@ main {
   justify-content: space-between;
   gap: 10px;
   margin: 0;
-  padding: 5px 0;
-  font-size: 12.5px;
+  padding: 3px 0;
+  font-size: 12px;
   border-bottom: 1px solid #f5f5f5;
 }
 
@@ -1972,14 +1969,14 @@ main {
 }
 
 .daily-sales-side-card li.is-sum {
-  margin-top: 4px;
+  margin-top: 2px;
   border-top: 1px solid #e5e5e5;
   font-weight: 700;
 }
 
 .daily-sales-muted {
   color: #737373;
-  font-size: 12.5px;
+  font-size: 12px;
 }
 
 @media print {
