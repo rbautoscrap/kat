@@ -10,8 +10,10 @@ import { adminActionBtnClass } from "@/lib/admin-ui";
 import {
   SALE_SHIPMENT_TYPES,
   buyerSummaries,
+  displayShipmentType,
   formatSaleMoney,
   formatSaleMoneyInput,
+  isSettledSaleRow,
   isUnpaidRow,
   parseSaleMoney,
   remainingOf,
@@ -159,8 +161,20 @@ export function DailySalesReport({
     >,
   ) {
     setDaySales((rows) => applyPatch(rows, itemId, patch));
-    setReceivables((rows) => applyPatch(rows, itemId, patch));
-    setFxReceivables((rows) => applyPatch(rows, itemId, patch));
+    setReceivables((rows) => {
+      const next = applyPatch(rows, itemId, patch);
+      if (patch.shipmentType && isSettledSaleRow({ shipmentType: patch.shipmentType })) {
+        return next.filter((row) => row.itemId !== itemId);
+      }
+      return next;
+    });
+    setFxReceivables((rows) => {
+      const next = applyPatch(rows, itemId, patch);
+      if (patch.shipmentType && isSettledSaleRow({ shipmentType: patch.shipmentType })) {
+        return next.filter((row) => row.itemId !== itemId);
+      }
+      return next;
+    });
     setAddableKrw((rows) => applyPatch(rows, itemId, patch));
     setAddableFx((rows) => applyPatch(rows, itemId, patch));
   }
@@ -185,18 +199,22 @@ export function DailySalesReport({
       applyPatch(rows, row.itemId, { inReceivableLedger: true }),
     );
     if (row.currency === "KRW") {
-      setReceivables((rows) =>
-        rows.some((r) => r.itemId === row.itemId)
-          ? rows
-          : [...rows, { ...row, inReceivableLedger: true }],
-      );
+      if (!isSettledSaleRow(row)) {
+        setReceivables((rows) =>
+          rows.some((r) => r.itemId === row.itemId)
+            ? rows
+            : [...rows, { ...row, inReceivableLedger: true }],
+        );
+      }
       setAddableKrw((rows) => rows.filter((r) => r.itemId !== row.itemId));
     } else {
-      setFxReceivables((rows) =>
-        rows.some((r) => r.itemId === row.itemId)
-          ? rows
-          : [...rows, { ...row, inReceivableLedger: true }],
-      );
+      if (!isSettledSaleRow(row)) {
+        setFxReceivables((rows) =>
+          rows.some((r) => r.itemId === row.itemId)
+            ? rows
+            : [...rows, { ...row, inReceivableLedger: true }],
+        );
+      }
       setAddableFx((rows) => rows.filter((r) => r.itemId !== row.itemId));
     }
     startTransition(async () => {
@@ -497,7 +515,7 @@ function ReportTable({
               {showVat ? <th>부가세</th> : null}
               <th className="is-deposit">입금(계약금)</th>
               <th>잔액금</th>
-              <th>송품</th>
+              <th>결재</th>
             </tr>
           </thead>
           <tbody>
@@ -588,16 +606,16 @@ function ReportTable({
                     </td>
                     <td className="is-edit">
                       <select
-                        value={row.shipmentType}
+                        value={displayShipmentType(row.shipmentType)}
                         disabled={pending}
-                        aria-label="송품구분"
+                        aria-label="결재상태"
                         onChange={(e) =>
                           onSave(row.itemId, { shipmentType: e.target.value })
                         }
                       >
                         {SALE_SHIPMENT_TYPES.map((type) => (
-                          <option key={type || "blank"} value={type}>
-                            {type || "—"}
+                          <option key={type} value={type}>
+                            {type}
                           </option>
                         ))}
                       </select>

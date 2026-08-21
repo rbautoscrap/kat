@@ -4,14 +4,27 @@ import { STATEMENT_VAT_RATE, calcStatementTotals } from "@/lib/statement";
 import { formatOfferAmount, type OfferCurrencyCode } from "@/lib/purchase-offer";
 
 export const SALE_SHIPMENT_TYPES = [
-  "",
-  "완납",
-  "수출",
-  "국내",
-  "미선적",
+  "미결재",
+  "결재완료",
+  "보류",
+  "취소",
 ] as const;
 
+export const SALE_SHIPMENT_DONE = "결재완료";
+
 export type SaleShipmentType = (typeof SALE_SHIPMENT_TYPES)[number];
+
+export function isSettledSaleRow(row: { shipmentType: string }) {
+  return row.shipmentType === SALE_SHIPMENT_DONE;
+}
+
+export function displayShipmentType(value: string | null | undefined) {
+  const current = value?.trim() ?? "";
+  if ((SALE_SHIPMENT_TYPES as readonly string[]).includes(current)) {
+    return current as SaleShipmentType;
+  }
+  return "미결재";
+}
 
 export type DailySaleSource = "statement" | "invoice";
 

@@ -4,6 +4,7 @@ import { koreaTodayDate } from "@/lib/format-korea-time";
 import { prisma } from "@/lib/prisma";
 import {
   buildSaleRow,
+  isSettledSaleRow,
   resolveSaleCost,
   saleItemKey,
   sortSaleRowsByRecentDate,
@@ -136,10 +137,16 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
       row.source === "statement",
   );
   const receivables = allRows.filter(
-    (row) => row.currency === "KRW" && row.inReceivableLedger,
+    (row) =>
+      row.currency === "KRW" &&
+      row.inReceivableLedger &&
+      !isSettledSaleRow(row),
   );
   const fxReceivables = allRows.filter(
-    (row) => row.currency !== "KRW" && row.inReceivableLedger,
+    (row) =>
+      row.currency !== "KRW" &&
+      row.inReceivableLedger &&
+      !isSettledSaleRow(row),
   );
   const addableKrw = sortSaleRowsByRecentDate(
     allRows.filter((row) => row.currency === "KRW" && !row.inReceivableLedger),

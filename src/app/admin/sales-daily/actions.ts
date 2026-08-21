@@ -26,7 +26,7 @@ const shipmentSchema = z
   .trim()
   .refine(
     (v) => (SALE_SHIPMENT_TYPES as readonly string[]).includes(v),
-    "송품구분을 확인해 주세요.",
+    "결재 상태를 확인해 주세요.",
   );
 
 const noteSchema = z.string().trim().max(200, "비고가 너무 깁니다.");
