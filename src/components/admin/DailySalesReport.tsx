@@ -471,7 +471,7 @@ function ReportTable({
               <th>차량명</th>
               <th>공급금액</th>
               {showVat ? <th>부가세</th> : null}
-              <th>입금</th>
+              <th className="is-deposit">입금(계약금)</th>
               <th>잔액금</th>
               <th>송품</th>
             </tr>
@@ -526,7 +526,7 @@ function ReportTable({
                           row.currency,
                         )}
                         disabled={pending}
-                        aria-label="입금"
+                        aria-label="입금(계약금)"
                         placeholder="0"
                         onChange={(e) =>
                           onPatch(row.itemId, {
