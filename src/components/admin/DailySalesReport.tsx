@@ -6,6 +6,7 @@ import {
   setReceivableLedger,
   updateSaleTracking,
 } from "@/app/admin/sales-daily/actions";
+import { adminActionBtnClass } from "@/lib/admin-ui";
 import {
   SALE_SHIPMENT_TYPES,
   buyerSummaries,
@@ -18,6 +19,83 @@ import {
   sumSaleRows,
   type DailySaleRow,
 } from "@/lib/sales-daily";
+
+const EXPORT_WIDTH_PX = 1100;
+
+function waitFrames(count = 2) {
+  return new Promise<void>((resolve) => {
+    const step = (n: number) => {
+      if (n <= 0) {
+        resolve();
+        return;
+      }
+      requestAnimationFrame(() => step(n - 1));
+    };
+    step(count);
+  });
+}
+
+async function captureDailySalesPng(
+  source: HTMLElement,
+  toPng: typeof import("html-to-image").toPng,
+) {
+  await document.fonts.ready.catch(() => undefined);
+
+  const width = Math.max(source.scrollWidth, source.offsetWidth, EXPORT_WIDTH_PX);
+  const layer = document.createElement("div");
+  layer.setAttribute("data-daily-sales-export-layer", "1");
+  Object.assign(layer.style, {
+    position: "fixed",
+    left: "0",
+    top: "0",
+    width: `${width}px`,
+    zIndex: "2147483646",
+    background: "#ffffff",
+    pointerEvents: "none",
+    opacity: "1",
+  });
+
+  const clone = source.cloneNode(true) as HTMLElement;
+  clone.removeAttribute("id");
+  Object.assign(clone.style, {
+    width: `${width}px`,
+    maxWidth: `${width}px`,
+    minWidth: `${width}px`,
+    margin: "0",
+    background: "#ffffff",
+    transform: "none",
+    opacity: "1",
+  });
+  clone
+    .querySelectorAll<HTMLElement>(".daily-sales-scroll")
+    .forEach((el) => {
+      el.style.overflow = "visible";
+    });
+
+  layer.appendChild(clone);
+  document.body.appendChild(layer);
+
+  try {
+    await waitFrames(3);
+    await new Promise((r) => setTimeout(r, 80));
+    const height = Math.max(clone.scrollHeight, clone.offsetHeight, 400);
+    return await toPng(clone, {
+      cacheBust: true,
+      pixelRatio: 2,
+      backgroundColor: "#ffffff",
+      width,
+      height,
+      style: {
+        width: `${width}px`,
+        maxWidth: `${width}px`,
+        transform: "none",
+        opacity: "1",
+      },
+    });
+  } finally {
+    layer.remove();
+  }
+}
 
 type Props = {
   date: string;
@@ -133,25 +211,85 @@ export function DailySalesReport({
     [fxReceivables],
   );
   const buyers = useMemo(() => buyerSummaries(receivables), [receivables]);
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportMessage, setExportMessage] = useState("");
+
+  async function saveImage() {
+    const node = document.getElementById("daily-sales-document");
+    if (!node) {
+      setExportMessage("미리보기 영역을 찾을 수 없습니다.");
+      return;
+    }
+    setExportBusy(true);
+    setExportMessage("");
+    try {
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await captureDailySalesPng(node, toPng);
+      if (!dataUrl || dataUrl.length < 200) {
+        throw new Error("empty image data");
+      }
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `일일판매현황-${date}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (e) {
+      console.error(e);
+      setExportMessage(
+        "이미지 저장에 실패했습니다. 잠시 후 다시 시도하거나 출력을 이용해 주세요.",
+      );
+    } finally {
+      setExportBusy(false);
+    }
+  }
 
   return (
-    <div className="daily-sales-report">
-      {error ? (
-        <p className="mb-3 text-[13px] font-medium text-red-600">{error}</p>
+    <div className="daily-sales-print-root">
+      <div className="daily-sales-preview-bar daily-sales-no-print">
+        <button
+          type="button"
+          className={adminActionBtnClass}
+          disabled={exportBusy}
+          onClick={() => window.print()}
+        >
+          출력
+        </button>
+        <button
+          type="button"
+          className={adminActionBtnClass}
+          disabled={exportBusy}
+          onClick={() => void saveImage()}
+        >
+          {exportBusy ? "이미지 저장 중…" : "이미지 저장"}
+        </button>
+      </div>
+      {error || exportMessage ? (
+        <p
+          className="daily-sales-no-print mb-3 text-right text-[13px] font-medium text-red-600"
+          role="alert"
+        >
+          {error || exportMessage}
+        </p>
       ) : null}
-
-      <section className="daily-sales-kpis" aria-label="요약">
-        <Kpi label={`${date.slice(5).replace("-", "/")} 판매액`} value={dayTotals.total} />
-        <Kpi
-          label={`${date.slice(5).replace("-", "/")} 예상미수금`}
-          value={recvTotals.remaining}
-          warn
-        />
-        <Kpi label={`${date.slice(5).replace("-", "/")} 입금액`} value={dayTotals.paid} />
-        <Kpi label="미수 원장" value={recvTotals.total} />
-        <Kpi label="입금총액" value={dayTotals.paid} />
-        <Kpi label="외화 미수금" value={fxTotals.remaining} fx={fxReceivables[0]?.currency} />
-      </section>
+      <div id="daily-sales-document" className="daily-sales-document">
+        <div className="daily-sales-print-title">
+          <h1>수출사업 판매현황</h1>
+          <p>작성일 {date}</p>
+        </div>
+        <div className="daily-sales-report">
+          <section className="daily-sales-kpis" aria-label="요약">
+            <Kpi label={`${date.slice(5).replace("-", "/")} 판매액`} value={dayTotals.total} />
+            <Kpi
+              label={`${date.slice(5).replace("-", "/")} 예상미수금`}
+              value={recvTotals.remaining}
+              warn
+            />
+            <Kpi label={`${date.slice(5).replace("-", "/")} 입금액`} value={dayTotals.paid} />
+            <Kpi label="미수 원장" value={recvTotals.total} />
+            <Kpi label="입금총액" value={dayTotals.paid} />
+            <Kpi label="외화 미수금" value={fxTotals.remaining} fx={fxReceivables[0]?.currency} />
+          </section>
 
       <ReportTable
         title="판매현황"
@@ -236,6 +374,8 @@ export function DailySalesReport({
           )}
         </div>
       </aside>
+        </div>
+      </div>
     </div>
   );
 }

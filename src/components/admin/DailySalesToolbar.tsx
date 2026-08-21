@@ -24,13 +24,6 @@ export function DailySalesToolbar({ date }: Props) {
           className="daily-sales-date-input"
         />
       </label>
-      <button
-        type="button"
-        className="admin-ghost-btn"
-        onClick={() => window.print()}
-      >
-        출력
-      </button>
     </div>
   );
 }

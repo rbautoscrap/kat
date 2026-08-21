@@ -120,16 +120,11 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
             일일판매현황
           </h2>
           <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
-            오늘부터 작성한 거래명세서·해외 인보이스가 자동으로 반영됩니다. 입금과
-            송품은 표에서 바로 수정하세요.
+            오늘부터 작성한 거래명세서·해외 인보이스가 자동으로 반영됩니다. 아래
+            미리보기에서 입금·송품을 수정하고 출력 또는 이미지로 저장하세요.
           </p>
         </div>
         <DailySalesToolbar date={date} />
-      </div>
-
-      <div className="daily-sales-print-title">
-        <h1>수출사업 판매현황</h1>
-        <p>작성일 {date}</p>
       </div>
 
       <DailySalesReport
