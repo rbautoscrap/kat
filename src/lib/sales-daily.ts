@@ -86,6 +86,27 @@ export function formatSaleMoney(value: number, currency: OfferCurrency) {
   );
 }
 
+export function formatSaleMoneyInput(
+  value: string,
+  currency: OfferCurrency,
+) {
+  const cleaned = value.replace(/,/g, "").trim();
+  if (!cleaned) return "";
+  if (currency === "KRW") {
+    const digits = cleaned.replace(/[^\d]/g, "");
+    if (!digits) return "";
+    return Number(digits).toLocaleString("ko-KR");
+  }
+  const [intPart = "", ...rest] = cleaned.replace(/[^\d.]/g, "").split(".");
+  const formattedInt = intPart
+    ? Number(intPart).toLocaleString("en-US")
+    : cleaned.includes(".")
+      ? "0"
+      : "";
+  if (!cleaned.includes(".")) return formattedInt;
+  return `${formattedInt}.${rest.join("").slice(0, 2)}`;
+}
+
 export function remainingOf(
   total: number,
   paid: number,

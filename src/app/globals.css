@@ -1813,6 +1813,12 @@ main {
   outline: none;
 }
 
+.daily-sales-table .is-edit input {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
 .daily-sales-table .is-edit input:focus,
 .daily-sales-table .is-edit select:focus {
   border-color: #a3a3a3;

@@ -10,6 +10,7 @@ import {
   SALE_SHIPMENT_TYPES,
   buyerSummaries,
   formatSaleMoney,
+  formatSaleMoneyInput,
   isUnpaidRow,
   parseSaleMoney,
   remainingOf,
@@ -376,11 +377,14 @@ function ReportTable({
                         {formatSaleMoney(parseSaleMoney(row.vat), row.currency)}
                       </td>
                     ) : null}
-                    <td className="is-edit">
+                    <td className="is-edit is-num">
                       <input
                         type="text"
                         inputMode="decimal"
-                        value={row.paidAmount}
+                        value={formatSaleMoneyInput(
+                          row.paidAmount,
+                          row.currency,
+                        )}
                         disabled={pending}
                         aria-label="입금"
                         placeholder="0"
