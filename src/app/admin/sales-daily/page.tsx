@@ -4,6 +4,7 @@ import { koreaTodayDate } from "@/lib/format-korea-time";
 import { prisma } from "@/lib/prisma";
 import {
   buildSaleRow,
+  resolveSaleCost,
   saleItemKey,
   sortSaleRowsByRecentDate,
   type DailySaleRow,
@@ -30,14 +31,36 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
       where: { issueDate: { lte: date } },
       orderBy: [{ issueDate: "asc" }, { createdAt: "asc" }],
       include: {
-        items: { orderBy: { sortOrder: "asc" } },
+        items: {
+          orderBy: { sortOrder: "asc" },
+          include: {
+            listing: {
+              select: {
+                costPrice: true,
+                auctionPrice: true,
+                incidentalCost: true,
+              },
+            },
+          },
+        },
       },
     }),
     prisma.overseasInvoice.findMany({
       where: { invoiceDate: { lte: date } },
       orderBy: [{ invoiceDate: "asc" }, { createdAt: "asc" }],
       include: {
-        items: { orderBy: { sortOrder: "asc" } },
+        items: {
+          orderBy: { sortOrder: "asc" },
+          include: {
+            listing: {
+              select: {
+                costPrice: true,
+                auctionPrice: true,
+                incidentalCost: true,
+              },
+            },
+          },
+        },
       },
     }),
   ]);
@@ -59,6 +82,12 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
           currency: statement.currency,
           includeVat: statement.includeVat,
           supplyAmount: item.amount,
+          costAmount: resolveSaleCost({
+            isExtra: isStatementExtraLine(item),
+            costPrice: item.listing?.costPrice,
+            auctionPrice: item.listing?.auctionPrice,
+            incidentalCost: item.listing?.incidentalCost,
+          }),
           paidAmount: item.paidAmount,
           shipmentType: item.shipmentType,
           shippedDate: item.shippedDate,
@@ -84,6 +113,12 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
           currency: invoice.currency,
           includeVat: false,
           supplyAmount: item.finalPrice,
+          costAmount: resolveSaleCost({
+            isExtra: item.isExtra,
+            costPrice: item.listing?.costPrice,
+            auctionPrice: item.listing?.auctionPrice,
+            incidentalCost: item.listing?.incidentalCost,
+          }),
           paidAmount: item.paidAmount,
           shipmentType: item.shipmentType,
           shippedDate: item.shippedDate,

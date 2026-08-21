@@ -288,7 +288,7 @@ export function DailySalesReport({
             />
             <Kpi label={`${date.slice(5).replace("-", "/")} 입금액`} value={dayTotals.paid} />
             <Kpi label="미수 원장" value={recvTotals.total} />
-            <Kpi label="입금총액" value={dayTotals.paid} />
+            <Kpi label="영업이익" value={dayTotals.profit} profit />
             <Kpi label="외화 미수금" value={fxTotals.remaining} fx={fxReceivables[0]?.currency} />
           </section>
 
@@ -341,6 +341,12 @@ export function DailySalesReport({
             <strong>{formatSaleMoney(recvTotals.paid, "KRW")}</strong>
           </p>
           <p>
+            <span>영업이익</span>
+            <strong className={profitToneClass(dayTotals.profit)}>
+              {formatSaleMoney(dayTotals.profit, "KRW")}
+            </strong>
+          </p>
+          <p>
             <span>외화미수금</span>
             <strong>
               {fxReceivables.length
@@ -381,21 +387,33 @@ export function DailySalesReport({
   );
 }
 
+function profitToneClass(value: number) {
+  if (value > 0) return "is-profit";
+  if (value < 0) return "is-loss";
+  return undefined;
+}
+
 function Kpi({
   label,
   value,
   warn,
+  profit,
   fx,
 }: {
   label: string;
   value: number;
   warn?: boolean;
+  profit?: boolean;
   fx?: DailySaleRow["currency"];
 }) {
   return (
-    <div className={`daily-sales-kpi${warn ? " is-warn" : ""}`}>
+    <div
+      className={`daily-sales-kpi${warn ? " is-warn" : ""}${
+        profit ? " is-profit-kpi" : ""
+      }`}
+    >
       <span>{label}</span>
-      <strong>
+      <strong className={profit ? profitToneClass(value) : undefined}>
         {fx && fx !== "KRW"
           ? formatSaleMoney(value, fx)
           : formatSaleMoney(value, "KRW")}
@@ -441,7 +459,8 @@ function ReportTable({
 }) {
   const currency = rows[0]?.currency ?? "KRW";
   const showVat = !fx;
-  const colSpan = 6 + (showVat ? 1 : 0);
+  const showProfit = !fx;
+  const colSpan = 6 + (showVat ? 1 : 0) + (showProfit ? 2 : 0);
 
   return (
     <section className="daily-sales-section">
@@ -461,6 +480,8 @@ function ReportTable({
             <col className="col-buyer" />
             <col className="col-car" />
             <col className="col-num" />
+            {showProfit ? <col className="col-num" /> : null}
+            {showProfit ? <col className="col-num" /> : null}
             {showVat ? <col className="col-num" /> : null}
             <col className="col-num" />
             <col className="col-num" />
@@ -471,6 +492,8 @@ function ReportTable({
               <th>구매자</th>
               <th>차량명</th>
               <th>공급금액</th>
+              {showProfit ? <th>낙찰원가</th> : null}
+              {showProfit ? <th>영업이익</th> : null}
               {showVat ? <th>부가세</th> : null}
               <th className="is-deposit">입금(계약금)</th>
               <th>잔액금</th>
@@ -513,6 +536,23 @@ function ReportTable({
                     <td className="is-num">
                       {formatSaleMoney(parseSaleMoney(row.supply), row.currency)}
                     </td>
+                    {showProfit ? (
+                      <td className="is-num">
+                        {formatSaleMoney(parseSaleMoney(row.cost), row.currency)}
+                      </td>
+                    ) : null}
+                    {showProfit ? (
+                      <td
+                        className={`is-num is-strong ${
+                          profitToneClass(parseSaleMoney(row.profit)) ?? ""
+                        }`}
+                      >
+                        {formatSaleMoney(
+                          parseSaleMoney(row.profit),
+                          row.currency,
+                        )}
+                      </td>
+                    ) : null}
                     {showVat ? (
                       <td className="is-num">
                         {formatSaleMoney(parseSaleMoney(row.vat), row.currency)}
@@ -575,6 +615,20 @@ function ReportTable({
               <td className="is-num">
                 {formatSaleMoney(totals.supply, currency)}
               </td>
+              {showProfit ? (
+                <td className="is-num">
+                  {formatSaleMoney(totals.cost, currency)}
+                </td>
+              ) : null}
+              {showProfit ? (
+                <td
+                  className={`is-num is-strong ${
+                    profitToneClass(totals.profit) ?? ""
+                  }`}
+                >
+                  {formatSaleMoney(totals.profit, currency)}
+                </td>
+              ) : null}
               {showVat ? (
                 <td className="is-num">
                   {formatSaleMoney(totals.vat, currency)}

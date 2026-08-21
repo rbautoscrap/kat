@@ -1710,6 +1710,21 @@ main {
   color: #b45309;
 }
 
+.daily-sales-kpi.is-profit-kpi {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.daily-sales-kpi .is-profit,
+.daily-sales-side-card .is-profit {
+  color: #15803d;
+}
+
+.daily-sales-kpi .is-loss,
+.daily-sales-side-card .is-loss {
+  color: #b91c1c;
+}
+
 .daily-sales-section {
   margin-bottom: 10px;
 }
@@ -1790,10 +1805,10 @@ main {
   line-height: 1.25;
 }
 
-.daily-sales-table .col-buyer { width: 16%; }
-.daily-sales-table .col-car { width: 28%; }
-.daily-sales-table .col-num { width: 12%; }
-.daily-sales-table .col-ship { width: 10%; }
+.daily-sales-table .col-buyer { width: 13%; }
+.daily-sales-table .col-car { width: 20%; }
+.daily-sales-table .col-num { width: 9.5%; }
+.daily-sales-table .col-ship { width: 8%; }
 
 .daily-sales-table th,
 .daily-sales-table td {
@@ -1840,6 +1855,8 @@ main {
 }
 .daily-sales-table .is-strong { font-weight: 700; }
 .daily-sales-table .is-remain { color: #b45309; }
+.daily-sales-table .is-profit { color: #15803d; }
+.daily-sales-table .is-loss { color: #b91c1c; }
 .daily-sales-table .is-name {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2007,7 +2024,10 @@ main {
 
   .daily-sales-table thead th,
   .daily-sales-table tbody tr.is-unpaid td,
-  .daily-sales-kpi.is-warn {
+  .daily-sales-kpi.is-warn,
+  .daily-sales-kpi.is-profit-kpi,
+  .daily-sales-table .is-profit,
+  .daily-sales-table .is-loss {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
