@@ -5,6 +5,7 @@ import { formatOfferAmount, type OfferCurrencyCode } from "@/lib/purchase-offer"
 
 export const SALE_SHIPMENT_TYPES = [
   "미결재",
+  "일부결재",
   "결재완료",
   "보류",
   "취소",
