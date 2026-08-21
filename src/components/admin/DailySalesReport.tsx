@@ -13,6 +13,7 @@ import {
   isUnpaidRow,
   parseSaleMoney,
   remainingOf,
+  saleDocHref,
   sumSaleRows,
   type DailySaleRow,
 } from "@/lib/sales-daily";
@@ -411,7 +412,7 @@ function ReportTable({
                     <td>{row.vehicleNumber || (row.isExtra ? "—" : "")}</td>
                     <td>
                       <Link
-                        href={`/admin/statements/${row.statementId}`}
+                        href={saleDocHref(row)}
                         className="daily-sales-link"
                       >
                         {row.buyerName}

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
-import { SALE_SHIPMENT_TYPES } from "@/lib/sales-daily";
+import { parseSaleItemKey, SALE_SHIPMENT_TYPES } from "@/lib/sales-daily";
 
 const paidSchema = z
   .string()
@@ -80,11 +80,21 @@ export async function updateSaleTracking(
     data.reportNote = parsed.data.reportNote;
   }
 
+  const parsedId = parseSaleItemKey(parsed.data.itemId);
+  if (!parsedId) return { ok: false, error: "항목을 찾을 수 없습니다." };
+
   try {
-    await prisma.transactionStatementItem.update({
-      where: { id: parsed.data.itemId },
-      data,
-    });
+    if (parsedId.source === "invoice") {
+      await prisma.overseasInvoiceItem.update({
+        where: { id: parsedId.id },
+        data,
+      });
+    } else {
+      await prisma.transactionStatementItem.update({
+        where: { id: parsedId.id },
+        data,
+      });
+    }
   } catch {
     return { ok: false, error: "항목을 저장하지 못했습니다." };
   }
@@ -98,22 +108,31 @@ export async function setReceivableLedger(
   listed: boolean,
 ): Promise<SaleTrackingResult> {
   await requireAdmin();
-  const id = itemId.trim();
-  if (!id) return { ok: false, error: "항목을 찾을 수 없습니다." };
+  const parsedId = parseSaleItemKey(itemId);
+  if (!parsedId) return { ok: false, error: "항목을 찾을 수 없습니다." };
+
+  const data = listed
+    ? { inReceivableLedger: true }
+    : {
+        inReceivableLedger: false,
+        paidAmount: "",
+        shipmentType: "",
+        shippedDate: "",
+        reportNote: "",
+      };
 
   try {
-    await prisma.transactionStatementItem.update({
-      where: { id },
-      data: listed
-        ? { inReceivableLedger: true }
-        : {
-            inReceivableLedger: false,
-            paidAmount: "",
-            shipmentType: "",
-            shippedDate: "",
-            reportNote: "",
-          },
-    });
+    if (parsedId.source === "invoice") {
+      await prisma.overseasInvoiceItem.update({
+        where: { id: parsedId.id },
+        data,
+      });
+    } else {
+      await prisma.transactionStatementItem.update({
+        where: { id: parsedId.id },
+        data,
+      });
+    }
   } catch {
     return { ok: false, error: "미수 원장을 변경하지 못했습니다." };
   }

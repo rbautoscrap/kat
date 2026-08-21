@@ -16,6 +16,7 @@ import {
   type InvoiceCurrency,
 } from "@/lib/overseas-invoice";
 import { prisma } from "@/lib/prisma";
+import { shouldAutoListReceivable } from "@/lib/sales-daily";
 
 type ActionResult =
   | { ok: true; id: string }
@@ -197,13 +198,17 @@ export async function createOverseasInvoice(input: unknown): Promise<ActionResul
         amount,
         createdById: admin.id,
         items: {
-          create: built.rows,
+          create: built.rows.map((row) => ({
+            ...row,
+            inReceivableLedger: shouldAutoListReceivable(data.invoiceDate),
+          })),
         },
       },
       select: { id: true },
     });
 
     revalidatePath("/admin/invoices");
+    revalidatePath("/admin/sales-daily");
     return { ok: true, id: created.id };
   } catch (error) {
     console.error("[createOverseasInvoice]", error);
@@ -258,13 +263,19 @@ export async function updateOverseasInvoice(
           exchangeRate: data.exchangeRate,
           prepaidLabel: data.prepaidLabel.trim() || "100% PREPAID",
           amount,
-          items: { create: built.rows },
+          items: {
+            create: built.rows.map((row) => ({
+              ...row,
+              inReceivableLedger: shouldAutoListReceivable(data.invoiceDate),
+            })),
+          },
         },
       }),
     ]);
 
     revalidatePath("/admin/invoices");
     revalidatePath(`/admin/invoices/${id}`);
+    revalidatePath("/admin/sales-daily");
     return { ok: true, id };
   } catch (error) {
     console.error("[updateOverseasInvoice]", error);
@@ -281,6 +292,7 @@ export async function deleteOverseasInvoice(
 
     await prisma.overseasInvoice.delete({ where: { id } });
     revalidatePath("/admin/invoices");
+    revalidatePath("/admin/sales-daily");
     return { ok: true };
   } catch (error) {
     console.error("[deleteOverseasInvoice]", error);

@@ -7,6 +7,7 @@ import { auth, isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { OFFER_CURRENCIES } from "@/lib/purchase-offer";
 import { prisma } from "@/lib/prisma";
+import { shouldAutoListReceivable } from "@/lib/sales-daily";
 import {
   isExtraLineKey,
   isStatementBankAccountId,
@@ -322,11 +323,15 @@ export async function createStatement(
         notes: parsed.data.notes || null,
         createdById: admin.id,
         items: {
-          create: rows,
+          create: rows.map((row) => ({
+            ...row,
+            inReceivableLedger: shouldAutoListReceivable(parsed.data.issueDate),
+          })),
         },
       },
     });
     revalidatePath("/admin/statements");
+    revalidatePath("/admin/sales-daily");
     return { ok: true, id: row.id };
   } catch (e) {
     console.error("createStatement", e);
@@ -396,13 +401,17 @@ export async function updateStatement(
           issueDate: parsed.data.issueDate,
           notes: parsed.data.notes || null,
           items: {
-            create: rows,
+            create: rows.map((row) => ({
+              ...row,
+              inReceivableLedger: shouldAutoListReceivable(parsed.data.issueDate),
+            })),
           },
         },
       }),
     ]);
     revalidatePath("/admin/statements");
     revalidatePath(`/admin/statements/${id}`);
+    revalidatePath("/admin/sales-daily");
     return { ok: true, id };
   } catch (e) {
     console.error("updateStatement", e);
@@ -417,6 +426,7 @@ export async function deleteStatement(id: string): Promise<ActionResult> {
   try {
     await prisma.transactionStatement.delete({ where: { id } });
     revalidatePath("/admin/statements");
+    revalidatePath("/admin/sales-daily");
     return { ok: true, id };
   } catch (e) {
     console.error("deleteStatement", e);

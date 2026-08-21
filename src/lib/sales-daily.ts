@@ -1,4 +1,5 @@
 import type { OfferCurrency } from "@prisma/client";
+import { koreaTodayDate } from "@/lib/format-korea-time";
 import { STATEMENT_VAT_RATE, calcStatementTotals } from "@/lib/statement";
 import { formatOfferAmount, type OfferCurrencyCode } from "@/lib/purchase-offer";
 
@@ -12,7 +13,10 @@ export const SALE_SHIPMENT_TYPES = [
 
 export type SaleShipmentType = (typeof SALE_SHIPMENT_TYPES)[number];
 
+export type DailySaleSource = "statement" | "invoice";
+
 export type DailySaleRow = {
+  source: DailySaleSource;
   itemId: string;
   statementId: string;
   statementNo: string;
@@ -90,7 +94,38 @@ export function remainingOf(
   return roundMoney(Math.max(0, total - paid), currency);
 }
 
+export function shouldAutoListReceivable(docDate: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(docDate) && docDate >= koreaTodayDate();
+}
+
+export function saleItemKey(source: DailySaleSource, id: string) {
+  return source === "invoice" ? `i:${id}` : `s:${id}`;
+}
+
+export function parseSaleItemKey(raw: string): {
+  source: DailySaleSource;
+  id: string;
+} | null {
+  const value = raw.trim();
+  if (value.startsWith("i:")) {
+    const id = value.slice(2);
+    return id ? { source: "invoice", id } : null;
+  }
+  if (value.startsWith("s:")) {
+    const id = value.slice(2);
+    return id ? { source: "statement", id } : null;
+  }
+  return value ? { source: "statement", id: value } : null;
+}
+
+export function saleDocHref(row: Pick<DailySaleRow, "source" | "statementId">) {
+  return row.source === "invoice"
+    ? `/admin/invoices/${row.statementId}`
+    : `/admin/statements/${row.statementId}`;
+}
+
 export function buildSaleRow(args: {
+  source?: DailySaleSource;
   itemId: string;
   statementId: string;
   statementNo: string;
@@ -118,6 +153,7 @@ export function buildSaleRow(args: {
   const remaining = remainingOf(total, paid, args.currency);
 
   return {
+    source: args.source ?? "statement",
     itemId: args.itemId,
     statementId: args.statementId,
     statementNo: args.statementNo,
