@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import {
   buildSaleRow,
   saleItemKey,
+  sortSaleRowsByRecentDate,
   type DailySaleRow,
 } from "@/lib/sales-daily";
 import { isStatementExtraLine } from "@/lib/statement";
@@ -105,11 +106,11 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
   const fxReceivables = allRows.filter(
     (row) => row.currency !== "KRW" && row.inReceivableLedger,
   );
-  const addableKrw = allRows.filter(
-    (row) => row.currency === "KRW" && !row.inReceivableLedger,
+  const addableKrw = sortSaleRowsByRecentDate(
+    allRows.filter((row) => row.currency === "KRW" && !row.inReceivableLedger),
   );
-  const addableFx = allRows.filter(
-    (row) => row.currency !== "KRW" && !row.inReceivableLedger,
+  const addableFx = sortSaleRowsByRecentDate(
+    allRows.filter((row) => row.currency !== "KRW" && !row.inReceivableLedger),
   );
 
   return (

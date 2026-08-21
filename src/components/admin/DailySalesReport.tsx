@@ -16,6 +16,7 @@ import {
   parseSaleMoney,
   remainingOf,
   saleDocHref,
+  sortSaleRowsByRecentDate,
   sumSaleRows,
   type DailySaleRow,
 } from "@/lib/sales-daily";
@@ -609,14 +610,18 @@ function AddReceivableControl({
   onAdd: (row: DailySaleRow) => void;
 }) {
   const [itemId, setItemId] = useState("");
-  if (addable.length === 0) return null;
+  const options = useMemo(
+    () => sortSaleRowsByRecentDate(addable),
+    [addable],
+  );
+  if (options.length === 0) return null;
 
   return (
     <form
       className="daily-sales-add daily-sales-no-print"
       onSubmit={(e) => {
         e.preventDefault();
-        const row = addable.find((r) => r.itemId === itemId);
+        const row = options.find((r) => r.itemId === itemId);
         if (!row) return;
         onAdd(row);
         setItemId("");
@@ -629,7 +634,7 @@ function AddReceivableControl({
         aria-label="미수 등록할 품목"
       >
         <option value="">명세서 품목 선택</option>
-        {addable.map((row) => (
+        {options.map((row) => (
           <option key={row.itemId} value={row.itemId}>
             {optionLabel(row)}
           </option>

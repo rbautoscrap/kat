@@ -123,6 +123,18 @@ export function saleItemKey(source: DailySaleSource, id: string) {
   return source === "invoice" ? `i:${id}` : `s:${id}`;
 }
 
+export function sortSaleRowsByRecentDate(rows: DailySaleRow[]) {
+  return [...rows].sort((a, b) => {
+    if (a.issueDate !== b.issueDate) {
+      return b.issueDate.localeCompare(a.issueDate);
+    }
+    if (a.statementNo !== b.statementNo) {
+      return b.statementNo.localeCompare(a.statementNo);
+    }
+    return b.itemId.localeCompare(a.itemId);
+  });
+}
+
 export function parseSaleItemKey(raw: string): {
   source: DailySaleSource;
   id: string;
