@@ -125,43 +125,6 @@ export function DailySalesReport({
     });
   }
 
-  function removeFromLedger(row: DailySaleRow) {
-    setError("");
-    const cleared = {
-      ...row,
-      inReceivableLedger: false,
-      paidAmount: "",
-      shipmentType: "",
-      shippedDate: "",
-      reportNote: "",
-      remaining: row.total,
-    };
-    setDaySales((rows) =>
-      applyPatch(rows, row.itemId, {
-        inReceivableLedger: false,
-        paidAmount: "",
-        shipmentType: "",
-        shippedDate: "",
-        reportNote: "",
-      }),
-    );
-    setReceivables((rows) => rows.filter((r) => r.itemId !== row.itemId));
-    setFxReceivables((rows) => rows.filter((r) => r.itemId !== row.itemId));
-    if (row.currency === "KRW") {
-      setAddableKrw((rows) =>
-        rows.some((r) => r.itemId === row.itemId) ? rows : [...rows, cleared],
-      );
-    } else {
-      setAddableFx((rows) =>
-        rows.some((r) => r.itemId === row.itemId) ? rows : [...rows, cleared],
-      );
-    }
-    startTransition(async () => {
-      const result = await setReceivableLedger(row.itemId, false);
-      if (!result.ok) setError(result.error);
-    });
-  }
-
   const dayTotals = useMemo(() => sumSaleRows(daySales), [daySales]);
   const recvTotals = useMemo(() => sumSaleRows(receivables), [receivables]);
   const fxTotals = useMemo(
@@ -196,7 +159,6 @@ export function DailySalesReport({
         pending={pending}
         onPatch={syncAll}
         onSave={save}
-        onAdd={addToLedger}
         empty="해당일 판매 명세서가 없습니다."
       />
 
@@ -207,74 +169,72 @@ export function DailySalesReport({
         pending={pending}
         onPatch={syncAll}
         onSave={save}
-        onRemove={removeFromLedger}
         addable={addableKrw}
+        onAdd={addToLedger}
         highlightUnpaid
-        empty="등록된 미수 항목이 없습니다. 오른쪽에서 명세서 품목을 등록하세요."
+        empty="등록된 미수 항목이 없습니다."
       />
 
-      <div className="daily-sales-bottom">
-        <ReportTable
-          title="외화 미수금현황"
-          rows={fxReceivables}
-          totals={fxTotals}
-          pending={pending}
-          onPatch={syncAll}
-          onSave={save}
-          onRemove={removeFromLedger}
-          addable={addableFx}
-          highlightUnpaid
-          fx
-          empty="등록된 외화 미수 항목이 없습니다."
-        />
+      <ReportTable
+        title="외화 미수금현황"
+        rows={fxReceivables}
+        totals={fxTotals}
+        pending={pending}
+        onPatch={syncAll}
+        onSave={save}
+        addable={addableFx}
+        onAdd={addToLedger}
+        highlightUnpaid
+        fx
+        empty="등록된 외화 미수 항목이 없습니다."
+      />
 
-        <aside className="daily-sales-side">
-          <div className="daily-sales-side-card">
-            <h3>소계</h3>
-            <p>
-              <span>판매소계</span>
-              <strong>{formatSaleMoney(recvTotals.total, "KRW")}</strong>
-            </p>
-            <p>
-              <span>입금소계</span>
-              <strong>{formatSaleMoney(recvTotals.paid, "KRW")}</strong>
-            </p>
-            <p>
-              <span>외화미수금</span>
-              <strong>
-                {fxReceivables.length
-                  ? formatSaleMoney(
-                      fxTotals.remaining,
-                      fxReceivables[0]!.currency,
-                    )
-                  : "0"}
-              </strong>
-            </p>
-          </div>
-          <div className="daily-sales-side-card">
-            <h3>구매자별 현황</h3>
-            {buyers.length === 0 ? (
-              <p className="daily-sales-muted">미수 구매자가 없습니다.</p>
-            ) : (
-              <ul>
-                {buyers.map((b) => (
-                  <li key={b.buyerName}>
-                    <span>
-                      {b.buyerName}
-                      <em>{b.count}건</em>
-                    </span>
-                    <strong>{formatSaleMoney(b.total, "KRW")}</strong>
-                  </li>
-                ))}
-                <li className="is-sum">
-                  <span>합계</span>
-                  <strong>{formatSaleMoney(recvTotals.total, "KRW")}</strong>
+      <aside className="daily-sales-side">
+        <div className="daily-sales-side-card">
+          <h3>소계</h3>
+          <p>
+            <span>판매소계</span>
+            <strong>{formatSaleMoney(recvTotals.total, "KRW")}</strong>
+          </p>
+          <p>
+            <span>입금소계</span>
+            <strong>{formatSaleMoney(recvTotals.paid, "KRW")}</strong>
+          </p>
+          <p>
+            <span>외화미수금</span>
+            <strong>
+              {fxReceivables.length
+                ? formatSaleMoney(
+                    fxTotals.remaining,
+                    fxReceivables[0]!.currency,
+                  )
+                : "0"}
+            </strong>
+          </p>
+        </div>
+        <div className="daily-sales-side-card">
+          <h3>구매자별 현황</h3>
+          {buyers.length === 0 ? (
+            <p className="daily-sales-muted">미수 구매자가 없습니다.</p>
+          ) : (
+            <ul>
+              {buyers.map((b) => (
+                <li key={b.buyerName}>
+                  <span>
+                    {b.buyerName}
+                    <em>{b.count}건</em>
+                  </span>
+                  <strong>{formatSaleMoney(b.total, "KRW")}</strong>
                 </li>
-              </ul>
-            )}
-          </div>
-        </aside>
-      </div>
+              ))}
+              <li className="is-sum">
+                <span>합계</span>
+                <strong>{formatSaleMoney(recvTotals.total, "KRW")}</strong>
+              </li>
+            </ul>
+          )}
+        </div>
+      </aside>
     </div>
   );
 }
@@ -310,7 +270,6 @@ function ReportTable({
   onPatch,
   onSave,
   onAdd,
-  onRemove,
   addable,
   highlightUnpaid,
   fx,
@@ -333,15 +292,14 @@ function ReportTable({
     >,
   ) => void;
   onAdd?: (row: DailySaleRow) => void;
-  onRemove?: (row: DailySaleRow) => void;
   addable?: DailySaleRow[];
   highlightUnpaid?: boolean;
   fx?: boolean;
   empty: string;
 }) {
   const currency = rows[0]?.currency ?? "KRW";
-  const showActions = Boolean(onAdd || onRemove);
-  const colSpan = showActions ? 13 : 12;
+  const showVat = !fx;
+  const colSpan = 6 + (showVat ? 1 : 0);
 
   return (
     <section className="daily-sales-section">
@@ -358,37 +316,23 @@ function ReportTable({
       <div className="daily-sales-scroll">
         <table className="daily-sales-table">
           <colgroup>
-            <col className="col-no" />
-            <col className="col-plate" />
             <col className="col-buyer" />
             <col className="col-car" />
             <col className="col-num" />
-            <col className="col-num" />
-            <col className="col-num" />
+            {showVat ? <col className="col-num" /> : null}
             <col className="col-num" />
             <col className="col-num" />
             <col className="col-ship" />
-            <col className="col-date" />
-            <col className="col-note" />
-            {showActions ? <col className="col-action" /> : null}
           </colgroup>
           <thead>
             <tr>
-              <th>연번</th>
-              <th>차량번호</th>
               <th>구매자</th>
               <th>차량명</th>
               <th>공급금액</th>
-              <th>부가세</th>
+              {showVat ? <th>부가세</th> : null}
               <th>입금</th>
               <th>잔액금</th>
-              <th>계</th>
-              <th>송품구분</th>
-              <th>발송일자</th>
-              <th>비고</th>
-              {showActions ? (
-                <th className="daily-sales-no-print">관리</th>
-              ) : null}
+              <th>송품</th>
             </tr>
           </thead>
           <tbody>
@@ -399,7 +343,7 @@ function ReportTable({
                 </td>
               </tr>
             ) : (
-              rows.map((row, index) => {
+              rows.map((row) => {
                 const unpaid = isUnpaidRow(row);
                 return (
                   <tr
@@ -408,8 +352,6 @@ function ReportTable({
                       highlightUnpaid && unpaid ? "is-unpaid" : undefined
                     }
                   >
-                    <td className="is-center">{index + 1}</td>
-                    <td>{row.vehicleNumber || (row.isExtra ? "—" : "")}</td>
                     <td>
                       <Link
                         href={saleDocHref(row)}
@@ -420,13 +362,20 @@ function ReportTable({
                     </td>
                     <td className="is-name" title={row.vehicleLabel}>
                       {row.vehicleLabel}
+                      {row.vehicleNumber ? (
+                        <span className="daily-sales-plate">
+                          {row.vehicleNumber}
+                        </span>
+                      ) : null}
                     </td>
                     <td className="is-num">
                       {formatSaleMoney(parseSaleMoney(row.supply), row.currency)}
                     </td>
-                    <td className="is-num">
-                      {formatSaleMoney(parseSaleMoney(row.vat), row.currency)}
-                    </td>
+                    {showVat ? (
+                      <td className="is-num">
+                        {formatSaleMoney(parseSaleMoney(row.vat), row.currency)}
+                      </td>
+                    ) : null}
                     <td className="is-edit">
                       <input
                         type="text"
@@ -452,9 +401,6 @@ function ReportTable({
                         row.currency,
                       )}
                     </td>
-                    <td className="is-num is-strong">
-                      {formatSaleMoney(parseSaleMoney(row.total), row.currency)}
-                    </td>
                     <td className="is-edit">
                       <select
                         value={row.shipmentType}
@@ -471,59 +417,6 @@ function ReportTable({
                         ))}
                       </select>
                     </td>
-                    <td className="is-edit">
-                      <input
-                        type="date"
-                        value={row.shippedDate}
-                        disabled={pending}
-                        aria-label="발송일자"
-                        onChange={(e) =>
-                          onSave(row.itemId, { shippedDate: e.target.value })
-                        }
-                      />
-                    </td>
-                    <td className="is-edit">
-                      <input
-                        type="text"
-                        value={row.reportNote}
-                        disabled={pending}
-                        aria-label="비고"
-                        onChange={(e) =>
-                          onPatch(row.itemId, { reportNote: e.target.value })
-                        }
-                        onBlur={(e) => {
-                          const next = e.target.value.trim();
-                          onSave(row.itemId, { reportNote: next });
-                        }}
-                      />
-                    </td>
-                    {showActions ? (
-                      <td className="daily-sales-no-print is-center">
-                        {onAdd && !row.inReceivableLedger ? (
-                          <button
-                            type="button"
-                            className="daily-sales-mini-btn"
-                            disabled={pending}
-                            onClick={() => onAdd(row)}
-                          >
-                            미수 등록
-                          </button>
-                        ) : null}
-                        {onAdd && row.inReceivableLedger ? (
-                          <span className="daily-sales-muted">등록됨</span>
-                        ) : null}
-                        {onRemove ? (
-                          <button
-                            type="button"
-                            className="daily-sales-mini-btn is-quiet"
-                            disabled={pending}
-                            onClick={() => onRemove(row)}
-                          >
-                            제외
-                          </button>
-                        ) : null}
-                      </td>
-                    ) : null}
                   </tr>
                 );
               })
@@ -531,30 +424,31 @@ function ReportTable({
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={4} className="is-center is-strong">
+              <td colSpan={2} className="is-center is-strong">
                 합 계
               </td>
               <td className="is-num">
                 {formatSaleMoney(totals.supply, currency)}
               </td>
-              <td className="is-num">{formatSaleMoney(totals.vat, currency)}</td>
+              {showVat ? (
+                <td className="is-num">
+                  {formatSaleMoney(totals.vat, currency)}
+                </td>
+              ) : null}
               <td className="is-num">
                 {formatSaleMoney(totals.paid, currency)}
               </td>
               <td className="is-num is-remain">
                 {formatSaleMoney(totals.remaining, currency)}
               </td>
-              <td className="is-num is-strong">
-                {formatSaleMoney(totals.total, currency)}
-              </td>
-              <td colSpan={showActions ? 4 : 3} />
+              <td />
             </tr>
           </tfoot>
         </table>
       </div>
       {fx ? (
         <p className="daily-sales-fx-note">
-          외화 금액은 명세서 통화 기준입니다.
+          외화 금액은 명세서·인보이스 통화 기준입니다.
         </p>
       ) : null}
     </section>

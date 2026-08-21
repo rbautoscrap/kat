@@ -1709,41 +1709,33 @@ main {
   color: #737373;
 }
 
-.daily-sales-table .col-action {
-  width: 88px;
-}
-
 .daily-sales-scroll {
-  overflow-x: auto;
+  overflow: hidden;
   border: 1px solid #d4d4d4;
   background: #fff;
 }
 
 .daily-sales-table {
   width: 100%;
-  min-width: 1080px;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 12px;
   line-height: 1.35;
 }
 
-.daily-sales-table .col-no { width: 44px; }
-.daily-sales-table .col-plate { width: 92px; }
-.daily-sales-table .col-buyer { width: 110px; }
-.daily-sales-table .col-car { width: auto; }
-.daily-sales-table .col-num { width: 92px; }
-.daily-sales-table .col-ship { width: 88px; }
-.daily-sales-table .col-date { width: 118px; }
-.daily-sales-table .col-note { width: 140px; }
+.daily-sales-table .col-buyer { width: 16%; }
+.daily-sales-table .col-car { width: 28%; }
+.daily-sales-table .col-num { width: 12%; }
+.daily-sales-table .col-ship { width: 10%; }
 
 .daily-sales-table th,
 .daily-sales-table td {
   border: 1px solid #e5e5e5;
-  padding: 7px 8px;
+  padding: 6px 7px;
   vertical-align: middle;
   height: 38px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .daily-sales-table thead th {
@@ -1754,6 +1746,7 @@ main {
   font-size: 11.5px;
   letter-spacing: -0.01em;
   border-color: #262626;
+  white-space: nowrap;
 }
 
 .daily-sales-table tbody td {
@@ -1775,9 +1768,15 @@ main {
 .daily-sales-table .is-strong { font-weight: 700; }
 .daily-sales-table .is-remain { color: #b45309; }
 .daily-sales-table .is-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 8rem;
+}
+
+.daily-sales-plate {
+  display: block;
+  margin-top: 1px;
+  font-size: 11px;
+  color: #737373;
+  font-weight: 400;
 }
 
 .daily-sales-table .daily-sales-empty {
@@ -1820,31 +1819,22 @@ main {
   background: #fff;
 }
 
-.daily-sales-table .is-edit input[type="date"] {
-  min-width: 0;
-}
-
 .daily-sales-fx-note {
   margin: 6px 0 0;
   font-size: 12px;
   color: #737373;
 }
 
-.daily-sales-bottom {
-  display: grid;
-  gap: 16px;
-}
-
-@media (min-width: 1100px) {
-  .daily-sales-bottom {
-    grid-template-columns: minmax(0, 1fr) 280px;
-    align-items: start;
-  }
-}
-
 .daily-sales-side {
   display: grid;
   gap: 12px;
+}
+
+@media (min-width: 800px) {
+  .daily-sales-side {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
 }
 
 .daily-sales-side-card {
