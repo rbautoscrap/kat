@@ -7,8 +7,8 @@ const links = [
   { href: "/admin", label: "메인", exact: true },
   { href: "/admin/listings", label: "매물 관리", exact: false },
   { href: "/admin/statements", label: "거래명세서", exact: false },
-  { href: "/admin/sales-daily", label: "일일판매현황", exact: false },
   { href: "/admin/invoices", label: "해외 인보이스", exact: false },
+  { href: "/admin/sales-daily", label: "일일판매현황", exact: false },
   { href: "/admin/users", label: "회원 관리", exact: false },
   { href: "/admin/maintenance", label: "유지보수", exact: false },
 ];
