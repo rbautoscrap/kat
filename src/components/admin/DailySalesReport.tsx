@@ -515,7 +515,7 @@ function ReportTable({
               {showVat ? <th>부가세</th> : null}
               <th className="is-deposit">입금(계약금)</th>
               <th>잔액금</th>
-              <th>결재</th>
+              <th>분류</th>
             </tr>
           </thead>
           <tbody>
@@ -608,7 +608,7 @@ function ReportTable({
                       <select
                         value={displayShipmentType(row.shipmentType)}
                         disabled={pending}
-                        aria-label="결재상태"
+                        aria-label="분류"
                         onChange={(e) =>
                           onSave(row.itemId, { shipmentType: e.target.value })
                         }
