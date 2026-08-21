@@ -208,6 +208,14 @@ model TransactionStatementItem {
   qty           String               @default("1")
   /** Supply amount for this line (before VAT) */
   amount        String
+  /** Amount received toward this line (empty = 0) */
+  paidAmount    String               @default("")
+  /** 완납 / 수출 / 국내 / 미선적 등 */
+  shipmentType  String               @default("")
+  /** YYYY-MM-DD */
+  shippedDate   String               @default("")
+  /** Daily sales report memo */
+  reportNote    String               @default("")
   sortOrder     Int                  @default(0)
 
   @@index([statementId, sortOrder])

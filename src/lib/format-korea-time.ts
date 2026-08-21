@@ -94,3 +94,18 @@ export function toKoreaDatetimeLocalValue(
   if (hour === "24") hour = "00";
   return `${get("year")}-${get("month")}-${get("day")}T${hour}:${get("minute")}`;
 }
+
+/** Calendar date in Asia/Seoul, `YYYY-MM-DD`. */
+export function koreaTodayDate(value: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(value);
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
