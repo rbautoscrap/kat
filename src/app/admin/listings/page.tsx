@@ -583,12 +583,12 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                   <td className={adminTdClass}>
                     {cost != null ? (
                       <span
-                        className={`inline-flex max-w-full truncate rounded-md border px-2 py-1 text-[12.5px] font-semibold tabular-nums ${
+                        className={`max-w-full truncate text-[12.5px] font-semibold tabular-nums ${
                           tier === "high"
-                            ? "border-red-400 bg-red-100 text-red-900"
+                            ? "text-red-800"
                             : tier === "mid"
-                              ? "border-orange-400 bg-orange-100 text-orange-950"
-                              : "border-neutral-200 bg-neutral-50 text-neutral-700"
+                              ? "text-orange-800"
+                              : "text-neutral-700"
                         }`}
                         title={formatCostWon(cost)}
                       >
