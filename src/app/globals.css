@@ -1643,7 +1643,31 @@ main {
 .daily-sales-toolbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+.daily-sales-view-tabs {
+  display: inline-flex;
+  border: 1px solid #d4d4d4;
+  border-radius: 7px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.daily-sales-view-tabs button {
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #737373;
+}
+
+.daily-sales-view-tabs button.is-active {
+  background: #171717;
+  color: #fff;
 }
 
 .daily-sales-date-label {
@@ -1996,6 +2020,243 @@ main {
   font-size: 12px;
 }
 
+.month-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+@media (min-width: 900px) {
+  .month-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.month-kpi {
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  padding: 7px 10px;
+}
+
+.month-kpi span,
+.month-kpi em {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #737373;
+  font-style: normal;
+}
+
+.month-kpi strong {
+  display: block;
+  margin: 2px 0 1px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: #111;
+}
+
+.month-kpi.is-profit {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.month-kpi.is-profit strong { color: #15803d; }
+.month-kpi.is-loss strong { color: #b91c1c; }
+.month-kpi.is-warn {
+  background: #fffbeb;
+  border-color: #f3e8c2;
+}
+.month-kpi.is-warn strong { color: #b45309; }
+
+.month-insight {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: #525252;
+}
+
+.month-panel {
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  padding: 10px 12px 12px;
+  margin-bottom: 10px;
+}
+
+.month-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.month-panel-head h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.month-panel-head p,
+.month-empty {
+  margin: 0;
+  font-size: 12px;
+  color: #737373;
+}
+
+.month-chart {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 3px;
+  align-items: end;
+  height: 140px;
+}
+
+.month-chart-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  height: 100%;
+}
+
+.month-chart-track {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 14px;
+  background: #f5f5f5;
+}
+
+.month-chart-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #171717;
+}
+
+.month-chart-dot {
+  position: absolute;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: #16a34a;
+}
+
+.month-chart-col em {
+  margin-top: 4px;
+  font-size: 9px;
+  font-style: normal;
+  color: #a3a3a3;
+}
+
+.month-grid {
+  display: grid;
+  gap: 10px;
+}
+
+@media (min-width: 900px) {
+  .month-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.month-rank {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.month-rank li {
+  display: flex;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.month-rank li:last-child { border-bottom: 0; }
+
+.month-rank-no {
+  width: 18px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #a3a3a3;
+}
+
+.month-rank-body { min-width: 0; flex: 1; }
+
+.month-rank-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+}
+
+.month-rank-line strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.month-rank-line b {
+  font-variant-numeric: tabular-nums;
+}
+
+.month-rank-line b.is-remain,
+.month-kpi.is-warn strong {
+  color: #b45309;
+}
+
+.month-rank-bar {
+  height: 4px;
+  margin: 5px 0 3px;
+  background: #171717;
+}
+
+.month-rank-bar.is-remain { background: #d97706; }
+
+.month-rank small {
+  color: #737373;
+  font-size: 11px;
+}
+
+.month-status {
+  display: grid;
+  gap: 7px;
+}
+
+@media (min-width: 800px) {
+  .month-status {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+.month-status > div span,
+.month-status > div strong {
+  display: block;
+  font-size: 12px;
+}
+
+.month-status > div span { color: #737373; }
+.month-status > div strong { margin: 2px 0 5px; }
+
+.month-status-track {
+  height: 6px;
+  background: #f5f5f5;
+}
+
+.month-status-track i {
+  display: block;
+  height: 100%;
+  background: #171717;
+}
+
 @media print {
   .daily-sales-no-print,
   .admin-shell .admin-ghost-btn,
@@ -2027,7 +2288,11 @@ main {
   .daily-sales-kpi.is-warn,
   .daily-sales-kpi.is-profit-kpi,
   .daily-sales-table .is-profit,
-  .daily-sales-table .is-loss {
+  .daily-sales-table .is-loss,
+  .month-kpi.is-profit,
+  .month-kpi.is-warn,
+  .month-chart-bar,
+  .month-rank-bar {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
