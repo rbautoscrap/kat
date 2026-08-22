@@ -51,6 +51,7 @@ export type DailySaleRow = {
   shippedDate: string;
   reportNote: string;
   inReceivableLedger: boolean;
+  amountKrw: string;
 };
 
 export type DailySaleTotals = {
@@ -214,6 +215,7 @@ export function buildSaleRow(args: {
   shippedDate: string | null | undefined;
   reportNote: string | null | undefined;
   inReceivableLedger?: boolean;
+  amountKrw?: string | null;
 }): DailySaleRow {
   const totals = calcStatementTotals(
     args.supplyAmount,
@@ -249,6 +251,11 @@ export function buildSaleRow(args: {
     shippedDate: args.shippedDate?.trim() ?? "",
     reportNote: args.reportNote?.trim() ?? "",
     inReceivableLedger: args.inReceivableLedger === true,
+    amountKrw: String(
+      args.currency === "KRW"
+        ? total
+        : roundMoney(moneyToNumber(String(args.amountKrw ?? 0)), "KRW"),
+    ),
   };
 }
 

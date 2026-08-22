@@ -109,6 +109,7 @@ export async function loadSaleRowsThrough(
           shippedDate: item.shippedDate,
           reportNote: item.reportNote,
           inReceivableLedger: item.inReceivableLedger,
+          amountKrw: item.priceKrw,
         }),
       );
     }

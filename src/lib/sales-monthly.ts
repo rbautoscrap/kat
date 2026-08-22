@@ -68,6 +68,10 @@ export type MonthlySalesReportData = {
   peakSalesDate: string;
   peakProfitDate: string;
   purchases: MonthPurchaseTotals;
+  fxSalesKrw: number;
+  fxSalesCount: number;
+  fxSales: number;
+  operatingProfit: number;
 };
 
 const CANCELLED = "취소";
@@ -141,12 +145,23 @@ export function buildMonthlySalesReport(
   );
   const monthSales = monthIssued.filter((row) => !isCancelled(row));
   const monthReceivables = monthSales.filter(isOpenReceivable);
-  const fxOpen = rows.filter(
+  const fxSalesRows = rows.filter(
     (row) =>
       row.currency !== "KRW" &&
       inMonth(row.issueDate, start, end) &&
-      isOpenReceivable(row),
+      !isCancelled(row),
   );
+  const fxOpen = fxSalesRows.filter(isOpenReceivable);
+  const fxSalesKrw = fxSalesRows.reduce(
+    (sum, row) => sum + parseSaleMoney(row.amountKrw),
+    0,
+  );
+  const fxSales = sumSaleRows(
+    fxSalesRows,
+    fxSalesRows[0]?.currency ?? "USD",
+  ).total;
+  const sales = sumSaleRows(monthSales);
+  const operatingProfit = sales.total + fxSalesKrw - purchases.cost;
 
   const dailyMap = new Map<string, MonthlyDayPoint>();
   for (let day = 1; day <= days; day += 1) {
@@ -200,7 +215,7 @@ export function buildMonthlySalesReport(
     start,
     end,
     label: monthLabel(month),
-    sales: sumSaleRows(monthSales),
+    sales,
     salesCount: monthSales.length,
     monthReceivables: sumSaleRows(monthReceivables),
     monthReceivableCount: monthReceivables.length,
@@ -208,7 +223,7 @@ export function buildMonthlySalesReport(
     outstandingCount: monthReceivables.length,
     fxRemaining: sumSaleRows(fxOpen, fxOpen[0]?.currency ?? "USD").remaining,
     fxCount: fxOpen.length,
-    fxCurrency: fxOpen[0]?.currency ?? "USD",
+    fxCurrency: fxSalesRows[0]?.currency ?? fxOpen[0]?.currency ?? "USD",
     daily,
     buyers: rankBuyers(monthSales).slice(0, 10),
     outstandingBuyers: rankBuyers(monthReceivables)
@@ -218,5 +233,9 @@ export function buildMonthlySalesReport(
     peakSalesDate,
     peakProfitDate,
     purchases,
+    fxSalesKrw,
+    fxSalesCount: fxSalesRows.length,
+    fxSales,
+    operatingProfit,
   };
 }

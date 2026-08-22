@@ -156,15 +156,24 @@ export function MonthlySalesReport({ report }: Props) {
             note={`${report.salesCount}건 · 공급 ${money(report.sales.supply)} · 부가세 ${money(report.sales.vat)}`}
           />
           <Kpi
-            label="영업이익"
-            value={money(report.sales.profit)}
-            note={`공급 ${money(report.sales.supply)} − 원가 ${money(report.sales.cost)}`}
-            tone={report.sales.profit >= 0 ? "profit" : "loss"}
+            label="외화 판매액"
+            value={money(report.fxSalesKrw)}
+            note={
+              report.fxSalesCount
+                ? `${report.fxSalesCount}건 · ${formatSaleMoney(report.fxSales, report.fxCurrency)}`
+                : "없음"
+            }
           />
           <Kpi
             label="당월 매입비용"
             value={money(report.purchases.cost)}
             note={`${report.purchases.count}대 · 낙찰 ${money(report.purchases.auction)} · 부대 ${money(report.purchases.incidental)}`}
+          />
+          <Kpi
+            label="영업이익"
+            value={money(report.operatingProfit)}
+            note={`판매 ${money(report.sales.total)} + 외화 ${money(report.fxSalesKrw)} − 매입 ${money(report.purchases.cost)}`}
+            tone={report.operatingProfit >= 0 ? "profit" : "loss"}
           />
           <Kpi label="당월 입금" value={money(report.sales.paid)} />
           <Kpi
@@ -173,21 +182,12 @@ export function MonthlySalesReport({ report }: Props) {
             note={`${report.monthReceivableCount}건`}
             tone="warn"
           />
-          <Kpi
-            label="외화 미수"
-            value={
-              report.fxCount
-                ? formatSaleMoney(report.fxRemaining, report.fxCurrency)
-                : "0"
-            }
-            note={report.fxCount ? `${report.fxCount}건` : "없음"}
-          />
         </section>
 
         <p className="month-insight">
-          {report.start}부터 {report.end}까지 거래명세서와 입고 매입 기준입니다.
-          영업이익은 공급가액에서 판매 낙찰원가를 뺀 금액입니다. 매입비용은
-          해당 월 입고 차량의 낙찰가+부대비용입니다. 최고 판매일{" "}
+          {report.start}부터 {report.end}까지 거래명세서·인보이스·입고 매입
+          기준입니다. 영업이익은 판매액 + 외화 판매액(원화) − 매입비용입니다.
+          최고 판매일{" "}
           {dateLabel(report.peakSalesDate)} · 최고 이익일{" "}
           {dateLabel(report.peakProfitDate)}
         </p>
