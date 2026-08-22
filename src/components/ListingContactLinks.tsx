@@ -23,7 +23,7 @@ export function ListingContactLinks({ priceHref, csHref }: Props) {
             className="inline-flex min-h-[3.25rem] items-center justify-center gap-1 rounded bg-[#1877F2] px-2 py-1.5 text-[12px] font-semibold tracking-wide text-white transition hover:brightness-95"
           >
             <WhatsAppIcon />
-            Only Check Price
+            Price Check Only
           </a>
         ) : null}
         {csHref ? (
