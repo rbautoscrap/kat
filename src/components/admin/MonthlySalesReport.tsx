@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { adminActionBtnClass } from "@/lib/admin-ui";
 import { formatSaleMoney } from "@/lib/sales-daily";
-import type { MonthlySalesReportData } from "@/lib/sales-monthly";
+import {
+  momDirection,
+  summarizeMonthOverMonth,
+  type MonthChange,
+  type MonthlySalesReportData,
+} from "@/lib/sales-monthly";
 
 type Props = {
   report: MonthlySalesReportData;
@@ -78,6 +83,22 @@ function dateLabel(iso: string) {
   return `${iso.slice(5, 7)}/${iso.slice(8, 10)}`;
 }
 
+function signedMoney(value: number) {
+  const abs = money(Math.abs(value));
+  if (value > 0) return `+${abs}`;
+  if (value < 0) return `-${abs}`;
+  return abs;
+}
+
+function formatChange(change: MonthChange) {
+  if (change.previous === 0 && change.current === 0) return "전월과 동일";
+  if (change.previous === 0) return `전월 없음 · ${signedMoney(change.delta)}`;
+  const pct =
+    change.pct == null ? "" : ` · ${Math.abs(change.pct).toFixed(1)}%`;
+  if (change.delta === 0) return "전월과 동일";
+  return `${signedMoney(change.delta)}${pct}`;
+}
+
 export function MonthlySalesReport({ report }: Props) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -88,6 +109,8 @@ export function MonthlySalesReport({ report }: Props) {
     1,
   );
   const statusTotal = report.statuses.reduce((sum, s) => sum + s.count, 0);
+  const mom = report.mom ?? null;
+  const momSummary = mom ? summarizeMonthOverMonth(mom) : null;
 
   async function saveImage() {
     const node = document.getElementById("monthly-sales-document");
@@ -154,6 +177,7 @@ export function MonthlySalesReport({ report }: Props) {
             label="당월 판매액"
             value={money(report.sales.total)}
             note={`${report.salesCount}건 · 공급 ${money(report.sales.supply)} · 부가세 ${money(report.sales.vat)}`}
+            change={mom?.sales}
           />
           <Kpi
             label="외화 판매액"
@@ -163,26 +187,61 @@ export function MonthlySalesReport({ report }: Props) {
                 ? `${report.fxSalesCount}건 · ${formatSaleMoney(report.fxSales, report.fxCurrency)}`
                 : "없음"
             }
+            change={mom?.fxSalesKrw}
           />
           <Kpi
             label="당월 매입비용"
             value={money(report.purchases.cost)}
             note={`${report.purchases.count}대 · 낙찰 ${money(report.purchases.auction)} · 부대 ${money(report.purchases.incidental)}`}
+            change={mom?.purchases}
           />
           <Kpi
             label="영업이익"
             value={money(report.operatingProfit)}
             note={`판매 ${money(report.sales.total)} + 외화 ${money(report.fxSalesKrw)} − 매입 ${money(report.purchases.cost)}`}
             tone={report.operatingProfit >= 0 ? "profit" : "loss"}
+            change={mom?.operatingProfit}
           />
-          <Kpi label="당월 입금" value={money(report.sales.paid)} />
+          <Kpi
+            label="당월 입금"
+            value={money(report.sales.paid)}
+            change={mom?.paid}
+          />
           <Kpi
             label="당월 미수"
             value={money(report.monthReceivables.remaining)}
             note={`${report.monthReceivableCount}건`}
             tone="warn"
+            change={mom?.receivables}
+            invertChange
           />
         </section>
+
+        {mom && momSummary ? (
+          <section className="month-mom" aria-label="전월 대비 요약">
+            <div className="month-panel-head">
+              <h2>전월 대비 요약</h2>
+              <p>{mom.previousLabel} 대비</p>
+            </div>
+            <p className="month-mom-text">{momSummary.text}</p>
+            <div className="month-mom-lists">
+              <p>
+                <b className="is-up">상승</b>
+                {momSummary.up.length ? momSummary.up.join(" · ") : "없음"}
+              </p>
+              <p>
+                <b className="is-down">하락</b>
+                {momSummary.down.length ? momSummary.down.join(" · ") : "없음"}
+              </p>
+              {momSummary.flat.length ? (
+                <p>
+                  <b>보합</b>
+                  {momSummary.flat.join(" · ")}
+                </p>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
 
         <p className="month-insight">
           {report.start}부터 {report.end}까지 거래명세서·인보이스·입고 매입
@@ -348,17 +407,29 @@ function Kpi({
   value,
   note,
   tone,
+  change,
+  invertChange,
 }: {
   label: string;
   value: string;
   note?: string;
   tone?: "profit" | "loss" | "warn";
+  change?: MonthChange;
+  invertChange?: boolean;
 }) {
+  const direction = change ? momDirection(change) : null;
   return (
     <div className={`month-kpi${tone ? ` is-${tone}` : ""}`}>
       <span>{label}</span>
       <strong>{value}</strong>
       {note ? <em>{note}</em> : null}
+      {change && direction ? (
+        <b
+          className={`month-kpi-change is-${direction}${invertChange ? " is-invert" : ""}`}
+        >
+          전월 대비 {formatChange(change)}
+        </b>
+      ) : null}
     </div>
   );
 }

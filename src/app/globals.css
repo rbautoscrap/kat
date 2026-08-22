@@ -2071,6 +2071,57 @@ main {
 }
 .month-kpi.is-warn strong { color: #b45309; }
 
+.month-kpi-change {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #737373;
+}
+
+.month-kpi-change.is-up { color: #15803d; }
+.month-kpi-change.is-down { color: #b91c1c; }
+.month-kpi-change.is-flat { color: #737373; }
+.month-kpi-change.is-invert.is-up { color: #b45309; }
+.month-kpi-change.is-invert.is-down { color: #15803d; }
+
+.month-mom {
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  padding: 10px 12px 11px;
+  margin-bottom: 10px;
+}
+
+.month-mom-text {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #262626;
+}
+
+.month-mom-lists {
+  display: grid;
+  gap: 4px;
+}
+
+.month-mom-lists p {
+  margin: 0;
+  font-size: 12px;
+  color: #525252;
+}
+
+.month-mom-lists b {
+  display: inline-block;
+  min-width: 2.4rem;
+  margin-right: 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.month-mom-lists b.is-up { color: #15803d; }
+.month-mom-lists b.is-down { color: #b91c1c; }
+
 .month-insight {
   margin: 0 0 10px;
   font-size: 12px;
@@ -2291,6 +2342,10 @@ main {
   .daily-sales-table .is-loss,
   .month-kpi.is-profit,
   .month-kpi.is-warn,
+  .month-kpi-change.is-up,
+  .month-kpi-change.is-down,
+  .month-mom-lists b.is-up,
+  .month-mom-lists b.is-down,
   .month-chart-bar,
   .month-rank-bar {
     -webkit-print-color-adjust: exact;

@@ -47,6 +47,25 @@ export type MonthlyStatusShare = {
   total: number;
 };
 
+export type MonthChange = {
+  label: string;
+  current: number;
+  previous: number;
+  delta: number;
+  pct: number | null;
+};
+
+export type MonthlyMomCompare = {
+  previousMonth: string;
+  previousLabel: string;
+  sales: MonthChange;
+  fxSalesKrw: MonthChange;
+  purchases: MonthChange;
+  operatingProfit: MonthChange;
+  paid: MonthChange;
+  receivables: MonthChange;
+};
+
 export type MonthlySalesReportData = {
   month: string;
   start: string;
@@ -72,6 +91,7 @@ export type MonthlySalesReportData = {
   fxSalesCount: number;
   fxSales: number;
   operatingProfit: number;
+  mom?: MonthlyMomCompare | null;
 };
 
 const CANCELLED = "취소";
@@ -95,6 +115,93 @@ export function monthBounds(month: string) {
 export function monthLabel(month: string) {
   const { year, month: mon } = monthBounds(month);
   return `${year}년 ${mon}월`;
+}
+
+export function previousYearMonth(month: string) {
+  const { year, month: mon } = monthBounds(month);
+  if (mon === 1) return `${year - 1}-12`;
+  return `${year}-${String(mon - 1).padStart(2, "0")}`;
+}
+
+export function monthChange(
+  label: string,
+  current: number,
+  previous: number,
+): MonthChange {
+  const delta = current - previous;
+  const pct = previous === 0 ? null : (delta / Math.abs(previous)) * 100;
+  return { label, current, previous, delta, pct };
+}
+
+export function attachMonthOverMonth(
+  current: MonthlySalesReportData,
+  previous: MonthlySalesReportData,
+): MonthlySalesReportData {
+  return {
+    ...current,
+    mom: {
+      previousMonth: previous.month,
+      previousLabel: previous.label,
+      sales: monthChange("당월 판매액", current.sales.total, previous.sales.total),
+      fxSalesKrw: monthChange(
+        "외화 판매액",
+        current.fxSalesKrw,
+        previous.fxSalesKrw,
+      ),
+      purchases: monthChange(
+        "당월 매입비용",
+        current.purchases.cost,
+        previous.purchases.cost,
+      ),
+      operatingProfit: monthChange(
+        "영업이익",
+        current.operatingProfit,
+        previous.operatingProfit,
+      ),
+      paid: monthChange("당월 입금", current.sales.paid, previous.sales.paid),
+      receivables: monthChange(
+        "당월 미수",
+        current.monthReceivables.remaining,
+        previous.monthReceivables.remaining,
+      ),
+    },
+  };
+}
+
+export function momDirection(change: MonthChange) {
+  if (change.delta > 0) return "up" as const;
+  if (change.delta < 0) return "down" as const;
+  return "flat" as const;
+}
+
+export function summarizeMonthOverMonth(mom: MonthlyMomCompare) {
+  const items = [
+    mom.sales,
+    mom.fxSalesKrw,
+    mom.purchases,
+    mom.operatingProfit,
+    mom.paid,
+    mom.receivables,
+  ];
+  const up = items.filter((item) => item.delta > 0).map((item) => item.label);
+  const down = items.filter((item) => item.delta < 0).map((item) => item.label);
+  const flat = items.filter((item) => item.delta === 0).map((item) => item.label);
+  const highlights = [mom.sales, mom.operatingProfit, mom.receivables]
+    .filter((item) => item.delta !== 0)
+    .map((item) => {
+      const verb = item.delta > 0 ? "증가" : "감소";
+      const amount = Math.abs(Math.round(item.delta)).toLocaleString("ko-KR");
+      const pct =
+        item.pct == null
+          ? "전월 실적 없음"
+          : `${Math.abs(item.pct).toFixed(1)}%`;
+      return `${item.label} ${amount}원 ${verb}(${pct})`;
+    });
+  const text =
+    highlights.length > 0
+      ? `${mom.previousLabel} 대비 ${highlights.join(", ")}.`
+      : `${mom.previousLabel}과 주요 금액이 같습니다.`;
+  return { up, down, flat, text };
 }
 
 function inMonth(date: string, start: string, end: string) {
