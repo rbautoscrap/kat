@@ -20,15 +20,10 @@ export function ListingContactLinks({ priceHref, csHref }: Props) {
             href={priceHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded bg-[#1877F2] px-2 py-1.5 text-white transition hover:brightness-95"
+            className="inline-flex min-h-[3.25rem] items-center justify-center gap-1 rounded bg-[#1877F2] px-2 py-1.5 text-[12px] font-semibold tracking-wide text-white transition hover:brightness-95"
           >
-            <span className="inline-flex items-center gap-1 text-[12px] font-semibold tracking-wide">
-              <WhatsAppIcon />
-              Price inquiry
-            </span>
-            <span className="text-[10.5px] font-medium tracking-wide text-white/90">
-              가격 문의만
-            </span>
+            <WhatsAppIcon />
+            Only Check Price
           </a>
         ) : null}
         {csHref ? (
