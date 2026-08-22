@@ -31,15 +31,10 @@ export function ListingContactLinks({ priceHref, csHref }: Props) {
             href={csHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded bg-[#25D366] px-2 py-1.5 text-white transition hover:brightness-95"
+            className="inline-flex min-h-[3.25rem] items-center justify-center gap-1 rounded bg-[#25D366] px-2 py-1.5 text-[12px] font-semibold tracking-wide text-white transition hover:brightness-95"
           >
-            <span className="inline-flex items-center gap-1 text-[12px] font-semibold tracking-wide">
-              <WhatsAppIcon />
-              Documents / CS
-            </span>
-            <span className="text-[10.5px] font-medium tracking-wide text-white/90">
-              서류 · 명세서 · 말소 · 통관
-            </span>
+            <WhatsAppIcon />
+            Documents / CS
           </a>
         ) : null}
       </div>
