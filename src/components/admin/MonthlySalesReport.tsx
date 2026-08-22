@@ -161,7 +161,11 @@ export function MonthlySalesReport({ report }: Props) {
             note={`공급 ${money(report.sales.supply)} − 원가 ${money(report.sales.cost)}`}
             tone={report.sales.profit >= 0 ? "profit" : "loss"}
           />
-          <Kpi label="당월 원가" value={money(report.sales.cost)} />
+          <Kpi
+            label="당월 매입비용"
+            value={money(report.purchases.cost)}
+            note={`${report.purchases.count}대 · 낙찰 ${money(report.purchases.auction)} · 부대 ${money(report.purchases.incidental)}`}
+          />
           <Kpi label="당월 입금" value={money(report.sales.paid)} />
           <Kpi
             label="당월 미수"
@@ -181,11 +185,41 @@ export function MonthlySalesReport({ report }: Props) {
         </section>
 
         <p className="month-insight">
-          {report.start}부터 {report.end}까지 거래명세서 품목 기준입니다.
-          영업이익은 공급가액에서 낙찰원가를 뺀 금액입니다. 최고 판매일{" "}
+          {report.start}부터 {report.end}까지 거래명세서와 입고 매입 기준입니다.
+          영업이익은 공급가액에서 판매 낙찰원가를 뺀 금액입니다. 매입비용은
+          해당 월 입고 차량의 낙찰가+부대비용입니다. 최고 판매일{" "}
           {dateLabel(report.peakSalesDate)} · 최고 이익일{" "}
           {dateLabel(report.peakProfitDate)}
         </p>
+
+        <section className="month-panel">
+          <div className="month-panel-head">
+            <h2>당월 매입비용</h2>
+            <p>입고일 기준 · 낙찰가 + 부대비용</p>
+          </div>
+          <div className="month-status">
+            <div>
+              <span>낙찰가</span>
+              <strong>{money(report.purchases.auction)}</strong>
+            </div>
+            <div>
+              <span>부대비용</span>
+              <strong>{money(report.purchases.incidental)}</strong>
+            </div>
+            <div>
+              <span>매입 합계</span>
+              <strong>{money(report.purchases.cost)}</strong>
+            </div>
+            <div>
+              <span>입고 대수</span>
+              <strong>{report.purchases.count}대</strong>
+            </div>
+            <div>
+              <span>판매 원가</span>
+              <strong>{money(report.sales.cost)}</strong>
+            </div>
+          </div>
+        </section>
 
         <section className="month-panel">
           <div className="month-panel-head">

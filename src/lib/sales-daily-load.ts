@@ -1,6 +1,8 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import { parseCostPrice, resolveListingCost } from "@/lib/inventory-cost";
+import type { MonthPurchaseTotals } from "@/lib/sales-monthly";
 import {
   buildSaleRow,
   resolveSaleCost,
@@ -112,4 +114,59 @@ export async function loadSaleRowsThrough(
     }
   }
   return rows;
+}
+
+/** Listings inbound (or registered if no inbound date) during the month. */
+export async function loadMonthPurchases(
+  month: string,
+): Promise<MonthPurchaseTotals> {
+  const compact = month.replace("-", "");
+  const [year, mon] = month.split("-").map(Number);
+  const start = new Date(`${month}-01T00:00:00+09:00`);
+  const next =
+    mon === 12
+      ? new Date(`${year + 1}-01-01T00:00:00+09:00`)
+      : new Date(
+          `${year}-${String(mon + 1).padStart(2, "0")}-01T00:00:00+09:00`,
+        );
+
+  const listings = await prisma.listing.findMany({
+    where: {
+      NOT: { category: "USED_PARTS" },
+      OR: [
+        { inboundDate: { contains: compact } },
+        { inboundDate: { contains: month } },
+        { inboundDate: { contains: `${month.replace("-", ".")}` } },
+        {
+          AND: [
+            {
+              OR: [{ inboundDate: null }, { inboundDate: "" }],
+            },
+            { createdAt: { gte: start, lt: next } },
+          ],
+        },
+      ],
+    },
+    select: {
+      auctionPrice: true,
+      incidentalCost: true,
+      costPrice: true,
+    },
+  });
+
+  let auction = 0;
+  let incidental = 0;
+  let cost = 0;
+  for (const row of listings) {
+    auction += parseCostPrice(row.auctionPrice);
+    incidental += parseCostPrice(row.incidentalCost);
+    cost += resolveListingCost(row);
+  }
+
+  return {
+    count: listings.length,
+    auction,
+    incidental,
+    cost,
+  };
 }

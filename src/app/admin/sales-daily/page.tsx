@@ -2,7 +2,7 @@ import { DailySalesReport } from "@/components/admin/DailySalesReport";
 import { DailySalesToolbar } from "@/components/admin/DailySalesToolbar";
 import { MonthlySalesReport } from "@/components/admin/MonthlySalesReport";
 import { koreaTodayDate } from "@/lib/format-korea-time";
-import { loadSaleRowsThrough } from "@/lib/sales-daily-load";
+import { loadMonthPurchases, loadSaleRowsThrough } from "@/lib/sales-daily-load";
 import {
   isSettledSaleRow,
   sortSaleRowsByRecentDate,
@@ -31,7 +31,12 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
   const month = parseYearMonth(params.month, date) || date.slice(0, 7);
   const through = view === "month" ? monthBounds(month).end : date;
   const from = view === "month" ? monthBounds(month).start : undefined;
-  const allRows = await loadSaleRowsThrough(through, from);
+  const [allRows, purchases] = await Promise.all([
+    loadSaleRowsThrough(through, from),
+    view === "month"
+      ? loadMonthPurchases(month)
+      : Promise.resolve({ count: 0, auction: 0, incidental: 0, cost: 0 }),
+  ]);
 
   const daySales = allRows.filter(
     (row) =>
@@ -57,7 +62,7 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
   const addableFx = sortSaleRowsByRecentDate(
     allRows.filter((row) => row.currency !== "KRW" && !row.inReceivableLedger),
   );
-  const monthly = buildMonthlySalesReport(allRows, month);
+  const monthly = buildMonthlySalesReport(allRows, month, purchases);
 
   return (
     <div className="daily-sales-page">
@@ -68,7 +73,7 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
           </h2>
           <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
             {view === "month"
-              ? "선택한 달 1일부터 말일까지 거래명세서를 기준으로 판매·영업이익·미수를 집계합니다."
+              ? "선택한 달 1일부터 말일까지 거래명세서와 입고 매입비용을 기준으로 집계합니다."
               : "오늘부터 작성한 거래명세서·해외 인보이스가 자동으로 반영됩니다. 아래 미리보기에서 입금·분류를 수정하고 출력 또는 이미지로 저장하세요."}
           </p>
         </div>

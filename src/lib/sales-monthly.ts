@@ -8,6 +8,20 @@ import {
   type DailySaleTotals,
 } from "@/lib/sales-daily";
 
+export type MonthPurchaseTotals = {
+  count: number;
+  auction: number;
+  incidental: number;
+  cost: number;
+};
+
+export const EMPTY_MONTH_PURCHASES: MonthPurchaseTotals = {
+  count: 0,
+  auction: 0,
+  incidental: 0,
+  cost: 0,
+};
+
 export type MonthlyDayPoint = {
   date: string;
   day: number;
@@ -53,6 +67,7 @@ export type MonthlySalesReportData = {
   statuses: MonthlyStatusShare[];
   peakSalesDate: string;
   peakProfitDate: string;
+  purchases: MonthPurchaseTotals;
 };
 
 const CANCELLED = "취소";
@@ -118,6 +133,7 @@ function rankBuyers(rows: DailySaleRow[]): MonthlyBuyerRank[] {
 export function buildMonthlySalesReport(
   rows: DailySaleRow[],
   month: string,
+  purchases: MonthPurchaseTotals = EMPTY_MONTH_PURCHASES,
 ): MonthlySalesReportData {
   const { start, end, days } = monthBounds(month);
   const monthIssued = rows.filter(
@@ -201,5 +217,6 @@ export function buildMonthlySalesReport(
     statuses: [...statusMap.values()],
     peakSalesDate,
     peakProfitDate,
+    purchases,
   };
 }
