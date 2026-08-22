@@ -9,16 +9,25 @@ import {
 } from "@/lib/sales-daily";
 import { isStatementExtraLine } from "@/lib/statement";
 
-export async function loadSaleRowsThrough(date: string): Promise<DailySaleRow[]> {
+export async function loadSaleRowsThrough(
+  date: string,
+  from?: string,
+): Promise<DailySaleRow[]> {
   const listingSelect = {
     costPrice: true,
     auctionPrice: true,
     incidentalCost: true,
   } as const;
+  const statementDate = from
+    ? { issueDate: { gte: from, lte: date } }
+    : { issueDate: { lte: date } };
+  const invoiceDate = from
+    ? { invoiceDate: { gte: from, lte: date } }
+    : { invoiceDate: { lte: date } };
 
   const [statements, invoices] = await Promise.all([
     prisma.transactionStatement.findMany({
-      where: { issueDate: { lte: date } },
+      where: statementDate,
       orderBy: [{ issueDate: "asc" }, { createdAt: "asc" }],
       include: {
         items: {
@@ -28,7 +37,7 @@ export async function loadSaleRowsThrough(date: string): Promise<DailySaleRow[]>
       },
     }),
     prisma.overseasInvoice.findMany({
-      where: { invoiceDate: { lte: date } },
+      where: invoiceDate,
       orderBy: [{ invoiceDate: "asc" }, { createdAt: "asc" }],
       include: {
         items: {

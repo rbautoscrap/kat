@@ -88,9 +88,9 @@ function isCancelled(row: DailySaleRow) {
 
 function isOpenReceivable(row: DailySaleRow) {
   return (
-    row.inReceivableLedger &&
     row.shipmentType !== SALE_SHIPMENT_DONE &&
-    !isCancelled(row)
+    !isCancelled(row) &&
+    parseSaleMoney(row.remaining) > 0
   );
 }
 
@@ -120,30 +120,15 @@ export function buildMonthlySalesReport(
   month: string,
 ): MonthlySalesReportData {
   const { start, end, days } = monthBounds(month);
-  const monthSales = rows.filter(
-    (row) =>
-      row.currency === "KRW" &&
-      row.source === "statement" &&
-      inMonth(row.issueDate, start, end) &&
-      !isCancelled(row),
-  );
   const monthIssued = rows.filter(
-    (row) =>
-      row.currency === "KRW" &&
-      row.source === "statement" &&
-      inMonth(row.issueDate, start, end),
+    (row) => row.currency === "KRW" && inMonth(row.issueDate, start, end),
   );
+  const monthSales = monthIssued.filter((row) => !isCancelled(row));
   const monthReceivables = monthSales.filter(isOpenReceivable);
-  const outstanding = rows.filter(
-    (row) =>
-      row.currency === "KRW" &&
-      row.issueDate <= end &&
-      isOpenReceivable(row),
-  );
   const fxOpen = rows.filter(
     (row) =>
       row.currency !== "KRW" &&
-      row.issueDate <= end &&
+      inMonth(row.issueDate, start, end) &&
       isOpenReceivable(row),
   );
 
@@ -203,14 +188,14 @@ export function buildMonthlySalesReport(
     salesCount: monthSales.length,
     monthReceivables: sumSaleRows(monthReceivables),
     monthReceivableCount: monthReceivables.length,
-    outstanding: sumSaleRows(outstanding),
-    outstandingCount: outstanding.length,
+    outstanding: sumSaleRows(monthReceivables),
+    outstandingCount: monthReceivables.length,
     fxRemaining: sumSaleRows(fxOpen, fxOpen[0]?.currency ?? "USD").remaining,
     fxCount: fxOpen.length,
     fxCurrency: fxOpen[0]?.currency ?? "USD",
     daily,
     buyers: rankBuyers(monthSales).slice(0, 10),
-    outstandingBuyers: rankBuyers(outstanding)
+    outstandingBuyers: rankBuyers(monthReceivables)
       .sort((a, b) => b.remaining - a.remaining)
       .slice(0, 10),
     statuses: [...statusMap.values()],

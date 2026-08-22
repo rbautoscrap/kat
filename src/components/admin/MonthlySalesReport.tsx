@@ -150,24 +150,23 @@ export function MonthlySalesReport({ report }: Props) {
         </div>
 
         <section className="month-kpis" aria-label="월간 요약">
-          <Kpi label="당월 판매액" value={money(report.sales.total)} note={`${report.salesCount}건`} />
+          <Kpi
+            label="당월 판매액"
+            value={money(report.sales.total)}
+            note={`${report.salesCount}건 · 공급 ${money(report.sales.supply)} · 부가세 ${money(report.sales.vat)}`}
+          />
           <Kpi
             label="영업이익"
             value={money(report.sales.profit)}
-            note={`원가 ${money(report.sales.cost)}`}
+            note={`공급 ${money(report.sales.supply)} − 원가 ${money(report.sales.cost)}`}
             tone={report.sales.profit >= 0 ? "profit" : "loss"}
           />
+          <Kpi label="당월 원가" value={money(report.sales.cost)} />
           <Kpi label="당월 입금" value={money(report.sales.paid)} />
           <Kpi
-            label="당월 발생 미수"
+            label="당월 미수"
             value={money(report.monthReceivables.remaining)}
             note={`${report.monthReceivableCount}건`}
-            tone="warn"
-          />
-          <Kpi
-            label="미수 잔액"
-            value={money(report.outstanding.remaining)}
-            note={`${report.outstandingCount}건`}
             tone="warn"
           />
           <Kpi
@@ -182,7 +181,9 @@ export function MonthlySalesReport({ report }: Props) {
         </section>
 
         <p className="month-insight">
-          최고 판매일 {dateLabel(report.peakSalesDate)} · 최고 이익일{" "}
+          {report.start}부터 {report.end}까지 거래명세서 품목 기준입니다.
+          영업이익은 공급가액에서 낙찰원가를 뺀 금액입니다. 최고 판매일{" "}
+          {dateLabel(report.peakSalesDate)} · 최고 이익일{" "}
           {dateLabel(report.peakProfitDate)}
         </p>
 

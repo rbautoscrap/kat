@@ -30,7 +30,8 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
   const view = params.view === "month" ? "month" : "daily";
   const month = parseYearMonth(params.month, date) || date.slice(0, 7);
   const through = view === "month" ? monthBounds(month).end : date;
-  const allRows = await loadSaleRowsThrough(through);
+  const from = view === "month" ? monthBounds(month).start : undefined;
+  const allRows = await loadSaleRowsThrough(through, from);
 
   const daySales = allRows.filter(
     (row) =>
@@ -67,7 +68,7 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
           </h2>
           <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
             {view === "month"
-              ? "선택한 달의 판매·영업이익·미수·구매자 순위를 한 화면에서 확인합니다."
+              ? "선택한 달 1일부터 말일까지 거래명세서를 기준으로 판매·영업이익·미수를 집계합니다."
               : "오늘부터 작성한 거래명세서·해외 인보이스가 자동으로 반영됩니다. 아래 미리보기에서 입금·분류를 수정하고 출력 또는 이미지로 저장하세요."}
           </p>
         </div>
