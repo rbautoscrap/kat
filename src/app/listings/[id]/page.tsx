@@ -30,7 +30,6 @@ import {
   formatTransmission,
   isPartsCategory,
   SALE_STATUS_LABELS,
-  listingKakaoInquiryText,
   listingWhatsAppLink,
   whatsappLink,
   youtubeEmbedUrl,
@@ -212,7 +211,6 @@ export default async function ListingDetailPage({ params }: Props) {
     listing.title,
     inquiryOptions,
   );
-  const kakaoInquiry = listingKakaoInquiryText(listing.title, inquiryOptions);
 
   const isParts = isPartsCategory(listing.category);
   const contactDigits = listing.whatsappNumber.replace(/\D/g, "");
@@ -367,10 +365,7 @@ export default async function ListingDetailPage({ params }: Props) {
       <div className="mb-5 overflow-hidden rounded-sm border border-[var(--line)]">
         {!isParts ? (
           <div className="border-b border-[var(--line)] bg-neutral-50 px-2.5 py-2 sm:px-3">
-            <ListingContactLinks
-              whatsappHref={wa}
-              inquiryText={kakaoInquiry}
-            />
+            <ListingContactLinks whatsappHref={wa} />
           </div>
         ) : null}
 
