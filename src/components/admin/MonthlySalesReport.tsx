@@ -195,7 +195,7 @@ export function MonthlySalesReport({ report }: Props) {
         <section className="month-panel">
           <div className="month-panel-head">
             <h2>당월 매입비용</h2>
-            <p>입고일 기준 · 낙찰가 + 부대비용</p>
+            <p>Stand by · Car Listings 입고 기준 · 낙찰가 + 부대비용</p>
           </div>
           <div className="month-status">
             <div>
