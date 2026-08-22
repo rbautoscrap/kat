@@ -34,6 +34,7 @@ import {
   whatsappLink,
   youtubeEmbedUrl,
 } from "@/lib/listings";
+import { PRICE_INQUIRY_WHATSAPP } from "@/lib/contact";
 import { displayAccumulatedDays } from "@/lib/listing-actions";
 import { recordListingView } from "@/lib/listing-views";
 import {
@@ -206,10 +207,15 @@ export default async function ListingDetailPage({ params }: Props) {
     make: listing.make,
     model: listing.model,
   };
-  const wa = listingWhatsAppLink(
+  const waPrice = listingWhatsAppLink(
+    PRICE_INQUIRY_WHATSAPP,
+    listing.title,
+    { ...inquiryOptions, purpose: "price" },
+  );
+  const waCs = listingWhatsAppLink(
     listing.whatsappNumber,
     listing.title,
-    inquiryOptions,
+    { ...inquiryOptions, purpose: "cs" },
   );
 
   const isParts = isPartsCategory(listing.category);
@@ -365,7 +371,7 @@ export default async function ListingDetailPage({ params }: Props) {
       <div className="mb-5 overflow-hidden rounded-sm border border-[var(--line)]">
         {!isParts ? (
           <div className="border-b border-[var(--line)] bg-neutral-50 px-2.5 py-2 sm:px-3">
-            <ListingContactLinks whatsappHref={wa} />
+            <ListingContactLinks priceHref={waPrice} csHref={waCs} />
           </div>
         ) : null}
 

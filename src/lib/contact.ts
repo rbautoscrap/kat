@@ -15,6 +15,10 @@ export const CONTACT_WHATSAPP =
   process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT ??
   (DEFAULT_LISTING_WHATSAPP.replace(/\D/g, "") || "821058172207");
 
+/** Vehicle price inquiries only (listing detail blue WhatsApp). */
+export const PRICE_INQUIRY_WHATSAPP =
+  process.env.NEXT_PUBLIC_PRICE_INQUIRY_WHATSAPP ?? "+82 1094002207";
+
 /**
  * KakaoTalk Open Chat or Channel URL (https://open.kakao.com/... or pf.kakao.com/...).
  * Override with NEXT_PUBLIC_KAKAOTALK_URL when needed.

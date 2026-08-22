@@ -1,9 +1,10 @@
 type Props = {
-  whatsappHref: string | null;
+  priceHref: string | null;
+  csHref: string | null;
 };
 
-export function ListingContactLinks({ whatsappHref }: Props) {
-  if (!whatsappHref) {
+export function ListingContactLinks({ priceHref, csHref }: Props) {
+  if (!priceHref && !csHref) {
     return (
       <p className="text-[12px] leading-snug tracking-wide text-neutral-500">
         Contact unavailable
@@ -12,16 +13,44 @@ export function ListingContactLinks({ whatsappHref }: Props) {
   }
 
   return (
-    <div className="flex w-full">
-      <a
-        href={whatsappHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex h-7 w-full items-center justify-center gap-1 rounded bg-[#25D366] px-2 text-[11.5px] font-medium tracking-wide text-white transition hover:brightness-95 sm:h-8 sm:text-[12px]"
-      >
-        <WhatsAppIcon />
-        WhatsApp
-      </a>
+    <div className="flex w-full flex-col gap-1.5">
+      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+        {priceHref ? (
+          <a
+            href={priceHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded bg-[#1877F2] px-2 py-1.5 text-white transition hover:brightness-95"
+          >
+            <span className="inline-flex items-center gap-1 text-[12px] font-semibold tracking-wide">
+              <WhatsAppIcon />
+              Price inquiry
+            </span>
+            <span className="text-[10.5px] font-medium tracking-wide text-white/90">
+              가격 문의만
+            </span>
+          </a>
+        ) : null}
+        {csHref ? (
+          <a
+            href={csHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded bg-[#25D366] px-2 py-1.5 text-white transition hover:brightness-95"
+          >
+            <span className="inline-flex items-center gap-1 text-[12px] font-semibold tracking-wide">
+              <WhatsAppIcon />
+              Documents / CS
+            </span>
+            <span className="text-[10.5px] font-medium tracking-wide text-white/90">
+              서류 · 명세서 · 말소 · 통관
+            </span>
+          </a>
+        ) : null}
+      </div>
+      <p className="text-center text-[10.5px] leading-snug tracking-wide text-neutral-500 sm:text-left">
+        Blue: vehicle price only · Green: documents, statement, customs
+      </p>
     </div>
   );
 }

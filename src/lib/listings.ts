@@ -133,6 +133,8 @@ export function whatsappLink(phone: string, text: string) {
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
+export type ListingInquiryPurpose = "price" | "cs";
+
 export type ListingInquiryOptions = {
   listingUrl?: string | null;
   serialNumber?: string | null;
@@ -140,6 +142,7 @@ export type ListingInquiryOptions = {
   year?: number | null;
   make?: string | null;
   model?: string | null;
+  purpose?: ListingInquiryPurpose;
 };
 
 /**
@@ -150,12 +153,17 @@ export function listingInquiryText(
   title: string,
   options?: ListingInquiryOptions,
 ) {
+  const purpose = options?.purpose ?? "price";
   const vehicle = title.trim() || "this vehicle";
-  const lines = [
-    "Hello, I am interested in this vehicle.",
-    "",
-    `Vehicle: ${vehicle}`,
-  ];
+  const greeting =
+    purpose === "cs"
+      ? "Hello, I would like to inquire about documents, a transaction statement, deregistration, or customs for this vehicle."
+      : "Hello, I would like to inquire about the price of this vehicle.";
+  const closing =
+    purpose === "cs"
+      ? "Please advise on the required documents and process. Thank you."
+      : "Please share the price. Thank you.";
+  const lines = [greeting, "", `Vehicle: ${vehicle}`];
   const ym =
     options?.year && options?.make && options?.model
       ? `${options.year} ${options.make} ${options.model}`.trim()
@@ -171,7 +179,7 @@ export function listingInquiryText(
   if (url) {
     lines.push(`Link: ${url}`);
   }
-  lines.push("", "Please share the price and more details. Thank you.");
+  lines.push("", closing);
   return lines.join("\n");
 }
 
