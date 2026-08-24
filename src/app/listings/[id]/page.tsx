@@ -219,6 +219,7 @@ export default async function ListingDetailPage({ params }: Props) {
   );
 
   const isParts = isPartsCategory(listing.category);
+  const isLiveAuction = listing.category === "LIVE_AUCTION";
   const contactDigits = listing.whatsappNumber.replace(/\D/g, "");
   const contactDisplay = listing.whatsappNumber.trim() || "—";
   const partsWhatsAppHref =
@@ -369,7 +370,7 @@ export default async function ListingDetailPage({ params }: Props) {
       ) : null}
 
       <div className="mb-5 overflow-hidden rounded-sm border border-[var(--line)]">
-        {!isParts ? (
+        {!isParts && !isLiveAuction ? (
           <div className="border-b border-[var(--line)] bg-neutral-50 px-2.5 py-2 sm:px-3">
             <ListingContactLinks priceHref={waPrice} csHref={waCs} />
           </div>
