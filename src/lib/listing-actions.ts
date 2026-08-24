@@ -246,6 +246,16 @@ const listingFieldsSchema = z.object({
       });
     }
   }
+  if (data.category === "CAR_LISTINGS" || data.category === "STAND_BY") {
+    const auction = Number(data.auctionPrice ?? "0") || 0;
+    if (!data.auctionPrice || auction <= 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["auctionPrice"],
+        message: "차량 매물과 스탠바이는 낙찰가를 입력해 주세요.",
+      });
+    }
+  }
   if (data.category !== "LIVE_AUCTION") return;
   const raw = data.auctionEndsAt?.trim();
   if (!raw) {

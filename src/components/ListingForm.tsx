@@ -457,6 +457,18 @@ export function ListingForm({
       data.set("year", String(yearNum));
     }
 
+    if (category === "CAR_LISTINGS" || category === "STAND_BY") {
+      const auctionDigits = String(data.get("auctionPrice") ?? "").replace(
+        /\D/g,
+        "",
+      );
+      if (!auctionDigits || Number(auctionDigits) <= 0) {
+        setError("낙찰가를 입력해 주세요.");
+        setPending(false);
+        return;
+      }
+    }
+
     if (category === "LIVE_AUCTION") {
       const rawEnds = String(data.get("auctionEndsAt") ?? "").trim();
       const parsedEnds = parseAuctionEndsAtInput(rawEnds);
@@ -938,6 +950,9 @@ export function ListingForm({
             <InternalCostFields
               auctionPrice={listing?.auctionPrice ?? undefined}
               incidentalCost={listing?.incidentalCost ?? undefined}
+              auctionPriceRequired={
+                category === "CAR_LISTINGS" || category === "STAND_BY"
+              }
             />
           </div>
         </div>
@@ -1569,9 +1584,11 @@ function sumCostDisplay(auction: string, incidental: string) {
 function InternalCostFields({
   auctionPrice,
   incidentalCost,
+  auctionPriceRequired = false,
 }: {
   auctionPrice?: string;
   incidentalCost?: string;
+  auctionPriceRequired?: boolean;
 }) {
   const [auction, setAuction] = useState(() =>
     formatOdometer(auctionPrice ?? ""),
@@ -1586,12 +1603,16 @@ function InternalCostFields({
       <label className="block text-sm">
         <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
           낙찰가
+          {auctionPriceRequired ? (
+            <span className="ml-1.5 font-normal text-neutral-400">(필수)</span>
+          ) : null}
         </span>
         <input
           name="auctionPrice"
           type="text"
           inputMode="numeric"
           autoComplete="off"
+          required={auctionPriceRequired}
           placeholder="예: 10,000,000"
           value={auction}
           onChange={(e) => setAuction(formatOdometer(e.target.value))}
