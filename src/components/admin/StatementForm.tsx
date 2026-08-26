@@ -389,7 +389,7 @@ export function StatementForm({
           placeholder="시리얼, 차량명, VIN…"
           className={fieldClass}
         />
-        <div className="mt-2 max-h-48 overflow-y-auto rounded-md border border-[var(--line)]">
+        <div className="mt-2 max-h-48 overflow-y-auto rounded-md border-2 border-red-500">
           {filteredListings.length === 0 ? (
             <p className="px-3 py-3 text-[13px] text-neutral-500">
               검색 결과가 없습니다.
@@ -440,7 +440,7 @@ export function StatementForm({
           <button
             type="button"
             onClick={addExtraLine}
-            className="inline-flex h-8 items-center rounded-md border border-neutral-300 bg-white px-2.5 text-[12.5px] font-medium text-neutral-700 transition hover:bg-neutral-50"
+            className="inline-flex h-8 items-center rounded-md border border-amber-500 bg-amber-500 px-2.5 text-[12.5px] font-semibold text-white transition hover:bg-amber-600"
           >
             + 별도 금액
           </button>
@@ -579,7 +579,7 @@ export function StatementForm({
                 className={fieldClass}
                 autoComplete="off"
               />
-              <div className="mt-2 max-h-40 overflow-y-auto rounded-md border border-[var(--line)]">
+              <div className="mt-2 max-h-40 overflow-y-auto rounded-md border-2 border-red-500">
                 {filteredMembers.length === 0 ? (
                   <p className="px-3 py-3 text-[13px] text-neutral-500">
                     {memberQuery.trim()
