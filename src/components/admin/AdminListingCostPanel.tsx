@@ -1,10 +1,21 @@
-function formatWon(value?: string | null): string {
-  if (!value) return "—";
+const MARGIN_RATES = [0.05, 0.1, 0.2] as const;
+
+function parseWonDigits(value?: string | null): number | null {
+  if (!value) return null;
   const digits = value.replace(/\D/g, "");
-  if (!digits) return "—";
+  if (!digits) return null;
   const n = Number(digits);
-  if (!Number.isFinite(n)) return "—";
+  return Number.isFinite(n) ? n : null;
+}
+
+function formatWon(value?: string | null): string {
+  const n = parseWonDigits(value);
+  if (n == null) return "—";
   return `${n.toLocaleString("ko-KR")}원`;
+}
+
+function formatMarginWon(cost: number, rate: number) {
+  return `${Math.round(cost * (1 + rate)).toLocaleString("ko-KR")}원`;
 }
 
 type Props = {
@@ -28,6 +39,7 @@ export function AdminListingCostPanel({
       ? "—"
       : `${accumulatedDays.toLocaleString("ko-KR")}일`;
   const views = (viewCount ?? 0).toLocaleString("ko-KR");
+  const cost = showCostFields ? parseWonDigits(costPrice) : null;
 
   return (
     <section className="mb-3 rounded-sm border border-amber-200 bg-amber-50/60 px-3 py-2 sm:px-3.5">
@@ -79,6 +91,20 @@ export function AdminListingCostPanel({
           관리자 · 회원 비공개
         </p>
       </div>
+      {cost != null && cost > 0 ? (
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-4 gap-y-1 border-t border-amber-200/80 pt-1.5 text-[12.5px]">
+          {MARGIN_RATES.map((rate) => (
+            <p key={rate} className="flex items-baseline gap-1.5">
+              <span className="font-medium tracking-wide text-amber-900/80">
+                마진 {Math.round(rate * 100)}%
+              </span>
+              <span className="font-semibold tabular-nums text-red-700">
+                {formatMarginWon(cost, rate)}
+              </span>
+            </p>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }
