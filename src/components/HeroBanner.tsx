@@ -12,12 +12,12 @@ export async function HeroBanner() {
 
   return (
     <div className="border-b border-[var(--line)] bg-neutral-50/60">
-      <div className="site-container flex flex-col gap-2.5 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-5">
+      <div className="site-container relative flex flex-col items-center justify-center py-3.5 sm:py-5">
         <CsResumeBanner resumeAt={resumeAt} />
         {canList ? (
           <Link
             href="/listings/new"
-            className="inline-flex h-9 w-full shrink-0 items-center justify-center rounded-md border border-neutral-300 bg-white px-3.5 text-[12.5px] font-medium tracking-wide text-neutral-700 transition hover:border-neutral-400 hover:bg-neutral-50 sm:h-8 sm:w-auto"
+            className="mt-2 inline-flex h-9 w-full shrink-0 items-center justify-center rounded-md border border-neutral-300 bg-white px-3.5 text-[12.5px] font-medium tracking-wide text-neutral-700 transition hover:border-neutral-400 hover:bg-neutral-50 sm:absolute sm:right-0 sm:top-1/2 sm:mt-0 sm:h-8 sm:w-auto sm:-translate-y-1/2"
           >
             + List
           </Link>

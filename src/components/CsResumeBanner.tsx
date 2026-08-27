@@ -34,14 +34,14 @@ export function CsResumeBanner({ resumeAt }: Props) {
 
   if (remainMs <= 0) {
     return (
-      <p className="min-w-0 text-[12px] leading-relaxed tracking-wide text-neutral-500 sm:text-[12.5px] sm:leading-snug">
+      <p className="flex min-w-0 flex-wrap items-baseline justify-center gap-x-3 gap-y-0.5 text-center text-[12.5px] leading-snug tracking-wide text-neutral-500">
         {CONTACT_LINE}
       </p>
     );
   }
 
   return (
-    <p className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[12.5px] leading-snug tracking-wide text-neutral-500">
+    <p className="flex min-w-0 flex-wrap items-baseline justify-center gap-x-3 gap-y-0.5 text-center text-[12.5px] leading-snug tracking-wide text-neutral-500">
       <span>CS consultations begin at 9:00 AM KST</span>
       <span className="font-medium tabular-nums text-neutral-800">
         {formatRemain(remainMs)}
