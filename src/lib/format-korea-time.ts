@@ -109,3 +109,13 @@ export function koreaTodayDate(value: Date = new Date()): string {
 
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
+
+/** Next 09:00 Asia/Seoul. If it is already 09:00 or later, returns tomorrow 09:00. */
+export function nextKoreaNineAm(now: Date = new Date()): Date {
+  const today = koreaTodayDate(now);
+  const nineToday = parseAuctionEndsAtInput(`${today}T09:00:00`);
+  if (!nineToday) return now;
+  if (now.getTime() < nineToday.getTime()) return nineToday;
+  return new Date(nineToday.getTime() + 24 * 60 * 60 * 1000);
+}
+
