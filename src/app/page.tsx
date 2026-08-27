@@ -127,8 +127,8 @@ export default async function HomePage({ searchParams }: Props) {
       )}
       <HeroBanner />
       <ListingSection
-        category="LIVE_AUCTION"
-        listings={liveAuction}
+        category="STAND_BY"
+        listings={standBy}
         {...sectionProps}
       />
       <ListingSection
@@ -137,13 +137,13 @@ export default async function HomePage({ searchParams }: Props) {
         {...sectionProps}
       />
       <ListingSection
-        category="STAND_BY"
-        listings={standBy}
+        category="USED_PARTS"
+        listings={usedParts}
         {...sectionProps}
       />
       <ListingSection
-        category="USED_PARTS"
-        listings={usedParts}
+        category="LIVE_AUCTION"
+        listings={liveAuction}
         {...sectionProps}
       />
     </>
