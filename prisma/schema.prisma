@@ -318,3 +318,10 @@ model SiteStats {
   todayVisits Int    @default(0)
   todayDate   String @default("")
 }
+
+/** Singleton site flags (admin toggles). */
+model SiteSetting {
+  id                    String   @id @default("main")
+  priceInquiryHoliday   Boolean  @default(false)
+  updatedAt             DateTime @updatedAt
+}

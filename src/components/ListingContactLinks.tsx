@@ -1,9 +1,14 @@
 type Props = {
   priceHref: string | null;
   csHref: string | null;
+  holidayMode?: boolean;
 };
 
-export function ListingContactLinks({ priceHref, csHref }: Props) {
+export function ListingContactLinks({
+  priceHref,
+  csHref,
+  holidayMode = false,
+}: Props) {
   if (!priceHref && !csHref) {
     return (
       <p className="text-[12px] leading-snug tracking-wide text-neutral-500">
@@ -39,7 +44,9 @@ export function ListingContactLinks({ priceHref, csHref }: Props) {
         ) : null}
       </div>
       <p className="text-center text-[10.5px] leading-snug tracking-wide text-neutral-500 sm:text-left">
-        Blue: vehicle price only · Green: documents, statement, customs
+        {holidayMode
+          ? "Holiday: Price Check Only connects to Documents / CS"
+          : "Blue: vehicle price only · Green: documents, statement, customs"}
       </p>
     </div>
   );

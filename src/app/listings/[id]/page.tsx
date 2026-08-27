@@ -37,6 +37,7 @@ import {
 import { PRICE_INQUIRY_WHATSAPP } from "@/lib/contact";
 import { displayAccumulatedDays } from "@/lib/listing-actions";
 import { recordListingView } from "@/lib/listing-views";
+import { isPriceInquiryHoliday } from "@/lib/site-settings";
 import {
   isMemberOutbidByOthers,
   type OfferCurrencyCode,
@@ -56,6 +57,7 @@ export default async function ListingDetailPage({ params }: Props) {
 
   const session = await auth();
   const dbUser = await resolveSessionDbUser();
+  const holidayMode = await isPriceInquiryHoliday();
   const canEdit = await userCanModifyListing(
     listing.authorId,
     listing.category,
@@ -208,7 +210,7 @@ export default async function ListingDetailPage({ params }: Props) {
     model: listing.model,
   };
   const waPrice = listingWhatsAppLink(
-    PRICE_INQUIRY_WHATSAPP,
+    holidayMode ? listing.whatsappNumber : PRICE_INQUIRY_WHATSAPP,
     listing.title,
     { ...inquiryOptions, purpose: "price" },
   );
@@ -372,7 +374,11 @@ export default async function ListingDetailPage({ params }: Props) {
       <div className="mb-5 overflow-hidden rounded-sm border border-[var(--line)]">
         {!isParts && !isLiveAuction ? (
           <div className="border-b border-[var(--line)] bg-neutral-50 px-2.5 py-2 sm:px-3">
-            <ListingContactLinks priceHref={waPrice} csHref={waCs} />
+            <ListingContactLinks
+              priceHref={waPrice}
+              csHref={waCs}
+              holidayMode={holidayMode}
+            />
           </div>
         ) : null}
 
