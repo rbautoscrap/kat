@@ -137,13 +137,13 @@ export default async function HomePage({ searchParams }: Props) {
         {...sectionProps}
       />
       <ListingSection
-        category="USED_PARTS"
-        listings={usedParts}
+        category="LIVE_AUCTION"
+        listings={liveAuction}
         {...sectionProps}
       />
       <ListingSection
-        category="LIVE_AUCTION"
-        listings={liveAuction}
+        category="USED_PARTS"
+        listings={usedParts}
         {...sectionProps}
       />
     </>
