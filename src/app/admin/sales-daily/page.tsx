@@ -5,6 +5,7 @@ import { koreaTodayDate } from "@/lib/format-korea-time";
 import { loadMonthPurchases, loadSaleRowsThrough } from "@/lib/sales-daily-load";
 import {
   isSettledSaleRow,
+  parseSalesDailyView,
   sortSaleRowsByRecentDate,
 } from "@/lib/sales-daily";
 import {
@@ -29,7 +30,7 @@ function parseDate(value?: string) {
 export default async function AdminDailySalesPage({ searchParams }: Props) {
   const params = await searchParams;
   const date = parseDate(params.date);
-  const view = params.view === "month" ? "month" : "daily";
+  const view = parseSalesDailyView(params.view);
   const month = parseYearMonth(params.month, date) || date.slice(0, 7);
   const prevMonth = previousYearMonth(month);
   const through = view === "month" ? monthBounds(month).end : date;
@@ -87,12 +88,22 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
       <div className="daily-sales-head daily-sales-no-print">
         <div>
           <h2 className="text-[17px] font-bold tracking-tight text-neutral-900">
-            {view === "month" ? "월말보고서" : "일일판매현황"}
+            {view === "month"
+              ? "월말보고서"
+              : view === "recv"
+                ? "미수금현황"
+                : view === "fx"
+                  ? "외화 미수금현황"
+                  : "일일판매현황"}
           </h2>
           <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
             {view === "month"
               ? "선택한 달 1일부터 말일까지 거래명세서와 입고 매입비용을 기준으로 집계하고, 전월 대비 증감을 함께 보여 줍니다."
-              : "오늘부터 작성한 거래명세서·해외 인보이스가 자동으로 반영됩니다. 아래 미리보기에서 입금·분류를 수정하고 출력 또는 이미지로 저장하세요."}
+              : view === "recv"
+                ? "미수 원장에 등록된 원화 항목만 보여 줍니다. 입금·분류를 수정하고 출력 또는 이미지로 저장하세요."
+                : view === "fx"
+                  ? "미수 원장에 등록된 외화 항목만 보여 줍니다. 입금·분류를 수정하고 출력 또는 이미지로 저장하세요."
+                  : "오늘부터 작성한 거래명세서·해외 인보이스가 자동으로 반영됩니다. 아래 미리보기에서 입금·분류를 수정하고 출력 또는 이미지로 저장하세요."}
           </p>
         </div>
         <DailySalesToolbar date={date} month={month} view={view} />
@@ -102,8 +113,9 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
         <MonthlySalesReport key={month} report={monthly} />
       ) : (
         <DailySalesReport
-          key={date}
+          key={`${view}-${date}`}
           date={date}
+          focus={view === "recv" || view === "fx" ? view : undefined}
           daySales={daySales}
           receivables={receivables}
           fxReceivables={fxReceivables}

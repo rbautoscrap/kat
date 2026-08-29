@@ -29,6 +29,13 @@ export function displayShipmentType(value: string | null | undefined) {
 
 export type DailySaleSource = "statement" | "invoice";
 
+export type SalesDailyView = "daily" | "month" | "recv" | "fx";
+
+export function parseSalesDailyView(value?: string): SalesDailyView {
+  if (value === "month" || value === "recv" || value === "fx") return value;
+  return "daily";
+}
+
 export type DailySaleRow = {
   source: DailySaleSource;
   itemId: string;

@@ -1670,6 +1670,36 @@ main {
   color: #fff;
 }
 
+.daily-sales-ledger-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.daily-sales-ledger-icons button {
+  display: inline-flex;
+  height: 32px;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  background: #fff;
+  padding: 0 8px;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.daily-sales-ledger-icons button:hover {
+  background: #fef2f2;
+}
+
+.daily-sales-ledger-icons button.is-active {
+  border-color: #dc2626;
+  background: #dc2626;
+  color: #fff;
+}
+
 .daily-sales-date-label {
   display: flex;
   align-items: center;

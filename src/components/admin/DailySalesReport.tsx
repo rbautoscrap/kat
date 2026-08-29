@@ -102,6 +102,7 @@ async function captureDailySalesPng(
 
 type Props = {
   date: string;
+  focus?: "recv" | "fx";
   daySales: DailySaleRow[];
   receivables: DailySaleRow[];
   fxReceivables: DailySaleRow[];
@@ -140,6 +141,7 @@ function optionLabel(row: DailySaleRow) {
 
 export function DailySalesReport({
   date,
+  focus,
   daySales: initialDaySales,
   receivables: initialReceivables,
   fxReceivables: initialFx,
@@ -229,7 +231,10 @@ export function DailySalesReport({
     () => sumSaleRows(fxReceivables, fxReceivables[0]?.currency ?? "USD"),
     [fxReceivables],
   );
-  const buyers = useMemo(() => buyerSummaries(receivables), [receivables]);
+  const buyers = useMemo(
+    () => buyerSummaries(focus === "fx" ? fxReceivables : receivables),
+    [focus, fxReceivables, receivables],
+  );
   const [exportBusy, setExportBusy] = useState(false);
   const [exportMessage, setExportMessage] = useState("");
 
@@ -249,7 +254,12 @@ export function DailySalesReport({
       }
       const a = document.createElement("a");
       a.href = dataUrl;
-      a.download = `일일판매현황-${date}.png`;
+      a.download =
+        focus === "recv"
+          ? `미수금현황-${date}.png`
+          : focus === "fx"
+            ? `외화미수금현황-${date}.png`
+            : `일일판매현황-${date}.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -293,88 +303,166 @@ export function DailySalesReport({
       ) : null}
       <div id="daily-sales-document" className="daily-sales-document">
         <div className="daily-sales-print-title">
-          <h1>수출사업 판매현황</h1>
+          <h1>
+            {focus === "recv"
+              ? "미수금현황"
+              : focus === "fx"
+                ? "외화 미수금현황"
+                : "수출사업 판매현황"}
+          </h1>
           <p>작성일 {date}</p>
         </div>
         <div className="daily-sales-report">
           <section className="daily-sales-kpis" aria-label="요약">
-            <Kpi label={`${date.slice(5).replace("-", "/")} 판매액`} value={dayTotals.total} />
-            <Kpi
-              label={`${date.slice(5).replace("-", "/")} 예상미수금`}
-              value={recvTotals.remaining}
-              warn
-            />
-            <Kpi label={`${date.slice(5).replace("-", "/")} 입금액`} value={dayTotals.paid} />
-            <Kpi label="미수 원장" value={recvTotals.total} />
-            <Kpi label="영업이익" value={dayTotals.profit} profit />
-            <Kpi label="외화 미수금" value={fxTotals.remaining} fx={fxReceivables[0]?.currency} />
+            {focus === "recv" ? (
+              <>
+                <Kpi label="미수 원장" value={recvTotals.total} />
+                <Kpi label="잔액금" value={recvTotals.remaining} warn />
+                <Kpi label="입금액" value={recvTotals.paid} />
+                <Kpi label="영업이익" value={recvTotals.profit} profit />
+              </>
+            ) : focus === "fx" ? (
+              <>
+                <Kpi
+                  label="외화 미수금"
+                  value={fxTotals.remaining}
+                  fx={fxReceivables[0]?.currency}
+                  warn
+                />
+                <Kpi
+                  label="외화 입금액"
+                  value={fxTotals.paid}
+                  fx={fxReceivables[0]?.currency}
+                />
+                <Kpi
+                  label="외화 공급금액"
+                  value={fxTotals.supply}
+                  fx={fxReceivables[0]?.currency}
+                />
+              </>
+            ) : (
+              <>
+                <Kpi label={`${date.slice(5).replace("-", "/")} 판매액`} value={dayTotals.total} />
+                <Kpi
+                  label={`${date.slice(5).replace("-", "/")} 예상미수금`}
+                  value={recvTotals.remaining}
+                  warn
+                />
+                <Kpi label={`${date.slice(5).replace("-", "/")} 입금액`} value={dayTotals.paid} />
+                <Kpi label="미수 원장" value={recvTotals.total} />
+                <Kpi label="영업이익" value={dayTotals.profit} profit />
+                <Kpi label="외화 미수금" value={fxTotals.remaining} fx={fxReceivables[0]?.currency} />
+              </>
+            )}
           </section>
 
-      <ReportTable
-        title="판매현황"
-        rows={daySales}
-        totals={dayTotals}
-        pending={pending}
-        onPatch={syncAll}
-        onSave={save}
-        empty="해당일 판매 명세서가 없습니다."
-      />
+      {focus ? null : (
+        <ReportTable
+          title="판매현황"
+          rows={daySales}
+          totals={dayTotals}
+          pending={pending}
+          onPatch={syncAll}
+          onSave={save}
+          empty="해당일 판매 명세서가 없습니다."
+        />
+      )}
 
-      <ReportTable
-        title="미수금현황"
-        rows={receivables}
-        totals={recvTotals}
-        pending={pending}
-        onPatch={syncAll}
-        onSave={save}
-        addable={addableKrw}
-        onAdd={addToLedger}
-        highlightUnpaid
-        empty="등록된 미수 항목이 없습니다."
-      />
+      {focus === "fx" ? null : (
+        <ReportTable
+          title="미수금현황"
+          rows={receivables}
+          totals={recvTotals}
+          pending={pending}
+          onPatch={syncAll}
+          onSave={save}
+          addable={addableKrw}
+          onAdd={addToLedger}
+          highlightUnpaid
+          empty="등록된 미수 항목이 없습니다."
+        />
+      )}
 
-      <ReportTable
-        title="외화 미수금현황"
-        rows={fxReceivables}
-        totals={fxTotals}
-        pending={pending}
-        onPatch={syncAll}
-        onSave={save}
-        addable={addableFx}
-        onAdd={addToLedger}
-        highlightUnpaid
-        fx
-        empty="등록된 외화 미수 항목이 없습니다."
-      />
+      {focus === "recv" ? null : (
+        <ReportTable
+          title="외화 미수금현황"
+          rows={fxReceivables}
+          totals={fxTotals}
+          pending={pending}
+          onPatch={syncAll}
+          onSave={save}
+          addable={addableFx}
+          onAdd={addToLedger}
+          highlightUnpaid
+          fx
+          empty="등록된 외화 미수 항목이 없습니다."
+        />
+      )}
 
       <aside className="daily-sales-side">
         <div className="daily-sales-side-card">
           <h3>소계</h3>
-          <p>
-            <span>판매소계</span>
-            <strong>{formatSaleMoney(recvTotals.total, "KRW")}</strong>
-          </p>
-          <p>
-            <span>입금소계</span>
-            <strong>{formatSaleMoney(recvTotals.paid, "KRW")}</strong>
-          </p>
-          <p>
-            <span>영업이익</span>
-            <strong className={profitToneClass(dayTotals.profit)}>
-              {formatSaleMoney(dayTotals.profit, "KRW")}
-            </strong>
-          </p>
-          <p>
-            <span>외화미수금</span>
-            <strong>
-              {fxReceivables.length
-                ? formatSaleMoney(
-                    fxTotals.remaining,
-                    fxReceivables[0]!.currency,
-                  )
-                : "0"}
-            </strong>
-          </p>
+          {focus === "fx" ? (
+            <>
+              <p>
+                <span>외화 공급</span>
+                <strong>
+                  {fxReceivables.length
+                    ? formatSaleMoney(fxTotals.supply, fxReceivables[0]!.currency)
+                    : "0"}
+                </strong>
+              </p>
+              <p>
+                <span>외화 입금</span>
+                <strong>
+                  {fxReceivables.length
+                    ? formatSaleMoney(fxTotals.paid, fxReceivables[0]!.currency)
+                    : "0"}
+                </strong>
+              </p>
+              <p>
+                <span>외화미수금</span>
+                <strong>
+                  {fxReceivables.length
+                    ? formatSaleMoney(
+                        fxTotals.remaining,
+                        fxReceivables[0]!.currency,
+                      )
+                    : "0"}
+                </strong>
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                <span>판매소계</span>
+                <strong>{formatSaleMoney(recvTotals.total, "KRW")}</strong>
+              </p>
+              <p>
+                <span>입금소계</span>
+                <strong>{formatSaleMoney(recvTotals.paid, "KRW")}</strong>
+              </p>
+              <p>
+                <span>영업이익</span>
+                <strong className={profitToneClass(recvTotals.profit)}>
+                  {formatSaleMoney(recvTotals.profit, "KRW")}
+                </strong>
+              </p>
+              {focus === "recv" ? null : (
+                <p>
+                  <span>외화미수금</span>
+                  <strong>
+                    {fxReceivables.length
+                      ? formatSaleMoney(
+                          fxTotals.remaining,
+                          fxReceivables[0]!.currency,
+                        )
+                      : "0"}
+                  </strong>
+                </p>
+              )}
+            </>
+          )}
         </div>
         <div className="daily-sales-side-card">
           <h3>구매자별 현황</h3>
@@ -388,12 +476,26 @@ export function DailySalesReport({
                     {b.buyerName}
                     <em>{b.count}건</em>
                   </span>
-                  <strong>{formatSaleMoney(b.total, "KRW")}</strong>
+                  <strong>
+                    {formatSaleMoney(
+                      b.total,
+                      focus === "fx"
+                        ? (fxReceivables[0]?.currency ?? "USD")
+                        : "KRW",
+                    )}
+                  </strong>
                 </li>
               ))}
               <li className="is-sum">
                 <span>합계</span>
-                <strong>{formatSaleMoney(recvTotals.total, "KRW")}</strong>
+                <strong>
+                  {formatSaleMoney(
+                    focus === "fx" ? fxTotals.total : recvTotals.total,
+                    focus === "fx"
+                      ? (fxReceivables[0]?.currency ?? "USD")
+                      : "KRW",
+                  )}
+                </strong>
               </li>
             </ul>
           )}
