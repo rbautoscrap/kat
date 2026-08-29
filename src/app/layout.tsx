@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import localFont from "next/font/local";
 import { Header } from "@/components/Header";
+import { OutageNoticeDialog } from "@/components/OutageNoticeDialog";
 import { SiteSearchBar } from "@/components/SiteSearchBar";
 import { Footer } from "@/components/Footer";
 import "./globals.css";
@@ -66,6 +67,7 @@ export default async function RootLayout({
       <body
         className={`${pretendard.className} flex min-h-full flex-col bg-white text-[16px] text-neutral-800 antialiased`}
       >
+        <OutageNoticeDialog />
         <Header />
         <Suspense fallback={<SiteSearchBarFallback />}>
           <SiteSearchBar />
