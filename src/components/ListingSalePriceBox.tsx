@@ -33,6 +33,14 @@ function PencilIcon() {
   );
 }
 
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden className="h-3.5 w-3.5" fill="currentColor">
+      <path d="M7.2 3.2h5.6l.35 1.1H16.5a.7.7 0 1 1 0 1.4h-.72l-.72 9.05A1.9 1.9 0 0 1 13.17 16.6H6.83a1.9 1.9 0 0 1-1.89-1.85L4.22 5.7H3.5a.7.7 0 1 1 0-1.4h3.35L7.2 3.2Zm.95 1.1-.2.6h4.1l-.2-.6H8.15ZM6.12 5.7l.71 8.9c.03.32.3.57.62.57h6.34c.32 0 .59-.25.62-.57l.71-8.9H6.12Zm2.13 1.7a.65.65 0 0 1 .65.65v5.1a.65.65 0 1 1-1.3 0v-5.1c0-.36.29-.65.65-.65Zm3.5 0c.36 0 .65.29.65.65v5.1a.65.65 0 1 1-1.3 0v-5.1c0-.36.29-.65.65-.65Z" />
+    </svg>
+  );
+}
+
 export function ListingSalePriceBox({
   listingId,
   salePrice,
@@ -55,18 +63,23 @@ export function ListingSalePriceBox({
     setOpen(true);
   }
 
-  function save() {
+  function save(nextValue = value, closeAfter = true) {
     if (!listingId) return;
     setError(null);
     startTransition(async () => {
-      const result = await updateListingSalePrice(listingId, value);
+      const result = await updateListingSalePrice(listingId, nextValue);
       if (!result.ok) {
         setError(result.error);
         return;
       }
-      setOpen(false);
+      if (closeAfter) setOpen(false);
       router.refresh();
     });
+  }
+
+  function clearSalePrice() {
+    if (!listingId || pending) return;
+    save("", false);
   }
 
   return (
@@ -83,18 +96,38 @@ export function ListingSalePriceBox({
               {displayKrw}
             </p>
             {canEdit && listingId ? (
-              <button
-                type="button"
-                className="listing-sale-price-edit"
-                title="판매가 빠른 수정"
-                aria-label="판매가 빠른 수정"
-                onClick={openEditor}
-              >
-                <PencilIcon />
-              </button>
+              <div className="listing-sale-price-actions">
+                <button
+                  type="button"
+                  className="listing-sale-price-edit"
+                  title="판매가 빠른 수정"
+                  aria-label="판매가 빠른 수정"
+                  disabled={pending}
+                  onClick={openEditor}
+                >
+                  <PencilIcon />
+                </button>
+                {krwLabel ? (
+                  <button
+                    type="button"
+                    className="listing-sale-price-edit is-clear"
+                    title="판매가 즉시 삭제"
+                    aria-label="판매가 즉시 삭제"
+                    disabled={pending}
+                    onClick={clearSalePrice}
+                  >
+                    <TrashIcon />
+                  </button>
+                ) : null}
+              </div>
             ) : null}
           </div>
           {fx ? <p className="listing-sale-price-box-fx">≈ {fx}</p> : null}
+          {error && !open ? (
+            <p className="mt-1 text-[12px] text-red-600" role="alert">
+              {error}
+            </p>
+          ) : null}
         </div>
       </div>
 

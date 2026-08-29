@@ -301,6 +301,12 @@ main {
   color: #a3a3a3;
 }
 
+.listing-sale-price-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 .listing-sale-price-edit {
   display: inline-flex;
   height: 1.75rem;
@@ -317,6 +323,21 @@ main {
 .listing-sale-price-edit:hover {
   background: #fafafa;
   color: #171717;
+}
+
+.listing-sale-price-edit:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.listing-sale-price-edit.is-clear {
+  border-color: #f3c4cb;
+  color: #b42318;
+}
+
+.listing-sale-price-edit.is-clear:hover:not(:disabled) {
+  background: #fff5f5;
+  color: #912018;
 }
 
 .listing-sale-price-box-krw {
