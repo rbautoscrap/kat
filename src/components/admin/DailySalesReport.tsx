@@ -368,7 +368,7 @@ export function DailySalesReport({
         />
       )}
 
-      {focus === "fx" ? null : (
+      {focus === "recv" ? (
         <ReportTable
           title="미수금현황"
           rows={receivables}
@@ -381,9 +381,9 @@ export function DailySalesReport({
           highlightUnpaid
           empty="등록된 미수 항목이 없습니다."
         />
-      )}
+      ) : null}
 
-      {focus === "recv" ? null : (
+      {focus === "fx" ? (
         <ReportTable
           title="외화 미수금현황"
           rows={fxReceivables}
@@ -397,6 +397,60 @@ export function DailySalesReport({
           fx
           empty="등록된 외화 미수 항목이 없습니다."
         />
+      ) : null}
+
+      {focus ? null : (
+        <div className="daily-sales-ledger-summaries">
+          <LedgerTotalsCard
+            title="미수금현황"
+            href={`/admin/sales-daily?view=recv&date=${date}`}
+            count={receivables.length}
+            items={[
+              {
+                label: "잔액금",
+                value: formatSaleMoney(recvTotals.remaining, "KRW"),
+                warn: true,
+              },
+              {
+                label: "원장",
+                value: formatSaleMoney(recvTotals.total, "KRW"),
+              },
+              {
+                label: "입금",
+                value: formatSaleMoney(recvTotals.paid, "KRW"),
+              },
+            ]}
+          />
+          <LedgerTotalsCard
+            title="외화 미수금현황"
+            href={`/admin/sales-daily?view=fx&date=${date}`}
+            count={fxReceivables.length}
+            items={[
+              {
+                label: "잔액금",
+                value: fxReceivables.length
+                  ? formatSaleMoney(
+                      fxTotals.remaining,
+                      fxReceivables[0]!.currency,
+                    )
+                  : "0",
+                warn: true,
+              },
+              {
+                label: "입금",
+                value: fxReceivables.length
+                  ? formatSaleMoney(fxTotals.paid, fxReceivables[0]!.currency)
+                  : "0",
+              },
+              {
+                label: "공급",
+                value: fxReceivables.length
+                  ? formatSaleMoney(fxTotals.supply, fxReceivables[0]!.currency)
+                  : "0",
+              },
+            ]}
+          />
+        </div>
       )}
 
       <aside className="daily-sales-side">
@@ -504,6 +558,40 @@ export function DailySalesReport({
         </div>
       </div>
     </div>
+  );
+}
+
+function LedgerTotalsCard({
+  title,
+  href,
+  count,
+  items,
+}: {
+  title: string;
+  href: string;
+  count: number;
+  items: { label: string; value: string; warn?: boolean }[];
+}) {
+  return (
+    <section className="daily-sales-section daily-sales-totals-only">
+      <div className="daily-sales-section-head">
+        <h2>
+          {title}
+          <em>{count}건</em>
+        </h2>
+        <Link href={href} className="daily-sales-totals-link">
+          상세 목록
+        </Link>
+      </div>
+      <div className="daily-sales-totals-row">
+        {items.map((item) => (
+          <p key={item.label} className={item.warn ? "is-warn" : undefined}>
+            <span>{item.label}</span>
+            <strong>{item.value}</strong>
+          </p>
+        ))}
+      </div>
+    </section>
   );
 }
 

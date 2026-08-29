@@ -1900,6 +1900,76 @@ main {
   margin-bottom: 10px;
 }
 
+.daily-sales-ledger-summaries {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+@media (min-width: 800px) {
+  .daily-sales-ledger-summaries {
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+  }
+}
+
+.daily-sales-totals-only {
+  margin-bottom: 0;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  padding: 8px 10px;
+}
+
+.daily-sales-section-head h2 em {
+  margin-left: 6px;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 600;
+  color: #a3a3a3;
+}
+
+.daily-sales-totals-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: #525252;
+  text-decoration: none;
+}
+
+.daily-sales-totals-link:hover {
+  color: #111;
+}
+
+.daily-sales-totals-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.daily-sales-totals-row p {
+  margin: 0;
+}
+
+.daily-sales-totals-row span {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #737373;
+}
+
+.daily-sales-totals-row strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: #111;
+}
+
+.daily-sales-totals-row p.is-warn strong {
+  color: #b45309;
+}
+
 .daily-sales-section-head {
   display: flex;
   flex-wrap: wrap;
