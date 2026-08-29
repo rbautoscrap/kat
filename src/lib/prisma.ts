@@ -7,7 +7,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
  */
 const clientRevision = `${Object.keys(Prisma.ListingScalarFieldEnum)
   .sort()
-  .join(",")}|sale-status-v1|sqlite-busy-v2`;
+  .join(",")}|sale-status-v1|sqlite-busy-v3`;
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -32,6 +32,10 @@ async function applySqlitePragmas(client: PrismaClient) {
     await client.$executeRawUnsafe(`PRAGMA journal_mode = WAL`);
     await client.$executeRawUnsafe(`PRAGMA synchronous = NORMAL`);
     await client.$executeRawUnsafe(`PRAGMA foreign_keys = ON`);
+    // Fewer automatic WAL checkpoints on the Railway volume. A checkpoint
+    // there can freeze every page for several seconds, then recover.
+    await client.$executeRawUnsafe(`PRAGMA wal_autocheckpoint = 8000`);
+    await client.$executeRawUnsafe(`PRAGMA cache_size = -8000`);
   } catch (error) {
     console.error("[prisma] sqlite pragma setup failed", error);
   }

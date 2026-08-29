@@ -19,6 +19,11 @@ let statsCache: {
 } | null = null;
 
 const STATS_CACHE_MS = 15_000;
+const FLUSH_MS = 15_000;
+
+let pendingIncrements = 0;
+let flushTimer: ReturnType<typeof setTimeout> | null = null;
+let flushing = false;
 
 function fromRow(stats: {
   todayDate: string;
@@ -50,14 +55,22 @@ async function refreshVisitStats() {
     });
   }
   const stats = fromRow(row);
-  statsCache = { at: now, today, ...stats };
-  return stats;
+  statsCache = {
+    at: now,
+    today,
+    todayVisits: stats.todayVisits + pendingIncrements,
+    totalVisits: stats.totalVisits + pendingIncrements,
+  };
+  return {
+    todayVisits: statsCache.todayVisits,
+    totalVisits: statsCache.totalVisits,
+  };
 }
 
 export async function getVisitStats() {
   try {
     if (statsCache) {
-      if (Date.now() - statsCache.at >= STATS_CACHE_MS) {
+      if (Date.now() - statsCache.at >= STATS_CACHE_MS && pendingIncrements === 0) {
         void refreshVisitStats().catch((error) => {
           console.error("[visits] background refresh failed", error);
         });
@@ -74,9 +87,21 @@ export async function getVisitStats() {
   }
 }
 
-export async function recordVisit() {
+function scheduleFlush() {
+  if (flushTimer) return;
+  flushTimer = setTimeout(() => {
+    flushTimer = null;
+    void flushPendingVisits();
+  }, FLUSH_MS);
+}
+
+async function flushPendingVisits() {
+  if (flushing || pendingIncrements <= 0) return;
+  flushing = true;
+  const n = pendingIncrements;
+  pendingIncrements = 0;
+  const today = todayKey();
   try {
-    const today = todayKey();
     const current = await prisma.siteStats.upsert({
       where: { id: "main" },
       update: {},
@@ -94,25 +119,62 @@ export async function recordVisit() {
             where: { id: "main" },
             data: {
               todayDate: today,
-              todayVisits: 1,
-              totalVisits: { increment: 1 },
+              todayVisits: n,
+              totalVisits: { increment: n },
             },
           })
         : await prisma.siteStats.update({
             where: { id: "main" },
             data: {
-              todayVisits: { increment: 1 },
-              totalVisits: { increment: 1 },
+              todayVisits: { increment: n },
+              totalVisits: { increment: n },
             },
           });
 
     statsCache = {
       at: Date.now(),
       today,
-      todayVisits: updated.todayVisits,
-      totalVisits: updated.totalVisits,
+      todayVisits: updated.todayVisits + pendingIncrements,
+      totalVisits: updated.totalVisits + pendingIncrements,
     };
-    return updated;
+  } catch (error) {
+    pendingIncrements += n;
+    scheduleFlush();
+    console.error("[visits] flush failed", error);
+  } finally {
+    flushing = false;
+  }
+}
+
+export async function recordVisit() {
+  try {
+    const today = todayKey();
+    pendingIncrements += 1;
+
+    if (statsCache) {
+      if (statsCache.today !== today) {
+        statsCache = {
+          at: Date.now(),
+          today,
+          todayVisits: 1,
+          totalVisits: statsCache.totalVisits + 1,
+        };
+      } else {
+        statsCache.todayVisits += 1;
+        statsCache.totalVisits += 1;
+        statsCache.at = Date.now();
+      }
+    } else {
+      await refreshVisitStats();
+    }
+
+    scheduleFlush();
+    return statsCache
+      ? {
+          todayVisits: statsCache.todayVisits,
+          totalVisits: statsCache.totalVisits,
+        }
+      : emptyStats;
   } catch (error) {
     console.error("[visits] recordVisit failed", error);
     return null;

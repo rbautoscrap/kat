@@ -189,35 +189,37 @@ if (schemaOk) {
   }
 }
 
-// Must run before any Listing findMany — legacy HOT_DEALS values crash Prisma reads.
-const ensureDbRuntime = path.join(
-  process.cwd(),
-  "scripts",
-  "ensure-db-runtime.mjs",
-);
-if (existsSync(ensureDbRuntime)) {
-  console.log("[start-prod] Ensuring DB runtime repairs (HOT_DEALS / columns / WAL)…");
-  spawnSync(process.execPath, [ensureDbRuntime], {
-    stdio: "inherit",
-    env: process.env,
-  });
-}
+if (schemaOk) {
+  console.log(
+    "[start-prod] Schema ready — starting app immediately (skip boot DB repairs)",
+  );
+} else {
+  const ensureDbRuntime = path.join(
+    process.cwd(),
+    "scripts",
+    "ensure-db-runtime.mjs",
+  );
+  if (existsSync(ensureDbRuntime)) {
+    console.log("[start-prod] Ensuring DB runtime repairs (HOT_DEALS / columns / WAL)…");
+    spawnSync(process.execPath, [ensureDbRuntime], {
+      stdio: "inherit",
+      env: process.env,
+    });
+  }
 
-// Critical: User.phoneKey / signupIp* must exist or admin member pages crash.
-const ensureSignup = path.join(
-  process.cwd(),
-  "scripts",
-  "ensure-signup-columns.mjs",
-);
-if (existsSync(ensureSignup)) {
-  console.log("[start-prod] Ensuring signup columns…");
-  spawnSync(process.execPath, [ensureSignup, "columns"], {
-    stdio: "inherit",
-    env: process.env,
-  });
-}
+  const ensureSignup = path.join(
+    process.cwd(),
+    "scripts",
+    "ensure-signup-columns.mjs",
+  );
+  if (existsSync(ensureSignup)) {
+    console.log("[start-prod] Ensuring signup columns…");
+    spawnSync(process.execPath, [ensureSignup, "columns"], {
+      stdio: "inherit",
+      env: process.env,
+    });
+  }
 
-if (!schemaOk) {
   const ensureStorage = path.join(
     process.cwd(),
     "scripts",
@@ -251,35 +253,31 @@ if (!schemaOk) {
       env: process.env,
     });
   }
-} else {
-  console.log(
-    "[start-prod] Schema ready — skipping storage backfill / signup index rebuild",
+
+  const ensureListing = path.join(
+    process.cwd(),
+    "scripts",
+    "ensure-listing-columns.mjs",
   );
-}
+  if (existsSync(ensureListing)) {
+    console.log("[start-prod] Ensuring listing columns…");
+    spawnSync(process.execPath, [ensureListing], {
+      stdio: "inherit",
+      env: process.env,
+    });
+  }
 
-const ensureListing = path.join(
-  process.cwd(),
-  "scripts",
-  "ensure-listing-columns.mjs",
-);
-if (existsSync(ensureListing)) {
-  console.log("[start-prod] Ensuring listing columns…");
-  spawnSync(process.execPath, [ensureListing], {
-    stdio: "inherit",
-    env: process.env,
-  });
-}
-
-const ensureAdmin = path.join(process.cwd(), "scripts", "ensure-admin.mjs");
-if (existsSync(ensureAdmin)) {
-  console.log("[start-prod] Ensuring ADMIN account…");
-  const ensured = spawnSync(process.execPath, [ensureAdmin], {
-    stdio: "inherit",
-    env: process.env,
-  });
-  if (ensured.status !== 0) {
-    console.error(`[start-prod] ensure-admin failed with code ${ensured.status}`);
-    process.exit(ensured.status ?? 1);
+  const ensureAdmin = path.join(process.cwd(), "scripts", "ensure-admin.mjs");
+  if (existsSync(ensureAdmin)) {
+    console.log("[start-prod] Ensuring ADMIN account…");
+    const ensured = spawnSync(process.execPath, [ensureAdmin], {
+      stdio: "inherit",
+      env: process.env,
+    });
+    if (ensured.status !== 0) {
+      console.error(`[start-prod] ensure-admin failed with code ${ensured.status}`);
+      process.exit(ensured.status ?? 1);
+    }
   }
 }
 
