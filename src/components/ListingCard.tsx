@@ -89,9 +89,7 @@ export function ListingCard({
           {label}
         </p>
         {salePriceLabel ? (
-          <p className="mt-1 text-[13px] font-semibold tabular-nums tracking-wide text-neutral-800">
-            {salePriceLabel}
-          </p>
+          <p className="listing-sale-price">{salePriceLabel}</p>
         ) : null}
         {notesPreview ? (
           <p className="mt-1 line-clamp-1 text-[12.5px] tracking-wide text-neutral-500">
@@ -166,9 +164,7 @@ export function ListingCard({
         {label}
       </p>
       {salePriceLabel ? (
-        <p className="mt-1 text-[13px] font-semibold tabular-nums tracking-wide text-neutral-800">
-          {salePriceLabel}
-        </p>
+        <p className="listing-sale-price">{salePriceLabel}</p>
       ) : null}
       {listing.category === "LIVE_AUCTION" && listing.auctionEndsAt ? (
         <AuctionCountdown

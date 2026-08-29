@@ -247,6 +247,18 @@ main {
   letter-spacing: -0.025em;
 }
 
+.listing-sale-price {
+  margin-top: 0.25rem;
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+}
+
 .admin-list {
   display: grid;
   gap: 0;
