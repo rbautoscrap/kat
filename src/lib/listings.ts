@@ -133,7 +133,7 @@ export function whatsappLink(phone: string, text: string) {
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
-export type ListingInquiryPurpose = "price" | "cs";
+export type ListingInquiryPurpose = "price" | "cs" | "buy";
 
 export type ListingInquiryOptions = {
   listingUrl?: string | null;
@@ -142,6 +142,7 @@ export type ListingInquiryOptions = {
   year?: number | null;
   make?: string | null;
   model?: string | null;
+  salePrice?: string | null;
   purpose?: ListingInquiryPurpose;
 };
 
@@ -156,13 +157,17 @@ export function listingInquiryText(
   const purpose = options?.purpose ?? "price";
   const vehicle = title.trim() || "this vehicle";
   const greeting =
-    purpose === "cs"
-      ? "Hello, I would like to inquire about documents, a transaction statement, deregistration, or customs for this vehicle."
-      : "Hello, I would like to inquire about the price of this vehicle.";
+    purpose === "buy"
+      ? "Hello, I would like to buy this vehicle at the listed special sale price."
+      : purpose === "cs"
+        ? "Hello, I would like to inquire about documents, a transaction statement, deregistration, or customs for this vehicle."
+        : "Hello, I would like to inquire about the price of this vehicle.";
   const closing =
-    purpose === "cs"
-      ? "Please advise on the required documents and process. Thank you."
-      : "Please share the price. Thank you.";
+    purpose === "buy"
+      ? "Please confirm availability and the next steps. Thank you."
+      : purpose === "cs"
+        ? "Please advise on the required documents and process. Thank you."
+        : "Please share the price. Thank you.";
   const lines = [greeting, "", `Vehicle: ${vehicle}`];
   const ym =
     options?.year && options?.make && options?.model
@@ -175,6 +180,8 @@ export function listingInquiryText(
   if (sn) lines.push(`S/N: ${sn}`);
   const vin = options?.vin?.trim();
   if (vin) lines.push(`VIN: ${vin}`);
+  const salePrice = options?.salePrice?.trim();
+  if (purpose === "buy" && salePrice) lines.push(`Sale price: ${salePrice}`);
   const url = options?.listingUrl?.trim();
   if (url) {
     lines.push(`Link: ${url}`);

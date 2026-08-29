@@ -230,6 +230,15 @@ export default async function ListingDetailPage({ params }: Props) {
     listing.title,
     { ...inquiryOptions, purpose: "cs" },
   );
+  const waBuy = listingWhatsAppLink(
+    listing.whatsappNumber,
+    listing.title,
+    {
+      ...inquiryOptions,
+      purpose: "buy",
+      salePrice: formatSalePriceDisplay(listing.salePrice),
+    },
+  );
 
   const isParts = isPartsCategory(listing.category);
   const isLiveAuction = listing.category === "LIVE_AUCTION";
@@ -409,6 +418,7 @@ export default async function ListingDetailPage({ params }: Props) {
             krwLabel={salePriceLabel}
             usdLabel={saleUsdLabel || null}
             eurLabel={saleEurLabel || null}
+            buyHref={salePriceLabel ? waBuy : null}
             canEdit={adminView}
           />
         ) : null}
