@@ -681,6 +681,12 @@ export function ListingForm({
               defaultValue={listing?.make}
               placeholder="e.g. 2012 QM6 2.0 Front bumper"
             />
+            <NumericField
+              label="Sale price (optional)"
+              name="salePrice"
+              defaultValue={listing?.salePrice ?? undefined}
+              placeholder="e.g. 850,000"
+            />
             <NotesField
               defaultValue={listing?.damages ?? undefined}
               translatedEn={listing?.damagesEn ?? undefined}
@@ -854,6 +860,12 @@ export function ListingForm({
           </select>
         </label>
         <OdometerField defaultValue={listing?.odometer ?? undefined} />
+        <NumericField
+          label="판매가 (선택)"
+          name="salePrice"
+          defaultValue={listing?.salePrice ?? undefined}
+          placeholder="예: 8,500,000"
+        />
         <NotesField
           defaultValue={listing?.damages ?? undefined}
           translatedEn={listing?.damagesEn ?? undefined}

@@ -105,6 +105,8 @@ model Listing {
   auctionPrice     String?
   incidentalCost   String?
   costPrice        String?
+  /** Optional public asking price. Shown only when set. */
+  salePrice        String?
   accumulatedDays  String?
   /** Admin-only detail page view counter (not shown publicly) */
   viewCount        Int             @default(0)

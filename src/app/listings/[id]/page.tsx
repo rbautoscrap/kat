@@ -27,6 +27,7 @@ import {
   formatFuelType,
   formatNotesDisplay,
   formatOdometerDisplay,
+  formatSalePriceDisplay,
   formatTransmission,
   isPartsCategory,
   SALE_STATUS_LABELS,
@@ -306,6 +307,10 @@ export default async function ListingDetailPage({ params }: Props) {
           value: formatFuelType(listing.fuelType) || "—",
         },
       ];
+  const salePriceLabel = formatSalePriceDisplay(listing.salePrice);
+  if (salePriceLabel) {
+    shortSpecs.unshift({ label: "Sale Price", value: salePriceLabel });
+  }
   const notesValue =
     formatNotesDisplay(listing.damages, listing.damagesEn) || "—";
   const accumulatedDays = displayAccumulatedDays(listing);

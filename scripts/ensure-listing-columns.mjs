@@ -25,6 +25,7 @@ async function main() {
     await ensureColumn(prisma, names, "offersSeenAt", "DATETIME");
     await ensureColumn(prisma, names, "auctionEndsAt", "DATETIME");
     await ensureColumn(prisma, names, "bumpedAt", "DATETIME");
+    await ensureColumn(prisma, names, "salePrice", "TEXT");
   } finally {
     await prisma.$disconnect();
   }

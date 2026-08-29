@@ -254,19 +254,6 @@ if (schemaOk) {
     });
   }
 
-  const ensureListing = path.join(
-    process.cwd(),
-    "scripts",
-    "ensure-listing-columns.mjs",
-  );
-  if (existsSync(ensureListing)) {
-    console.log("[start-prod] Ensuring listing columns…");
-    spawnSync(process.execPath, [ensureListing], {
-      stdio: "inherit",
-      env: process.env,
-    });
-  }
-
   const ensureAdmin = path.join(process.cwd(), "scripts", "ensure-admin.mjs");
   if (existsSync(ensureAdmin)) {
     console.log("[start-prod] Ensuring ADMIN account…");
@@ -279,6 +266,19 @@ if (schemaOk) {
       process.exit(ensured.status ?? 1);
     }
   }
+}
+
+const ensureListing = path.join(
+  process.cwd(),
+  "scripts",
+  "ensure-listing-columns.mjs",
+);
+if (existsSync(ensureListing)) {
+  console.log("[start-prod] Ensuring listing columns…");
+  spawnSync(process.execPath, [ensureListing], {
+    stdio: "inherit",
+    env: process.env,
+  });
 }
 
 console.log(`[start-prod] Starting Next.js on http://${bindHost}:${port}`);

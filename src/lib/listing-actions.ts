@@ -210,6 +210,7 @@ const listingFieldsSchema = z.object({
   auctionPrice: optionalDigits,
   incidentalCost: optionalDigits,
   costPrice: optionalDigits,
+  salePrice: optionalDigits,
   accumulatedDays: optionalDigits,
   /** ISO / datetime-local string; required for LIVE_AUCTION */
   auctionEndsAt: z.string().optional(),
@@ -326,6 +327,7 @@ export function formDataToListingInput(formData: FormData) {
     auctionPrice: emptyToUndef(formData.get("auctionPrice")),
     incidentalCost: emptyToUndef(formData.get("incidentalCost")),
     costPrice: emptyToUndef(formData.get("costPrice")),
+    salePrice: emptyToUndef(formData.get("salePrice")),
     accumulatedDays: emptyToUndef(formData.get("accumulatedDays")),
     auctionEndsAt: emptyToUndef(formData.get("auctionEndsAt")),
   };
@@ -365,6 +367,7 @@ export function formDataToListingInput(formData: FormData) {
     auctionPrice: data.auctionPrice ?? null,
     incidentalCost: data.incidentalCost ?? null,
     costPrice,
+    salePrice: data.salePrice ?? null,
     accumulatedDays,
     auctionEndsAt,
     title: buildListingTitle(data.year, data.make, data.model, data.category),

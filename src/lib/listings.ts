@@ -297,6 +297,16 @@ export function formatOdometerDisplay(value?: string | null) {
   return `${Number(digits).toLocaleString("en-US")} km`;
 }
 
+/** Public asking price. Empty when the seller left it blank. */
+export function formatSalePriceDisplay(value?: string | null) {
+  if (!value) return "";
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  const n = Number(digits);
+  if (!Number.isFinite(n) || n <= 0) return "";
+  return `₩${n.toLocaleString("en-US")}`;
+}
+
 /** Format displacement (cc) with thousand separators. */
 export function formatDisplacementDisplay(value?: string | null) {
   if (!value) return "";

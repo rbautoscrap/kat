@@ -12,6 +12,7 @@ import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
 import {
   formatNotesDisplay,
   isPartsCategory,
+  formatSalePriceDisplay,
   listingCardLabel,
   listingSellerName,
 } from "@/lib/listings";
@@ -53,6 +54,7 @@ export function ListingCard({
     listing.damages,
     listing.damagesEn,
   ).trim();
+  const salePriceLabel = formatSalePriceDisplay(listing.salePrice);
 
   if (layout === "list") {
     const listMedia = (
@@ -86,6 +88,11 @@ export function ListingCard({
         >
           {label}
         </p>
+        {salePriceLabel ? (
+          <p className="mt-1 text-[13px] font-semibold tabular-nums tracking-wide text-neutral-800">
+            {salePriceLabel}
+          </p>
+        ) : null}
         {notesPreview ? (
           <p className="mt-1 line-clamp-1 text-[12.5px] tracking-wide text-neutral-500">
             {notesPreview}
@@ -158,6 +165,11 @@ export function ListingCard({
       >
         {label}
       </p>
+      {salePriceLabel ? (
+        <p className="mt-1 text-[13px] font-semibold tabular-nums tracking-wide text-neutral-800">
+          {salePriceLabel}
+        </p>
+      ) : null}
       {listing.category === "LIVE_AUCTION" && listing.auctionEndsAt ? (
         <AuctionCountdown
           endsAt={
