@@ -57,7 +57,7 @@ export default async function ListingDetailPage({ params }: Props) {
 
   const session = await auth();
   const dbUser = await resolveSessionDbUser();
-  const holidayMode = await isPriceInquiryHoliday();
+  const holidayMode = await isPriceInquiryHoliday().catch(() => false);
   const canEdit = await userCanModifyListing(
     listing.authorId,
     listing.category,

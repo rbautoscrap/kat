@@ -4,7 +4,6 @@ import { z } from "zod";
 import type { Role } from "@prisma/client";
 import { verifyCredentials } from "@/lib/authenticate";
 import { loginIdSchema } from "@/lib/login-id";
-import { prisma } from "@/lib/prisma";
 import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
 import { recordUserAccess } from "@/lib/user-access";
 
@@ -30,9 +29,6 @@ declare module "@auth/core/jwt" {
     checkedAt?: number;
   }
 }
-
-/** How often to re-check user role/status from DB (cuts auth DB load). */
-const JWT_DB_REVALIDATE_MS = 10 * 60 * 1000;
 
 /** Set `code` after super() — Auth.js constructor resets it to "credentials". */
 function credentialsError(code: string): CredentialsSignin {
@@ -90,10 +86,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // any direct Auth.js credential posts. Soft limit so double-check on
         // success path rarely trips.
         const ip = await clientIpFromHeaders();
-        const byIp = rateLimit(`login:ip:${ip}`, 40, 15 * 60 * 1000);
+        const byIp = rateLimit(`login:ip:${ip}`, 200, 15 * 60 * 1000);
         const byId = rateLimit(
           `login:id:${parsed.data.email}`,
-          20,
+          60,
           15 * 60 * 1000,
         );
         if (!byIp.ok || !byId.ok) {
@@ -124,6 +120,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
+      // Never query the database here. A SQLite lock during login would
+      // stall every page that calls auth().
       if (user?.id) {
         token.id = user.id;
         token.sub = user.id;
@@ -131,47 +129,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.name = user.name;
         token.email = user.email;
         token.checkedAt = Date.now();
-      }
-
-      const userId =
-        (typeof token.id === "string" && token.id) ||
-        (typeof token.sub === "string" && token.sub) ||
-        "";
-
-      if (userId) {
-        const stale =
-          !token.checkedAt ||
-          Date.now() - token.checkedAt > JWT_DB_REVALIDATE_MS;
-
-        if (stale) {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { role: true, name: true, email: true, status: true },
-          });
-          if (!dbUser) {
-            delete token.id;
-            delete token.sub;
-            delete token.role;
-            return token;
-          }
-          // Revoke session if a non-admin account is no longer approved.
-          if (dbUser.role !== "ADMIN" && dbUser.status !== "APPROVED") {
-            delete token.id;
-            delete token.sub;
-            delete token.role;
-            return token;
-          }
-          token.id = userId;
-          token.sub = userId;
-          token.role = dbUser.role;
-          token.name = dbUser.name;
-          token.email = dbUser.email;
-          token.checkedAt = Date.now();
-          // Fire-and-forget: never block JWT/auth on analytics writes (SQLite locks).
-          if (!user) {
-            void recordUserAccess(userId);
-          }
-        }
       }
       return token;
     },

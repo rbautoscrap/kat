@@ -25,15 +25,20 @@ export async function diagnoseLogin(
   }
 
   const ip = await clientIpFromHeaders();
-  const byIp = rateLimit(`login:ip:${ip}`, 20, 15 * 60 * 1000);
-  const byId = rateLimit(`login:id:${parsedId.data}`, 10, 15 * 60 * 1000);
+  const byIp = rateLimit(`login:ip:${ip}`, 200, 15 * 60 * 1000);
+  const byId = rateLimit(`login:id:${parsedId.data}`, 60, 15 * 60 * 1000);
   if (!byIp.ok || !byId.ok) {
     return { ok: false, reason: "rate_limited" };
   }
 
-  const result = await diagnoseAccountStatus(parsedId.data);
-  if (!result.ok) {
-    return { ok: false, reason: result.reason };
+  try {
+    const result = await diagnoseAccountStatus(parsedId.data);
+    if (!result.ok) {
+      return { ok: false, reason: result.reason };
+    }
+    return { ok: true };
+  } catch (error) {
+    console.error("[diagnoseLogin] failed open", error);
+    return { ok: true };
   }
-  return { ok: true };
 }

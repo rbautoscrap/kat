@@ -20,21 +20,30 @@ export const resolveSessionDbUser = cache(
   async (): Promise<SessionDbUser | null> => {
     try {
       const session = await auth();
-      if (!session?.user) return null;
+      const user = session?.user;
+      if (!user?.id) return null;
 
-      const select = { id: true, role: true, email: true, name: true } as const;
-
-      if (session.user.id) {
-        const byId = await prisma.user.findUnique({
-          where: { id: session.user.id },
-          select,
-        });
-        if (byId) return byId;
+      // Trust the session JWT for page renders so a busy SQLite lock
+      // cannot freeze the whole site after login.
+      if (user.role) {
+        return {
+          id: user.id,
+          role: user.role,
+          email: user.email ?? "",
+          name: user.name ?? "",
+        };
       }
 
-      if (session.user.email) {
+      const select = { id: true, role: true, email: true, name: true } as const;
+      const byId = await prisma.user.findUnique({
+        where: { id: user.id },
+        select,
+      });
+      if (byId) return byId;
+
+      if (user.email) {
         const byEmail = await prisma.user.findUnique({
-          where: { email: session.user.email },
+          where: { email: user.email },
           select,
         });
         if (byEmail) return byEmail;

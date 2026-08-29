@@ -21,7 +21,8 @@ function LoginPageInner() {
   const registered = params.get("registered") === "1";
 
   const safeCallback = useMemo(() => {
-    if (!callbackUrl || callbackUrl.startsWith("/login")) return "/";
+    if (!callbackUrl.startsWith("/") || callbackUrl.startsWith("//")) return "/";
+    if (callbackUrl.startsWith("/login")) return "/";
     return callbackUrl;
   }, [callbackUrl]);
 

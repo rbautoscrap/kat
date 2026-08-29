@@ -41,20 +41,28 @@ export function LoginForm({
     );
     const password = String(new FormData(form).get("password") ?? "");
 
+    const nextPath =
+      callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+        ? callbackUrl
+        : "/";
+
     try {
-      // Surface pending / rejected clearly (Auth.js alone often collapses these).
-      const diagnosed = await diagnoseLogin(loginId, password);
-      if (!diagnosed.ok) {
-        setLocalError(loginErrorMessage(diagnosed.reason));
-        setSubmitting(false);
-        return;
+      try {
+        const diagnosed = await diagnoseLogin(loginId, password);
+        if (!diagnosed.ok) {
+          setLocalError(loginErrorMessage(diagnosed.reason));
+          setSubmitting(false);
+          return;
+        }
+      } catch {
+        // Server action failed — still try Auth.js so login is not blocked.
       }
 
       const result = await signIn("credentials", {
         email: loginId,
         password,
         redirect: false,
-        callbackUrl,
+        callbackUrl: nextPath,
       });
 
       if (!result || result.error) {
@@ -64,7 +72,7 @@ export function LoginForm({
         return;
       }
 
-      window.location.href = result.url || callbackUrl;
+      window.location.assign(nextPath);
     } catch {
       setLocalError("Something went wrong. Please try again.");
       setSubmitting(false);
