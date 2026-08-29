@@ -453,6 +453,7 @@ export function DailySalesReport({
         </div>
       )}
 
+      {focus ? (
       <aside className="daily-sales-side">
         <div className="daily-sales-side-card">
           <h3>소계</h3>
@@ -519,42 +520,43 @@ export function DailySalesReport({
           )}
         </div>
         <div className="daily-sales-side-card">
-          <h3>구매자별 현황</h3>
-          {buyers.length === 0 ? (
-            <p className="daily-sales-muted">미수 구매자가 없습니다.</p>
-          ) : (
-            <ul>
-              {buyers.map((b) => (
-                <li key={b.buyerName}>
-                  <span>
-                    {b.buyerName}
-                    <em>{b.count}건</em>
-                  </span>
+            <h3>구매자별 현황</h3>
+            {buyers.length === 0 ? (
+              <p className="daily-sales-muted">미수 구매자가 없습니다.</p>
+            ) : (
+              <ul>
+                {buyers.map((b) => (
+                  <li key={b.buyerName}>
+                    <span>
+                      {b.buyerName}
+                      <em>{b.count}건</em>
+                    </span>
+                    <strong>
+                      {formatSaleMoney(
+                        b.total,
+                        focus === "fx"
+                          ? (fxReceivables[0]?.currency ?? "USD")
+                          : "KRW",
+                      )}
+                    </strong>
+                  </li>
+                ))}
+                <li className="is-sum">
+                  <span>합계</span>
                   <strong>
                     {formatSaleMoney(
-                      b.total,
+                      focus === "fx" ? fxTotals.total : recvTotals.total,
                       focus === "fx"
                         ? (fxReceivables[0]?.currency ?? "USD")
                         : "KRW",
                     )}
                   </strong>
                 </li>
-              ))}
-              <li className="is-sum">
-                <span>합계</span>
-                <strong>
-                  {formatSaleMoney(
-                    focus === "fx" ? fxTotals.total : recvTotals.total,
-                    focus === "fx"
-                      ? (fxReceivables[0]?.currency ?? "USD")
-                      : "KRW",
-                  )}
-                </strong>
-              </li>
-            </ul>
-          )}
+              </ul>
+            )}
         </div>
       </aside>
+      ) : null}
         </div>
       </div>
     </div>
