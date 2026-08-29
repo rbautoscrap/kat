@@ -30,14 +30,24 @@ async function main() {
   const { PrismaClient } = require("@prisma/client");
   const prisma = new PrismaClient();
   try {
-    await prisma.$executeRawUnsafe(`PRAGMA busy_timeout = 15000`);
+    await prisma.$executeRawUnsafe(`PRAGMA busy_timeout = 4000`);
     await prisma.$executeRawUnsafe(`PRAGMA journal_mode = WAL`);
     await prisma.$executeRawUnsafe(`PRAGMA synchronous = NORMAL`);
 
-    const hot = await prisma.$executeRawUnsafe(
-      `UPDATE "Listing" SET "category" = 'CAR_LISTINGS' WHERE "category" = 'HOT_DEALS'`,
+    const hotRows = await prisma.$queryRawUnsafe(
+      `SELECT COUNT(*) AS c FROM "Listing" WHERE "category" = 'HOT_DEALS'`,
     );
-    console.log(`[ensure-db] HOT_DEALS → CAR_LISTINGS rows=${hot ?? 0}`);
+    const hotCount = Number(
+      Array.isArray(hotRows) ? (hotRows[0]?.c ?? 0) : 0,
+    );
+    if (hotCount > 0) {
+      const hot = await prisma.$executeRawUnsafe(
+        `UPDATE "Listing" SET "category" = 'CAR_LISTINGS' WHERE "category" = 'HOT_DEALS'`,
+      );
+      console.log(`[ensure-db] HOT_DEALS → CAR_LISTINGS rows=${hot ?? 0}`);
+    } else {
+      console.log("[ensure-db] HOT_DEALS already migrated");
+    }
 
     await ensureColumn(prisma, "User", "loginCount", "INTEGER NOT NULL DEFAULT 0");
     await ensureColumn(prisma, "User", "lastLoginAt", "DATETIME");
@@ -64,26 +74,8 @@ async function main() {
       console.log("[ensure-db] SiteSetting OK");
     }
 
-    try {
-      const integrity = await prisma.$queryRawUnsafe(`PRAGMA integrity_check`);
-      const first = Array.isArray(integrity) ? integrity[0] : integrity;
-      const ok =
-        first?.integrity_check === "ok" ||
-        first?.integrity_check === "OK" ||
-        Object.values(first ?? {})[0] === "ok";
-      console.log(
-        `[ensure-db] integrity_check=${ok ? "ok" : JSON.stringify(first)}`,
-      );
-    } catch (error) {
-      console.warn("[ensure-db] integrity_check skipped", error);
-    }
-
-    try {
-      await prisma.$executeRawUnsafe(`PRAGMA wal_checkpoint(TRUNCATE)`);
-      console.log("[ensure-db] wal_checkpoint OK");
-    } catch (error) {
-      console.warn("[ensure-db] wal_checkpoint skipped", error);
-    }
+    // Do not run integrity_check or wal_checkpoint on every boot.
+    // Both lock SQLite and freeze the live site.
   } finally {
     await prisma.$disconnect();
   }

@@ -17,6 +17,19 @@ export const dynamic = "force-dynamic";
 const HOME_SECTION_LIMIT = 10; // 5 per row × 2 rows
 /** Fetch extra rows so reserved/sold demotion still fills the strip. */
 const HOME_SECTION_FETCH = 40;
+const HOME_CACHE_MS = 20_000;
+
+type HomeSections = {
+  carListings: HomeListing[];
+  standBy: HomeListing[];
+  liveAuction: HomeListing[];
+  usedParts: HomeListing[];
+};
+
+const homeCache: {
+  public: { at: number; data: HomeSections } | null;
+  admin: { at: number; data: HomeSections } | null;
+} = { public: null, admin: null };
 
 type Props = {
   searchParams: Promise<{ error?: string }>;
@@ -50,32 +63,45 @@ async function loadSectionListings(
   return orderByIds(candidates, orderedIds).slice(0, HOME_SECTION_LIMIT);
 }
 
-async function loadHomeListings(includeEndedAuctions: boolean): Promise<{
-  carListings: HomeListing[];
-  standBy: HomeListing[];
-  liveAuction: HomeListing[];
-  usedParts: HomeListing[];
-}> {
+async function loadHomeListings(includeEndedAuctions: boolean): Promise<HomeSections> {
+  const cacheKey = includeEndedAuctions ? "admin" : "public";
+  const cached = homeCache[cacheKey];
+  if (cached && Date.now() - cached.at < HOME_CACHE_MS) {
+    return cached.data;
+  }
+
   const visibility: Prisma.ListingWhereInput = includeEndedAuctions
     ? {}
     : memberListingVisibilityWhere();
 
   try {
-    const [carListings, standBy, liveAuction, usedParts] = await Promise.all([
-      loadSectionListings("CAR_LISTINGS", visibility, "cost_biased"),
-      loadSectionListings("STAND_BY", visibility, "newest"),
-      loadSectionListings("LIVE_AUCTION", visibility, "newest"),
-      loadSectionListings("USED_PARTS", visibility, "newest"),
-    ]);
-    return { carListings, standBy, liveAuction, usedParts };
+    // Sequential reads — four parallel findMany calls lock SQLite together.
+    const carListings = await loadSectionListings(
+      "CAR_LISTINGS",
+      visibility,
+      "cost_biased",
+    );
+    const standBy = await loadSectionListings("STAND_BY", visibility, "newest");
+    const liveAuction = await loadSectionListings(
+      "LIVE_AUCTION",
+      visibility,
+      "newest",
+    );
+    const usedParts = await loadSectionListings(
+      "USED_PARTS",
+      visibility,
+      "newest",
+    );
+    const data = { carListings, standBy, liveAuction, usedParts };
+    homeCache[cacheKey] = { at: Date.now(), data };
+    return data;
   } catch (error) {
+    if (cached) {
+      console.error("[HomePage] listing query failed, serving stale cache", error);
+      return cached.data;
+    }
     console.error("[HomePage] listing query failed", error);
-    return {
-      carListings: [],
-      standBy: [],
-      liveAuction: [],
-      usedParts: [],
-    };
+    throw error;
   }
 }
 

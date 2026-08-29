@@ -12,6 +12,8 @@ type RecordOpts = {
   authorId?: string | null;
 };
 
+const recentViewKeys = new Set<string>();
+
 /**
  * Count a listing detail view once per visitor fingerprint.
  * - Same IP → no extra count
@@ -39,23 +41,28 @@ export async function recordListingView(
 
     if (fingerprints.length === 0) return;
 
-    await prisma.$transaction(async (tx) => {
-      const existing = await tx.listingView.findFirst({
-        where: {
-          listingId,
-          ipHash: { in: fingerprints },
-        },
-        select: { id: true },
-      });
-      if (existing) return;
+    const memoKey = `${listingId}:${fingerprints.join("|")}`;
+    if (recentViewKeys.has(memoKey)) return;
+    recentViewKeys.add(memoKey);
+    if (recentViewKeys.size > 5_000) {
+      recentViewKeys.clear();
+    }
 
-      await tx.listingView.createMany({
-        data: fingerprints.map((ipHash) => ({ listingId, ipHash })),
-      });
-      await tx.listing.update({
-        where: { id: listingId },
-        data: { viewCount: { increment: 1 } },
-      });
+    const existing = await prisma.listingView.findFirst({
+      where: {
+        listingId,
+        ipHash: { in: fingerprints },
+      },
+      select: { id: true },
+    });
+    if (existing) return;
+
+    await prisma.listingView.createMany({
+      data: fingerprints.map((ipHash) => ({ listingId, ipHash })),
+    });
+    await prisma.listing.update({
+      where: { id: listingId },
+      data: { viewCount: { increment: 1 } },
     });
   } catch (error) {
     if (

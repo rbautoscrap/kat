@@ -66,22 +66,27 @@ export default async function ListingDetailPage({ params }: Props) {
   const isSignedIn = Boolean(dbUser?.id || session?.user?.id);
 
   // Admin opened the listing → clear "new offer" highlight on the admin list.
+  // Do not block the detail page on this write — SQLite locks freeze the site.
   if (adminView) {
-    const latestOffer = await prisma.purchaseOffer.findFirst({
-      where: { listingId: listing.id },
-      orderBy: { createdAt: "desc" },
-      select: { createdAt: true },
-    });
-    if (
-      latestOffer &&
-      (!listing.offersSeenAt ||
-        latestOffer.createdAt.getTime() > listing.offersSeenAt.getTime())
-    ) {
-      await prisma.listing.update({
-        where: { id: listing.id },
-        data: { offersSeenAt: new Date() },
+    void (async () => {
+      const latestOffer = await prisma.purchaseOffer.findFirst({
+        where: { listingId: listing.id },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
       });
-    }
+      if (
+        latestOffer &&
+        (!listing.offersSeenAt ||
+          latestOffer.createdAt.getTime() > listing.offersSeenAt.getTime())
+      ) {
+        await prisma.listing.update({
+          where: { id: listing.id },
+          data: { offersSeenAt: new Date() },
+        });
+      }
+    })().catch((error) => {
+      console.error("[listing-detail] offersSeenAt update failed", error);
+    });
   }
 
   if (

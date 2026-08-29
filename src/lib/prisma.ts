@@ -7,7 +7,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
  */
 const clientRevision = `${Object.keys(Prisma.ListingScalarFieldEnum)
   .sort()
-  .join(",")}|sale-status-v1|sqlite-busy-v1`;
+  .join(",")}|sale-status-v1|sqlite-busy-v2`;
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -28,7 +28,7 @@ function createPrismaClient() {
  */
 async function applySqlitePragmas(client: PrismaClient) {
   try {
-    await client.$executeRawUnsafe(`PRAGMA busy_timeout = 15000`);
+    await client.$executeRawUnsafe(`PRAGMA busy_timeout = 4000`);
     await client.$executeRawUnsafe(`PRAGMA journal_mode = WAL`);
     await client.$executeRawUnsafe(`PRAGMA synchronous = NORMAL`);
     await client.$executeRawUnsafe(`PRAGMA foreign_keys = ON`);

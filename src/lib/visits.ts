@@ -35,36 +35,39 @@ function fromRow(stats: {
   };
 }
 
+async function refreshVisitStats() {
+  const today = todayKey();
+  const now = Date.now();
+  let row = await prisma.siteStats.findUnique({ where: { id: "main" } });
+  if (!row) {
+    row = await prisma.siteStats.create({
+      data: {
+        id: "main",
+        totalVisits: 0,
+        todayVisits: 0,
+        todayDate: today,
+      },
+    });
+  }
+  const stats = fromRow(row);
+  statsCache = { at: now, today, ...stats };
+  return stats;
+}
+
 export async function getVisitStats() {
   try {
-    const today = todayKey();
-    const now = Date.now();
-    if (
-      statsCache &&
-      statsCache.today === today &&
-      now - statsCache.at < STATS_CACHE_MS
-    ) {
+    if (statsCache) {
+      if (Date.now() - statsCache.at >= STATS_CACHE_MS) {
+        void refreshVisitStats().catch((error) => {
+          console.error("[visits] background refresh failed", error);
+        });
+      }
       return {
         todayVisits: statsCache.todayVisits,
         totalVisits: statsCache.totalVisits,
       };
     }
-
-    let row = await prisma.siteStats.findUnique({ where: { id: "main" } });
-    if (!row) {
-      row = await prisma.siteStats.create({
-        data: {
-          id: "main",
-          totalVisits: 0,
-          todayVisits: 0,
-          todayDate: today,
-        },
-      });
-    }
-
-    const stats = fromRow(row);
-    statsCache = { at: now, today, ...stats };
-    return stats;
+    return await refreshVisitStats();
   } catch (error) {
     console.error("[visits] getVisitStats failed", error);
     return emptyStats;

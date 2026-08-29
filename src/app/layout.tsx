@@ -2,12 +2,8 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import localFont from "next/font/local";
 import { Header } from "@/components/Header";
-import { ProtectPublicImages } from "@/components/ProtectPublicImages";
 import { SiteSearchBar } from "@/components/SiteSearchBar";
 import { Footer } from "@/components/Footer";
-import { HolidayNoticeDialog } from "@/components/HolidayNoticeDialog";
-import { isAdmin } from "@/lib/auth";
-import { resolveSessionDbUser } from "@/lib/listing-access";
 import "./globals.css";
 
 const pretendard = localFont({
@@ -65,16 +61,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const dbUser = await resolveSessionDbUser();
-  const allowImageSave = isAdmin(dbUser?.role);
-
   return (
     <html lang="en" className={`${pretendard.variable} h-full`}>
       <body
         className={`${pretendard.className} flex min-h-full flex-col bg-white text-[16px] text-neutral-800 antialiased`}
       >
-        <ProtectPublicImages allowImageSave={allowImageSave} />
-        <HolidayNoticeDialog />
         <Header />
         <Suspense fallback={<SiteSearchBarFallback />}>
           <SiteSearchBar />

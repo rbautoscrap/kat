@@ -148,31 +148,45 @@ if (!nextCli || !existsSync(nextCli)) {
   process.exit(1);
 }
 
-const prepareDb = path.join(process.cwd(), "scripts", "prepare-db-for-push.mjs");
-if (existsSync(prepareDb)) {
-  console.log("[start-prod] Preparing DB for schema push…");
-  const prepared = spawnSync(process.execPath, [prepareDb], {
+const schemaReady = path.join(process.cwd(), "scripts", "schema-ready.mjs");
+const schemaOk =
+  existsSync(schemaReady) &&
+  spawnSync(process.execPath, [schemaReady], {
     stdio: "inherit",
     env: process.env,
-  });
-  if (prepared.status !== 0) {
-    console.warn(
-      `[start-prod] prepare-db exited ${prepared.status} — continuing to db push`,
+  }).status === 0;
+
+if (schemaOk) {
+  console.log("[start-prod] Schema already in place — skipping prisma db push");
+} else {
+  const prepareDb = path.join(process.cwd(), "scripts", "prepare-db-for-push.mjs");
+  if (existsSync(prepareDb)) {
+    console.log("[start-prod] Preparing DB for schema push…");
+    const prepared = spawnSync(process.execPath, [prepareDb], {
+      stdio: "inherit",
+      env: process.env,
+    });
+    if (prepared.status !== 0) {
+      console.warn(
+        `[start-prod] prepare-db exited ${prepared.status} — continuing to db push`,
+      );
+    }
+  }
+
+  console.log("[start-prod] Running prisma db push…");
+  const push = spawnSync(
+    process.execPath,
+    [prismaCli, "db", "push", "--skip-generate"],
+    {
+      stdio: "inherit",
+      env: process.env,
+    },
+  );
+  if (push.status !== 0) {
+    console.error(
+      `[start-prod] WARNING: prisma db push failed with code ${push.status} — starting app anyway`,
     );
   }
-}
-
-console.log("[start-prod] Running prisma db push…");
-const push = spawnSync(process.execPath, [prismaCli, "db", "push", "--skip-generate"], {
-  stdio: "inherit",
-  env: process.env,
-});
-if (push.status !== 0) {
-  // Do not keep the site offline for a schema sync failure — Next can still serve
-  // most pages while we inspect logs. Offer features that need new columns may error.
-  console.error(
-    `[start-prod] WARNING: prisma db push failed with code ${push.status} — starting app anyway`,
-  );
 }
 
 // Must run before any Listing findMany — legacy HOT_DEALS values crash Prisma reads.
@@ -203,38 +217,44 @@ if (existsSync(ensureSignup)) {
   });
 }
 
-const ensureStorage = path.join(
-  process.cwd(),
-  "scripts",
-  "ensure-storage-locations.mjs",
-);
-if (existsSync(ensureStorage)) {
-  console.log("[start-prod] Normalizing storage locations / costPrice…");
-  spawnSync(process.execPath, [ensureStorage], {
-    stdio: "inherit",
-    env: process.env,
-  });
-}
+if (!schemaOk) {
+  const ensureStorage = path.join(
+    process.cwd(),
+    "scripts",
+    "ensure-storage-locations.mjs",
+  );
+  if (existsSync(ensureStorage)) {
+    console.log("[start-prod] Normalizing storage locations / costPrice…");
+    spawnSync(process.execPath, [ensureStorage], {
+      stdio: "inherit",
+      env: process.env,
+    });
+  }
 
-const backfillSignup = path.join(
-  process.cwd(),
-  "scripts",
-  "backfill-signup-keys.mjs",
-);
-if (existsSync(backfillSignup)) {
-  console.log("[start-prod] Backfilling signup phone keys…");
-  spawnSync(process.execPath, [backfillSignup], {
-    stdio: "inherit",
-    env: process.env,
-  });
-}
+  const backfillSignup = path.join(
+    process.cwd(),
+    "scripts",
+    "backfill-signup-keys.mjs",
+  );
+  if (existsSync(backfillSignup)) {
+    console.log("[start-prod] Backfilling signup phone keys…");
+    spawnSync(process.execPath, [backfillSignup], {
+      stdio: "inherit",
+      env: process.env,
+    });
+  }
 
-if (existsSync(ensureSignup)) {
-  console.log("[start-prod] Ensuring signup indexes…");
-  spawnSync(process.execPath, [ensureSignup, "indexes"], {
-    stdio: "inherit",
-    env: process.env,
-  });
+  if (existsSync(ensureSignup)) {
+    console.log("[start-prod] Ensuring signup indexes…");
+    spawnSync(process.execPath, [ensureSignup, "indexes"], {
+      stdio: "inherit",
+      env: process.env,
+    });
+  }
+} else {
+  console.log(
+    "[start-prod] Schema ready — skipping storage backfill / signup index rebuild",
+  );
 }
 
 const ensureListing = path.join(
