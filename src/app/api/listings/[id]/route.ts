@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { invalidateHomeListingsCache } from "@/lib/home-listings";
 import { prisma } from "@/lib/prisma";
 import { toApiErrorMessage } from "@/lib/api-error";
 import { requireListingModifier } from "@/lib/listing-access";
@@ -132,6 +133,7 @@ export async function PUT(request: Request, { params }: Params) {
       await deleteUploadedFiles(orphanUrls);
     }
 
+    invalidateHomeListingsCache();
     return NextResponse.json({ id });
   } catch (err) {
     console.error("[PUT /api/listings/:id]", err);
@@ -158,6 +160,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     const urls = access.listing.images.map((img) => img.url);
     await prisma.listing.delete({ where: { id } });
     await deleteUploadedFiles(urls);
+    invalidateHomeListingsCache();
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[DELETE /api/listings/:id]", err);

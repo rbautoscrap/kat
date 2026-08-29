@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { canCreateListing } from "@/lib/auth";
+import { invalidateHomeListingsCache } from "@/lib/home-listings";
 import { prisma } from "@/lib/prisma";
 import { toApiErrorMessage } from "@/lib/api-error";
 import { resolveSessionDbUser } from "@/lib/listing-access";
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
       },
     });
 
+    invalidateHomeListingsCache();
     return NextResponse.json({ id: listing.id });
   } catch (err) {
     console.error("[POST /api/listings]", err);

@@ -15,6 +15,7 @@ import { resolveSessionDbUser } from "@/lib/listing-access";
 import { deleteUploadedFiles } from "@/lib/listing-actions";
 import { loginIdSchema, passwordSchema } from "@/lib/login-id";
 import { optionalPhoneSchema, phoneKeyFromPhone } from "@/lib/phone";
+import { invalidateHomeListingsCache } from "@/lib/home-listings";
 import { prisma } from "@/lib/prisma";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
@@ -154,6 +155,7 @@ export async function updateListingCategory(
     };
   }
 
+  invalidateHomeListingsCache();
   revalidatePath("/admin");
   revalidatePath("/admin/listings");
   revalidatePath("/");
@@ -189,6 +191,7 @@ export async function updateListingSaleStatus(
     };
   }
 
+  invalidateHomeListingsCache();
   revalidatePath("/admin");
   revalidatePath("/admin/listings");
   revalidatePath("/");
@@ -262,6 +265,7 @@ export async function deleteListing(listingId: string): Promise<ActionResult> {
     };
   }
 
+  invalidateHomeListingsCache();
   revalidatePath("/admin");
   revalidatePath("/admin/listings");
   revalidatePath("/admin/statements");
@@ -296,6 +300,7 @@ export async function bumpListingToFront(
     };
   }
 
+  invalidateHomeListingsCache();
   revalidatePath("/admin");
   revalidatePath("/admin/listings");
   revalidatePath("/");
@@ -476,6 +481,7 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
     };
   }
 
+  invalidateHomeListingsCache();
   revalidatePath("/admin");
   revalidatePath("/admin/users");
   revalidatePath("/admin/listings");
