@@ -192,7 +192,7 @@ export function ListingSalePriceBox({
               <button
                 type="button"
                 disabled={pending}
-                onClick={save}
+                onClick={() => save()}
                 className="inline-flex h-9 items-center rounded-md bg-neutral-900 px-3.5 text-[13px] font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
               >
                 {pending ? "저장 중…" : "저장"}
