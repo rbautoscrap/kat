@@ -402,11 +402,14 @@ export default async function ListingDetailPage({ params }: Props) {
           </div>
         ) : null}
 
-        {salePriceLabel ? (
+        {salePriceLabel || adminView ? (
           <ListingSalePriceBox
+            listingId={listing.id}
+            salePrice={listing.salePrice}
             krwLabel={salePriceLabel}
             usdLabel={saleUsdLabel || null}
             eurLabel={saleEurLabel || null}
+            canEdit={adminView}
           />
         ) : null}
 

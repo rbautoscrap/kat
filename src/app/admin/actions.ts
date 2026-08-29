@@ -200,6 +200,41 @@ export async function updateListingSaleStatus(
   return { ok: true };
 }
 
+export async function updateListingSalePrice(
+  listingId: string,
+  salePrice: string,
+): Promise<ActionResult> {
+  if (!(await assertAdmin())) return { ok: false, error: "권한이 없습니다." };
+  if (!listingId) return { ok: false, error: "매물을 찾을 수 없습니다." };
+
+  const digits = String(salePrice ?? "").replace(/\D/g, "");
+  const next = digits && Number(digits) > 0 ? digits : null;
+
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId },
+    select: { id: true },
+  });
+  if (!listing) return { ok: false, error: "매물을 찾을 수 없습니다." };
+
+  try {
+    await prisma.listing.update({
+      where: { id: listingId },
+      data: { salePrice: next },
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: prismaErrorMessage(error, "판매가 변경에 실패했습니다."),
+    };
+  }
+
+  invalidateHomeListingsCache();
+  revalidatePath("/");
+  revalidatePath("/listings");
+  revalidatePath(`/listings/${listingId}`);
+  return { ok: true };
+}
+
 export async function setUserAccountStatus(
   userId: string,
   status: AccountStatus,
