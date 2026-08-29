@@ -51,6 +51,18 @@ async function findUserWithHash(
   return byName.length === 1 ? byName[0]! : null;
 }
 
+export async function diagnoseAccountStatus(
+  rawLoginId: string,
+): Promise<{ ok: true } | { ok: false; reason: "invalid" | "pending" | "rejected" }> {
+  const user = await findUserWithHash(rawLoginId);
+  if (!user) return { ok: false, reason: "invalid" };
+  if (user.role !== "ADMIN") {
+    if (user.status === "PENDING") return { ok: false, reason: "pending" };
+    if (user.status === "REJECTED") return { ok: false, reason: "rejected" };
+  }
+  return { ok: true };
+}
+
 export async function verifyCredentials(
   rawLoginId: string,
   password: string,

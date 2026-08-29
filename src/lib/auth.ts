@@ -111,7 +111,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw credentialsError("credentials");
         }
 
-        await recordUserAccess(result.user.id, { force: true });
+        void recordUserAccess(result.user.id, { force: true });
 
         return {
           id: result.user.id,
@@ -128,6 +128,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.sub = user.id;
         token.role = user.role;
+        token.name = user.name;
+        token.email = user.email;
         token.checkedAt = Date.now();
       }
 
@@ -141,7 +143,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           !token.checkedAt ||
           Date.now() - token.checkedAt > JWT_DB_REVALIDATE_MS;
 
-        if (stale || user) {
+        if (stale) {
           const dbUser = await prisma.user.findUnique({
             where: { id: userId },
             select: { role: true, name: true, email: true, status: true },

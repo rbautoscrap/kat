@@ -48,6 +48,22 @@ async function main() {
       "TEXT NOT NULL DEFAULT '1'",
     );
 
+    const settingTables = await prisma.$queryRawUnsafe(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name='SiteSetting'`,
+    );
+    if (!Array.isArray(settingTables) || settingTables.length === 0) {
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE "SiteSetting" (
+          "id" TEXT NOT NULL PRIMARY KEY DEFAULT 'main',
+          "priceInquiryHoliday" BOOLEAN NOT NULL DEFAULT 0,
+          "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log("[ensure-db] created SiteSetting");
+    } else {
+      console.log("[ensure-db] SiteSetting OK");
+    }
+
     try {
       const integrity = await prisma.$queryRawUnsafe(`PRAGMA integrity_check`);
       const first = Array.isArray(integrity) ? integrity[0] : integrity;

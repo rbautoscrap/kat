@@ -1,6 +1,6 @@
 "use server";
 
-import { verifyCredentials } from "@/lib/authenticate";
+import { diagnoseAccountStatus } from "@/lib/authenticate";
 import { loginIdSchema } from "@/lib/login-id";
 import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
 
@@ -31,7 +31,7 @@ export async function diagnoseLogin(
     return { ok: false, reason: "rate_limited" };
   }
 
-  const result = await verifyCredentials(parsedId.data, password);
+  const result = await diagnoseAccountStatus(parsedId.data);
   if (!result.ok) {
     return { ok: false, reason: result.reason };
   }
