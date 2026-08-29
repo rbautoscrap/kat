@@ -297,14 +297,29 @@ export function formatOdometerDisplay(value?: string | null) {
   return `${Number(digits).toLocaleString("en-US")} km`;
 }
 
+export function parseSalePriceWon(value?: string | null) {
+  if (!value) return 0;
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return 0;
+  const n = Number(digits);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
 /** Public asking price. Empty when the seller left it blank. */
 export function formatSalePriceDisplay(value?: string | null) {
-  if (!value) return "";
-  const digits = value.replace(/\D/g, "");
-  if (!digits) return "";
-  const n = Number(digits);
-  if (!Number.isFinite(n) || n <= 0) return "";
+  const n = parseSalePriceWon(value);
+  if (!n) return "";
   return `₩${n.toLocaleString("en-US")}`;
+}
+
+export function formatSalePriceUsd(amount: number) {
+  if (!Number.isFinite(amount) || amount <= 0) return "";
+  return `US$${Math.round(amount).toLocaleString("en-US")}`;
+}
+
+export function formatSalePriceEur(amount: number) {
+  if (!Number.isFinite(amount) || amount <= 0) return "";
+  return `€${Math.round(amount).toLocaleString("en-US")}`;
 }
 
 /** Format displacement (cc) with thousand separators. */

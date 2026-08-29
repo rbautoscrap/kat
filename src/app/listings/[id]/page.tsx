@@ -11,6 +11,7 @@ import { DownloadListingImagesButton } from "@/components/admin/DownloadListingI
 import { AuctionCountdown } from "@/components/AuctionCountdown";
 import { LiveAuctionGatePanel } from "@/components/LiveAuctionGatePanel";
 import { ListingContactLinks } from "@/components/ListingContactLinks";
+import { ListingSalePriceBox } from "@/components/ListingSalePriceBox";
 import { auth, canAccessLiveAuctionAsSignedIn, isAdmin } from "@/lib/auth";
 import {
   resolveSessionDbUser,
@@ -28,7 +29,10 @@ import {
   formatNotesDisplay,
   formatOdometerDisplay,
   formatSalePriceDisplay,
+  formatSalePriceEur,
+  formatSalePriceUsd,
   formatTransmission,
+  parseSalePriceWon,
   isPartsCategory,
   SALE_STATUS_LABELS,
   listingWhatsAppLink,
@@ -36,6 +40,7 @@ import {
   youtubeEmbedUrl,
 } from "@/lib/listings";
 import { PRICE_INQUIRY_WHATSAPP } from "@/lib/contact";
+import { convertKrw, getKrwFxRates } from "@/lib/fx-rates";
 import { displayAccumulatedDays } from "@/lib/listing-actions";
 import { recordListingView } from "@/lib/listing-views";
 import { isPriceInquiryHoliday } from "@/lib/site-settings";
@@ -307,10 +312,15 @@ export default async function ListingDetailPage({ params }: Props) {
           value: formatFuelType(listing.fuelType) || "—",
         },
       ];
+  const saleWon = parseSalePriceWon(listing.salePrice);
   const salePriceLabel = formatSalePriceDisplay(listing.salePrice);
-  if (salePriceLabel) {
-    shortSpecs.unshift({ label: "Sale Price", value: salePriceLabel });
-  }
+  const fxRates = saleWon > 0 ? await getKrwFxRates() : null;
+  const saleUsdLabel = fxRates
+    ? formatSalePriceUsd(convertKrw(saleWon, fxRates.usdPerKrw))
+    : "";
+  const saleEurLabel = fxRates
+    ? formatSalePriceEur(convertKrw(saleWon, fxRates.eurPerKrw))
+    : "";
   const notesValue =
     formatNotesDisplay(listing.damages, listing.damagesEn) || "—";
   const accumulatedDays = displayAccumulatedDays(listing);
@@ -390,6 +400,14 @@ export default async function ListingDetailPage({ params }: Props) {
               holidayMode={holidayMode}
             />
           </div>
+        ) : null}
+
+        {salePriceLabel ? (
+          <ListingSalePriceBox
+            krwLabel={salePriceLabel}
+            usdLabel={saleUsdLabel || null}
+            eurLabel={saleEurLabel || null}
+          />
         ) : null}
 
         {/* Specs: paired rows (50/50). Notes full-width below. */}
