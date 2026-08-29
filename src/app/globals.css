@@ -229,6 +229,11 @@ main {
 .admin-table .admin-td-actions,
 .admin-table .admin-th-actions {
   overflow: visible;
+  white-space: nowrap;
+}
+
+.admin-table .admin-td-actions > div {
+  flex-wrap: nowrap;
 }
 
 .admin-table tbody tr:last-child td {

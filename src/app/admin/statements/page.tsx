@@ -14,12 +14,12 @@ import {
   totalPages,
 } from "@/lib/admin-pagination";
 import {
-  adminActionBtnClass,
+  adminActionBtnCompactClass,
   adminTableClass,
   adminTableScrollClass,
-  adminTdActionsClass,
-  adminTdClass,
-  adminThClass,
+  adminTdActionsCompactClass,
+  adminTdCompactClass,
+  adminThCompactClass,
 } from "@/lib/admin-ui";
 import { prisma } from "@/lib/prisma";
 import {
@@ -219,25 +219,27 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
       ) : (
         <>
           <div className={adminTableScrollClass}>
-            <table className={`${adminTableClass} min-w-[920px]`}>
+            <table className={`${adminTableClass} min-w-[960px]`}>
               <colgroup>
-                <col style={{ width: "18%" }} />
-                <col style={{ width: "12%" }} />
-                <col style={{ width: "24%" }} />
+                <col style={{ width: "16%" }} />
+                <col style={{ width: "11%" }} />
+                <col style={{ width: "26%" }} />
                 <col style={{ width: "16%" }} />
                 <col style={{ width: "12%" }} />
-                <col style={{ width: "10%" }} />
                 <col style={{ width: "8%" }} />
+                <col style={{ width: "7.5rem" }} />
               </colgroup>
               <thead>
                 <tr>
-                  <th className={adminThClass}>번호</th>
-                  <th className={adminThClass}>발행일</th>
-                  <th className={adminThClass}>매물</th>
-                  <th className={adminThClass}>거래처</th>
-                  <th className={adminThClass}>합계</th>
-                  <th className={adminThClass}>부가세</th>
-                  <th className={`${adminThClass} admin-th-actions`}>관리</th>
+                  <th className={adminThCompactClass}>번호</th>
+                  <th className={adminThCompactClass}>발행일</th>
+                  <th className={adminThCompactClass}>매물</th>
+                  <th className={adminThCompactClass}>거래처</th>
+                  <th className={adminThCompactClass}>합계</th>
+                  <th className={adminThCompactClass}>부가세</th>
+                  <th className={`${adminThCompactClass} admin-th-actions`}>
+                    관리
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -246,33 +248,37 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
                   const multi = itemCount > 1;
                   return (
                     <tr key={s.id}>
-                      <td className={adminTdClass}>
+                      <td className={adminTdCompactClass}>
                         <span className="font-medium text-neutral-800">
                           {s.statementNo}
                         </span>
                       </td>
-                      <td className={adminTdClass}>{s.issueDate}</td>
-                      <td className={adminTdClass}>
+                      <td className={`${adminTdCompactClass} tabular-nums`}>
+                        {s.issueDate}
+                      </td>
+                      <td className={adminTdCompactClass}>
                         <span className="block truncate font-medium text-neutral-800">
                           {s.vehicleLabel}
                           {multi ? ` 외 ${itemCount - 1}건` : ""}
                         </span>
-                        <span className="mt-0.5 block truncate text-[12px] text-neutral-500">
+                        <span className="mt-0.5 block truncate text-[12px] font-normal text-neutral-500">
                           {s.serialNumber === "EXTRA" ? "별도 항목" : s.serialNumber}
                           {multi ? ` · 총 ${itemCount}건` : ""}
                         </span>
                       </td>
-                      <td className={adminTdClass}>
+                      <td className={adminTdCompactClass}>
                         <span className="block truncate font-medium text-neutral-800">
                           {s.buyerName}
                         </span>
                         {s.buyerUser?.email ? (
-                          <span className="mt-0.5 block truncate text-[12px] text-sky-700">
+                          <span className="mt-0.5 block truncate text-[12px] font-normal text-sky-700">
                             {s.buyerUser.email}
                           </span>
                         ) : null}
                       </td>
-                      <td className={adminTdClass}>
+                      <td
+                        className={`${adminTdCompactClass} tabular-nums text-[13px]`}
+                      >
                         {
                           calcStatementTotals(
                             s.amount,
@@ -281,18 +287,20 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
                           ).totalLabel
                         }
                       </td>
-                      <td className={adminTdClass}>
+                      <td className={`${adminTdCompactClass} text-neutral-600`}>
                         {s.includeVat ? "포함 10%" : "영세율"}
                       </td>
-                      <td className={`${adminTdActionsClass} admin-td-actions`}>
-                        <div className="flex flex-wrap gap-1.5">
+                      <td
+                        className={`${adminTdActionsCompactClass} admin-td-actions`}
+                      >
+                        <div className="flex flex-nowrap items-center justify-end gap-1">
                           <Link
                             href={`/admin/statements/${s.id}`}
-                            className={adminActionBtnClass}
+                            className={adminActionBtnCompactClass}
                           >
                             열기
                           </Link>
-                          <StatementDeleteButton id={s.id} />
+                          <StatementDeleteButton id={s.id} compact />
                         </div>
                       </td>
                     </tr>

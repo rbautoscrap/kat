@@ -9,10 +9,10 @@ import {
   totalPages,
 } from "@/lib/admin-pagination";
 import {
-  adminActionBtnClass,
+  adminActionBtnCompactClass,
   adminTableClass,
   adminTableScrollClass,
-  adminTdActionsClass,
+  adminTdActionsCompactClass,
   adminTdClass,
   adminThClass,
 } from "@/lib/admin-ui";
@@ -154,8 +154,8 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                 <col style={{ width: "22%" }} />
                 <col style={{ width: "18%" }} />
                 <col style={{ width: "14%" }} />
-                <col style={{ width: "10%" }} />
                 <col style={{ width: "8%" }} />
+                <col style={{ width: "7.5rem" }} />
               </colgroup>
               <thead>
                 <tr>
@@ -194,15 +194,15 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                       {formatFx(inv.amount, inv.currency)}
                     </td>
                     <td className={adminTdClass}>{inv._count.items}</td>
-                    <td className={`${adminTdActionsClass} admin-td-actions`}>
-                      <div className="flex flex-wrap gap-1.5">
+                    <td className={`${adminTdActionsCompactClass} admin-td-actions`}>
+                      <div className="flex flex-nowrap items-center justify-end gap-1">
                         <Link
                           href={`/admin/invoices/${inv.id}`}
-                          className={adminActionBtnClass}
+                          className={adminActionBtnCompactClass}
                         >
                           열기
                         </Link>
-                        <InvoiceDeleteButton id={inv.id} />
+                        <InvoiceDeleteButton id={inv.id} compact />
                       </div>
                     </td>
                   </tr>

@@ -3,11 +3,11 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteStatement } from "@/app/admin/statement-actions";
-import { adminDangerBtnClass } from "@/lib/admin-ui";
+import { adminDangerBtnClass, adminDangerBtnCompactClass } from "@/lib/admin-ui";
 
-type Props = { id: string };
+type Props = { id: string; compact?: boolean };
 
-export function StatementDeleteButton({ id }: Props) {
+export function StatementDeleteButton({ id, compact = false }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -15,7 +15,7 @@ export function StatementDeleteButton({ id }: Props) {
     <button
       type="button"
       disabled={pending}
-      className={adminDangerBtnClass}
+      className={compact ? adminDangerBtnCompactClass : adminDangerBtnClass}
       onClick={() => {
         if (!confirm("이 거래명세서를 삭제할까요?")) return;
         startTransition(async () => {

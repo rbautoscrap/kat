@@ -3,11 +3,11 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteOverseasInvoice } from "@/app/admin/invoice-actions";
-import { adminDangerBtnClass } from "@/lib/admin-ui";
+import { adminDangerBtnClass, adminDangerBtnCompactClass } from "@/lib/admin-ui";
 
-type Props = { id: string };
+type Props = { id: string; compact?: boolean };
 
-export function InvoiceDeleteButton({ id }: Props) {
+export function InvoiceDeleteButton({ id, compact = false }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -15,7 +15,7 @@ export function InvoiceDeleteButton({ id }: Props) {
     <button
       type="button"
       disabled={pending}
-      className={adminDangerBtnClass}
+      className={compact ? adminDangerBtnCompactClass : adminDangerBtnClass}
       onClick={() => {
         if (!confirm("이 해외 인보이스를 삭제할까요?")) return;
         startTransition(async () => {
