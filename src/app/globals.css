@@ -282,6 +282,12 @@ main {
   color: #404040;
 }
 
+.listing-share-btn svg {
+  display: block;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
 .listing-share-btn:hover {
   background: #fafafa;
 }
