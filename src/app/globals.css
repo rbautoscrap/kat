@@ -247,6 +247,83 @@ main {
   letter-spacing: -0.025em;
 }
 
+.listing-share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.7rem;
+}
+
+.listing-share-label {
+  margin: 0;
+  color: #737373;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.listing-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.listing-share-btn {
+  display: inline-flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e5e5;
+  border-radius: 999px;
+  background: #fff;
+  color: #404040;
+}
+
+.listing-share-btn:hover {
+  background: #fafafa;
+}
+
+.listing-share-btn.is-whatsapp {
+  border-color: #b7efcc;
+  background: #ecfdf3;
+  color: #128c7e;
+}
+
+.listing-share-btn.is-facebook {
+  border-color: #c7d7f5;
+  background: #eff4ff;
+  color: #1877f2;
+}
+
+.listing-share-btn.is-instagram {
+  border-color: #f5c6d6;
+  background: #fff5f8;
+  color: #c13584;
+}
+
+.listing-share-btn.is-telegram {
+  border-color: #b9e0f5;
+  background: #f0f9ff;
+  color: #229ed9;
+}
+
+.listing-share-btn.is-x,
+.listing-share-btn.is-link,
+.listing-share-btn.is-more {
+  color: #262626;
+}
+
+.listing-share-copied {
+  width: 100%;
+  margin: 0;
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .listing-sale-price {
   margin-top: 0.25rem;
   color: var(--accent);

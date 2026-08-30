@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import { ImageGallery } from "@/components/ImageGallery";
@@ -12,6 +13,7 @@ import { AuctionCountdown } from "@/components/AuctionCountdown";
 import { LiveAuctionGatePanel } from "@/components/LiveAuctionGatePanel";
 import { ListingContactLinks } from "@/components/ListingContactLinks";
 import { ListingSalePriceBox } from "@/components/ListingSalePriceBox";
+import { ListingShareBar } from "@/components/ListingShareBar";
 import { auth, canAccessLiveAuctionAsSignedIn, isAdmin } from "@/lib/auth";
 import {
   resolveSessionDbUser,
@@ -35,6 +37,7 @@ import {
   parseSalePriceWon,
   isPartsCategory,
   SALE_STATUS_LABELS,
+  getPublicSiteOrigin,
   listingWhatsAppLink,
   whatsappLink,
   youtubeEmbedUrl,
@@ -52,6 +55,56 @@ import {
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ id: string }> };
+
+function absoluteMediaUrl(path: string | null | undefined, origin: string) {
+  const raw = path?.trim();
+  if (!raw) return undefined;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (!origin) return undefined;
+  return `${origin}${raw.startsWith("/") ? "" : "/"}${raw}`;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const listing = await prisma.listing.findUnique({
+    where: { id },
+    select: {
+      title: true,
+      salePrice: true,
+      images: {
+        orderBy: { sortOrder: "asc" },
+        take: 1,
+        select: { url: true },
+      },
+    },
+  });
+  if (!listing) return { title: "Listing" };
+
+  const origin = getPublicSiteOrigin() || "https://www.rbautotrade.com";
+  const price = formatSalePriceDisplay(listing.salePrice);
+  const description = price
+    ? `${listing.title} · Special sale price ${price}`
+    : listing.title;
+  const image = absoluteMediaUrl(listing.images[0]?.url, origin);
+
+  return {
+    title: `${listing.title} | KOREA AUTO TRADE`,
+    description,
+    openGraph: {
+      title: listing.title,
+      description,
+      url: `${origin}/listings/${id}`,
+      type: "website",
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title: listing.title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
 
 export default async function ListingDetailPage({ params }: Props) {
   const { id } = await params;
@@ -381,6 +434,13 @@ export default async function ListingDetailPage({ params }: Props) {
             canBump={adminView}
           />
         ) : null}
+      </div>
+      <div className="mb-4">
+        <ListingShareBar
+          title={listing.title}
+          path={`/listings/${listing.id}`}
+          priceLabel={salePriceLabel}
+        />
       </div>
 
       {adminView ? (
