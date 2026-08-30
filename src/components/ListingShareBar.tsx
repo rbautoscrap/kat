@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { shareToKakaoTalk } from "@/lib/kakao-share";
 
 type Props = {
   title: string;
   path: string;
   priceLabel?: string | null;
+  imageUrl?: string | null;
 };
 
 function FacebookIcon() {
@@ -74,10 +76,15 @@ function MoreIcon() {
   );
 }
 
-export function ListingShareBar({ title, path, priceLabel }: Props) {
-  const [copied, setCopied] = useState<"link" | "instagram" | "kakao" | null>(
-    null,
-  );
+export function ListingShareBar({
+  title,
+  path,
+  priceLabel,
+  imageUrl,
+}: Props) {
+  const [copied, setCopied] = useState<"link" | "instagram" | null>(null);
+  const [kakaoError, setKakaoError] = useState<string | null>(null);
+  const [kakaoPending, setKakaoPending] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
 
   const share = useMemo(() => {
@@ -95,14 +102,35 @@ export function ListingShareBar({ title, path, priceLabel }: Props) {
     if (typeof navigator.share === "function") setCanNativeShare(true);
   }, []);
 
-  async function copyLink(kind: "link" | "instagram" | "kakao") {
-    const value = kind === "kakao" ? share.text : share.url;
+  async function copyLink(kind: "link" | "instagram") {
     try {
-      await navigator.clipboard.writeText(value);
+      await navigator.clipboard.writeText(share.url);
       setCopied(kind);
       window.setTimeout(() => setCopied(null), 2200);
     } catch {
-      window.prompt("Copy this listing link", value);
+      window.prompt("Copy this listing link", share.url);
+    }
+  }
+
+  async function shareKakao() {
+    setKakaoError(null);
+    setKakaoPending(true);
+    try {
+      await shareToKakaoTalk({
+        url: share.url,
+        title,
+        description: priceLabel?.trim() || "KOREA AUTO TRADE listing",
+        imageUrl,
+      });
+    } catch (error) {
+      const code = error instanceof Error ? error.message : "";
+      setKakaoError(
+        code === "kakao-key"
+          ? "KakaoTalk share is not configured yet."
+          : "Could not open KakaoTalk. Try again.",
+      );
+    } finally {
+      setKakaoPending(false);
     }
   }
 
@@ -138,9 +166,10 @@ export function ListingShareBar({ title, path, priceLabel }: Props) {
         <button
           type="button"
           className="listing-share-btn is-kakao"
-          title="Copy link for KakaoTalk"
-          aria-label="Copy link for KakaoTalk"
-          onClick={() => void copyLink("kakao")}
+          title="Share on KakaoTalk"
+          aria-label="Share on KakaoTalk"
+          disabled={kakaoPending}
+          onClick={() => void shareKakao()}
         >
           <KakaoIcon />
         </button>
@@ -208,9 +237,12 @@ export function ListingShareBar({ title, path, priceLabel }: Props) {
         <p className="listing-share-copied" role="status">
           {copied === "instagram"
             ? "Link copied. Paste it in Instagram."
-            : copied === "kakao"
-              ? "Copied. Paste it in KakaoTalk."
-              : "Link copied."}
+            : "Link copied."}
+        </p>
+      ) : null}
+      {kakaoError ? (
+        <p className="listing-share-error" role="alert">
+          {kakaoError}
         </p>
       ) : null}
     </div>

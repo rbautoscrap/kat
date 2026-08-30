@@ -440,6 +440,10 @@ export default async function ListingDetailPage({ params }: Props) {
           title={listing.title}
           path={`/listings/${listing.id}`}
           priceLabel={salePriceLabel}
+          imageUrl={absoluteMediaUrl(
+            listing.images[0]?.url,
+            getPublicSiteOrigin() || "https://www.rbautotrade.com",
+          )}
         />
       </div>
 

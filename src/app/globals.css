@@ -330,6 +330,19 @@ main {
   font-weight: 600;
 }
 
+.listing-share-error {
+  width: 100%;
+  margin: 0;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.listing-share-btn:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 .listing-sale-price {
   margin-top: 0.25rem;
   color: var(--accent);
