@@ -287,33 +287,39 @@ main {
 }
 
 .listing-share-btn.is-whatsapp {
-  border-color: #b7efcc;
-  background: #ecfdf3;
-  color: #128c7e;
-}
-
-.listing-share-btn.is-kakao {
-  border-color: #f0e27a;
-  background: #fee500;
-  color: #191919;
+  border-color: #25d366;
+  background: #25d366;
+  color: #fff;
 }
 
 .listing-share-btn.is-facebook {
-  border-color: #c7d7f5;
-  background: #eff4ff;
-  color: #1877f2;
+  border-color: #1877f2;
+  background: #1877f2;
+  color: #fff;
+}
+
+.listing-share-btn.is-kakao {
+  border-color: #fee500;
+  background: #fee500;
+  color: #391b1b;
 }
 
 .listing-share-btn.is-instagram {
-  border-color: #f5c6d6;
-  background: #fff5f8;
-  color: #c13584;
+  border-color: transparent;
+  background: radial-gradient(
+    circle at 30% 107%,
+    #fdf497 0%,
+    #fd5949 45%,
+    #d6249f 60%,
+    #285aeb 90%
+  );
+  color: #fff;
 }
 
 .listing-share-btn.is-telegram {
-  border-color: #b9e0f5;
-  background: #f0f9ff;
-  color: #229ed9;
+  border-color: #229ed9;
+  background: #229ed9;
+  color: #fff;
 }
 
 .listing-share-btn.is-x,
