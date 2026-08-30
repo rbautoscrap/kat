@@ -25,6 +25,14 @@ function WhatsAppIcon() {
   );
 }
 
+function KakaoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4" fill="currentColor">
+      <path d="M12 4.2c-4.7 0-8.5 3-8.5 6.7 0 2.4 1.6 4.5 4 5.7l-.9 3.3c-.1.3.3.6.6.4l3.9-2.6c.3 0 .6.1.9.1 4.7 0 8.5-3 8.5-6.7S16.7 4.2 12 4.2Z" />
+    </svg>
+  );
+}
+
 function InstagramIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4" fill="currentColor">
@@ -67,7 +75,9 @@ function MoreIcon() {
 }
 
 export function ListingShareBar({ title, path, priceLabel }: Props) {
-  const [copied, setCopied] = useState<"link" | "instagram" | null>(null);
+  const [copied, setCopied] = useState<"link" | "instagram" | "kakao" | null>(
+    null,
+  );
   const [canNativeShare, setCanNativeShare] = useState(false);
 
   const share = useMemo(() => {
@@ -85,13 +95,14 @@ export function ListingShareBar({ title, path, priceLabel }: Props) {
     if (typeof navigator.share === "function") setCanNativeShare(true);
   }, []);
 
-  async function copyLink(kind: "link" | "instagram") {
+  async function copyLink(kind: "link" | "instagram" | "kakao") {
+    const value = kind === "kakao" ? share.text : share.url;
     try {
-      await navigator.clipboard.writeText(share.url);
+      await navigator.clipboard.writeText(value);
       setCopied(kind);
       window.setTimeout(() => setCopied(null), 2200);
     } catch {
-      window.prompt("Copy this listing link", share.url);
+      window.prompt("Copy this listing link", value);
     }
   }
 
@@ -124,6 +135,15 @@ export function ListingShareBar({ title, path, priceLabel }: Props) {
         >
           <WhatsAppIcon />
         </a>
+        <button
+          type="button"
+          className="listing-share-btn is-kakao"
+          title="Copy link for KakaoTalk"
+          aria-label="Copy link for KakaoTalk"
+          onClick={() => void copyLink("kakao")}
+        >
+          <KakaoIcon />
+        </button>
         <a
           className="listing-share-btn is-facebook"
           href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
@@ -188,7 +208,9 @@ export function ListingShareBar({ title, path, priceLabel }: Props) {
         <p className="listing-share-copied" role="status">
           {copied === "instagram"
             ? "Link copied. Paste it in Instagram."
-            : "Link copied."}
+            : copied === "kakao"
+              ? "Copied. Paste it in KakaoTalk."
+              : "Link copied."}
         </p>
       ) : null}
     </div>

@@ -292,6 +292,12 @@ main {
   color: #128c7e;
 }
 
+.listing-share-btn.is-kakao {
+  border-color: #f0e27a;
+  background: #fee500;
+  color: #191919;
+}
+
 .listing-share-btn.is-facebook {
   border-color: #c7d7f5;
   background: #eff4ff;
