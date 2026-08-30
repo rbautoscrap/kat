@@ -12,11 +12,8 @@ type Props = {
 
 function FacebookIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4" fill="currentColor">
-      <path
-        transform="translate(3.1 2.15) scale(0.7)"
-        d="M9.102 23.691v-7.98H6.627v-3.667h2.475v-1.58c0-4.085 1.848-5.978 5.859-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036c-.99 0-1.303.37-1.303 1.5v2.47h3.23l-.428 3.667h-2.802v7.98z"
-      />
+    <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5" fill="currentColor">
+      <path d="M14.55 21.35V13.15h2.8l.42-3.25h-3.22V8c0-1.02.3-1.68 1.78-1.68h1.72V3.4c-.32-.05-1.42-.18-2.72-.18-2.7 0-4.55 1.65-4.55 4.7v1.98H7.5v3.25h2.34v8.2h4.71z" />
     </svg>
   );
 }
