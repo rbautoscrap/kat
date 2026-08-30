@@ -59,6 +59,13 @@ function loadKakaoSdk(): Promise<KakaoSdk> {
   });
 }
 
+export class KakaoShareError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "KakaoShareError";
+  }
+}
+
 export async function shareToKakaoTalk(options: {
   url: string;
   title: string;
@@ -66,7 +73,7 @@ export async function shareToKakaoTalk(options: {
   imageUrl?: string | null;
 }) {
   const key = kakaoJsKey();
-  if (!key) throw new Error("kakao-key");
+  if (!key) throw new KakaoShareError("kakao-key");
 
   const Kakao = await loadKakaoSdk();
   if (!Kakao.isInitialized()) Kakao.init(key);

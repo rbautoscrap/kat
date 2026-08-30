@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { shareToKakaoTalk } from "@/lib/kakao-share";
+import { isKakaoShareReady, shareToKakaoTalk } from "@/lib/kakao-share";
 
 type Props = {
   title: string;
@@ -82,7 +82,9 @@ export function ListingShareBar({
   priceLabel,
   imageUrl,
 }: Props) {
-  const [copied, setCopied] = useState<"link" | "instagram" | null>(null);
+  const [copied, setCopied] = useState<"link" | "instagram" | "kakao" | null>(
+    null,
+  );
   const [kakaoError, setKakaoError] = useState<string | null>(null);
   const [kakaoPending, setKakaoPending] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
@@ -116,19 +118,28 @@ export function ListingShareBar({
     setKakaoError(null);
     setKakaoPending(true);
     try {
-      await shareToKakaoTalk({
-        url: share.url,
-        title,
-        description: priceLabel?.trim() || "KOREA AUTO TRADE listing",
-        imageUrl,
-      });
+      if (isKakaoShareReady()) {
+        await shareToKakaoTalk({
+          url: share.url,
+          title,
+          description: priceLabel?.trim() || "KOREA AUTO TRADE listing",
+          imageUrl,
+        });
+        return;
+      }
+      if (typeof navigator.share === "function") {
+        await navigator.share({
+          title,
+          text: share.text,
+          url: share.url,
+        });
+        return;
+      }
+      await navigator.clipboard.writeText(share.text);
+      setCopied("kakao");
     } catch (error) {
-      const code = error instanceof Error ? error.message : "";
-      setKakaoError(
-        code === "kakao-key"
-          ? "KakaoTalk share is not configured yet."
-          : "Could not open KakaoTalk. Try again.",
-      );
+      if (error instanceof Error && error.name === "AbortError") return;
+      setKakaoError("Could not open KakaoTalk. Try again.");
     } finally {
       setKakaoPending(false);
     }
@@ -237,7 +248,9 @@ export function ListingShareBar({
         <p className="listing-share-copied" role="status">
           {copied === "instagram"
             ? "Link copied. Paste it in Instagram."
-            : "Link copied."}
+            : copied === "kakao"
+              ? "Copied. Open KakaoTalk and paste it."
+              : "Link copied."}
         </p>
       ) : null}
       {kakaoError ? (
