@@ -29,6 +29,7 @@ import {
   formatDisplacementDisplay,
   formatFuelType,
   formatNotesDisplay,
+  formatRegistrationDate,
   formatOdometerDisplay,
   formatSalePriceDisplay,
   formatSalePriceEur,
@@ -270,7 +271,6 @@ export default async function ListingDetailPage({ params }: Props) {
     serialNumber: listing.serialNumber,
     vin: listing.vin,
     year: listing.year,
-    manufactureMonth: listing.manufactureMonth,
     make: listing.make,
     model: listing.model,
   };
@@ -356,6 +356,10 @@ export default async function ListingDetailPage({ params }: Props) {
         },
       ]
     : [
+        {
+          label: "First Registration",
+          value: formatRegistrationDate(listing.registrationDate) || "—",
+        },
         { label: "VIN", value: listing.vin || "—" },
         { label: "Engine Mark", value: listing.engineMark || "—" },
         {

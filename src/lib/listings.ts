@@ -26,77 +26,67 @@ export function isPartsCategory(
   return category === "USED_PARTS";
 }
 
-/** Display 연식 as `2022` or `2022.08`. */
+/** Display 연식 as a 4-digit year. */
 export function formatListingYear(
   year: number | null | undefined,
-  manufactureMonth?: number | null,
 ): string {
   if (!year || year < 1980) return "";
-  if (
-    manufactureMonth &&
-    manufactureMonth >= 1 &&
-    manufactureMonth <= 12
-  ) {
-    return `${year}.${String(manufactureMonth).padStart(2, "0")}`;
-  }
   return String(year);
 }
 
-export type ParsedListingYear = {
-  year: number;
-  manufactureMonth: number | null;
-};
+/** Accept a 4-digit year; extra digits (e.g. pasted dates) use the leading year. */
+export function parseListingYearInput(value: unknown): number | null {
+  if (value === 0 || value === "0") return 0;
+  if (value == null) return null;
+  const digits = String(value).replace(/\D/g, "");
+  if (digits.length < 4) return digits === "0" ? 0 : null;
+  const year = Number(digits.slice(0, 4));
+  return Number.isFinite(year) ? year : null;
+}
 
-/**
- * Accept `2022`, `2022.08`, `2022-08`, `2022/08`, or `202208`.
- * Year-only is allowed; invalid month returns null.
- */
-export function parseListingYearInput(value: unknown): ParsedListingYear | null {
-  if (value === 0 || value === "0") return { year: 0, manufactureMonth: null };
+/** Store 최초 등록일 as YYYYMMDD. Empty input is allowed. */
+export function parseRegistrationDateInput(value: unknown): string | null {
   if (value == null) return null;
   const raw = String(value).trim();
   if (!raw) return null;
-
-  const dotted = raw.match(/^(\d{4})\s*[.\-/]\s*(\d{1,2})$/);
-  if (dotted) {
-    const year = Number(dotted[1]);
-    const month = Number(dotted[2]);
-    if (year < 1980 || year > 2100) return null;
-    if (month < 1 || month > 12) return null;
-    return { year, manufactureMonth: month };
-  }
-
   const digits = raw.replace(/\D/g, "");
-  if (digits.length >= 6) {
-    const year = Number(digits.slice(0, 4));
-    const month = Number(digits.slice(4, 6));
-    if (year >= 1980 && year <= 2100 && month >= 1 && month <= 12) {
-      return { year, manufactureMonth: month };
-    }
+  if (digits.length !== 8) return null;
+  const y = Number(digits.slice(0, 4));
+  const m = Number(digits.slice(4, 6));
+  const d = Number(digits.slice(6, 8));
+  if (y < 1980 || y > 2100 || m < 1 || m > 12 || d < 1 || d > 31) return null;
+  const dt = new Date(y, m - 1, d);
+  if (
+    dt.getFullYear() !== y ||
+    dt.getMonth() !== m - 1 ||
+    dt.getDate() !== d
+  ) {
+    return null;
   }
-  if (digits.length >= 4) {
-    const year = Number(digits.slice(0, 4));
-    if (year >= 1980 && year <= 2100) {
-      return { year, manufactureMonth: null };
-    }
-  }
-  return null;
+  return digits;
+}
+
+/** Display 최초 등록일 as `2000.01.01`. */
+export function formatRegistrationDate(
+  value: string | null | undefined,
+): string {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (digits.length !== 8) return "";
+  return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6, 8)}`;
 }
 
 export function listingVehicleLabel(listing: {
   year: number;
-  manufactureMonth?: number | null;
   make: string;
   model: string;
 }): string {
-  return `${formatListingYear(listing.year, listing.manufactureMonth)} ${listing.make} ${listing.model}`.trim();
+  return `${formatListingYear(listing.year)} ${listing.make} ${listing.model}`.trim();
 }
 
 /** Card / list label — parts use title; vehicles use year make model. */
 export function listingCardLabel(listing: {
   category: ListingCategory;
   year: number;
-  manufactureMonth?: number | null;
   make: string;
   model: string;
   title: string;
@@ -207,7 +197,6 @@ export type ListingInquiryOptions = {
   serialNumber?: string | null;
   vin?: string | null;
   year?: number | null;
-  manufactureMonth?: number | null;
   make?: string | null;
   model?: string | null;
   salePrice?: string | null;
@@ -241,7 +230,6 @@ export function listingInquiryText(
     options?.year && options?.make && options?.model
       ? listingVehicleLabel({
           year: options.year,
-          manufactureMonth: options.manufactureMonth,
           make: options.make,
           model: options.model,
         })

@@ -22,19 +22,13 @@ export function buildPublicListingSearchWhere(
   const isShortNumeric =
     isPureNumeric && digits.length > 0 && digits.length < MIN_VIN_SERIAL_DIGITS;
 
-  const parsedYear = parseListingYearInput(q);
+  const year = parseListingYearInput(q);
   const yearMatch =
-    parsedYear && parsedYear.year >= 1980 && parsedYear.year <= 2100
-      ? parsedYear.manufactureMonth
-        ? [
-            {
-              year: parsedYear.year,
-              manufactureMonth: parsedYear.manufactureMonth,
-            },
-          ]
-        : digits.length === 4
-          ? [{ year: parsedYear.year }]
-          : []
+    digits.length === 4 &&
+    year != null &&
+    year >= 1980 &&
+    year <= 2100
+      ? [{ year }]
       : [];
 
   const contains = { contains: q } as const;
@@ -58,6 +52,10 @@ export function buildPublicListingSearchWhere(
       { vin: { contains: digits } },
       { serialNumber: { contains: digits } },
     );
+  }
+
+  if (digits.length === 8) {
+    identity.push({ registrationDate: { contains: digits } });
   }
 
   // Notes: allow text search, but never short pure numbers (too many false hits).

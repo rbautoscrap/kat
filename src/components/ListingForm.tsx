@@ -18,11 +18,12 @@ import {
   toKoreaDatetimeLocalValue,
 } from "@/lib/format-korea-time";
 import {
-  formatListingYear,
+  formatRegistrationDate,
   isPartsCategory,
   MAX_IMAGES_PER_LISTING,
   MAX_IMAGES_PER_USED_PARTS,
   parseListingYearInput,
+  parseRegistrationDateInput,
 } from "@/lib/listings";
 import {
   STORAGE_LOCATIONS,
@@ -448,17 +449,25 @@ export function ListingForm({
         return;
       }
     } else {
-      const parsedYear = parseListingYearInput(data.get("year"));
-      if (!parsedYear || parsedYear.year < 1980 || parsedYear.year > 2100) {
-        setError("연식은 연도 또는 연도.월로 입력해 주세요. 예: 2022.08");
+      const yearNum = parseListingYearInput(data.get("year"));
+      if (!yearNum || yearNum < 1980 || yearNum > 2100) {
+        setError("연식은 4자리 연도(예: 2000)로 입력해 주세요.");
         setPending(false);
         return;
       }
-      data.set(
-        "year",
-        formatListingYear(parsedYear.year, parsedYear.manufactureMonth) ||
-          String(parsedYear.year),
-      );
+      data.set("year", String(yearNum));
+      const rawRegistration = String(data.get("registrationDate") ?? "").trim();
+      if (rawRegistration) {
+        const registrationDate = parseRegistrationDateInput(rawRegistration);
+        if (!registrationDate) {
+          setError(
+            "최초 등록일은 연.월.일 형식(예: 2000.01.01)으로 입력해 주세요.",
+          );
+          setPending(false);
+          return;
+        }
+        data.set("registrationDate", registrationDate);
+      }
     }
 
     if (category === "CAR_LISTINGS" || category === "STAND_BY") {
@@ -727,18 +736,29 @@ export function ListingForm({
           </span>
           <input
             name="year"
-            type="text"
-            inputMode="decimal"
+            type="number"
+            inputMode="numeric"
             required
-            placeholder="예: 2022.08"
+            min={1980}
+            max={2100}
+            step={1}
+            placeholder="예: 2000"
             defaultValue={
               listing?.year && listing.year >= 1980
-                ? formatListingYear(listing.year, listing.manufactureMonth)
+                ? listing.year.toString()
                 : undefined
             }
             className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400 focus:bg-white"
           />
         </label>
+        <Field
+          label="최초 등록일"
+          name="registrationDate"
+          placeholder="예: 2000.01.01"
+          defaultValue={
+            formatRegistrationDate(listing?.registrationDate) || undefined
+          }
+        />
         {category === "LIVE_AUCTION" ? (
           <div className="sm:col-span-2 rounded-md border border-rose-200 bg-rose-50/40 px-3 py-3 sm:px-4">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">

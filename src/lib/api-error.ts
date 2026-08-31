@@ -10,13 +10,13 @@ export function toApiErrorMessage(
     const raw = issue?.message ?? "";
     // Zod v4 default English messages → Korean for listing forms
     if (/expected number to be <=\s*2100/i.test(raw)) {
-      return "연식은 연도 또는 연도.월(예: 2022.08)로 입력해 주세요.";
+      return "연식은 4자리 연도(예: 2000)로 입력해 주세요.";
     }
     if (/expected number to be >=\s*1980/i.test(raw)) {
       return "연식은 1980년 이상이어야 합니다.";
     }
     if (/^Too big:/i.test(raw) || /^Too small:/i.test(raw)) {
-      return "입력값을 확인해 주세요. 연식은 연도 또는 연도.월(예: 2022.08)입니다.";
+      return "입력값을 확인해 주세요. 연식은 4자리 연도(예: 2000)입니다.";
     }
     if (raw && !/^Invalid/i.test(raw)) return raw;
     return fallback;
