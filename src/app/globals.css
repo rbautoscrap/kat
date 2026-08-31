@@ -2185,17 +2185,17 @@ main {
   line-height: 1.25;
 }
 
-.daily-sales-table .col-buyer { width: 13%; }
-.daily-sales-table .col-car { width: 20%; }
-.daily-sales-table .col-num { width: 9.5%; }
-.daily-sales-table .col-ship { width: 8%; }
+.daily-sales-table .col-buyer { width: 8.5%; }
+.daily-sales-table .col-num { width: 7.4%; }
+.daily-sales-table .col-ship { width: 9.5%; }
 
 .daily-sales-table th,
 .daily-sales-table td {
   border: 1px solid #e5e5e5;
-  padding: 3px 6px;
+  padding: 3px 4px;
   vertical-align: middle;
-  height: 28px;
+  height: auto;
+  min-height: 28px;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -2206,13 +2206,17 @@ main {
   font-weight: 600;
   text-align: center;
   font-size: 11.5px;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   border-color: #262626;
   white-space: nowrap;
+  height: 28px;
+  padding: 3px;
 }
 
 .daily-sales-table thead th.is-deposit {
   color: #facc15;
+  white-space: normal;
+  line-height: 1.15;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
@@ -2230,17 +2234,29 @@ main {
 .daily-sales-table .is-num {
   text-align: right;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
   white-space: nowrap;
+  padding-left: 2px;
+  padding-right: 3px;
 }
 .daily-sales-table .is-strong { font-weight: 700; }
 .daily-sales-table .is-remain { color: #b45309; }
 .daily-sales-table .is-profit { color: #15803d; }
 .daily-sales-table .is-loss { color: #b91c1c; }
+.daily-sales-table td:first-child {
+  padding-left: 5px;
+  padding-right: 3px;
+  word-break: keep-all;
+}
 .daily-sales-table .is-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+  padding-left: 6px;
+  padding-right: 6px;
 }
 
 .daily-sales-plate {
@@ -2270,7 +2286,7 @@ main {
 .daily-sales-link:hover { text-decoration: underline; }
 
 .daily-sales-table .is-edit {
-  padding: 2px 4px;
+  padding: 2px 2px;
 }
 
 .daily-sales-table .is-edit input,
