@@ -18,9 +18,11 @@ import {
   toKoreaDatetimeLocalValue,
 } from "@/lib/format-korea-time";
 import {
+  formatListingYear,
   isPartsCategory,
   MAX_IMAGES_PER_LISTING,
   MAX_IMAGES_PER_USED_PARTS,
+  parseListingYearInput,
 } from "@/lib/listings";
 import {
   STORAGE_LOCATIONS,
@@ -446,15 +448,17 @@ export function ListingForm({
         return;
       }
     } else {
-      const yearDigits = String(data.get("year") ?? "").replace(/\D/g, "");
-      const yearNum =
-        yearDigits.length >= 4 ? Number(yearDigits.slice(0, 4)) : NaN;
-      if (!Number.isFinite(yearNum) || yearNum < 1980 || yearNum > 2100) {
-        setError("연식은 4자리 연도(예: 2024)로 입력해 주세요.");
+      const parsedYear = parseListingYearInput(data.get("year"));
+      if (!parsedYear || parsedYear.year < 1980 || parsedYear.year > 2100) {
+        setError("연식은 연도 또는 연도.월로 입력해 주세요. 예: 2022.08");
         setPending(false);
         return;
       }
-      data.set("year", String(yearNum));
+      data.set(
+        "year",
+        formatListingYear(parsedYear.year, parsedYear.manufactureMonth) ||
+          String(parsedYear.year),
+      );
     }
 
     if (category === "CAR_LISTINGS" || category === "STAND_BY") {
@@ -723,16 +727,13 @@ export function ListingForm({
           </span>
           <input
             name="year"
-            type="number"
-            inputMode="numeric"
+            type="text"
+            inputMode="decimal"
             required
-            min={1980}
-            max={2100}
-            step={1}
-            placeholder="예: 2024"
+            placeholder="예: 2022.08"
             defaultValue={
               listing?.year && listing.year >= 1980
-                ? listing.year.toString()
+                ? formatListingYear(listing.year, listing.manufactureMonth)
                 : undefined
             }
             className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400 focus:bg-white"

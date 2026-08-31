@@ -6,6 +6,7 @@ import type { OfferCurrency } from "@prisma/client";
 import { auth, isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { OFFER_CURRENCIES } from "@/lib/purchase-offer";
+import { listingVehicleLabel } from "@/lib/listings";
 import { prisma } from "@/lib/prisma";
 import { shouldAutoListReceivable } from "@/lib/sales-daily";
 import {
@@ -116,6 +117,7 @@ async function nextStatementNo(issueDate: string) {
 
 function listingSnapshot(listing: {
   year: number;
+  manufactureMonth?: number | null;
   make: string;
   model: string;
   vin: string | null;
@@ -123,7 +125,7 @@ function listingSnapshot(listing: {
   vehicleNumber: string | null;
 }) {
   return {
-    vehicleLabel: `${listing.year} ${listing.make} ${listing.model}`.trim(),
+    vehicleLabel: listingVehicleLabel(listing),
     vin: listing.vin?.trim() || null,
     serialNumber: listing.serialNumber,
     vehicleNumber: listing.vehicleNumber?.trim() || null,

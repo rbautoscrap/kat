@@ -81,6 +81,8 @@ model Listing {
   /** AVAILABLE = on sale, RESERVED = under contract, SOLD = sold out */
   saleStatus       ListingSaleStatus @default(AVAILABLE)
   year             Int
+  /** Optional month of manufacture (1–12). Shown as YYYY.MM with year. */
+  manufactureMonth Int?
   make             String
   model            String
   vin              String?

@@ -21,6 +21,7 @@ import {
   formatFx,
   type ListingOption,
 } from "@/lib/overseas-invoice";
+import { listingVehicleLabel } from "@/lib/listings";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -82,6 +83,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
         serialNumber: true,
         title: true,
         year: true,
+        manufactureMonth: true,
         make: true,
         model: true,
         vin: true,
@@ -93,7 +95,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
   const listings: ListingOption[] = listingRows.map((l) => ({
     id: l.id,
     serialNumber: l.serialNumber,
-    label: l.title || `${l.year} ${l.make} ${l.model}`,
+    label: l.title || listingVehicleLabel(l),
     vin: l.vin,
     vehicleNumber: l.vehicleNumber,
   }));

@@ -8,7 +8,11 @@ import { DEFAULT_LISTING_WHATSAPP } from "@/lib/contact";
 import { parseAuctionEndsAtInput } from "@/lib/format-korea-time";
 import { getAppTempDir, getUploadsDir } from "@/lib/storage-paths";
 import { translateToEnglish } from "@/lib/translate";
-import { maxImagesForCategory } from "@/lib/listings";
+import {
+  formatListingYear,
+  maxImagesForCategory,
+  parseListingYearInput,
+} from "@/lib/listings";
 import { canonicalizeStorageLocation } from "@/lib/storage-location";
 
 export {
@@ -132,27 +136,34 @@ function normalizeFuelType(value: string) {
   return FUEL_LEGACY[value] ?? value;
 }
 
-/** Accept 4-digit years; if YYYYMMDD (or longer) is pasted, use the leading year. */
 function parseListingYear(value: unknown): number | null {
-  if (value === 0 || value === "0") return 0;
-  if (value == null || value === "") return null;
-  const digits = String(value).replace(/\D/g, "");
-  if (digits.length < 4) {
-    // Parts listings may send placeholder 0
-    if (digits === "0") return 0;
-    return null;
-  }
-  const year = Number(digits.slice(0, 4));
-  return Number.isFinite(year) ? year : null;
+  const parsed = parseListingYearInput(value);
+  return parsed ? parsed.year : null;
+}
+
+function parseListingManufactureMonth(value: unknown): number | null {
+  const parsed = parseListingYearInput(value);
+  if (!parsed) return null;
+  return parsed.manufactureMonth;
 }
 
 const listingYearSchema = z.preprocess(
   (value) => parseListingYear(value),
   z
-    .number({ error: "연식(연도)을 입력해 주세요." })
-    .int("연식은 정수 연도로 입력해 주세요.")
+    .number({ error: "연식을 입력해 주세요." })
+    .int("연식은 연도 또는 연도.월로 입력해 주세요.")
     .min(0, "연식은 1980년 이상이어야 합니다.")
-    .max(2100, "연식은 4자리 연도(예: 2024)로 입력해 주세요."),
+    .max(2100, "연식은 연도 또는 연도.월(예: 2022.08)로 입력해 주세요."),
+);
+
+const listingManufactureMonthSchema = z.preprocess(
+  (value) => parseListingManufactureMonth(value),
+  z
+    .number()
+    .int()
+    .min(1, "연식 월은 01–12로 입력해 주세요.")
+    .max(12, "연식 월은 01–12로 입력해 주세요.")
+    .nullable(),
 );
 
 const LISTING_CATEGORIES = [
@@ -165,6 +176,7 @@ const LISTING_CATEGORIES = [
 const listingFieldsSchema = z.object({
   category: z.enum(LISTING_CATEGORIES),
   year: listingYearSchema,
+  manufactureMonth: listingManufactureMonthSchema,
   make: z.string().min(1, "제조사/부품명 또는 제목을 입력해 주세요."),
   model: z.string().min(1, "모델/판매자명을 입력해 주세요."),
   vin: z
@@ -281,12 +293,13 @@ export function buildListingTitle(
   make: string,
   model: string,
   category?: ListingCategory,
+  manufactureMonth?: number | null,
 ) {
   if (category === "USED_PARTS") {
     // make = part title; model = seller name (not shown in listing title)
     return make.trim();
   }
-  return `${year} ${make} ${model}`.trim();
+  return `${formatListingYear(year, manufactureMonth)} ${make} ${model}`.trim();
 }
 
 export function formDataToListingInput(formData: FormData) {
@@ -295,6 +308,7 @@ export function formDataToListingInput(formData: FormData) {
   const raw = {
     category,
     year: isParts ? 0 : formData.get("year"),
+    manufactureMonth: isParts ? null : formData.get("year"),
     make: String(formData.get("make") ?? "").trim(),
     model: isParts
       ? String(formData.get("model") ?? "").trim()
@@ -368,9 +382,16 @@ export function formDataToListingInput(formData: FormData) {
     incidentalCost: data.incidentalCost ?? null,
     costPrice,
     salePrice: data.salePrice ?? null,
+    manufactureMonth: data.manufactureMonth ?? null,
     accumulatedDays,
     auctionEndsAt,
-    title: buildListingTitle(data.year, data.make, data.model, data.category),
+    title: buildListingTitle(
+      data.year,
+      data.make,
+      data.model,
+      data.category,
+      data.manufactureMonth,
+    ),
   };
 }
 

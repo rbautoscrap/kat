@@ -21,6 +21,7 @@ import {
   adminTdCompactClass,
   adminThCompactClass,
 } from "@/lib/admin-ui";
+import { listingVehicleLabel } from "@/lib/listings";
 import { prisma } from "@/lib/prisma";
 import {
   calcStatementTotals,
@@ -155,6 +156,7 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
         id: true,
         serialNumber: true,
         year: true,
+        manufactureMonth: true,
         make: true,
         model: true,
         vin: true,
@@ -177,7 +179,7 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
   const listings: ListingOption[] = listingRows.map((l) => ({
     id: l.id,
     serialNumber: l.serialNumber,
-    label: `${l.year} ${l.make} ${l.model}`,
+    label: listingVehicleLabel(l),
     vin: l.vin,
     vehicleNumber: l.vehicleNumber,
   }));

@@ -270,6 +270,7 @@ export default async function ListingDetailPage({ params }: Props) {
     serialNumber: listing.serialNumber,
     vin: listing.vin,
     year: listing.year,
+    manufactureMonth: listing.manufactureMonth,
     make: listing.make,
     model: listing.model,
   };

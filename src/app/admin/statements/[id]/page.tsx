@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { StatementActions } from "@/components/admin/StatementActions";
 import { StatementForm } from "@/components/admin/StatementForm";
 import { StatementPreviewPanel } from "@/components/admin/StatementPreviewPanel";
+import { listingVehicleLabel } from "@/lib/listings";
 import { prisma } from "@/lib/prisma";
 import {
   defaultIssueDate,
@@ -38,6 +39,7 @@ export default async function StatementDetailPage({ params }: Props) {
         id: true,
         serialNumber: true,
         year: true,
+        manufactureMonth: true,
         make: true,
         model: true,
         vin: true,
@@ -60,7 +62,7 @@ export default async function StatementDetailPage({ params }: Props) {
   const options: ListingOption[] = listings.map((l) => ({
     id: l.id,
     serialNumber: l.serialNumber,
-    label: `${l.year} ${l.make} ${l.model}`,
+    label: listingVehicleLabel(l),
     vin: l.vin,
     vehicleNumber: l.vehicleNumber,
   }));

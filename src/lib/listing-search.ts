@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { parseListingYearInput } from "@/lib/listings";
 
 /** Minimum digit length before matching against VIN / S/N substrings. */
 const MIN_VIN_SERIAL_DIGITS = 5;
@@ -21,13 +22,19 @@ export function buildPublicListingSearchWhere(
   const isShortNumeric =
     isPureNumeric && digits.length > 0 && digits.length < MIN_VIN_SERIAL_DIGITS;
 
-  const year = Number(digits);
+  const parsedYear = parseListingYearInput(q);
   const yearMatch =
-    digits.length === 4 &&
-    Number.isFinite(year) &&
-    year >= 1980 &&
-    year <= 2100
-      ? [{ year }]
+    parsedYear && parsedYear.year >= 1980 && parsedYear.year <= 2100
+      ? parsedYear.manufactureMonth
+        ? [
+            {
+              year: parsedYear.year,
+              manufactureMonth: parsedYear.manufactureMonth,
+            },
+          ]
+        : digits.length === 4
+          ? [{ year: parsedYear.year }]
+          : []
       : [];
 
   const contains = { contains: q } as const;
