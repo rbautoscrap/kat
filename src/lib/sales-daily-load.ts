@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { parseCostPrice, resolveListingCost } from "@/lib/inventory-cost";
+import { calcFinalFromKrw } from "@/lib/overseas-invoice";
 import type { MonthPurchaseTotals } from "@/lib/sales-monthly";
 import {
   buildSaleRow,
@@ -84,6 +85,21 @@ export async function loadSaleRowsThrough(
   }
   for (const invoice of invoices) {
     for (const item of invoice.items) {
+      const costKrw = resolveSaleCost({
+        isExtra: item.isExtra,
+        costPrice: item.listing?.costPrice,
+        auctionPrice: item.listing?.auctionPrice,
+        incidentalCost: item.listing?.incidentalCost,
+      });
+      const costAmount =
+        invoice.currency === "KRW" || item.isExtra
+          ? costKrw
+          : Number(
+              calcFinalFromKrw(
+                String(costKrw),
+                item.rate || invoice.exchangeRate,
+              ) || 0,
+            );
       rows.push(
         buildSaleRow({
           source: "invoice",
@@ -98,12 +114,7 @@ export async function loadSaleRowsThrough(
           currency: invoice.currency,
           includeVat: false,
           supplyAmount: item.finalPrice,
-          costAmount: resolveSaleCost({
-            isExtra: item.isExtra,
-            costPrice: item.listing?.costPrice,
-            auctionPrice: item.listing?.auctionPrice,
-            incidentalCost: item.listing?.incidentalCost,
-          }),
+          costAmount,
           paidAmount: item.paidAmount,
           shipmentType: item.shipmentType,
           shippedDate: item.shippedDate,

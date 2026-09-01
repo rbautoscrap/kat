@@ -295,6 +295,24 @@ export function sumSaleRows(
   };
 }
 
+export function sumSaleRowsByCurrency(rows: DailySaleRow[]) {
+  const order: OfferCurrency[] = ["KRW", "EUR", "USD"];
+  const grouped = new Map<OfferCurrency, DailySaleRow[]>();
+  for (const row of rows) {
+    const list = grouped.get(row.currency) ?? [];
+    list.push(row);
+    grouped.set(row.currency, list);
+  }
+  const currencies = [
+    ...order.filter((code) => grouped.has(code)),
+    ...[...grouped.keys()].filter((code) => !order.includes(code)),
+  ];
+  return currencies.map((currency) => ({
+    currency,
+    totals: sumSaleRows(grouped.get(currency) ?? [], currency),
+  }));
+}
+
 export function isUnpaidRow(row: DailySaleRow) {
   return parseSaleMoney(row.remaining) > 0;
 }

@@ -20,6 +20,7 @@ import {
   saleDocHref,
   sortSaleRowsByRecentDate,
   sumSaleRows,
+  sumSaleRowsByCurrency,
   type DailySaleRow,
 } from "@/lib/sales-daily";
 
@@ -225,7 +226,15 @@ export function DailySalesReport({
     });
   }
 
-  const dayTotals = useMemo(() => sumSaleRows(daySales), [daySales]);
+  const dayTotals = useMemo(() => {
+    const krw = sumSaleRows(
+      daySales.filter((row) => row.currency === "KRW"),
+    );
+    const fxKrw = daySales
+      .filter((row) => row.currency !== "KRW")
+      .reduce((sum, row) => sum + parseSaleMoney(row.amountKrw), 0);
+    return { ...krw, total: krw.total + fxKrw };
+  }, [daySales]);
   const recvTotals = useMemo(() => sumSaleRows(receivables), [receivables]);
   const fxTotals = useMemo(
     () => sumSaleRows(fxReceivables, fxReceivables[0]?.currency ?? "USD"),
@@ -364,7 +373,7 @@ export function DailySalesReport({
           pending={pending}
           onPatch={syncAll}
           onSave={save}
-          empty="해당일 판매 명세서가 없습니다."
+          empty="해당일 판매 명세서·인보이스가 없습니다."
         />
       )}
 
@@ -671,6 +680,8 @@ function ReportTable({
   const showVat = !fx;
   const showProfit = !fx;
   const colSpan = 6 + (showVat ? 1 : 0) + (showProfit ? 2 : 0);
+  const footerGroups = sumSaleRowsByCurrency(rows);
+  const hasFxRows = rows.some((row) => row.currency !== "KRW");
 
   return (
     <section className="daily-sales-section">
@@ -818,44 +829,50 @@ function ReportTable({
             )}
           </tbody>
           <tfoot>
-            <tr>
-              <td colSpan={2} className="is-center is-strong">
-                합 계
-              </td>
-              <td className="is-num">
-                {formatSaleMoney(totals.supply, currency)}
-              </td>
-              {showProfit ? (
-                <td className="is-num">
-                  {formatSaleMoney(totals.cost, currency)}
-                </td>
-              ) : null}
-              {showProfit ? (
-                <td
-                  className={`is-num is-strong ${
-                    profitToneClass(totals.profit) ?? ""
-                  }`}
-                >
-                  {formatSaleMoney(totals.profit, currency)}
-                </td>
-              ) : null}
-              {showVat ? (
-                <td className="is-num">
-                  {formatSaleMoney(totals.vat, currency)}
-                </td>
-              ) : null}
-              <td className="is-num">
-                {formatSaleMoney(totals.paid, currency)}
-              </td>
-              <td className="is-num is-remain">
-                {formatSaleMoney(totals.remaining, currency)}
-              </td>
-              <td />
-            </tr>
+            {(footerGroups.length ? footerGroups : [{ currency, totals }]).map(
+              (group) => (
+                <tr key={group.currency}>
+                  <td colSpan={2} className="is-center is-strong">
+                    {footerGroups.length > 1
+                      ? `합 계 (${group.currency})`
+                      : "합 계"}
+                  </td>
+                  <td className="is-num">
+                    {formatSaleMoney(group.totals.supply, group.currency)}
+                  </td>
+                  {showProfit ? (
+                    <td className="is-num">
+                      {formatSaleMoney(group.totals.cost, group.currency)}
+                    </td>
+                  ) : null}
+                  {showProfit ? (
+                    <td
+                      className={`is-num is-strong ${
+                        profitToneClass(group.totals.profit) ?? ""
+                      }`}
+                    >
+                      {formatSaleMoney(group.totals.profit, group.currency)}
+                    </td>
+                  ) : null}
+                  {showVat ? (
+                    <td className="is-num">
+                      {formatSaleMoney(group.totals.vat, group.currency)}
+                    </td>
+                  ) : null}
+                  <td className="is-num">
+                    {formatSaleMoney(group.totals.paid, group.currency)}
+                  </td>
+                  <td className="is-num is-remain">
+                    {formatSaleMoney(group.totals.remaining, group.currency)}
+                  </td>
+                  <td />
+                </tr>
+              ),
+            )}
           </tfoot>
         </table>
       </div>
-      {fx ? (
+      {fx || hasFxRows ? (
         <p className="daily-sales-fx-note">
           외화 금액은 명세서·인보이스 통화 기준입니다.
         </p>

@@ -53,8 +53,8 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
   const daySales = allRows.filter(
     (row) =>
       row.issueDate === date &&
-      row.currency === "KRW" &&
-      row.source === "statement",
+      ((row.source === "statement" && row.currency === "KRW") ||
+        row.source === "invoice"),
   );
   const receivables = allRows.filter(
     (row) =>
