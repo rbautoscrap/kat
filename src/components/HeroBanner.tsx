@@ -1,19 +1,17 @@
 import Link from "next/link";
 import { canManageListings } from "@/lib/auth";
 import { CsResumeBanner } from "@/components/CsResumeBanner";
-import { nextKoreaNineAm } from "@/lib/format-korea-time";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 
 export async function HeroBanner() {
   const dbUser = await resolveSessionDbUser();
   /** Vehicle listers only (ADMIN / AUTHORIZED). Regular members no longer see + List. */
   const canList = canManageListings(dbUser?.role);
-  const resumeAt = nextKoreaNineAm().toISOString();
 
   return (
     <div className="border-b border-[var(--line)] bg-neutral-50/60">
       <div className="site-container relative flex flex-col items-center justify-center py-3.5 sm:py-5">
-        <CsResumeBanner resumeAt={resumeAt} />
+        <CsResumeBanner />
         {canList ? (
           <Link
             href="/listings/new"
