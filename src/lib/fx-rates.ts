@@ -87,3 +87,10 @@ export function convertKrw(amountKrw: number, perKrw: number) {
   }
   return amountKrw * perKrw;
 }
+
+/** Foreign amount → KRW using a KRW-base mid-market rate (USD/EUR per 1 KRW). */
+export function convertFxToKrw(amountFx: number, perKrw: number) {
+  if (!Number.isFinite(amountFx) || amountFx === 0) return 0;
+  if (!Number.isFinite(perKrw) || perKrw <= 0) return 0;
+  return amountFx / perKrw;
+}

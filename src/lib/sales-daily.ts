@@ -1,5 +1,6 @@
 import type { OfferCurrency } from "@prisma/client";
 import { koreaTodayDate } from "@/lib/format-korea-time";
+import { convertFxToKrw, type KrwFxRates } from "@/lib/fx-rates";
 import { STATEMENT_VAT_RATE, calcStatementTotals } from "@/lib/statement";
 import { formatOfferAmount, type OfferCurrencyCode } from "@/lib/purchase-offer";
 
@@ -311,6 +312,48 @@ export function sumSaleRowsByCurrency(rows: DailySaleRow[]) {
     currency,
     totals: sumSaleRows(grouped.get(currency) ?? [], currency),
   }));
+}
+
+export function fxAmountToKrw(
+  amount: number,
+  currency: OfferCurrency,
+  rates?: KrwFxRates | null,
+) {
+  if (currency === "KRW") return Math.round(amount);
+  if (!rates) return 0;
+  const perKrw =
+    currency === "USD"
+      ? rates.usdPerKrw
+      : currency === "EUR"
+        ? rates.eurPerKrw
+        : 0;
+  return Math.round(convertFxToKrw(amount, perKrw));
+}
+
+/** Live-rate KRW total for foreign rows; falls back to invoice KRW amount. */
+export function sumForeignSalesToKrw(
+  rows: DailySaleRow[],
+  rates?: KrwFxRates | null,
+) {
+  return rows.reduce((sum, row) => {
+    if (row.currency === "KRW") return sum;
+    const live = fxAmountToKrw(parseSaleMoney(row.total), row.currency, rates);
+    return sum + (live > 0 ? live : parseSaleMoney(row.amountKrw));
+  }, 0);
+}
+
+export function formatSpotKrwRates(rates?: KrwFxRates | null) {
+  if (!rates) return "";
+  const parts: string[] = [];
+  const eur = Math.round(1 / rates.eurPerKrw);
+  const usd = Math.round(1 / rates.usdPerKrw);
+  if (Number.isFinite(eur) && eur > 0) {
+    parts.push(`EUR ${eur.toLocaleString("ko-KR")}원`);
+  }
+  if (Number.isFinite(usd) && usd > 0) {
+    parts.push(`USD ${usd.toLocaleString("ko-KR")}원`);
+  }
+  return parts.join(" · ");
 }
 
 export function isUnpaidRow(row: DailySaleRow) {

@@ -2039,6 +2039,38 @@ main {
   margin-bottom: 10px;
 }
 
+.daily-sales-split {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.daily-sales-section.is-krw-block,
+.daily-sales-section.is-fx-block {
+  margin-bottom: 0;
+  padding: 8px 8px 6px;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+}
+
+.daily-sales-section.is-fx-block {
+  border-color: #bfdbfe;
+  background: #f8fbff;
+}
+
+.daily-sales-section.is-fx-block .daily-sales-section-head h2 {
+  color: #1e3a8a;
+}
+
+.daily-sales-section.is-fx-block .daily-sales-section-head h2 em {
+  color: #3b82f6;
+}
+
+.daily-sales-section.is-fx-block .daily-sales-table thead th {
+  background: #1e3a8a;
+  border-color: #1e40af;
+}
+
 .daily-sales-ledger-summaries {
   display: grid;
   gap: 8px;

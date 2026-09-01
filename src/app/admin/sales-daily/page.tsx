@@ -2,6 +2,7 @@ import { DailySalesReport } from "@/components/admin/DailySalesReport";
 import { DailySalesToolbar } from "@/components/admin/DailySalesToolbar";
 import { MonthlySalesReport } from "@/components/admin/MonthlySalesReport";
 import { koreaTodayDate } from "@/lib/format-korea-time";
+import { getKrwFxRates } from "@/lib/fx-rates";
 import { loadMonthPurchases, loadSaleRowsThrough } from "@/lib/sales-daily-load";
 import {
   isSettledSaleRow,
@@ -42,12 +43,13 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
     incidental: 0,
     cost: 0,
   };
-  const [allRows, purchases, prevPurchases] = await Promise.all([
+  const [allRows, purchases, prevPurchases, fxRates] = await Promise.all([
     loadSaleRowsThrough(through, from),
     view === "month" ? loadMonthPurchases(month) : Promise.resolve(emptyPurchases),
     view === "month"
       ? loadMonthPurchases(prevMonth)
       : Promise.resolve(emptyPurchases),
+    view === "month" ? Promise.resolve(null) : getKrwFxRates(),
   ]);
 
   const daySales = allRows.filter(
@@ -121,6 +123,7 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
           fxReceivables={fxReceivables}
           addableKrw={addableKrw}
           addableFx={addableFx}
+          fxRates={fxRates}
         />
       )}
     </div>

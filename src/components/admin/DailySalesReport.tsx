@@ -13,16 +13,19 @@ import {
   displayShipmentType,
   formatSaleMoney,
   formatSaleMoneyInput,
+  formatSpotKrwRates,
   isSettledSaleRow,
   isUnpaidRow,
   parseSaleMoney,
   remainingOf,
   saleDocHref,
   sortSaleRowsByRecentDate,
+  sumForeignSalesToKrw,
   sumSaleRows,
   sumSaleRowsByCurrency,
   type DailySaleRow,
 } from "@/lib/sales-daily";
+import type { KrwFxRates } from "@/lib/fx-rates";
 
 const EXPORT_WIDTH_PX = 1100;
 
@@ -109,6 +112,7 @@ type Props = {
   fxReceivables: DailySaleRow[];
   addableKrw: DailySaleRow[];
   addableFx: DailySaleRow[];
+  fxRates?: KrwFxRates | null;
 };
 
 function applyPatch(
@@ -148,6 +152,7 @@ export function DailySalesReport({
   fxReceivables: initialFx,
   addableKrw: initialAddableKrw,
   addableFx: initialAddableFx,
+  fxRates = null,
 }: Props) {
   const [daySales, setDaySales] = useState(initialDaySales);
   const [receivables, setReceivables] = useState(initialReceivables);
@@ -226,15 +231,26 @@ export function DailySalesReport({
     });
   }
 
+  const daySalesKrw = useMemo(
+    () => daySales.filter((row) => row.currency === "KRW"),
+    [daySales],
+  );
+  const daySalesFx = useMemo(
+    () => daySales.filter((row) => row.currency !== "KRW"),
+    [daySales],
+  );
   const dayTotals = useMemo(() => {
-    const krw = sumSaleRows(
-      daySales.filter((row) => row.currency === "KRW"),
-    );
-    const fxKrw = daySales
-      .filter((row) => row.currency !== "KRW")
-      .reduce((sum, row) => sum + parseSaleMoney(row.amountKrw), 0);
-    return { ...krw, total: krw.total + fxKrw };
-  }, [daySales]);
+    const krw = sumSaleRows(daySalesKrw);
+    return {
+      ...krw,
+      total: krw.total + sumForeignSalesToKrw(daySalesFx, fxRates),
+    };
+  }, [daySalesFx, daySalesKrw, fxRates]);
+  const fxSalesKrw = useMemo(
+    () => sumForeignSalesToKrw(daySalesFx, fxRates),
+    [daySalesFx, fxRates],
+  );
+  const spotRateLabel = formatSpotKrwRates(fxRates);
   const recvTotals = useMemo(() => sumSaleRows(receivables), [receivables]);
   const fxTotals = useMemo(
     () => sumSaleRows(fxReceivables, fxReceivables[0]?.currency ?? "USD"),
@@ -366,15 +382,41 @@ export function DailySalesReport({
           </section>
 
       {focus ? null : (
-        <ReportTable
-          title="판매현황"
-          rows={daySales}
-          totals={dayTotals}
-          pending={pending}
-          onPatch={syncAll}
-          onSave={save}
-          empty="해당일 판매 명세서·인보이스가 없습니다."
-        />
+        <div className="daily-sales-split">
+          <ReportTable
+            title="판매현황"
+            badge="원화"
+            tone="krw"
+            rows={daySalesKrw}
+            totals={sumSaleRows(daySalesKrw)}
+            pending={pending}
+            onPatch={syncAll}
+            onSave={save}
+            empty="해당일 원화 판매 명세서가 없습니다."
+          />
+          <ReportTable
+            title="판매현황"
+            badge="외화"
+            tone="fx"
+            rows={daySalesFx}
+            totals={sumSaleRows(
+              daySalesFx,
+              daySalesFx[0]?.currency ?? "EUR",
+            )}
+            pending={pending}
+            onPatch={syncAll}
+            onSave={save}
+            krwEquivalent={fxSalesKrw}
+            rateNote={
+              daySalesFx.length
+                ? spotRateLabel
+                  ? `현재 시세 ${spotRateLabel} 기준 원화 환산`
+                  : "시세를 불러오지 못해 인보이스 원화 금액으로 환산"
+                : undefined
+            }
+            empty="해당일 외화 인보이스가 없습니다."
+          />
+        </div>
       )}
 
       {focus === "recv" ? (
@@ -643,6 +685,8 @@ function Kpi({
 
 function ReportTable({
   title,
+  badge,
+  tone,
   rows,
   totals,
   pending,
@@ -652,9 +696,13 @@ function ReportTable({
   addable,
   highlightUnpaid,
   fx,
+  krwEquivalent,
+  rateNote,
   empty,
 }: {
   title: string;
+  badge?: string;
+  tone?: "krw" | "fx";
   rows: DailySaleRow[];
   totals: ReturnType<typeof sumSaleRows>;
   pending: boolean;
@@ -674,6 +722,8 @@ function ReportTable({
   addable?: DailySaleRow[];
   highlightUnpaid?: boolean;
   fx?: boolean;
+  krwEquivalent?: number;
+  rateNote?: string;
   empty: string;
 }) {
   const currency = rows[0]?.currency ?? "KRW";
@@ -684,9 +734,16 @@ function ReportTable({
   const hasFxRows = rows.some((row) => row.currency !== "KRW");
 
   return (
-    <section className="daily-sales-section">
+    <section
+      className={`daily-sales-section${
+        tone === "fx" ? " is-fx-block" : tone === "krw" ? " is-krw-block" : ""
+      }`}
+    >
       <div className="daily-sales-section-head">
-        <h2>{title}</h2>
+        <h2>
+          {title}
+          {badge ? <em>{badge} {rows.length}건</em> : null}
+        </h2>
         {addable && onAdd ? (
           <AddReceivableControl
             addable={addable}
@@ -874,7 +931,10 @@ function ReportTable({
       </div>
       {fx || hasFxRows ? (
         <p className="daily-sales-fx-note">
-          외화 금액은 명세서·인보이스 통화 기준입니다.
+          {rateNote || "외화 금액은 명세서·인보이스 통화 기준입니다."}
+          {typeof krwEquivalent === "number" && rows.length > 0
+            ? ` · 판매액 합산 ${formatSaleMoney(krwEquivalent, "KRW")}`
+            : ""}
         </p>
       ) : null}
     </section>
