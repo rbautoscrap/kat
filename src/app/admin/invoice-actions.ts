@@ -52,6 +52,7 @@ const invoiceSchema = z.object({
         vin: z.string().trim().max(40).optional(),
         qty: z.string().trim().min(1).max(10),
         priceKrw: moneySchema,
+        isCredit: z.boolean().optional(),
       }),
     )
     .min(1, "Add at least one line item.")
@@ -117,10 +118,16 @@ async function buildItems(
   const rows: BuiltItem[] = [];
   for (let i = 0; i < items.length; i++) {
     const item = items[i]!;
-    const finalPrice = calcFinalFromKrw(item.priceKrw, rate);
-    if (!finalPrice) {
+    const isCredit = item.isCredit === true;
+    if (isCredit && !isInvoiceExtraKey(item.lineKey)) {
+      return { ok: false, error: "Credit must be an extra line." };
+    }
+    const finalMagnitude = calcFinalFromKrw(item.priceKrw, rate);
+    if (!finalMagnitude) {
       return { ok: false, error: "Check KRW price and exchange rate." };
     }
+    const priceKrw = isCredit ? `-${item.priceKrw}` : item.priceKrw;
+    const finalPrice = isCredit ? `-${finalMagnitude}` : finalMagnitude;
 
     if (isInvoiceExtraKey(item.lineKey)) {
       rows.push({
@@ -130,7 +137,7 @@ async function buildItems(
         regNo: item.regNo?.trim() || null,
         vin: item.vin?.trim() || null,
         qty: item.qty.trim() || "1",
-        priceKrw: item.priceKrw,
+        priceKrw,
         rate,
         finalPrice,
         sortOrder: i,
@@ -149,7 +156,7 @@ async function buildItems(
       regNo: item.regNo?.trim() || listing.vehicleNumber || null,
       vin: item.vin?.trim() || listing.vin || null,
       qty: item.qty.trim() || "1",
-      priceKrw: item.priceKrw,
+      priceKrw,
       rate,
       finalPrice,
       sortOrder: i,
@@ -180,7 +187,16 @@ export async function createOverseasInvoice(input: unknown): Promise<ActionResul
       data.invoiceDate,
       parseTermsDays(formatTermsLabel(data.termsDays)),
     );
+    if (!built.rows.some((row) => Number(row.finalPrice) > 0)) {
+      return { ok: false, error: "Add at least one charge line." };
+    }
     const amount = sumFinalPrices(built.rows);
+    if (Number(amount) <= 0) {
+      return {
+        ok: false,
+        error: "Credit cannot exceed the invoice total. Only the balance due should remain.",
+      };
+    }
 
     const created = await prisma.overseasInvoice.create({
       data: {
@@ -245,7 +261,16 @@ export async function updateOverseasInvoice(
       data.invoiceDate,
       parseTermsDays(formatTermsLabel(data.termsDays)),
     );
+    if (!built.rows.some((row) => Number(row.finalPrice) > 0)) {
+      return { ok: false, error: "Add at least one charge line." };
+    }
     const amount = sumFinalPrices(built.rows);
+    if (Number(amount) <= 0) {
+      return {
+        ok: false,
+        error: "Credit cannot exceed the invoice total. Only the balance due should remain.",
+      };
+    }
 
     await prisma.$transaction([
       prisma.overseasInvoiceItem.deleteMany({ where: { invoiceId: id } }),

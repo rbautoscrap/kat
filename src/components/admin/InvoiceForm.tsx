@@ -10,6 +10,7 @@ import {
   INVOICE_CURRENCIES,
   addDaysToDateString,
   calcFinalFromKrw,
+  isInvoiceCreditLine,
   newInvoiceExtraKey,
   parseTermsDays,
   type InvoiceCurrency,
@@ -23,7 +24,7 @@ const labelClass = "block text-[12px] font-medium text-neutral-600";
 
 type Line = {
   lineKey: string;
-  kind: "listing" | "extra";
+  kind: "listing" | "extra" | "credit";
   description: string;
   regNo: string;
   vin: string;
@@ -85,15 +86,22 @@ export function InvoiceForm({
     return initial.items
       .slice()
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-      .map((item) => ({
-        lineKey: item.listingId ? item.listingId : newInvoiceExtraKey(),
-        kind: item.isExtra || !item.listingId ? "extra" : "listing",
-        description: item.description,
-        regNo: item.regNo ?? "",
-        vin: item.vin ?? "",
-        qty: item.qty || "1",
-        priceKrw: formatKrwInput(item.priceKrw),
-      }));
+      .map((item) => {
+        const credit = isInvoiceCreditLine(item);
+        return {
+          lineKey: item.listingId ? item.listingId : newInvoiceExtraKey(),
+          kind: credit
+            ? "credit"
+            : item.isExtra || !item.listingId
+              ? "extra"
+              : "listing",
+          description: item.description,
+          regNo: item.regNo ?? "",
+          vin: item.vin ?? "",
+          qty: item.qty || "1",
+          priceKrw: formatKrwInput(item.priceKrw),
+        };
+      });
   });
 
   const dueDate = addDaysToDateString(invoiceDate, termsDays);
@@ -142,13 +150,13 @@ export function InvoiceForm({
     setLines((prev) => prev.filter((row) => row.lineKey !== listingId));
   }
 
-  function addExtra() {
+  function addExtra(kind: "extra" | "credit" = "extra") {
     setLines((prev) => [
       ...prev,
       {
         lineKey: newInvoiceExtraKey(),
-        kind: "extra",
-        description: "",
+        kind,
+        description: kind === "credit" ? "CREDIT" : "",
         regNo: "",
         vin: "",
         qty: "1",
@@ -178,6 +186,7 @@ export function InvoiceForm({
           vin: line.vin || undefined,
           qty: line.qty || "1",
           priceKrw: line.priceKrw,
+          isCredit: line.kind === "credit",
         })),
       };
       const result =
@@ -195,6 +204,16 @@ export function InvoiceForm({
 
   const listingCount = lines.filter((l) => l.kind === "listing").length;
   const extraCount = lines.filter((l) => l.kind === "extra").length;
+  const creditCount = lines.filter((l) => l.kind === "credit").length;
+  const netFxPreview = useMemo(() => {
+    let sum = 0;
+    for (const line of lines) {
+      const fx = Number(calcFinalFromKrw(line.priceKrw, rateClean));
+      if (!Number.isFinite(fx) || fx <= 0) continue;
+      sum += line.kind === "credit" ? -fx : fx;
+    }
+    return sum;
+  }, [lines, rateClean]);
 
   return (
     <form onSubmit={onSubmit} className="space-y-4" lang="en">
@@ -368,29 +387,51 @@ export function InvoiceForm({
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] bg-neutral-50 px-3 py-2">
           <p className="text-[12px] font-medium text-neutral-600">
             Line items ({listingCount}
-            {extraCount > 0 ? ` + extra ${extraCount}` : ""})
+            {extraCount > 0 ? ` + extra ${extraCount}` : ""}
+            {creditCount > 0 ? ` + credit ${creditCount}` : ""})
           </p>
-          <button
-            type="button"
-            onClick={addExtra}
-            className="h-8 rounded-md border border-neutral-300 bg-white px-2.5 text-[12px] font-medium"
-          >
-            + Extra
-          </button>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => addExtra("extra")}
+              className="h-8 rounded-md border border-neutral-300 bg-white px-2.5 text-[12px] font-medium"
+            >
+              + Extra
+            </button>
+            <button
+              type="button"
+              onClick={() => addExtra("credit")}
+              className="h-8 rounded-md border border-rose-200 bg-rose-50 px-2.5 text-[12px] font-medium text-rose-800"
+            >
+              + Credit
+            </button>
+          </div>
         </div>
 
         <div className="divide-y divide-[var(--line)]">
           {lines.length === 0 ? (
             <p className="px-3 py-4 text-[12.5px] text-neutral-500">
-              위에서 매물을 검색·선택하거나 Extra 항목을 추가하세요.
+              위에서 매물을 검색·선택하거나 Extra / Credit 항목을 추가하세요.
             </p>
           ) : (
             lines.map((line) => {
               const finalApprox = calcFinalFromKrw(line.priceKrw, rateClean);
+              const isCredit = line.kind === "credit";
               return (
-                <div key={line.lineKey} className="space-y-2 px-3 py-3">
+                <div
+                  key={line.lineKey}
+                  className={`space-y-2 px-3 py-3${
+                    isCredit ? " bg-rose-50/70" : ""
+                  }`}
+                >
                   <div className="flex items-start justify-between gap-2">
-                    <input
+                    <div className="min-w-0 flex-1">
+                      {isCredit ? (
+                        <p className="mb-1 text-[11px] font-semibold tracking-wide text-rose-700">
+                          CREDIT — subtracted from the invoice total
+                        </p>
+                      ) : null}
+                      <input
                       value={line.description}
                       onChange={(e) =>
                         setLines((prev) =>
@@ -401,10 +442,15 @@ export function InvoiceForm({
                           ),
                         )
                       }
-                      placeholder="Description"
+                      placeholder={
+                        isCredit
+                          ? "CREDIT — previous remittance / cancelled unit"
+                          : "Description"
+                      }
                       className={`${fieldClass} mt-0`}
                       required
                     />
+                    </div>
                     <button
                       type="button"
                       onClick={() =>
@@ -474,7 +520,7 @@ export function InvoiceForm({
                           ),
                         )
                       }
-                      placeholder="PRICE (₩)"
+                      placeholder={isCredit ? "CREDIT (₩)" : "PRICE (₩)"}
                       className={`${fieldClass} mt-0`}
                       required
                     />
@@ -482,7 +528,7 @@ export function InvoiceForm({
                   <p className="text-[11.5px] text-neutral-500">
                     Final ≈{" "}
                     {finalApprox
-                      ? `${currency} ${Number(finalApprox).toLocaleString("en-US")}`
+                      ? `${isCredit ? "− " : ""}${currency} ${Number(finalApprox).toLocaleString("en-US")}`
                       : "—"}
                   </p>
                 </div>
@@ -490,6 +536,17 @@ export function InvoiceForm({
             })
           )}
         </div>
+        {lines.length > 0 ? (
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-t border-[var(--line)] bg-neutral-50 px-3 py-2.5">
+            <p className="text-[12px] text-neutral-500">
+              Charges minus credits. Buyer pays this balance.
+            </p>
+            <p className="text-[13px] font-semibold text-neutral-900">
+              Net total ≈ {currency}{" "}
+              {netFxPreview.toLocaleString("en-US")}
+            </p>
+          </div>
+        ) : null}
       </div>
 
       {error ? (

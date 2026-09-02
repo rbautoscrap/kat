@@ -937,6 +937,11 @@ main {
   background: #fcfcfc;
 }
 
+.invoice-items tbody tr.is-credit td {
+  color: #b42318;
+  background: #fff7f6;
+}
+
 .invoice-items col.col-desc {
   width: 26%;
 }

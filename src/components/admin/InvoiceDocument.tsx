@@ -9,6 +9,7 @@ import {
   formatKrw,
   formatRate,
   getInvoiceLines,
+  isInvoiceCreditLine,
   totalLabel,
   type InvoiceView,
 } from "@/lib/overseas-invoice";
@@ -126,17 +127,25 @@ export function InvoiceDocument({ invoice }: Props) {
             </tr>
           </thead>
           <tbody>
-            {lines.map((line, index) => (
-              <tr key={line.id ?? `${line.description}-${index}`}>
-                <td className="col-desc">{line.description}</td>
-                <td className="col-reg">{line.regNo || ""}</td>
-                <td className="col-vin">{line.vin || ""}</td>
-                <td className="col-qty">{line.qty}</td>
-                <td className="col-krw">{formatKrw(line.priceKrw)}</td>
-                <td className="col-rate">{formatRate(line.rate)}</td>
-                <td className="col-fx">{formatFx(line.finalPrice, currency)}</td>
-              </tr>
-            ))}
+            {lines.map((line, index) => {
+              const credit = isInvoiceCreditLine(line);
+              return (
+                <tr
+                  key={line.id ?? `${line.description}-${index}`}
+                  className={credit ? "is-credit" : undefined}
+                >
+                  <td className="col-desc">{line.description}</td>
+                  <td className="col-reg">{line.regNo || ""}</td>
+                  <td className="col-vin">{line.vin || ""}</td>
+                  <td className="col-qty">{line.qty}</td>
+                  <td className="col-krw">{formatKrw(line.priceKrw)}</td>
+                  <td className="col-rate">{formatRate(line.rate)}</td>
+                  <td className="col-fx">
+                    {formatFx(line.finalPrice, currency)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 

@@ -113,7 +113,8 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
           </h2>
           <p className="mt-1 text-[13px] text-neutral-500">
             영문 Commercial Invoice를 작성·저장하고 출력 또는 이미지로
-            저장합니다. 페이지당 {ADMIN_PAGE_SIZE}건.
+            저장합니다. Credit 항목은 총액에서 차감됩니다. 페이지당{" "}
+            {ADMIN_PAGE_SIZE}건.
           </p>
         </div>
         <NewInvoiceModal

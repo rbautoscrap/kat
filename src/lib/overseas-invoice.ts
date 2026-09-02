@@ -89,9 +89,19 @@ export function parseMoneyNumber(raw: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+export function isInvoiceCreditLine(line: {
+  priceKrw?: string | null;
+  finalPrice?: string | null;
+}) {
+  return (
+    parseMoneyNumber(line.finalPrice ?? "") < 0 ||
+    parseMoneyNumber(line.priceKrw ?? "") < 0
+  );
+}
+
 /** KRW ÷ rate → foreign amount (rounded to nearest whole unit). */
 export function calcFinalFromKrw(priceKrw: string, rate: string): string {
-  const krw = parseMoneyNumber(priceKrw);
+  const krw = Math.abs(parseMoneyNumber(priceKrw));
   const r = parseMoneyNumber(rate);
   if (krw <= 0 || r <= 0) return "";
   return String(Math.round(krw / r));
@@ -104,15 +114,21 @@ export function sumFinalPrices(lines: { finalPrice: string }[]): string {
 
 export function formatKrw(amount: string) {
   const n = parseMoneyNumber(amount);
-  if (!Number.isFinite(n) || n <= 0) return "—";
-  return `₩ ${n.toLocaleString("en-US")}`;
+  if (!Number.isFinite(n) || n === 0) return "—";
+  const abs = `₩ ${Math.abs(n).toLocaleString("en-US")}`;
+  return n < 0 ? `-${abs}` : abs;
 }
 
 export function formatFx(
   amount: string,
   currency: OfferCurrency | OfferCurrencyCode,
 ) {
-  return formatOfferAmount(cleanMoney(amount) || "0", currency as OfferCurrencyCode);
+  const n = parseMoneyNumber(amount);
+  const formatted = formatOfferAmount(
+    String(Math.abs(n) || 0),
+    currency as OfferCurrencyCode,
+  );
+  return n < 0 ? `-${formatted}` : formatted;
 }
 
 export function formatRate(rate: string) {
