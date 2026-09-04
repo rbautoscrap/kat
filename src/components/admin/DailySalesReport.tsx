@@ -14,7 +14,7 @@ import {
   formatSaleMoney,
   formatSaleMoneyInput,
   formatSpotKrwRates,
-  isSettledSaleRow,
+  isClosedReceivableRow,
   isUnpaidRow,
   parseSaleMoney,
   remainingOf,
@@ -169,22 +169,18 @@ export function DailySalesReport({
     >,
   ) {
     setDaySales((rows) => applyPatch(rows, itemId, patch));
-    setReceivables((rows) => {
-      const next = applyPatch(rows, itemId, patch);
-      if (patch.shipmentType && isSettledSaleRow({ shipmentType: patch.shipmentType })) {
-        return next.filter((row) => row.itemId !== itemId);
-      }
-      return next;
-    });
-    setFxReceivables((rows) => {
-      const next = applyPatch(rows, itemId, patch);
-      if (patch.shipmentType && isSettledSaleRow({ shipmentType: patch.shipmentType })) {
-        return next.filter((row) => row.itemId !== itemId);
-      }
-      return next;
-    });
-    setAddableKrw((rows) => applyPatch(rows, itemId, patch));
-    setAddableFx((rows) => applyPatch(rows, itemId, patch));
+    setReceivables((rows) =>
+      applyPatch(rows, itemId, patch).filter((row) => !isClosedReceivableRow(row)),
+    );
+    setFxReceivables((rows) =>
+      applyPatch(rows, itemId, patch).filter((row) => !isClosedReceivableRow(row)),
+    );
+    setAddableKrw((rows) =>
+      applyPatch(rows, itemId, patch).filter((row) => !isClosedReceivableRow(row)),
+    );
+    setAddableFx((rows) =>
+      applyPatch(rows, itemId, patch).filter((row) => !isClosedReceivableRow(row)),
+    );
   }
 
   function save(
@@ -207,7 +203,7 @@ export function DailySalesReport({
       applyPatch(rows, row.itemId, { inReceivableLedger: true }),
     );
     if (row.currency === "KRW") {
-      if (!isSettledSaleRow(row)) {
+      if (!isClosedReceivableRow(row)) {
         setReceivables((rows) =>
           rows.some((r) => r.itemId === row.itemId)
             ? rows
@@ -216,7 +212,7 @@ export function DailySalesReport({
       }
       setAddableKrw((rows) => rows.filter((r) => r.itemId !== row.itemId));
     } else {
-      if (!isSettledSaleRow(row)) {
+      if (!isClosedReceivableRow(row)) {
         setFxReceivables((rows) =>
           rows.some((r) => r.itemId === row.itemId)
             ? rows
@@ -251,14 +247,26 @@ export function DailySalesReport({
     [daySalesFx, fxRates],
   );
   const spotRateLabel = formatSpotKrwRates(fxRates);
-  const recvTotals = useMemo(() => sumSaleRows(receivables), [receivables]);
-  const fxTotals = useMemo(
-    () => sumSaleRows(fxReceivables, fxReceivables[0]?.currency ?? "USD"),
+  const openReceivables = useMemo(
+    () => receivables.filter((row) => !isClosedReceivableRow(row)),
+    [receivables],
+  );
+  const openFxReceivables = useMemo(
+    () => fxReceivables.filter((row) => !isClosedReceivableRow(row)),
     [fxReceivables],
   );
+  const recvTotals = useMemo(
+    () => sumSaleRows(openReceivables),
+    [openReceivables],
+  );
+  const fxTotals = useMemo(
+    () =>
+      sumSaleRows(openFxReceivables, openFxReceivables[0]?.currency ?? "USD"),
+    [openFxReceivables],
+  );
   const buyers = useMemo(
-    () => buyerSummaries(focus === "fx" ? fxReceivables : receivables),
-    [focus, fxReceivables, receivables],
+    () => buyerSummaries(focus === "fx" ? openFxReceivables : openReceivables),
+    [focus, openFxReceivables, openReceivables],
   );
   const [exportBusy, setExportBusy] = useState(false);
   const [exportMessage, setExportMessage] = useState("");
@@ -351,18 +359,18 @@ export function DailySalesReport({
                 <Kpi
                   label="외화 미수금"
                   value={fxTotals.remaining}
-                  fx={fxReceivables[0]?.currency}
+                  fx={openFxReceivables[0]?.currency}
                   warn
                 />
                 <Kpi
                   label="외화 입금액"
                   value={fxTotals.paid}
-                  fx={fxReceivables[0]?.currency}
+                  fx={openFxReceivables[0]?.currency}
                 />
                 <Kpi
                   label="외화 공급금액"
                   value={fxTotals.supply}
-                  fx={fxReceivables[0]?.currency}
+                  fx={openFxReceivables[0]?.currency}
                 />
               </>
             ) : (
@@ -376,7 +384,7 @@ export function DailySalesReport({
                 <Kpi label={`${date.slice(5).replace("-", "/")} 입금액`} value={dayTotals.paid} />
                 <Kpi label="미수 원장" value={recvTotals.total} />
                 <Kpi label="영업이익" value={dayTotals.profit} profit />
-                <Kpi label="외화 미수금" value={fxTotals.remaining} fx={fxReceivables[0]?.currency} />
+                <Kpi label="외화 미수금" value={fxTotals.remaining} fx={openFxReceivables[0]?.currency} />
               </>
             )}
           </section>
@@ -422,7 +430,7 @@ export function DailySalesReport({
       {focus === "recv" ? (
         <ReportTable
           title="미수금현황"
-          rows={receivables}
+          rows={openReceivables}
           totals={recvTotals}
           pending={pending}
           onPatch={syncAll}
@@ -437,7 +445,7 @@ export function DailySalesReport({
       {focus === "fx" ? (
         <ReportTable
           title="외화 미수금현황"
-          rows={fxReceivables}
+          rows={openFxReceivables}
           totals={fxTotals}
           pending={pending}
           onPatch={syncAll}
@@ -455,7 +463,7 @@ export function DailySalesReport({
           <LedgerTotalsCard
             title="미수금현황"
             href={`/admin/sales-daily?view=recv&date=${date}`}
-            count={receivables.length}
+            count={openReceivables.length}
             items={[
               {
                 label: "잔액금",
@@ -475,28 +483,28 @@ export function DailySalesReport({
           <LedgerTotalsCard
             title="외화 미수금현황"
             href={`/admin/sales-daily?view=fx&date=${date}`}
-            count={fxReceivables.length}
+            count={openFxReceivables.length}
             items={[
               {
                 label: "잔액금",
-                value: fxReceivables.length
+                value: openFxReceivables.length
                   ? formatSaleMoney(
                       fxTotals.remaining,
-                      fxReceivables[0]!.currency,
+                      openFxReceivables[0]!.currency,
                     )
                   : "0",
                 warn: true,
               },
               {
                 label: "입금",
-                value: fxReceivables.length
-                  ? formatSaleMoney(fxTotals.paid, fxReceivables[0]!.currency)
+                value: openFxReceivables.length
+                  ? formatSaleMoney(fxTotals.paid, openFxReceivables[0]!.currency)
                   : "0",
               },
               {
                 label: "공급",
-                value: fxReceivables.length
-                  ? formatSaleMoney(fxTotals.supply, fxReceivables[0]!.currency)
+                value: openFxReceivables.length
+                  ? formatSaleMoney(fxTotals.supply, openFxReceivables[0]!.currency)
                   : "0",
               },
             ]}
@@ -513,26 +521,26 @@ export function DailySalesReport({
               <p>
                 <span>외화 공급</span>
                 <strong>
-                  {fxReceivables.length
-                    ? formatSaleMoney(fxTotals.supply, fxReceivables[0]!.currency)
+                  {openFxReceivables.length
+                    ? formatSaleMoney(fxTotals.supply, openFxReceivables[0]!.currency)
                     : "0"}
                 </strong>
               </p>
               <p>
                 <span>외화 입금</span>
                 <strong>
-                  {fxReceivables.length
-                    ? formatSaleMoney(fxTotals.paid, fxReceivables[0]!.currency)
+                  {openFxReceivables.length
+                    ? formatSaleMoney(fxTotals.paid, openFxReceivables[0]!.currency)
                     : "0"}
                 </strong>
               </p>
               <p>
                 <span>외화미수금</span>
                 <strong>
-                  {fxReceivables.length
+                  {openFxReceivables.length
                     ? formatSaleMoney(
                         fxTotals.remaining,
-                        fxReceivables[0]!.currency,
+                        openFxReceivables[0]!.currency,
                       )
                     : "0"}
                 </strong>
@@ -558,10 +566,10 @@ export function DailySalesReport({
                 <p>
                   <span>외화미수금</span>
                   <strong>
-                    {fxReceivables.length
+                    {openFxReceivables.length
                       ? formatSaleMoney(
                           fxTotals.remaining,
-                          fxReceivables[0]!.currency,
+                          openFxReceivables[0]!.currency,
                         )
                       : "0"}
                   </strong>
@@ -586,7 +594,7 @@ export function DailySalesReport({
                       {formatSaleMoney(
                         b.total,
                         focus === "fx"
-                          ? (fxReceivables[0]?.currency ?? "USD")
+                          ? (openFxReceivables[0]?.currency ?? "USD")
                           : "KRW",
                       )}
                     </strong>
@@ -598,7 +606,7 @@ export function DailySalesReport({
                     {formatSaleMoney(
                       focus === "fx" ? fxTotals.total : recvTotals.total,
                       focus === "fx"
-                        ? (fxReceivables[0]?.currency ?? "USD")
+                        ? (openFxReceivables[0]?.currency ?? "USD")
                         : "KRW",
                     )}
                   </strong>

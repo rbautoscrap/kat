@@ -13,12 +13,9 @@ export const SALE_SHIPMENT_TYPES = [
 ] as const;
 
 export const SALE_SHIPMENT_DONE = "결재완료";
+export const SALE_SHIPMENT_CANCELLED = "취소";
 
 export type SaleShipmentType = (typeof SALE_SHIPMENT_TYPES)[number];
-
-export function isSettledSaleRow(row: { shipmentType: string }) {
-  return row.shipmentType === SALE_SHIPMENT_DONE;
-}
 
 export function displayShipmentType(value: string | null | undefined) {
   const current = value?.trim() ?? "";
@@ -26,6 +23,37 @@ export function displayShipmentType(value: string | null | undefined) {
     return current as SaleShipmentType;
   }
   return "미결재";
+}
+
+export function isSettledSaleRow(row: { shipmentType: string }) {
+  const raw = normalizeShipmentLabel(row.shipmentType);
+  return (
+    displayShipmentType(row.shipmentType) === SALE_SHIPMENT_DONE ||
+    raw === "결제완료" ||
+    raw === "완료"
+  );
+}
+
+export function isCancelledSaleRow(row: { shipmentType: string }) {
+  const raw = normalizeShipmentLabel(row.shipmentType);
+  return (
+    displayShipmentType(row.shipmentType) === SALE_SHIPMENT_CANCELLED ||
+    raw.includes("취소")
+  );
+}
+
+/** 미수금현황에서 제외: 결재완료·취소·잔액 0 */
+export function isClosedReceivableRow(row: {
+  shipmentType: string;
+  remaining?: string;
+}) {
+  if (isSettledSaleRow(row) || isCancelledSaleRow(row)) return true;
+  if (row.remaining == null || row.remaining === "") return false;
+  return parseSaleMoney(row.remaining) <= 0;
+}
+
+function normalizeShipmentLabel(value: string | null | undefined) {
+  return (value ?? "").replace(/\s/g, "").trim();
 }
 
 export type DailySaleSource = "statement" | "invoice";

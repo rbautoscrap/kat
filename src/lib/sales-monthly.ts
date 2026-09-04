@@ -1,7 +1,8 @@
 import {
-  SALE_SHIPMENT_DONE,
   SALE_SHIPMENT_TYPES,
   displayShipmentType,
+  isCancelledSaleRow,
+  isClosedReceivableRow,
   parseSaleMoney,
   sumSaleRows,
   type DailySaleRow,
@@ -93,8 +94,6 @@ export type MonthlySalesReportData = {
   operatingProfit: number;
   mom?: MonthlyMomCompare | null;
 };
-
-const CANCELLED = "취소";
 
 export function parseYearMonth(value?: string, fallbackDate?: string) {
   if (value && /^\d{4}-\d{2}$/.test(value)) return value;
@@ -208,16 +207,8 @@ function inMonth(date: string, start: string, end: string) {
   return date >= start && date <= end;
 }
 
-function isCancelled(row: DailySaleRow) {
-  return displayShipmentType(row.shipmentType) === CANCELLED;
-}
-
 function isOpenReceivable(row: DailySaleRow) {
-  return (
-    row.shipmentType !== SALE_SHIPMENT_DONE &&
-    !isCancelled(row) &&
-    parseSaleMoney(row.remaining) > 0
-  );
+  return !isClosedReceivableRow(row) && parseSaleMoney(row.remaining) > 0;
 }
 
 function rankBuyers(rows: DailySaleRow[]): MonthlyBuyerRank[] {
@@ -250,13 +241,13 @@ export function buildMonthlySalesReport(
   const monthIssued = rows.filter(
     (row) => row.currency === "KRW" && inMonth(row.issueDate, start, end),
   );
-  const monthSales = monthIssued.filter((row) => !isCancelled(row));
+  const monthSales = monthIssued.filter((row) => !isCancelledSaleRow(row));
   const monthReceivables = monthSales.filter(isOpenReceivable);
   const fxSalesRows = rows.filter(
     (row) =>
       row.currency !== "KRW" &&
       inMonth(row.issueDate, start, end) &&
-      !isCancelled(row),
+      !isCancelledSaleRow(row),
   );
   const fxOpen = fxSalesRows.filter(isOpenReceivable);
   const fxSalesKrw = fxSalesRows.reduce(
