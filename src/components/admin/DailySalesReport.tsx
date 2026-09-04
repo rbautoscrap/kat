@@ -734,12 +734,17 @@ function ReportTable({
   rateNote?: string;
   empty: string;
 }) {
-  const currency = rows[0]?.currency ?? "KRW";
+  const visibleRows = highlightUnpaid
+    ? rows.filter((row) => !isClosedReceivableRow(row))
+    : rows;
+  const currency = visibleRows[0]?.currency ?? rows[0]?.currency ?? "KRW";
   const showVat = !fx;
   const showProfit = !fx;
   const colSpan = 6 + (showVat ? 1 : 0) + (showProfit ? 2 : 0);
-  const footerGroups = sumSaleRowsByCurrency(rows);
-  const hasFxRows = rows.some((row) => row.currency !== "KRW");
+  const footerGroups = visibleRows.length
+    ? sumSaleRowsByCurrency(visibleRows)
+    : [{ currency, totals: sumSaleRows(visibleRows, currency) }];
+  const hasFxRows = visibleRows.some((row) => row.currency !== "KRW");
 
   return (
     <section
@@ -750,7 +755,7 @@ function ReportTable({
       <div className="daily-sales-section-head">
         <h2>
           {title}
-          {badge ? <em>{badge} {rows.length}건</em> : null}
+          {badge ? <em>{badge} {visibleRows.length}건</em> : null}
         </h2>
         {addable && onAdd ? (
           <AddReceivableControl
@@ -787,14 +792,14 @@ function ReportTable({
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 ? (
+            {visibleRows.length === 0 ? (
               <tr>
                 <td colSpan={colSpan} className="daily-sales-empty">
                   {empty}
                 </td>
               </tr>
             ) : (
-              rows.map((row) => {
+              visibleRows.map((row) => {
                 const unpaid = isUnpaidRow(row);
                 return (
                   <tr
@@ -940,7 +945,7 @@ function ReportTable({
       {fx || hasFxRows ? (
         <p className="daily-sales-fx-note">
           {rateNote || "외화 금액은 명세서·인보이스 통화 기준입니다."}
-          {typeof krwEquivalent === "number" && rows.length > 0
+          {typeof krwEquivalent === "number" && visibleRows.length > 0
             ? ` · 판매액 합산 ${formatSaleMoney(krwEquivalent, "KRW")}`
             : ""}
         </p>
