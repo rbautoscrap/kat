@@ -7,11 +7,13 @@ import {
   signOut,
 } from "@/lib/auth";
 import { AuthEntryButtons } from "@/components/AuthEntryButtons";
+import { FxRateBoard } from "@/components/FxRateBoard";
 import { MainNav } from "@/components/MainNav";
 import { MobileNav } from "@/components/MobileNav";
 import { MyPartsNavLink } from "@/components/MyPartsNavLink";
 import { ProfileButton } from "@/components/ProfileButton";
 import { ProtectPublicImages } from "@/components/ProtectPublicImages";
+import { getFxBoardQuote } from "@/lib/fx-rates";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 
 async function logoutAction() {
@@ -20,7 +22,10 @@ async function logoutAction() {
 }
 
 export async function Header() {
-  const dbUser = await resolveSessionDbUser();
+  const [dbUser, quote] = await Promise.all([
+    resolveSessionDbUser(),
+    getFxBoardQuote(),
+  ]);
   /** + List: ADMIN / AUTHORIZED only — hide from regular members (incl. mobile). */
   const canList = canManageListings(dbUser?.role);
   const canListParts = canListUsedParts(dbUser?.role);
@@ -133,6 +138,7 @@ export async function Header() {
           </div>
         </div>
       </div>
+      <FxRateBoard initial={quote} />
     </header>
   );
 }

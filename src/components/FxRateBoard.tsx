@@ -23,7 +23,7 @@ function formatKstTime(iso: string) {
   }).format(date);
 }
 
-function Pair({
+function Rate({
   code,
   value,
   unit,
@@ -33,17 +33,15 @@ function Pair({
   unit: string;
 }) {
   return (
-    <div className="flex min-w-0 flex-col items-center px-3 sm:px-5">
-      <span className="text-[10px] font-semibold tracking-[0.18em] text-neutral-400">
+    <span className="inline-flex items-baseline gap-1.5">
+      <span className="text-[10px] font-semibold tracking-[0.14em] text-neutral-400">
         {code}
       </span>
-      <strong className="mt-0.5 font-medium tabular-nums text-[15px] leading-none tracking-tight text-neutral-800 sm:text-[17px]">
+      <strong className="text-[12px] font-medium tabular-nums tracking-tight text-neutral-800">
         {value}
       </strong>
-      <span className="mt-1 text-[10px] tracking-wide text-neutral-400">
-        {unit}
-      </span>
-    </div>
+      <span className="text-[10px] text-neutral-400">{unit}</span>
+    </span>
   );
 }
 
@@ -79,36 +77,38 @@ export function FxRateBoard({ initial }: { initial?: FxBoardQuote | null }) {
   const time = quote ? formatKstTime(quote.asOf) : "";
 
   return (
-    <div className="flex w-full min-w-0 flex-col items-center justify-center gap-2 sm:flex-row sm:gap-4">
-      <div className="flex items-center gap-1.5 text-[10px] tracking-[0.16em] text-neutral-400">
-        <span
-          className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-neutral-800"
-          aria-hidden
-        />
-        <span>LIVE</span>
-        {time ? <span className="tracking-wide">{time} KST</span> : null}
-      </div>
+    <div className="border-t border-[var(--line)] bg-neutral-50/90">
       <div
-        className="flex items-start divide-x divide-neutral-200"
+        className="site-container flex h-8 items-center justify-center gap-x-3 overflow-x-auto whitespace-nowrap text-[11px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         aria-label="Today's exchange rates"
       >
-        <Pair
+        <span className="inline-flex shrink-0 items-center gap-1 text-[10px] tracking-[0.12em] text-neutral-400">
+          <span
+            className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-neutral-800"
+            aria-hidden
+          />
+          LIVE
+          {time ? <span className="tracking-wide">{time} KST</span> : null}
+        </span>
+        <Rate
           code="USD"
           value={quote ? formatWon(quote.usd) : "—"}
-          unit="₩ / $1"
+          unit="₩/$1"
         />
-        <Pair
+        <span className="h-3 w-px shrink-0 bg-neutral-200" aria-hidden />
+        <Rate
           code="EUR"
           value={quote ? formatWon(quote.eur) : "—"}
-          unit="₩ / €1"
+          unit="₩/€1"
         />
-        <Pair
+        <span className="h-3 w-px shrink-0 bg-neutral-200" aria-hidden />
+        <Rate
           code="KRW"
           value="1,000"
           unit={
             quote
               ? `$${formatWon(1000 / quote.usd)} · €${formatWon(1000 / quote.eur)}`
-              : "₩1,000"
+              : ""
           }
         />
       </div>

@@ -1,4 +1,3 @@
-import { HeroBanner } from "@/components/HeroBanner";
 import { ListingSection } from "@/components/ListingSection";
 import { isAdmin } from "@/lib/auth";
 import { HOME_SECTION_LIMIT, loadHomeListings } from "@/lib/home-listings";
@@ -42,7 +41,6 @@ export default async function HomePage({ searchParams }: Props) {
           </p>
         </div>
       )}
-      <HeroBanner />
       <ListingSection
         category="STAND_BY"
         listings={standBy}
