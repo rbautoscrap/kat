@@ -32,7 +32,7 @@ export function DeleteUserButton({
       onClick={() => {
         const listingNote =
           listingCount > 0
-            ? `\n등록된 매물 ${listingCount}개도 함께 삭제됩니다.`
+            ? `\n등록된 매물 ${listingCount}개는 삭제되지 않고 현재 관리자 계정으로 이관됩니다.`
             : "";
         if (
           !confirm(

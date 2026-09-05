@@ -499,16 +499,27 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
     }
   }
 
+  const keeperId = session.user.id;
+  if (!keeperId || keeperId === userId) {
+    return { ok: false, error: "매물을 이관할 관리자를 확인할 수 없습니다." };
+  }
+
   try {
-    const listingImages = await prisma.listingImage.findMany({
-      where: { listing: { authorId: userId } },
-      select: { url: true },
-    });
     await prisma.$transaction(async (tx) => {
-      await tx.listing.deleteMany({ where: { authorId: userId } });
+      await tx.listing.updateMany({
+        where: { authorId: userId },
+        data: { authorId: keeperId },
+      });
+      await tx.transactionStatement.updateMany({
+        where: { createdById: userId },
+        data: { createdById: keeperId },
+      });
+      await tx.overseasInvoice.updateMany({
+        where: { createdById: userId },
+        data: { createdById: keeperId },
+      });
       await tx.user.delete({ where: { id: userId } });
     });
-    await deleteUploadedFiles(listingImages.map((img) => img.url));
   } catch (error) {
     return {
       ok: false,
