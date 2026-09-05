@@ -8,10 +8,20 @@ export type KrwFxRates = {
   eurPerKrw: number;
 };
 
+/** Customer board: won per 1 USD / 1 EUR. */
+export type FxBoardQuote = {
+  usd: number;
+  eur: number;
+  asOf: string;
+};
+
 const CACHE_MS = 60 * 60 * 1000;
+const BOARD_CACHE_MS = 60 * 1000;
 
 let cache: { at: number; rates: KrwFxRates } | null = null;
 let inflight: Promise<KrwFxRates | null> | null = null;
+let boardCache: { at: number; quote: FxBoardQuote } | null = null;
+let boardInflight: Promise<FxBoardQuote | null> | null = null;
 
 function isUsable(rates: KrwFxRates) {
   return (
@@ -22,18 +32,19 @@ function isUsable(rates: KrwFxRates) {
   );
 }
 
-async function readJson(url: string) {
+async function readJson(url: string, revalidate = 3600) {
   const res = await fetch(url, {
-    next: { revalidate: 3600 },
+    next: { revalidate },
     signal: AbortSignal.timeout(2500),
   });
   if (!res.ok) throw new Error(`fx ${res.status}`);
   return res.json();
 }
 
-async function fetchFrankfurter(): Promise<KrwFxRates> {
+async function fetchFrankfurter(revalidate = 3600): Promise<KrwFxRates> {
   const json = (await readJson(
     "https://api.frankfurter.app/latest?from=KRW&to=USD,EUR",
+    revalidate,
   )) as { rates?: { USD?: number; EUR?: number } };
   const usdPerKrw = Number(json.rates?.USD);
   const eurPerKrw = Number(json.rates?.EUR);
@@ -42,8 +53,8 @@ async function fetchFrankfurter(): Promise<KrwFxRates> {
   return rates;
 }
 
-async function fetchOpenEr(): Promise<KrwFxRates> {
-  const json = (await readJson("https://open.er-api.com/v6/latest/KRW")) as {
+async function fetchOpenEr(revalidate = 3600): Promise<KrwFxRates> {
+  const json = (await readJson("https://open.er-api.com/v6/latest/KRW", revalidate)) as {
     rates?: { USD?: number; EUR?: number };
   };
   const usdPerKrw = Number(json.rates?.USD);
@@ -79,6 +90,46 @@ export async function getKrwFxRates(): Promise<KrwFxRates | null> {
       });
   }
   return inflight;
+}
+
+function toBoardQuote(rates: KrwFxRates, asOf = new Date().toISOString()): FxBoardQuote | null {
+  const usd = 1 / rates.usdPerKrw;
+  const eur = 1 / rates.eurPerKrw;
+  if (!Number.isFinite(usd) || usd <= 0 || !Number.isFinite(eur) || eur <= 0) {
+    return null;
+  }
+  return { usd, eur, asOf };
+}
+
+async function loadBoardRates(): Promise<KrwFxRates | null> {
+  try {
+    return await fetchOpenEr(60);
+  } catch {
+    try {
+      return await fetchFrankfurter(60);
+    } catch (error) {
+      console.error("[fx-rates] board lookup failed", error);
+      return null;
+    }
+  }
+}
+
+export async function getFxBoardQuote(): Promise<FxBoardQuote | null> {
+  if (boardCache && Date.now() - boardCache.at < BOARD_CACHE_MS) {
+    return boardCache.quote;
+  }
+  if (!boardInflight) {
+    boardInflight = loadBoardRates()
+      .then((rates) => {
+        const quote = rates ? toBoardQuote(rates) : null;
+        if (quote) boardCache = { at: Date.now(), quote };
+        return quote;
+      })
+      .finally(() => {
+        boardInflight = null;
+      });
+  }
+  return boardInflight;
 }
 
 export function convertKrw(amountKrw: number, perKrw: number) {

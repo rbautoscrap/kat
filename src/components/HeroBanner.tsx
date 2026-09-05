@@ -1,17 +1,25 @@
 import Link from "next/link";
 import { canManageListings } from "@/lib/auth";
-import { CsResumeBanner } from "@/components/CsResumeBanner";
+import { FxRateBoard } from "@/components/FxRateBoard";
+import { getFxBoardQuote } from "@/lib/fx-rates";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 
 export async function HeroBanner() {
-  const dbUser = await resolveSessionDbUser();
+  const [dbUser, quote] = await Promise.all([
+    resolveSessionDbUser(),
+    getFxBoardQuote(),
+  ]);
   /** Vehicle listers only (ADMIN / AUTHORIZED). Regular members no longer see + List. */
   const canList = canManageListings(dbUser?.role);
 
   return (
     <div className="border-b border-[var(--line)] bg-neutral-50/60">
-      <div className="site-container relative flex flex-col items-center justify-center py-3.5 sm:py-5">
-        <CsResumeBanner />
+      <div
+        className={`site-container relative flex flex-col items-center justify-center py-3.5 sm:py-5 ${
+          canList ? "sm:px-28" : ""
+        }`}
+      >
+        <FxRateBoard initial={quote} />
         {canList ? (
           <Link
             href="/listings/new"
