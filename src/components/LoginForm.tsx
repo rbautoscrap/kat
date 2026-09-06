@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { diagnoseLogin } from "@/app/login/actions";
+import { broadcastAuthChange } from "@/lib/auth-sync";
 import { normalizeLoginId } from "@/lib/login-id";
 import { loginErrorMessage } from "@/lib/login-messages";
 
@@ -72,6 +73,7 @@ export function LoginForm({
         return;
       }
 
+      broadcastAuthChange("login");
       window.location.assign(nextPath);
     } catch {
       setLocalError("Something went wrong. Please try again.");

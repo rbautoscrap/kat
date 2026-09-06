@@ -4,10 +4,10 @@ import {
   canListUsedParts,
   canManageListings,
   isAdmin,
-  signOut,
 } from "@/lib/auth";
 import { AuthEntryButtons } from "@/components/AuthEntryButtons";
 import { FxRateBoard } from "@/components/FxRateBoard";
+import { LogoutButton } from "@/components/LogoutButton";
 import { MainNav } from "@/components/MainNav";
 import { MobileNav } from "@/components/MobileNav";
 import { MyPartsNavLink } from "@/components/MyPartsNavLink";
@@ -15,11 +15,6 @@ import { ProfileButton } from "@/components/ProfileButton";
 import { ProtectPublicImages } from "@/components/ProtectPublicImages";
 import { getFxBoardQuote } from "@/lib/fx-rates";
 import { resolveSessionDbUser } from "@/lib/listing-access";
-
-async function logoutAction() {
-  "use server";
-  await signOut({ redirectTo: "/" });
-}
 
 export async function Header() {
   const [dbUser, quote] = await Promise.all([
@@ -60,7 +55,7 @@ export async function Header() {
             KOREA AUTO TRADE
           </Link>
           <Suspense fallback={<div className="h-10 w-10" aria-hidden />}>
-            <MobileNav user={mobileUser} logoutAction={logoutAction} />
+            <MobileNav user={mobileUser} />
           </Suspense>
         </div>
 
@@ -110,11 +105,7 @@ export async function Header() {
                   className={`${accountLinkClass} max-w-[8rem] truncate`}
                   title={dbUser.name}
                 />
-                <form action={logoutAction}>
-                  <button type="submit" className={accountLinkClass}>
-                    Log out
-                  </button>
-                </form>
+                <LogoutButton className={accountLinkClass} />
               </>
             ) : (
               <>

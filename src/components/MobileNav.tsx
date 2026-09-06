@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { usePathname, useSearchParams } from "next/navigation";
 import { JoinModal } from "@/components/JoinModal";
 import { LoginModal } from "@/components/LoginModal";
+import { LogoutButton } from "@/components/LogoutButton";
 import { MyPartsIcon } from "@/components/MyPartsNavLink";
 import { ProfileModal } from "@/components/ProfileModal";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/body-scroll-lock";
@@ -49,10 +50,9 @@ type AuthMode = "login" | "join" | null;
 
 type Props = {
   user: UserProps;
-  logoutAction: () => Promise<void>;
 };
 
-export function MobileNav({ user, logoutAction }: Props) {
+export function MobileNav({ user }: Props) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>(null);
@@ -214,14 +214,7 @@ export function MobileNav({ user, logoutAction }: Props) {
                         </button>
                       </li>
                       <li>
-                        <form action={logoutAction}>
-                          <button
-                            type="submit"
-                            className="flex min-h-12 w-full items-center px-3 text-left text-[15px] font-medium text-neutral-800"
-                          >
-                            Log out
-                          </button>
-                        </form>
+                        <LogoutButton className="flex min-h-12 w-full items-center px-3 text-left text-[15px] font-medium text-neutral-800" />
                       </li>
                     </>
                   ) : (
