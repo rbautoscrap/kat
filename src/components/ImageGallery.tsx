@@ -52,7 +52,6 @@ export function ImageGallery({
               alt={`${alt} ${index + 1}`}
               fill
               sizes="(max-width: 640px) 33vw, 20vw"
-              draggable={false}
               className="object-cover"
               // /uploads are served from Volume via route handler — skip optimizer
               unoptimized={
@@ -68,21 +67,21 @@ export function ImageGallery({
       </div>
 
       {activeUrl && (
-        <button
-          type="button"
+        <div
           className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/85 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Enlarged photo"
           onClick={() => setActiveUrl(null)}
-          aria-label="Close enlarged photo"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={activeUrl}
             alt={alt}
-            draggable={false}
-            data-protect-image=""
-            className="max-h-full max-w-full object-contain"
+            className="max-h-full max-w-full cursor-default object-contain"
+            onClick={(e) => e.stopPropagation()}
           />
-        </button>
+        </div>
       )}
     </>
   );
