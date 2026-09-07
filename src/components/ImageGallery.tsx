@@ -91,8 +91,7 @@ export function ImageGallery({
             alt={alt}
             draggable={false}
             data-protect-image=""
-            className="max-h-full max-w-full object-contain"
-            onClick={(e) => e.stopPropagation()}
+            className="max-h-full max-w-full cursor-zoom-out object-contain"
           />
           <DownloadPhotoButton
             imageId={active.id}
