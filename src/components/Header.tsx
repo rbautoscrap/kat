@@ -12,6 +12,7 @@ import { MainNav } from "@/components/MainNav";
 import { MobileNav } from "@/components/MobileNav";
 import { MyPartsNavLink } from "@/components/MyPartsNavLink";
 import { ProfileButton } from "@/components/ProfileButton";
+import { ProtectPublicImages } from "@/components/ProtectPublicImages";
 import { getFxBoardQuote } from "@/lib/fx-rates";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 
@@ -43,6 +44,7 @@ export async function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-white/95 backdrop-blur-md">
+      <ProtectPublicImages allowImageSave={admin} />
       <div className="site-container">
         {/* Mobile: brand + menu button only */}
         <div className="flex h-14 items-center justify-between gap-3 md:hidden">
