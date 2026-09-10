@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import type { Listing, ListingImage } from "@prisma/client";
 import { BackButton } from "@/components/BackButton";
 import { ListingCard } from "@/components/ListingCard";
@@ -19,13 +18,7 @@ import {
   USED_PARTS_LIST_CLASS,
   USED_PARTS_PAGE_SIZE,
 } from "@/lib/listings";
-import {
-  compareListingsForDisplay,
-  newListingShuffleSeed,
-  orderByIds,
-  parseListingShuffleSeed,
-  seededCostBiasedOrder,
-} from "@/lib/listing-shuffle";
+import { compareListingsForDisplay, orderByIds } from "@/lib/listing-shuffle";
 import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +28,6 @@ type Props = {
     category?: string;
     q?: string;
     page?: string;
-    shuffle?: string;
   }>;
 };
 
@@ -73,22 +65,6 @@ export default async function ListingsPage({ searchParams }: Props) {
   const pageSize = isPartsGallery
     ? USED_PARTS_PAGE_SIZE
     : LISTING_CATEGORY_PAGE_SIZE;
-  /** Car Listings: cost-biased random order per visit. */
-  const shuffleMode =
-    category === "CAR_LISTINGS" ? ("cost_biased" as const) : null;
-
-  let shuffleSeed: number | null = null;
-  if (shuffleMode && category) {
-    shuffleSeed = parseListingShuffleSeed(params.shuffle);
-    if (shuffleSeed === null) {
-      const sp = new URLSearchParams();
-      sp.set("category", category);
-      if (q) sp.set("q", q);
-      if (page > 1) sp.set("page", String(page));
-      sp.set("shuffle", String(newListingShuffleSeed()));
-      redirect(`/listings?${sp.toString()}`);
-    }
-  }
 
   let total = 0;
   let currentPage = page;
@@ -100,56 +76,28 @@ export default async function ListingsPage({ searchParams }: Props) {
     const totalPageCount = Math.max(1, Math.ceil(total / pageSize));
     currentPage = Math.min(page, totalPageCount);
 
-    if (shuffleMode && shuffleSeed !== null) {
-      const idRows = await prisma.listing.findMany({
-        where,
-        select: {
-          id: true,
-          costPrice: true,
-          createdAt: true,
-          saleStatus: true,
-          bumpedAt: true,
-        },
-        orderBy: { id: "asc" },
-      });
-      const orderedIds = seededCostBiasedOrder(idRows, shuffleSeed);
-      const pageIds = orderedIds.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize,
-      );
-      if (pageIds.length === 0) {
-        listings = [];
-      } else {
-        const pageRows = await prisma.listing.findMany({
-          where: { id: { in: pageIds } },
-          include: coverInclude,
-        });
-        listings = orderByIds(pageRows, pageIds);
-      }
+    // Newest first; 24h 상단 pins stay in front; reserved/sold stay last.
+    const idRows = await prisma.listing.findMany({
+      where,
+      select: {
+        id: true,
+        saleStatus: true,
+        bumpedAt: true,
+        createdAt: true,
+      },
+    });
+    idRows.sort((a, b) => compareListingsForDisplay(a, b));
+    const pageIds = idRows
+      .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+      .map((r) => r.id);
+    if (pageIds.length === 0) {
+      listings = [];
     } else {
-      // Stand by / auction / search: honor 24h 상단 pins (bumpedAt), then newest.
-      const idRows = await prisma.listing.findMany({
-        where,
-        select: {
-          id: true,
-          saleStatus: true,
-          bumpedAt: true,
-          createdAt: true,
-        },
+      const pageRows = await prisma.listing.findMany({
+        where: { id: { in: pageIds } },
+        include: coverInclude,
       });
-      idRows.sort((a, b) => compareListingsForDisplay(a, b));
-      const pageIds = idRows
-        .slice((currentPage - 1) * pageSize, currentPage * pageSize)
-        .map((r) => r.id);
-      if (pageIds.length === 0) {
-        listings = [];
-      } else {
-        const pageRows = await prisma.listing.findMany({
-          where: { id: { in: pageIds } },
-          include: coverInclude,
-        });
-        listings = orderByIds(pageRows, pageIds);
-      }
+      listings = orderByIds(pageRows, pageIds);
     }
   } catch (error) {
     console.error("[ListingsPage] query failed", error);
@@ -238,8 +186,6 @@ export default async function ListingsPage({ searchParams }: Props) {
               params={{
                 category: category ?? undefined,
                 q: q || undefined,
-                shuffle:
-                  shuffleSeed !== null ? String(shuffleSeed) : undefined,
               }}
             />
           ) : null}

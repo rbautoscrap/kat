@@ -1,11 +1,6 @@
 import type { Listing, ListingImage, ListingCategory, Prisma } from "@prisma/client";
 import { memberListingVisibilityWhere } from "@/lib/live-auction";
-import {
-  orderByIds,
-  orderListingsNewestFirst,
-  seededCostBiasedOrder,
-  standByHomeShuffleSeed,
-} from "@/lib/listing-shuffle";
+import { orderByIds, orderListingsNewestFirst } from "@/lib/listing-shuffle";
 import { prisma } from "@/lib/prisma";
 
 export const HOME_SECTION_LIMIT = 10;
@@ -43,19 +38,13 @@ function pickIds(
     id: string;
     category: ListingCategory;
     saleStatus: string | null;
-    bumpedAt: Date | null;
+        bumpedAt: Date | null;
     createdAt: Date;
-    costPrice: string | null;
   }[],
   category: ListingCategory,
-  mode: "newest" | "cost_biased",
 ): string[] {
   const slice = rows.filter((row) => row.category === category);
-  const ordered =
-    mode === "cost_biased"
-      ? seededCostBiasedOrder(slice, standByHomeShuffleSeed())
-      : orderListingsNewestFirst(slice);
-  return ordered.slice(0, HOME_SECTION_LIMIT);
+  return orderListingsNewestFirst(slice).slice(0, HOME_SECTION_LIMIT);
 }
 
 export async function loadHomeListings(
@@ -82,14 +71,13 @@ export async function loadHomeListings(
         saleStatus: true,
         bumpedAt: true,
         createdAt: true,
-        costPrice: true,
       },
     });
 
-    const standByIds = pickIds(rows, "STAND_BY", "newest");
-    const carIds = pickIds(rows, "CAR_LISTINGS", "cost_biased");
-    const auctionIds = pickIds(rows, "LIVE_AUCTION", "newest");
-    const partsIds = pickIds(rows, "USED_PARTS", "newest");
+    const standByIds = pickIds(rows, "STAND_BY");
+    const carIds = pickIds(rows, "CAR_LISTINGS");
+    const auctionIds = pickIds(rows, "LIVE_AUCTION");
+    const partsIds = pickIds(rows, "USED_PARTS");
     const pageIds = [...standByIds, ...carIds, ...auctionIds, ...partsIds];
 
     const covers =

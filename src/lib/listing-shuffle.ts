@@ -1,8 +1,5 @@
 /**
- * Some category pages shuffle so newer units are not always on top.
- * Category pages use a URL `shuffle` seed (new on each menu click).
- * Car Listings uses a cost-biased shuffle (higher costPrice tends to appear earlier).
- * Stand by uses newest-first (createdAt desc) — no shuffle.
+ * Public lists are newest-first so a just-registered unit appears up front.
  *
  * Shared display rules:
  * - RESERVED / SOLD listings always sort after AVAILABLE

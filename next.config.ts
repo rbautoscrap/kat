@@ -32,6 +32,34 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Listing grids must refresh immediately after a new registration.
+        source: "/",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, must-revalidate",
+          },
+        ],
+      },
+      {
+        source: "/listings",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, must-revalidate",
+          },
+        ],
+      },
+      {
+        source: "/listings/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, must-revalidate",
+          },
+        ],
+      },
+      {
         // UUID-named uploads are immutable; long cache cuts repeat bandwidth.
         source: "/uploads/:path*",
         headers: [

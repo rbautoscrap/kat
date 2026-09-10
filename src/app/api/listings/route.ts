@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { canCreateListing } from "@/lib/auth";
 import { invalidateHomeListingsCache } from "@/lib/home-listings";
@@ -51,6 +52,8 @@ export async function POST(request: Request) {
         ...data,
         serialNumber: generateSerialNumber(),
         authorId: dbUser.id,
+        // 24h front placement so the new unit shows on home + category first page.
+        bumpedAt: new Date(),
         images: {
           create: urls.map((url, i) => ({ url, sortOrder: i })),
         },
@@ -58,6 +61,8 @@ export async function POST(request: Request) {
     });
 
     invalidateHomeListingsCache();
+    revalidatePath("/");
+    revalidatePath("/listings");
     return NextResponse.json({ id: listing.id });
   } catch (err) {
     console.error("[POST /api/listings]", err);
