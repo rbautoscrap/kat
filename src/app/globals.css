@@ -356,7 +356,7 @@ main {
 }
 
 .listing-sale-price {
-  margin-top: 0.25rem;
+  margin-top: 0.2rem;
   color: var(--accent);
   font-family: var(--font-sans);
   font-size: 13.5px;
@@ -365,6 +365,7 @@ main {
   letter-spacing: -0.035em;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1, "ss01" 1;
+  white-space: nowrap;
 }
 
 .listing-sale-price-box {

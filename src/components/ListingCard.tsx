@@ -157,8 +157,8 @@ export function ListingCard({
       <p
         className={`mt-2.5 line-clamp-2 break-words font-semibold leading-snug text-neutral-800 ${
           large
-            ? "min-h-[2.9em] text-[13.5px] sm:text-[14.5px]"
-            : "min-h-[2.8em] text-[13px] sm:text-[14px]"
+            ? "text-[13.5px] sm:text-[14.5px]"
+            : "text-[13px] sm:text-[14px]"
         } ${canOpen ? "group-hover:text-neutral-950" : "text-neutral-500"}`}
       >
         {label}
