@@ -59,6 +59,14 @@ function parseWonAmount(value?: string | null) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function displayTitle(
+  listing: { year: number; make: string; model: string; title: string; serialNumber: string },
+) {
+  const raw =
+    listingVehicleLabel(listing) || listing.title.trim() || listing.serialNumber;
+  return raw.replace(/\s*\(S\/N:\s*[^)]+\)/gi, "").replace(/\s+/g, " ").trim();
+}
+
 function compareHighValueFirst(
   a: { cost: number; sale: number; title: string },
   b: { cost: number; sale: number; title: string },
@@ -90,8 +98,7 @@ function toRow(
 ): InventoryListRow {
   const days = displayAccumulatedDays(listing);
   const cost = resolveListingCost(listing);
-  const title =
-    listingVehicleLabel(listing) || listing.title.trim() || listing.serialNumber;
+  const title = displayTitle(listing);
   return {
     id: listing.id,
     no,
@@ -152,10 +159,7 @@ export async function loadInventoryListReport(): Promise<InventoryListReport> {
           listing: row,
           cost: resolveListingCost(row),
           sale: parseWonAmount(row.salePrice),
-          title:
-            listingVehicleLabel(row) ||
-            row.title.trim() ||
-            row.serialNumber,
+          title: displayTitle(row),
         }))
         .sort(compareHighValueFirst)
         .map((row, index) => toRow(row.listing, index + 1));

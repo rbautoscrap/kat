@@ -21,7 +21,7 @@ export default async function AdminInventoryPage() {
         </div>
         <InventoryPdfButton />
       </div>
-      <div className="overflow-hidden rounded-sm border border-[var(--line)] bg-white">
+      <div className="overflow-x-auto rounded-sm border border-[var(--line)] bg-white">
         <InventoryListDocument report={report} />
       </div>
     </div>

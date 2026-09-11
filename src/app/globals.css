@@ -1678,7 +1678,7 @@ main {
 }
 
 .inventory-sheet {
-  padding: 1.25rem 1.35rem 1.5rem;
+  padding: 0.9rem 0.85rem 1.1rem;
   color: #171717;
 }
 
@@ -1795,28 +1795,32 @@ main {
 
 .inventory-sheet table {
   width: 100%;
-  table-layout: fixed;
+  table-layout: auto;
   border-collapse: collapse;
   font-size: 11px;
 }
 
-.inventory-sheet col.col-no { width: 4%; }
-.inventory-sheet col.col-title { width: 22%; }
-.inventory-sheet col.col-cat { width: 8%; }
-.inventory-sheet col.col-sn { width: 10%; }
-.inventory-sheet col.col-vin { width: 16%; }
-.inventory-sheet col.col-car { width: 10%; }
-.inventory-sheet col.col-date { width: 8%; }
-.inventory-sheet col.col-days { width: 6%; }
-.inventory-sheet col.col-money { width: 8%; }
+.inventory-sheet col.col-no,
+.inventory-sheet col.col-cat,
+.inventory-sheet col.col-sn,
+.inventory-sheet col.col-vin,
+.inventory-sheet col.col-car,
+.inventory-sheet col.col-date,
+.inventory-sheet col.col-days,
+.inventory-sheet col.col-money {
+  width: 1%;
+}
+
+.inventory-sheet col.col-title {
+  width: 36%;
+}
 
 .inventory-sheet th,
 .inventory-sheet td {
   border: 1px solid #e5e5e5;
-  padding: 0.28rem 0.32rem;
+  padding: 0.16rem 0.28rem;
   text-align: left;
   vertical-align: middle;
-  overflow: hidden;
 }
 
 .inventory-sheet thead th {
@@ -1834,8 +1838,8 @@ main {
 
 .inventory-sheet .is-title {
   font-weight: 650;
+  word-break: keep-all;
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .inventory-sheet .inventory-title-link {
@@ -1851,13 +1855,12 @@ main {
 }
 
 .inventory-sheet .is-cat,
-.inventory-sheet .is-date {
+.inventory-sheet .is-date,
+.inventory-sheet .is-code {
   white-space: nowrap;
 }
 
 .inventory-sheet .is-code {
-  overflow-wrap: anywhere;
-  word-break: break-all;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1953,9 +1956,19 @@ main {
     overflow: visible !important;
   }
 
-  .inventory-print-root .overflow-hidden {
+  .inventory-print-root .overflow-hidden,
+  .inventory-print-root .overflow-x-auto {
     overflow: visible !important;
     border: none !important;
+  }
+
+  .inventory-sheet table {
+    font-size: 9.5px;
+  }
+
+  .inventory-sheet th,
+  .inventory-sheet td {
+    padding: 0.1rem 0.16rem;
   }
 
   .inventory-sheet thead th {

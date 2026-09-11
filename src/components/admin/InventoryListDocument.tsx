@@ -123,9 +123,15 @@ function StatusTable({ block }: { block: InventoryStatusBlock }) {
               </a>
             </td>
             <td className="is-cat">{row.categoryLabel}</td>
-            <td className="is-code">{row.serialNumber}</td>
-            <td className="is-code">{row.vin}</td>
-            <td className="is-code">{row.vehicleNumber}</td>
+            <td className="is-code" title={row.serialNumber}>
+              {row.serialNumber}
+            </td>
+            <td className="is-code" title={row.vin}>
+              {row.vin}
+            </td>
+            <td className="is-code" title={row.vehicleNumber}>
+              {row.vehicleNumber}
+            </td>
             <td className="is-date">{row.inboundDate}</td>
             <td className="is-num">{row.days}</td>
             <td className="is-num">{row.costLabel}</td>
