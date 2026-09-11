@@ -20,6 +20,7 @@ import {
 import {
   formatRegistrationDate,
   isPartsCategory,
+  isStockVehicleCategory,
   MAX_IMAGES_PER_LISTING,
   MAX_IMAGES_PER_USED_PARTS,
   parseListingYearInput,
@@ -470,7 +471,7 @@ export function ListingForm({
       }
     }
 
-    if (category === "CAR_LISTINGS" || category === "STAND_BY") {
+    if (isStockVehicleCategory(category)) {
       const auctionDigits = String(data.get("auctionPrice") ?? "").replace(
         /\D/g,
         "",
@@ -984,7 +985,7 @@ export function ListingForm({
               auctionPrice={listing?.auctionPrice ?? undefined}
               incidentalCost={listing?.incidentalCost ?? undefined}
               auctionPriceRequired={
-                category === "CAR_LISTINGS" || category === "STAND_BY"
+                isStockVehicleCategory(category)
               }
             />
           </div>

@@ -21,6 +21,7 @@ enum AccountStatus {
 
 enum ListingCategory {
   CAR_LISTINGS
+  CONSIGNMENT_SALE
   LIVE_AUCTION
   STAND_BY
   USED_PARTS

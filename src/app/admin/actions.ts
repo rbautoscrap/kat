@@ -23,6 +23,7 @@ type ActionResult = { ok: true } | { ok: false; error: string };
 const ROLES = ["MEMBER", "AUTHORIZED", "ADMIN"] as const;
 const CATEGORIES = [
   "CAR_LISTINGS",
+  "CONSIGNMENT_SALE",
   "LIVE_AUCTION",
   "STAND_BY",
 ] as const;

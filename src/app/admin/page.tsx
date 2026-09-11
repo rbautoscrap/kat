@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic";
 const CATEGORY_ORDER: ListingCategory[] = [
   "LIVE_AUCTION",
   "CAR_LISTINGS",
+  "CONSIGNMENT_SALE",
   "STAND_BY",
 ];
 

@@ -15,6 +15,7 @@ import {
   LISTING_CATEGORY_PAGE_SIZE,
   LISTING_GRID_CLASS,
   parseCategory,
+  publicCategoryFilter,
   USED_PARTS_LIST_CLASS,
   USED_PARTS_PAGE_SIZE,
 } from "@/lib/listings";
@@ -49,7 +50,7 @@ export default async function ListingsPage({ searchParams }: Props) {
 
   const searchWhere = buildPublicListingSearchWhere(q);
   const categoryWhere: Prisma.ListingWhereInput = category
-    ? { category }
+    ? { category: publicCategoryFilter(category) }
     : {};
   const visibilityWhere: Prisma.ListingWhereInput = canViewSold
     ? {}

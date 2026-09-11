@@ -7,6 +7,7 @@ export const HOME_SECTION_LIMIT = 10;
 
 const HOME_CATEGORIES = [
   "CAR_LISTINGS",
+  "CONSIGNMENT_SALE",
   "STAND_BY",
   "LIVE_AUCTION",
   "USED_PARTS",
@@ -75,7 +76,15 @@ export async function loadHomeListings(
     });
 
     const standByIds = pickIds(rows, "STAND_BY");
-    const carIds = pickIds(rows, "CAR_LISTINGS");
+    const carIds = orderListingsNewestFirst(
+      rows.filter(
+        (row) =>
+          row.category === "CAR_LISTINGS" ||
+          row.category === "CONSIGNMENT_SALE",
+      ),
+    )
+      .slice(0, HOME_SECTION_LIMIT)
+      .map((row) => row.id);
     const auctionIds = pickIds(rows, "LIVE_AUCTION");
     const partsIds = pickIds(rows, "USED_PARTS");
     const pageIds = [...standByIds, ...carIds, ...auctionIds, ...partsIds];

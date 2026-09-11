@@ -10,6 +10,7 @@ import { getAppTempDir, getUploadsDir } from "@/lib/storage-paths";
 import { translateToEnglish } from "@/lib/translate";
 import {
   formatListingYear,
+  isStockVehicleCategory,
   maxImagesForCategory,
   parseListingYearInput,
   parseRegistrationDateInput,
@@ -161,6 +162,7 @@ const listingRegistrationDateSchema = z.preprocess(
 
 const LISTING_CATEGORIES = [
   "CAR_LISTINGS",
+  "CONSIGNMENT_SALE",
   "LIVE_AUCTION",
   "STAND_BY",
   "USED_PARTS",
@@ -252,13 +254,13 @@ const listingFieldsSchema = z.object({
       });
     }
   }
-  if (data.category === "CAR_LISTINGS" || data.category === "STAND_BY") {
+  if (isStockVehicleCategory(data.category)) {
     const auction = Number(data.auctionPrice ?? "0") || 0;
     if (!data.auctionPrice || auction <= 0) {
       ctx.addIssue({
         code: "custom",
         path: ["auctionPrice"],
-        message: "차량 매물과 스탠바이는 낙찰가를 입력해 주세요.",
+        message: "차량 매물, 위탁 판매, 스탠바이는 낙찰가를 입력해 주세요.",
       });
     }
   }

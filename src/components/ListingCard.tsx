@@ -144,6 +144,11 @@ export function ListingCard({
       />
       <SaleStatusOverlay status={listing.saleStatus} />
       {listing.category === "LIVE_AUCTION" ? <AuctionImageBadge /> : null}
+      {listing.category === "CONSIGNMENT_SALE" ? (
+        <span className="absolute left-1.5 top-1.5 rounded bg-neutral-900/75 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white">
+          Consignment
+        </span>
+      ) : null}
       {isParts ? (
         <span className="absolute right-1.5 top-1.5 rounded bg-neutral-900/75 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white">
           Parts

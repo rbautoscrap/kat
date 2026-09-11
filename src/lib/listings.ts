@@ -2,10 +2,26 @@ import type { ListingCategory, ListingSaleStatus } from "@prisma/client";
 
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {
   CAR_LISTINGS: "Car Listings",
+  CONSIGNMENT_SALE: "Consignment",
   LIVE_AUCTION: "Live Auction",
   STAND_BY: "Stand by",
   USED_PARTS: "Used Parts",
 };
+
+/** Vehicle stock categories that share the car-listing form and inventory list. */
+export const STOCK_VEHICLE_CATEGORIES = [
+  "CAR_LISTINGS",
+  "CONSIGNMENT_SALE",
+  "STAND_BY",
+] as const satisfies readonly ListingCategory[];
+
+export function isStockVehicleCategory(
+  category: ListingCategory | string | null | undefined,
+): category is (typeof STOCK_VEHICLE_CATEGORIES)[number] {
+  return (STOCK_VEHICLE_CATEGORIES as readonly string[]).includes(
+    String(category ?? ""),
+  );
+}
 
 /** Optional part-type values stored in Listing.highlights for USED_PARTS */
 export const PART_TYPE_OPTIONS = [
@@ -117,6 +133,7 @@ export const SALE_STATUS_LABELS: Record<ListingSaleStatus, string> = {
 
 export const CATEGORY_PATHS: Record<ListingCategory, string> = {
   CAR_LISTINGS: "/listings?category=CAR_LISTINGS",
+  CONSIGNMENT_SALE: "/listings?category=CAR_LISTINGS",
   LIVE_AUCTION: "/listings?category=LIVE_AUCTION",
   STAND_BY: "/listings?category=STAND_BY",
   USED_PARTS: "/listings?category=USED_PARTS",
@@ -156,6 +173,7 @@ export function parseCategory(
   if (value === "HOT_DEALS") return "CAR_LISTINGS";
   if (
     value === "CAR_LISTINGS" ||
+    value === "CONSIGNMENT_SALE" ||
     value === "LIVE_AUCTION" ||
     value === "STAND_BY" ||
     value === "USED_PARTS"
@@ -163,6 +181,14 @@ export function parseCategory(
     return value;
   }
   return null;
+}
+
+/** Car Listings page also shows consignment stock. */
+export function publicCategoryFilter(category: ListingCategory) {
+  if (category === "CAR_LISTINGS") {
+    return { in: ["CAR_LISTINGS", "CONSIGNMENT_SALE"] as ListingCategory[] };
+  }
+  return category;
 }
 
 export function youtubeEmbedUrl(url?: string | null) {

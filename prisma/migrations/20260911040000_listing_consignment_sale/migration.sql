@@ -1,0 +1,2 @@
+-- SQLite stores ListingCategory as TEXT; no table rewrite required.
+-- New allowed value: CONSIGNMENT_SALE (same listing flow as CAR_LISTINGS).
