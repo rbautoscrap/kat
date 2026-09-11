@@ -6,6 +6,7 @@ import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 const requiredTables = ["Listing", "User", "SiteStats", "SiteSetting"];
+const requiredListingColumns = ["adminNote"];
 
 async function main() {
   const { PrismaClient } = require("@prisma/client");
@@ -20,6 +21,23 @@ async function main() {
     const missing = requiredTables.filter((name) => !names.has(name));
     if (missing.length > 0) {
       console.log(`[schema-ready] missing ${missing.join(", ")}`);
+      process.exit(1);
+    }
+    const listingCols = await prisma.$queryRawUnsafe(
+      `PRAGMA table_info("Listing")`,
+    );
+    const listingNames = new Set(
+      (Array.isArray(listingCols) ? listingCols : []).map((row) =>
+        String(row.name ?? ""),
+      ),
+    );
+    const missingCols = requiredListingColumns.filter(
+      (name) => !listingNames.has(name),
+    );
+    if (missingCols.length > 0) {
+      console.log(
+        `[schema-ready] missing Listing.${missingCols.join(", ")}`,
+      );
       process.exit(1);
     }
     console.log("[schema-ready] OK — skip prisma db push");

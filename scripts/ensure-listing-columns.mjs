@@ -27,6 +27,7 @@ async function main() {
     await ensureColumn(prisma, names, "bumpedAt", "DATETIME");
     await ensureColumn(prisma, names, "salePrice", "TEXT");
     await ensureColumn(prisma, names, "manufactureMonth", "INTEGER");
+    await ensureColumn(prisma, names, "adminNote", "TEXT");
   } finally {
     await prisma.$disconnect();
   }
