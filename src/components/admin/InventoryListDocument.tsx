@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { formatCostWon } from "@/lib/inventory-cost";
 import type {
   InventoryListReport,
   InventoryStatusBlock,
-} from "@/lib/inventory-list";
+} from "@/lib/inventory-list-types";
+
+function formatWon(value: number) {
+  return `${value.toLocaleString("ko-KR")}원`;
+}
 
 type Props = {
   report: InventoryListReport;
@@ -15,7 +18,7 @@ function CountLabel({ count, cost }: { count: number; cost: number }) {
   return (
     <span className="inventory-count">
       {count.toLocaleString("ko-KR")}대
-      {cost > 0 ? ` · 원가 ${formatCostWon(cost)}` : ""}
+      {cost > 0 ? ` · 원가 ${formatWon(cost)}` : ""}
     </span>
   );
 }
@@ -134,7 +137,7 @@ export function InventoryListDocument({ report }: Props) {
         </p>
         <p className="inventory-total">
           판매중 {availableCount.toLocaleString("ko-KR")}대
-          {availableCost > 0 ? ` · 원가 합계 ${formatCostWon(availableCost)}` : ""}
+          {availableCost > 0 ? ` · 원가 합계 ${formatWon(availableCost)}` : ""}
         </p>
         <div className="inventory-status-toggles inventory-no-print">
           <button

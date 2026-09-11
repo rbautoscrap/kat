@@ -10,6 +10,12 @@ import {
   formatCostWon,
   resolveListingCost,
 } from "@/lib/inventory-cost";
+import type {
+  InventoryListReport,
+  InventoryListRow,
+  InventoryLocationBlock,
+  InventoryStatusBlock,
+} from "@/lib/inventory-list-types";
 import { displayAccumulatedDays } from "@/lib/listing-actions";
 import { formatRegistrationDate, listingVehicleLabel } from "@/lib/listings";
 import { prisma } from "@/lib/prisma";
@@ -19,48 +25,18 @@ import {
   storageLocationLabel,
 } from "@/lib/storage-location";
 
+export type {
+  InventoryListReport,
+  InventoryListRow,
+  InventoryLocationBlock,
+  InventoryStatusBlock,
+} from "@/lib/inventory-list-types";
+
 const STATUS_ORDER = [
   "AVAILABLE",
   "RESERVED",
   "SOLD",
 ] as const satisfies readonly ListingSaleStatus[];
-
-export type InventoryListRow = {
-  id: string;
-  no: number;
-  title: string;
-  serialNumber: string;
-  vin: string;
-  vehicleNumber: string;
-  categoryLabel: string;
-  inboundDate: string;
-  days: string;
-  costLabel: string;
-  cost: number;
-  salePriceLabel: string;
-};
-
-export type InventoryStatusBlock = {
-  status: ListingSaleStatus;
-  label: string;
-  rows: InventoryListRow[];
-  count: number;
-  costTotal: number;
-};
-
-export type InventoryLocationBlock = {
-  location: string;
-  statuses: InventoryStatusBlock[];
-  count: number;
-  costTotal: number;
-};
-
-export type InventoryListReport = {
-  generatedAt: string;
-  locations: InventoryLocationBlock[];
-  totalCount: number;
-  totalCost: number;
-};
 
 function moneyLabel(value: number) {
   return value > 0 ? formatCostWon(value) : "—";
