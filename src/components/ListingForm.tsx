@@ -608,7 +608,7 @@ export function ListingForm({
         {
           method: listing ? "PUT" : "POST",
           body: data,
-          credentials: "same-origin",
+          credentials: "include",
           signal: controller.signal,
         },
       );

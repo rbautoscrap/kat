@@ -10,21 +10,6 @@ function formatWon(value: number) {
   return `${value.toLocaleString("ko-KR")}원`;
 }
 
-function openListingPopup(listingId: string) {
-  const width = Math.min(1280, Math.max(960, window.screen.availWidth - 80));
-  const height = Math.min(900, Math.max(720, window.screen.availHeight - 80));
-  const left = Math.max(0, Math.round((window.screen.availWidth - width) / 2));
-  const top = Math.max(0, Math.round((window.screen.availHeight - height) / 2));
-  const url = `/listings/${listingId}`;
-  // Do not use popup=yes — Chromium isolates that window and listing saves fail.
-  const opened = window.open(
-    url,
-    `listing-${listingId}`,
-    `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`,
-  );
-  if (!opened) window.open(url, "_blank");
-}
-
 function splitConsignment(block?: InventoryStatusBlock) {
   const stockRows = block?.rows.filter((row) => row.category !== "CONSIGNMENT_SALE") ?? [];
   const consignmentRows =
@@ -149,19 +134,8 @@ function StatusTable({ block }: { block: InventoryStatusBlock }) {
                 href={`/listings/${row.id}`}
                 className="inventory-title-link"
                 title={`${row.title} 매물 보기`}
-                onClick={(event) => {
-                  if (
-                    event.metaKey ||
-                    event.ctrlKey ||
-                    event.shiftKey ||
-                    event.altKey ||
-                    event.button !== 0
-                  ) {
-                    return;
-                  }
-                  event.preventDefault();
-                  openListingPopup(row.id);
-                }}
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 {row.title}
               </a>
