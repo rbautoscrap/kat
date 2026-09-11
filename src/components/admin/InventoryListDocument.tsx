@@ -15,11 +15,36 @@ function openListingPopup(listingId: string) {
   const height = Math.min(900, Math.max(720, window.screen.availHeight - 80));
   const left = Math.max(0, Math.round((window.screen.availWidth - width) / 2));
   const top = Math.max(0, Math.round((window.screen.availHeight - height) / 2));
-  window.open(
-    `/listings/${listingId}`,
+  const url = `/listings/${listingId}`;
+  // Do not use popup=yes — Chromium isolates that window and listing saves fail.
+  const opened = window.open(
+    url,
     `listing-${listingId}`,
-    `popup=yes,width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`,
+    `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`,
   );
+  if (!opened) window.open(url, "_blank");
+}
+
+function splitConsignment(block?: InventoryStatusBlock) {
+  const stockRows = block?.rows.filter((row) => row.category !== "CONSIGNMENT_SALE") ?? [];
+  const consignmentRows =
+    block?.rows.filter((row) => row.category === "CONSIGNMENT_SALE") ?? [];
+  return {
+    stock: {
+      status: block?.status ?? "AVAILABLE",
+      label: block?.label ?? "",
+      rows: stockRows.map((row, index) => ({ ...row, no: index + 1 })),
+      count: stockRows.length,
+      costTotal: stockRows.reduce((sum, row) => sum + row.cost, 0),
+    } satisfies InventoryStatusBlock,
+    consignment: {
+      status: block?.status ?? "AVAILABLE",
+      label: block?.label ?? "",
+      rows: consignmentRows.map((row, index) => ({ ...row, no: index + 1 })),
+      count: consignmentRows.length,
+      costTotal: consignmentRows.reduce((sum, row) => sum + row.cost, 0),
+    } satisfies InventoryStatusBlock,
+  };
 }
 
 type Props = {
@@ -58,6 +83,25 @@ function SoldIcon() {
         strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ConsignmentIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className="h-4 w-4">
+      <path
+        d="M7.5 8.5h9.2a2 2 0 0 1 1.7 1l1.8 3v6.2H5.8V12.5l1.7-4Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 8.5V6.6A2.6 2.6 0 0 1 11.6 4h.8A2.6 2.6 0 0 1 15 6.6v1.9"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -148,6 +192,7 @@ function StatusTable({ block }: { block: InventoryStatusBlock }) {
 export function InventoryListDocument({ report }: Props) {
   const [showReserved, setShowReserved] = useState(false);
   const [showSold, setShowSold] = useState(false);
+  const [showConsignment, setShowConsignment] = useState(false);
 
   const reservedCount = report.locations.reduce((sum, location) => {
     const block = location.statuses.find((item) => item.status === "RESERVED");
@@ -157,14 +202,28 @@ export function InventoryListDocument({ report }: Props) {
     const block = location.statuses.find((item) => item.status === "SOLD");
     return sum + (block?.count ?? 0);
   }, 0);
-  const availableCount = report.locations.reduce((sum, location) => {
-    const block = location.statuses.find((item) => item.status === "AVAILABLE");
-    return sum + (block?.count ?? 0);
-  }, 0);
-  const availableCost = report.locations.reduce((sum, location) => {
-    const block = location.statuses.find((item) => item.status === "AVAILABLE");
-    return sum + (block?.costTotal ?? 0);
-  }, 0);
+  const availableParts = report.locations.map((location) => ({
+    location: location.location,
+    available: location.statuses.find((item) => item.status === "AVAILABLE"),
+    reserved: location.statuses.find((item) => item.status === "RESERVED"),
+    sold: location.statuses.find((item) => item.status === "SOLD"),
+  }));
+  const splitAvailable = availableParts.map((item) => ({
+    ...item,
+    ...splitConsignment(item.available),
+  }));
+  const availableCount = splitAvailable.reduce(
+    (sum, item) => sum + item.stock.count,
+    0,
+  );
+  const availableCost = splitAvailable.reduce(
+    (sum, item) => sum + item.stock.costTotal,
+    0,
+  );
+  const consignmentCount = splitAvailable.reduce(
+    (sum, item) => sum + item.consignment.count,
+    0,
+  );
 
   return (
     <div className="inventory-sheet">
@@ -181,6 +240,16 @@ export function InventoryListDocument({ report }: Props) {
           {availableCost > 0 ? ` · 원가 합계 ${formatWon(availableCost)}` : ""}
         </p>
         <div className="inventory-status-toggles inventory-no-print">
+          <button
+            type="button"
+            className={`inventory-status-icon${showConsignment ? " is-on" : ""}`}
+            aria-pressed={showConsignment}
+            title="위탁 판매 보기"
+            onClick={() => setShowConsignment((open) => !open)}
+          >
+            <ConsignmentIcon />
+            <span>위탁 판매 {consignmentCount.toLocaleString("ko-KR")}</span>
+          </button>
           <button
             type="button"
             className={`inventory-status-icon${showReserved ? " is-on" : ""}`}
@@ -204,22 +273,14 @@ export function InventoryListDocument({ report }: Props) {
         </div>
       </header>
 
-      {report.locations.map((location) => {
-        const available = location.statuses.find(
-          (item) => item.status === "AVAILABLE",
-        );
-        const reserved = location.statuses.find(
-          (item) => item.status === "RESERVED",
-        );
-        const sold = location.statuses.find((item) => item.status === "SOLD");
-
+      {splitAvailable.map((location) => {
         return (
           <section key={location.location} className="inventory-location">
             <h2>
               {location.location}
               <CountLabel
-                count={available?.count ?? 0}
-                cost={available?.costTotal ?? 0}
+                count={location.stock.count}
+                cost={location.stock.costTotal}
               />
             </h2>
 
@@ -227,33 +288,49 @@ export function InventoryListDocument({ report }: Props) {
               <h3>
                 판매중
                 <CountLabel
-                  count={available?.count ?? 0}
-                  cost={available?.costTotal ?? 0}
+                  count={location.stock.count}
+                  cost={location.stock.costTotal}
                 />
               </h3>
-              {available ? <StatusTable block={available} /> : null}
+              <StatusTable block={location.stock} />
             </div>
 
-            {showReserved && reserved ? (
+            {showConsignment ? (
+              <div className="inventory-status">
+                <h3>
+                  위탁 판매
+                  <CountLabel
+                    count={location.consignment.count}
+                    cost={location.consignment.costTotal}
+                  />
+                </h3>
+                <StatusTable block={location.consignment} />
+              </div>
+            ) : null}
+
+            {showReserved && location.reserved ? (
               <div className="inventory-status">
                 <h3>
                   예약완료
                   <CountLabel
-                    count={reserved.count}
-                    cost={reserved.costTotal}
+                    count={location.reserved.count}
+                    cost={location.reserved.costTotal}
                   />
                 </h3>
-                <StatusTable block={reserved} />
+                <StatusTable block={location.reserved} />
               </div>
             ) : null}
 
-            {showSold && sold ? (
+            {showSold && location.sold ? (
               <div className="inventory-status">
                 <h3>
                   판매완료
-                  <CountLabel count={sold.count} cost={sold.costTotal} />
+                  <CountLabel
+                    count={location.sold.count}
+                    cost={location.sold.costTotal}
+                  />
                 </h3>
-                <StatusTable block={sold} />
+                <StatusTable block={location.sold} />
               </div>
             ) : null}
           </section>

@@ -608,6 +608,7 @@ export function ListingForm({
         {
           method: listing ? "PUT" : "POST",
           body: data,
+          credentials: "same-origin",
           signal: controller.signal,
         },
       );
@@ -633,8 +634,13 @@ export function ListingForm({
         );
         return;
       }
-      router.push(`/listings/${json.id}`);
-      router.refresh();
+      const nextUrl = `/listings/${json.id}`;
+      if (window.opener) {
+        window.location.assign(nextUrl);
+      } else {
+        router.push(nextUrl);
+        router.refresh();
+      }
     } catch (err) {
       const aborted =
         err instanceof DOMException && err.name === "AbortError";

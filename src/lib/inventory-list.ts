@@ -102,6 +102,7 @@ function toRow(
   return {
     id: listing.id,
     no,
+    category: listing.category,
     title,
     serialNumber: listing.serialNumber,
     vin: listing.vin?.trim() || "—",

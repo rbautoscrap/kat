@@ -3,6 +3,7 @@ import type { ListingSaleStatus } from "@prisma/client";
 export type InventoryListRow = {
   id: string;
   no: number;
+  category: string;
   title: string;
   serialNumber: string;
   vin: string;
