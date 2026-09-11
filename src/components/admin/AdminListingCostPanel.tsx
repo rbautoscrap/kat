@@ -1,3 +1,5 @@
+import { AdminListingMemo } from "@/components/admin/AdminListingMemo";
+
 const MARGIN_RATES = [0.05, 0.1, 0.2] as const;
 
 function parseWonDigits(value?: string | null): number | null {
@@ -19,20 +21,24 @@ function formatMarginWon(cost: number, rate: number) {
 }
 
 type Props = {
+  listingId: string;
   costPrice?: string | null;
   accumulatedDays?: number | null;
   /** Unique detail-page views (IP / member deduped). Admin-only. */
   viewCount?: number | null;
   /** When false, hide cost / days (e.g. used-parts listings). */
   showCostFields?: boolean;
+  adminNote?: string | null;
 };
 
 /** Admin-only cost / days / views summary on listing detail (members never see this). */
 export function AdminListingCostPanel({
+  listingId,
   costPrice,
   accumulatedDays,
   viewCount = 0,
   showCostFields = true,
+  adminNote = null,
 }: Props) {
   const days =
     accumulatedDays == null
@@ -105,6 +111,7 @@ export function AdminListingCostPanel({
           ))}
         </div>
       ) : null}
+      <AdminListingMemo listingId={listingId} note={adminNote} />
     </section>
   );
 }

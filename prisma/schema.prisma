@@ -110,6 +110,8 @@ model Listing {
   /** Optional public asking price. Shown only when set. */
   salePrice        String?
   accumulatedDays  String?
+  /** Admin-only internal memo on the listing detail cost panel. */
+  adminNote        String?
   /** Admin-only detail page view counter (not shown publicly) */
   viewCount        Int             @default(0)
   /**

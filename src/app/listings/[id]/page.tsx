@@ -454,10 +454,12 @@ export default async function ListingDetailPage({ params }: Props) {
 
       {adminView ? (
         <AdminListingCostPanel
+          listingId={listing.id}
           costPrice={listing.costPrice}
           accumulatedDays={accumulatedDays}
           viewCount={listing.viewCount}
           showCostFields={!isParts}
+          adminNote={listing.adminNote}
         />
       ) : null}
 

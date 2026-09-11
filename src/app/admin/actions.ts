@@ -235,6 +235,40 @@ export async function updateListingSalePrice(
   return { ok: true };
 }
 
+export async function updateListingAdminNote(
+  listingId: string,
+  note: string,
+): Promise<ActionResult> {
+  if (!(await assertAdmin())) return { ok: false, error: "권한이 없습니다." };
+  if (!listingId) return { ok: false, error: "매물을 찾을 수 없습니다." };
+
+  const trimmed = note.trim();
+  if (trimmed.length > 2000) {
+    return { ok: false, error: "메모는 2,000자 이내로 작성해 주세요." };
+  }
+
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId },
+    select: { id: true },
+  });
+  if (!listing) return { ok: false, error: "매물을 찾을 수 없습니다." };
+
+  try {
+    await prisma.listing.update({
+      where: { id: listingId },
+      data: { adminNote: trimmed.length > 0 ? trimmed : null },
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: prismaErrorMessage(error, "메모 저장에 실패했습니다."),
+    };
+  }
+
+  revalidatePath(`/listings/${listingId}`);
+  return { ok: true };
+}
+
 export async function setUserAccountStatus(
   userId: string,
   status: AccountStatus,
