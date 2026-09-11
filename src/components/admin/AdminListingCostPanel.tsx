@@ -23,7 +23,7 @@ function formatMarginWon(cost: number, rate: number) {
 type Props = {
   listingId: string;
   costPrice?: string | null;
-  /** Live FX conversion of costPrice, already formatted (e.g. US$2,168). */
+  /** Live FX conversion of costPrice, already formatted (e.g. US $2,168). */
   costUsdLabel?: string | null;
   accumulatedDays?: number | null;
   /** Unique detail-page views (IP / member deduped). Admin-only. */

@@ -408,7 +408,7 @@ export function formatSalePriceDisplay(value?: string | null) {
 
 export function formatSalePriceUsd(amount: number) {
   if (!Number.isFinite(amount) || amount <= 0) return "";
-  return `US$${Math.round(amount).toLocaleString("en-US")}`;
+  return `US $${Math.round(amount).toLocaleString("en-US")}`;
 }
 
 export function formatSalePriceEur(amount: number) {
