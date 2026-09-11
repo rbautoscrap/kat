@@ -10,6 +10,18 @@ function formatWon(value: number) {
   return `${value.toLocaleString("ko-KR")}원`;
 }
 
+function openListingPopup(listingId: string) {
+  const width = Math.min(1280, Math.max(960, window.screen.availWidth - 80));
+  const height = Math.min(900, Math.max(720, window.screen.availHeight - 80));
+  const left = Math.max(0, Math.round((window.screen.availWidth - width) / 2));
+  const top = Math.max(0, Math.round((window.screen.availHeight - height) / 2));
+  window.open(
+    `/listings/${listingId}`,
+    `listing-${listingId}`,
+    `popup=yes,width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`,
+  );
+}
+
 type Props = {
   report: InventoryListReport;
 };
@@ -88,7 +100,28 @@ function StatusTable({ block }: { block: InventoryStatusBlock }) {
         {block.rows.map((row) => (
           <tr key={row.id}>
             <td className="is-num">{row.no}</td>
-            <td className="is-title">{row.title}</td>
+            <td className="is-title">
+              <a
+                href={`/listings/${row.id}`}
+                className="inventory-title-link"
+                title={`${row.title} 매물 보기`}
+                onClick={(event) => {
+                  if (
+                    event.metaKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    event.altKey ||
+                    event.button !== 0
+                  ) {
+                    return;
+                  }
+                  event.preventDefault();
+                  openListingPopup(row.id);
+                }}
+              >
+                {row.title}
+              </a>
+            </td>
             <td className="is-cat">{row.categoryLabel}</td>
             <td className="is-code">{row.serialNumber}</td>
             <td className="is-code">{row.vin}</td>
