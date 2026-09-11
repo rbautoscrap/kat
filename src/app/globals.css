@@ -1747,19 +1747,37 @@ main {
   font-weight: 700;
 }
 
-.inventory-category {
-  margin-bottom: 0.7rem;
-}
-
-.inventory-category h4 {
+.inventory-status-toggles {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.4rem 0.7rem;
-  margin: 0 0 0.3rem;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.inventory-status-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2rem;
+  padding: 0 0.7rem;
+  border: 1px solid #d4d4d4;
+  border-radius: 999px;
+  background: #fff;
+  color: #525252;
   font-size: 12.5px;
-  font-weight: 700;
-  color: #262626;
+  font-weight: 650;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.inventory-status-icon:hover {
+  border-color: #a3a3a3;
+  color: #171717;
+}
+
+.inventory-status-icon.is-on {
+  border-color: #171717;
+  background: #171717;
+  color: #fff;
 }
 
 .inventory-count {
