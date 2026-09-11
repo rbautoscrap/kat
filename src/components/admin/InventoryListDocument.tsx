@@ -21,7 +21,7 @@ export function InventoryListDocument({ report }: Props) {
         <p className="inventory-brand">KOREA AUTO TRADE</p>
         <h1>재고 리스트</h1>
         <p className="inventory-meta">
-          충주·진천 입고지별 · 판매중 / 예약완료 / 판매완료
+          충주·진천 입고지별 · 판매중 / 예약완료 / 판매완료 · 원가 고액순
           <span> · </span>
           {report.generatedAt}
         </p>
@@ -48,6 +48,18 @@ export function InventoryListDocument({ report }: Props) {
                 <p className="inventory-empty">해당 없음</p>
               ) : (
                 <table>
+                  <colgroup>
+                    <col className="col-no" />
+                    <col className="col-title" />
+                    <col className="col-cat" />
+                    <col className="col-sn" />
+                    <col className="col-vin" />
+                    <col className="col-car" />
+                    <col className="col-date" />
+                    <col className="col-days" />
+                    <col className="col-money" />
+                    <col className="col-money" />
+                  </colgroup>
                   <thead>
                     <tr>
                       <th className="is-num">No</th>
@@ -67,11 +79,11 @@ export function InventoryListDocument({ report }: Props) {
                       <tr key={row.id}>
                         <td className="is-num">{row.no}</td>
                         <td className="is-title">{row.title}</td>
-                        <td>{row.categoryLabel}</td>
-                        <td>{row.serialNumber}</td>
-                        <td>{row.vin}</td>
-                        <td>{row.vehicleNumber}</td>
-                        <td>{row.inboundDate}</td>
+                        <td className="is-cat">{row.categoryLabel}</td>
+                        <td className="is-code">{row.serialNumber}</td>
+                        <td className="is-code">{row.vin}</td>
+                        <td className="is-code">{row.vehicleNumber}</td>
+                        <td className="is-date">{row.inboundDate}</td>
                         <td className="is-num">{row.days}</td>
                         <td className="is-num">{row.costLabel}</td>
                         <td className="is-num">{row.salePriceLabel}</td>

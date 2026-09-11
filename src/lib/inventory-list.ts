@@ -75,9 +75,21 @@ function salePriceLabel(value?: string | null) {
   return formatCostWon(n);
 }
 
-function sortKey(inboundDate: string | null, title: string) {
-  const inbound = inboundDate?.replace(/\D/g, "") ?? "";
-  return `${inbound ? `1${inbound}` : "0"}:${title}`;
+function parseWonAmount(value?: string | null) {
+  if (!value) return 0;
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return 0;
+  const n = Number(digits);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function compareHighValueFirst(
+  a: { cost: number; sale: number; title: string },
+  b: { cost: number; sale: number; title: string },
+) {
+  if (b.cost !== a.cost) return b.cost - a.cost;
+  if (b.sale !== a.sale) return b.sale - a.sale;
+  return a.title.localeCompare(b.title, "ko");
 }
 
 function toRow(
@@ -153,18 +165,24 @@ export async function loadInventoryListReport(): Promise<InventoryListReport> {
   if (hasUnassigned) locationNames.push(UNASSIGNED_STORAGE_LABEL);
 
   const locations = locationNames.map((location) => {
-    const atLocation = listings
-      .filter((row) => storageLocationLabel(row.storageLocation) === location)
-      .sort((a, b) =>
-        sortKey(b.inboundDate, b.title).localeCompare(
-          sortKey(a.inboundDate, a.title),
-        ),
-      );
+    const atLocation = listings.filter(
+      (row) => storageLocationLabel(row.storageLocation) === location,
+    );
 
     const statuses = STATUS_ORDER.map((status) => {
       const rows = atLocation
         .filter((row) => row.saleStatus === status)
-        .map((row, index) => toRow(row, index + 1));
+        .map((row) => ({
+          listing: row,
+          cost: resolveListingCost(row),
+          sale: parseWonAmount(row.salePrice),
+          title:
+            listingVehicleLabel(row) ||
+            row.title.trim() ||
+            row.serialNumber,
+        }))
+        .sort(compareHighValueFirst)
+        .map((row, index) => toRow(row.listing, index + 1));
       const costTotal = rows.reduce((sum, row) => sum + row.cost, 0);
       return {
         status,

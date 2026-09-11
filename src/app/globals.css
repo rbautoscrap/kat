@@ -1762,22 +1762,35 @@ main {
 
 .inventory-sheet table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
-  font-size: 11.5px;
+  font-size: 11px;
 }
+
+.inventory-sheet col.col-no { width: 4%; }
+.inventory-sheet col.col-title { width: 22%; }
+.inventory-sheet col.col-cat { width: 8%; }
+.inventory-sheet col.col-sn { width: 10%; }
+.inventory-sheet col.col-vin { width: 16%; }
+.inventory-sheet col.col-car { width: 10%; }
+.inventory-sheet col.col-date { width: 8%; }
+.inventory-sheet col.col-days { width: 6%; }
+.inventory-sheet col.col-money { width: 8%; }
 
 .inventory-sheet th,
 .inventory-sheet td {
   border: 1px solid #e5e5e5;
-  padding: 0.32rem 0.4rem;
+  padding: 0.28rem 0.32rem;
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
+  overflow: hidden;
 }
 
 .inventory-sheet thead th {
   background: #f5f5f5;
   font-weight: 700;
   color: #404040;
+  white-space: nowrap;
 }
 
 .inventory-sheet .is-num {
@@ -1788,7 +1801,19 @@ main {
 
 .inventory-sheet .is-title {
   font-weight: 650;
+  overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+.inventory-sheet .is-cat,
+.inventory-sheet .is-date {
+  white-space: nowrap;
+}
+
+.inventory-sheet .is-code {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  font-variant-numeric: tabular-nums;
 }
 
 @media print {
