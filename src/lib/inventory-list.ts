@@ -109,6 +109,7 @@ function toRow(
     categoryLabel: ADMIN_CATEGORY_LABELS[listing.category],
     inboundDate: formatRegistrationDate(listing.inboundDate) || "—",
     days: days == null ? "—" : `${days.toLocaleString("ko-KR")}일`,
+    daysAlert: days != null && days > 30,
     costLabel: moneyLabel(cost),
     cost,
     salePriceLabel: salePriceLabel(listing.salePrice),

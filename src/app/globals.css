@@ -1836,6 +1836,11 @@ main {
   white-space: nowrap;
 }
 
+.inventory-sheet .is-days-alert {
+  color: #dc2626;
+  font-weight: 700;
+}
+
 .inventory-sheet .is-title {
   font-weight: 650;
   word-break: keep-all;
@@ -1971,9 +1976,14 @@ main {
     padding: 0.1rem 0.16rem;
   }
 
-  .inventory-sheet thead th {
+  .inventory-sheet thead th,
+  .inventory-sheet .is-days-alert {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  .inventory-sheet .is-days-alert {
+    color: #dc2626 !important;
   }
 
   .inventory-sheet .inventory-title-link {

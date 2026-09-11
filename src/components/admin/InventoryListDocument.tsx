@@ -133,7 +133,9 @@ function StatusTable({ block }: { block: InventoryStatusBlock }) {
               {row.vehicleNumber}
             </td>
             <td className="is-date">{row.inboundDate}</td>
-            <td className="is-num">{row.days}</td>
+            <td className={`is-num${row.daysAlert ? " is-days-alert" : ""}`}>
+              {row.days}
+            </td>
             <td className="is-num">{row.costLabel}</td>
             <td className="is-num">{row.salePriceLabel}</td>
           </tr>
