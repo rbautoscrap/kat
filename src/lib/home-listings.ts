@@ -82,9 +82,7 @@ export async function loadHomeListings(
           row.category === "CAR_LISTINGS" ||
           row.category === "CONSIGNMENT_SALE",
       ),
-    )
-      .slice(0, HOME_SECTION_LIMIT)
-      .map((row) => row.id);
+    ).slice(0, HOME_SECTION_LIMIT);
     const auctionIds = pickIds(rows, "LIVE_AUCTION");
     const partsIds = pickIds(rows, "USED_PARTS");
     const pageIds = [...standByIds, ...carIds, ...auctionIds, ...partsIds];
