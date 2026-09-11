@@ -631,7 +631,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                   </td>
                   <td
                     className={`${adminTdClass} text-center text-[12.5px] tabular-nums`}
-                    title="입고일 기준 누적일"
+                    title="낙찰일 기준 누적일"
                   >
                     {days != null ? (
                       <span
@@ -644,7 +644,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                         {days.toLocaleString("ko-KR")}
                       </span>
                     ) : (
-                      <span className="text-neutral-400" title="입고일자 미입력">
+                      <span className="text-neutral-400" title="낙찰일자 미입력">
                         —
                       </span>
                     )}

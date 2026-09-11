@@ -107,7 +107,7 @@ export default async function AdminOverviewPage() {
       label: "악성재고",
       value: `${inventory.stagnantCount.toLocaleString("ko-KR")}대`,
       href: "/admin/listings?sale=AVAILABLE&sort=days_desc",
-      note: `입고 ${STAGNANT_INBOUND_DAYS}일 이상`,
+      note: `낙찰 ${STAGNANT_INBOUND_DAYS}일 이상`,
       danger: true,
     },
     {

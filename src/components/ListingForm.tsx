@@ -471,6 +471,18 @@ export function ListingForm({
       }
     }
 
+    if (!partsMode && !listing) {
+      const inboundDigits = String(data.get("inboundDate") ?? "").replace(
+        /\D/g,
+        "",
+      );
+      if (inboundDigits.length !== 8) {
+        setError("낙찰일자를 8자리 숫자(예: 20260719)로 입력해 주세요.");
+        setPending(false);
+        return;
+      }
+    }
+
     if (isStockVehicleCategory(category)) {
       const auctionDigits = String(data.get("auctionPrice") ?? "").replace(
         /\D/g,
@@ -986,6 +998,7 @@ export function ListingForm({
             </label>
             <InboundDateFields
               inboundDate={listing?.inboundDate ?? undefined}
+              required={!listing}
             />
             <InternalCostFields
               auctionPrice={listing?.auctionPrice ?? undefined}
@@ -1567,7 +1580,13 @@ function calcDaysFromInbound(inboundDigits: string): string {
   return String(Math.max(0, Math.floor(diffMs / 86_400_000)));
 }
 
-function InboundDateFields({ inboundDate }: { inboundDate?: string }) {
+function InboundDateFields({
+  inboundDate,
+  required = false,
+}: {
+  inboundDate?: string;
+  required?: boolean;
+}) {
   const [inbound, setInbound] = useState(() =>
     digitsOnly(inboundDate ?? "").slice(0, 8),
   );
@@ -1577,13 +1596,17 @@ function InboundDateFields({ inboundDate }: { inboundDate?: string }) {
     <>
       <label className="block text-sm">
         <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
-          입고일자
+          낙찰일자
+          {required ? <span className="ml-1 text-red-500">*</span> : null}
         </span>
         <input
           name="inboundDate"
           type="text"
           inputMode="numeric"
           autoComplete="off"
+          required={required}
+          minLength={required ? 8 : undefined}
+          maxLength={8}
           placeholder="예: 20260719"
           value={inbound}
           onChange={(e) => setInbound(digitsOnly(e.target.value).slice(0, 8))}
@@ -1594,7 +1617,7 @@ function InboundDateFields({ inboundDate }: { inboundDate?: string }) {
         <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
           누적일
           <span className="ml-1.5 font-normal text-neutral-400">
-            (입고일 ~ 오늘)
+            (낙찰일 ~ 오늘)
           </span>
         </span>
         <input type="hidden" name="accumulatedDays" value={days} />
@@ -1604,7 +1627,7 @@ function InboundDateFields({ inboundDate }: { inboundDate?: string }) {
           autoComplete="off"
           readOnly
           tabIndex={-1}
-          placeholder="입고일자 입력 시 자동 계산"
+          placeholder="낙찰일자 입력 시 자동 계산"
           value={days === "" ? "" : `${days}일`}
           className="h-10 w-full cursor-default rounded-md border border-neutral-200 bg-neutral-100 px-3 text-[13.5px] tracking-wide text-neutral-800 outline-none"
         />

@@ -21,9 +21,14 @@ export async function POST(request: Request) {
 
   try {
     const formData = await request.formData();
-    const data = await withPublicNotesTranslation(
-      formDataToListingInput(formData),
-    );
+    const parsed = formDataToListingInput(formData);
+    if (parsed.category !== "USED_PARTS" && !parsed.inboundDate) {
+      return NextResponse.json(
+        { error: "낙찰일자를 입력해 주세요." },
+        { status: 400 },
+      );
+    }
+    const data = await withPublicNotesTranslation(parsed);
     if (!canCreateListing(dbUser.role, data.category)) {
       return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
     }

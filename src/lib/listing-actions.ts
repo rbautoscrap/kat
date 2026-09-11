@@ -212,7 +212,7 @@ const listingFieldsSchema = z.object({
     })
     .refine(
       (v) => !v || v.length === 8,
-      "입고일자는 8자리 숫자(YYYYMMDD)로 입력해 주세요.",
+      "낙찰일자는 8자리 숫자(YYYYMMDD)로 입력해 주세요.",
     ),
   auctionPrice: optionalDigits,
   incidentalCost: optionalDigits,

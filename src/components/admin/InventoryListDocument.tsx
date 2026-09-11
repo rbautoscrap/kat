@@ -119,7 +119,7 @@ function StatusTable({ block }: { block: InventoryStatusBlock }) {
           <th>S/N</th>
           <th>VIN</th>
           <th>차량번호</th>
-          <th>입고일</th>
+          <th>낙찰일</th>
           <th className="is-num">누적</th>
           <th className="is-num">원가</th>
           <th className="is-num">판매가</th>
