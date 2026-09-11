@@ -44,7 +44,7 @@ import {
   youtubeEmbedUrl,
 } from "@/lib/listings";
 import { PRICE_INQUIRY_WHATSAPP } from "@/lib/contact";
-import { convertKrw, getKrwFxRates } from "@/lib/fx-rates";
+import { convertKrw, getFxBoardQuote, getKrwFxRates } from "@/lib/fx-rates";
 import { displayAccumulatedDays } from "@/lib/listing-actions";
 import { recordListingView } from "@/lib/listing-views";
 import { isPriceInquiryHoliday } from "@/lib/site-settings";
@@ -381,13 +381,24 @@ export default async function ListingDetailPage({ params }: Props) {
       ];
   const saleWon = parseSalePriceWon(listing.salePrice);
   const salePriceLabel = formatSalePriceDisplay(listing.salePrice);
+  const costWon =
+    adminView && !isParts ? parseSalePriceWon(listing.costPrice) : 0;
   const fxRates = saleWon > 0 ? await getKrwFxRates() : null;
+  const liveUsdPerWon =
+    costWon > 0 ? (await getFxBoardQuote())?.usd ?? 0 : 0;
   const saleUsdLabel = fxRates
     ? formatSalePriceUsd(convertKrw(saleWon, fxRates.usdPerKrw))
     : "";
   const saleEurLabel = fxRates
     ? formatSalePriceEur(convertKrw(saleWon, fxRates.eurPerKrw))
     : "";
+  const costUsdAmount =
+    costWon > 0 && liveUsdPerWon > 0
+      ? costWon / liveUsdPerWon
+      : costWon > 0 && fxRates
+        ? convertKrw(costWon, fxRates.usdPerKrw)
+        : 0;
+  const costUsdLabel = formatSalePriceUsd(costUsdAmount);
   const notesValue =
     formatNotesDisplay(listing.damages, listing.damagesEn) || "—";
   const accumulatedDays = displayAccumulatedDays(listing);
@@ -456,6 +467,7 @@ export default async function ListingDetailPage({ params }: Props) {
         <AdminListingCostPanel
           listingId={listing.id}
           costPrice={listing.costPrice}
+          costUsdLabel={costUsdLabel || null}
           accumulatedDays={accumulatedDays}
           viewCount={listing.viewCount}
           showCostFields={!isParts}

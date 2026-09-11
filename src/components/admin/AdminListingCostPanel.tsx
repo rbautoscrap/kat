@@ -23,6 +23,8 @@ function formatMarginWon(cost: number, rate: number) {
 type Props = {
   listingId: string;
   costPrice?: string | null;
+  /** Live FX conversion of costPrice, already formatted (e.g. US$2,168). */
+  costUsdLabel?: string | null;
   accumulatedDays?: number | null;
   /** Unique detail-page views (IP / member deduped). Admin-only. */
   viewCount?: number | null;
@@ -35,6 +37,7 @@ type Props = {
 export function AdminListingCostPanel({
   listingId,
   costPrice,
+  costUsdLabel = null,
   accumulatedDays,
   viewCount = 0,
   showCostFields = true,
@@ -60,6 +63,11 @@ export function AdminListingCostPanel({
                 <span className="font-semibold tabular-nums text-red-600">
                   {formatWon(costPrice)}
                 </span>
+                {costUsdLabel ? (
+                  <span className="font-semibold tabular-nums text-blue-600">
+                    {costUsdLabel}
+                  </span>
+                ) : null}
               </p>
               <span
                 className="hidden h-3 w-px bg-amber-200 sm:block"
