@@ -1747,6 +1747,21 @@ main {
   font-weight: 700;
 }
 
+.inventory-category {
+  margin-bottom: 0.7rem;
+}
+
+.inventory-category h4 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.7rem;
+  margin: 0 0 0.3rem;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #262626;
+}
+
 .inventory-count {
   font-size: 12px;
   font-weight: 600;

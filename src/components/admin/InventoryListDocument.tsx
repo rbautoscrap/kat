@@ -21,7 +21,7 @@ export function InventoryListDocument({ report }: Props) {
         <p className="inventory-brand">KOREA AUTO TRADE</p>
         <h1>재고 리스트</h1>
         <p className="inventory-meta">
-          충주·진천 입고지별 · 판매중 / 예약완료 / 판매완료 · 원가 고액순
+          충주·진천 입고지별 · 판매중 / 예약완료 / 판매완료 · 구분별 · 원가 고액순
           <span> · </span>
           {report.generatedAt}
         </p>
@@ -44,53 +44,61 @@ export function InventoryListDocument({ report }: Props) {
                 {block.label}
                 <CountLabel count={block.count} cost={block.costTotal} />
               </h3>
-              {block.rows.length === 0 ? (
+              {block.categories.length === 0 ? (
                 <p className="inventory-empty">해당 없음</p>
               ) : (
-                <table>
-                  <colgroup>
-                    <col className="col-no" />
-                    <col className="col-title" />
-                    <col className="col-cat" />
-                    <col className="col-sn" />
-                    <col className="col-vin" />
-                    <col className="col-car" />
-                    <col className="col-date" />
-                    <col className="col-days" />
-                    <col className="col-money" />
-                    <col className="col-money" />
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      <th className="is-num">No</th>
-                      <th>차량명</th>
-                      <th>구분</th>
-                      <th>S/N</th>
-                      <th>VIN</th>
-                      <th>차량번호</th>
-                      <th>입고일</th>
-                      <th className="is-num">누적</th>
-                      <th className="is-num">원가</th>
-                      <th className="is-num">판매가</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {block.rows.map((row) => (
-                      <tr key={row.id}>
-                        <td className="is-num">{row.no}</td>
-                        <td className="is-title">{row.title}</td>
-                        <td className="is-cat">{row.categoryLabel}</td>
-                        <td className="is-code">{row.serialNumber}</td>
-                        <td className="is-code">{row.vin}</td>
-                        <td className="is-code">{row.vehicleNumber}</td>
-                        <td className="is-date">{row.inboundDate}</td>
-                        <td className="is-num">{row.days}</td>
-                        <td className="is-num">{row.costLabel}</td>
-                        <td className="is-num">{row.salePriceLabel}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                block.categories.map((group) => (
+                  <div key={group.category} className="inventory-category">
+                    <h4>
+                      {group.label}
+                      <CountLabel count={group.count} cost={group.costTotal} />
+                    </h4>
+                    <table>
+                      <colgroup>
+                        <col className="col-no" />
+                        <col className="col-title" />
+                        <col className="col-cat" />
+                        <col className="col-sn" />
+                        <col className="col-vin" />
+                        <col className="col-car" />
+                        <col className="col-date" />
+                        <col className="col-days" />
+                        <col className="col-money" />
+                        <col className="col-money" />
+                      </colgroup>
+                      <thead>
+                        <tr>
+                          <th className="is-num">No</th>
+                          <th>차량명</th>
+                          <th>구분</th>
+                          <th>S/N</th>
+                          <th>VIN</th>
+                          <th>차량번호</th>
+                          <th>입고일</th>
+                          <th className="is-num">누적</th>
+                          <th className="is-num">원가</th>
+                          <th className="is-num">판매가</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {group.rows.map((row) => (
+                          <tr key={row.id}>
+                            <td className="is-num">{row.no}</td>
+                            <td className="is-title">{row.title}</td>
+                            <td className="is-cat">{row.categoryLabel}</td>
+                            <td className="is-code">{row.serialNumber}</td>
+                            <td className="is-code">{row.vin}</td>
+                            <td className="is-code">{row.vehicleNumber}</td>
+                            <td className="is-date">{row.inboundDate}</td>
+                            <td className="is-num">{row.days}</td>
+                            <td className="is-num">{row.costLabel}</td>
+                            <td className="is-num">{row.salePriceLabel}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))
               )}
             </div>
           ))}

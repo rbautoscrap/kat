@@ -25,6 +25,12 @@ const STATUS_ORDER = [
   "SOLD",
 ] as const satisfies readonly ListingSaleStatus[];
 
+const CATEGORY_ORDER = [
+  "CAR_LISTINGS",
+  "LIVE_AUCTION",
+  "STAND_BY",
+] as const satisfies readonly ListingCategory[];
+
 export type InventoryListRow = {
   id: string;
   no: number;
@@ -40,10 +46,18 @@ export type InventoryListRow = {
   salePriceLabel: string;
 };
 
+export type InventoryCategoryBlock = {
+  category: ListingCategory;
+  label: string;
+  rows: InventoryListRow[];
+  count: number;
+  costTotal: number;
+};
+
 export type InventoryStatusBlock = {
   status: ListingSaleStatus;
   label: string;
-  rows: InventoryListRow[];
+  categories: InventoryCategoryBlock[];
   count: number;
   costTotal: number;
 };
@@ -170,26 +184,36 @@ export async function loadInventoryListReport(): Promise<InventoryListReport> {
     );
 
     const statuses = STATUS_ORDER.map((status) => {
-      const rows = atLocation
-        .filter((row) => row.saleStatus === status)
-        .map((row) => ({
-          listing: row,
-          cost: resolveListingCost(row),
-          sale: parseWonAmount(row.salePrice),
-          title:
-            listingVehicleLabel(row) ||
-            row.title.trim() ||
-            row.serialNumber,
-        }))
-        .sort(compareHighValueFirst)
-        .map((row, index) => toRow(row.listing, index + 1));
-      const costTotal = rows.reduce((sum, row) => sum + row.cost, 0);
+      const inStatus = atLocation.filter((row) => row.saleStatus === status);
+      const categories = CATEGORY_ORDER.map((category) => {
+        const rows = inStatus
+          .filter((row) => row.category === category)
+          .map((row) => ({
+            listing: row,
+            cost: resolveListingCost(row),
+            sale: parseWonAmount(row.salePrice),
+            title:
+              listingVehicleLabel(row) ||
+              row.title.trim() ||
+              row.serialNumber,
+          }))
+          .sort(compareHighValueFirst)
+          .map((row, index) => toRow(row.listing, index + 1));
+        const costTotal = rows.reduce((sum, row) => sum + row.cost, 0);
+        return {
+          category,
+          label: ADMIN_CATEGORY_LABELS[category],
+          rows,
+          count: rows.length,
+          costTotal,
+        };
+      }).filter((block) => block.count > 0);
       return {
         status,
         label: SALE_STATUS_ADMIN_LABELS[status],
-        rows,
-        count: rows.length,
-        costTotal,
+        categories,
+        count: categories.reduce((sum, block) => sum + block.count, 0),
+        costTotal: categories.reduce((sum, block) => sum + block.costTotal, 0),
       };
     });
 
