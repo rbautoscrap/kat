@@ -1,0 +1,192 @@
+import "server-only";
+
+import type { ListingCategory, ListingSaleStatus } from "@prisma/client";
+import {
+  ADMIN_CATEGORY_LABELS,
+  SALE_STATUS_ADMIN_LABELS,
+} from "@/lib/admin-labels";
+import { formatKoreaDateTime } from "@/lib/format-korea-time";
+import {
+  formatCostWon,
+  resolveListingCost,
+} from "@/lib/inventory-cost";
+import { displayAccumulatedDays } from "@/lib/listing-actions";
+import { formatRegistrationDate, listingVehicleLabel } from "@/lib/listings";
+import { prisma } from "@/lib/prisma";
+import {
+  STORAGE_LOCATIONS,
+  UNASSIGNED_STORAGE_LABEL,
+  storageLocationLabel,
+} from "@/lib/storage-location";
+
+const STATUS_ORDER = [
+  "AVAILABLE",
+  "RESERVED",
+  "SOLD",
+] as const satisfies readonly ListingSaleStatus[];
+
+export type InventoryListRow = {
+  id: string;
+  no: number;
+  title: string;
+  serialNumber: string;
+  vin: string;
+  vehicleNumber: string;
+  categoryLabel: string;
+  inboundDate: string;
+  days: string;
+  costLabel: string;
+  cost: number;
+  salePriceLabel: string;
+};
+
+export type InventoryStatusBlock = {
+  status: ListingSaleStatus;
+  label: string;
+  rows: InventoryListRow[];
+  count: number;
+  costTotal: number;
+};
+
+export type InventoryLocationBlock = {
+  location: string;
+  statuses: InventoryStatusBlock[];
+  count: number;
+  costTotal: number;
+};
+
+export type InventoryListReport = {
+  generatedAt: string;
+  locations: InventoryLocationBlock[];
+  totalCount: number;
+  totalCost: number;
+};
+
+function moneyLabel(value: number) {
+  return value > 0 ? formatCostWon(value) : "—";
+}
+
+function salePriceLabel(value?: string | null) {
+  if (!value) return "—";
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "—";
+  const n = Number(digits);
+  if (!Number.isFinite(n) || n <= 0) return "—";
+  return formatCostWon(n);
+}
+
+function sortKey(inboundDate: string | null, title: string) {
+  const inbound = inboundDate?.replace(/\D/g, "") ?? "";
+  return `${inbound ? `1${inbound}` : "0"}:${title}`;
+}
+
+function toRow(
+  listing: {
+    id: string;
+    title: string;
+    year: number;
+    make: string;
+    model: string;
+    serialNumber: string;
+    vin: string | null;
+    vehicleNumber: string | null;
+    category: ListingCategory;
+    inboundDate: string | null;
+    accumulatedDays: string | null;
+    costPrice: string | null;
+    auctionPrice: string | null;
+    incidentalCost: string | null;
+    salePrice: string | null;
+  },
+  no: number,
+): InventoryListRow {
+  const days = displayAccumulatedDays(listing);
+  const cost = resolveListingCost(listing);
+  const title =
+    listingVehicleLabel(listing) || listing.title.trim() || listing.serialNumber;
+  return {
+    id: listing.id,
+    no,
+    title,
+    serialNumber: listing.serialNumber,
+    vin: listing.vin?.trim() || "—",
+    vehicleNumber: listing.vehicleNumber?.trim() || "—",
+    categoryLabel: ADMIN_CATEGORY_LABELS[listing.category],
+    inboundDate: formatRegistrationDate(listing.inboundDate) || "—",
+    days: days == null ? "—" : `${days.toLocaleString("ko-KR")}일`,
+    costLabel: moneyLabel(cost),
+    cost,
+    salePriceLabel: salePriceLabel(listing.salePrice),
+  };
+}
+
+export async function loadInventoryListReport(): Promise<InventoryListReport> {
+  const listings = await prisma.listing.findMany({
+    where: { NOT: { category: "USED_PARTS" } },
+    select: {
+      id: true,
+      title: true,
+      year: true,
+      make: true,
+      model: true,
+      serialNumber: true,
+      vin: true,
+      vehicleNumber: true,
+      category: true,
+      saleStatus: true,
+      storageLocation: true,
+      inboundDate: true,
+      accumulatedDays: true,
+      costPrice: true,
+      auctionPrice: true,
+      incidentalCost: true,
+      salePrice: true,
+    },
+  });
+
+  const locationNames = ["충주사업소", "진천사업소"].filter((name) =>
+    STORAGE_LOCATIONS.includes(name as (typeof STORAGE_LOCATIONS)[number]),
+  );
+  const hasUnassigned = listings.some(
+    (row) => storageLocationLabel(row.storageLocation) === UNASSIGNED_STORAGE_LABEL,
+  );
+  if (hasUnassigned) locationNames.push(UNASSIGNED_STORAGE_LABEL);
+
+  const locations = locationNames.map((location) => {
+    const atLocation = listings
+      .filter((row) => storageLocationLabel(row.storageLocation) === location)
+      .sort((a, b) =>
+        sortKey(b.inboundDate, b.title).localeCompare(
+          sortKey(a.inboundDate, a.title),
+        ),
+      );
+
+    const statuses = STATUS_ORDER.map((status) => {
+      const rows = atLocation
+        .filter((row) => row.saleStatus === status)
+        .map((row, index) => toRow(row, index + 1));
+      const costTotal = rows.reduce((sum, row) => sum + row.cost, 0);
+      return {
+        status,
+        label: SALE_STATUS_ADMIN_LABELS[status],
+        rows,
+        count: rows.length,
+        costTotal,
+      };
+    });
+
+    return {
+      location,
+      statuses,
+      count: statuses.reduce((sum, block) => sum + block.count, 0),
+      costTotal: statuses.reduce((sum, block) => sum + block.costTotal, 0),
+    };
+  });
+
+  return {
+    generatedAt: formatKoreaDateTime(new Date()),
+    locations,
+    totalCount: locations.reduce((sum, block) => sum + block.count, 0),
+    totalCost: locations.reduce((sum, block) => sum + block.costTotal, 0),
+  };
+}

@@ -427,7 +427,15 @@ export default async function AdminListingsPage({ searchParams }: Props) {
             </span>
           </p>
         </div>
-        <NewListingModal />
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/admin/inventory"
+            className="inline-flex h-9 items-center rounded-md border border-neutral-300 bg-white px-3 text-[13px] font-medium text-neutral-800 transition hover:bg-neutral-50"
+          >
+            재고 PDF
+          </Link>
+          <NewListingModal />
+        </div>
       </div>
 
       <AdminListingSearch

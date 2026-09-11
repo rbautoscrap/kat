@@ -1677,6 +1677,120 @@ main {
   color: #8a8a8a;
 }
 
+.inventory-sheet {
+  padding: 1.25rem 1.35rem 1.5rem;
+  color: #171717;
+}
+
+.inventory-head {
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 2px solid #171717;
+}
+
+.inventory-brand {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #737373;
+}
+
+.inventory-head h1 {
+  margin: 0.2rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+
+.inventory-meta,
+.inventory-total {
+  margin: 0.35rem 0 0;
+  font-size: 12.5px;
+  color: #525252;
+}
+
+.inventory-total {
+  font-weight: 650;
+  color: #171717;
+}
+
+.inventory-location {
+  break-inside: avoid;
+  margin-top: 1.35rem;
+}
+
+.inventory-location h2,
+.inventory-status h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.75rem;
+  margin: 0;
+}
+
+.inventory-location h2 {
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #d4d4d4;
+  font-size: 1.05rem;
+  font-weight: 750;
+}
+
+.inventory-status {
+  margin-bottom: 0.95rem;
+}
+
+.inventory-status h3 {
+  margin-bottom: 0.4rem;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.inventory-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #525252;
+}
+
+.inventory-empty {
+  margin: 0 0 0.4rem;
+  padding: 0.45rem 0.2rem;
+  font-size: 12.5px;
+  color: #737373;
+}
+
+.inventory-sheet table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+
+.inventory-sheet th,
+.inventory-sheet td {
+  border: 1px solid #e5e5e5;
+  padding: 0.32rem 0.4rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.inventory-sheet thead th {
+  background: #f5f5f5;
+  font-weight: 700;
+  color: #404040;
+}
+
+.inventory-sheet .is-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.inventory-sheet .is-title {
+  font-weight: 650;
+  word-break: break-word;
+}
+
 @media print {
   @page {
     size: A4;
@@ -1688,7 +1802,9 @@ main {
   }
 
   .statement-print-root,
-  .statement-print-root * {
+  .statement-print-root *,
+  .inventory-print-root,
+  .inventory-print-root * {
     visibility: visible !important;
   }
 
@@ -1746,8 +1862,35 @@ main {
     overflow: visible !important;
   }
 
-  .invoice-no-print {
+  .invoice-no-print,
+  .inventory-no-print {
     display: none !important;
+  }
+
+  .inventory-print-root {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: 100%;
+    height: auto !important;
+    margin: 0;
+    padding: 0 !important;
+    border: none !important;
+    background: white !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .inventory-print-root .overflow-hidden {
+    overflow: visible !important;
+    border: none !important;
+  }
+
+  .inventory-sheet thead th {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   html,
