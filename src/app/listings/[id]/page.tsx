@@ -83,24 +83,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const origin = getPublicSiteOrigin() || "https://www.rbautotrade.com";
   const price = formatSalePriceDisplay(listing.salePrice);
-  const description = price
-    ? `${listing.title} · Special sale price ${price}`
+  const ogTitle = price
+    ? `${listing.title} · ${price}`
     : listing.title;
+  const description = price
+    ? `${listing.title} from Korea. Asking ${price}. Deposit reserves the unit. How to buy: WhatsApp → invoice → deposit → ship.`
+    : `${listing.title} from Korea. Ask price on WhatsApp. How to buy in 4 steps.`;
   const image = absoluteMediaUrl(listing.images[0]?.url, origin);
+  const pageUrl = `${origin}/listings/${id}`;
 
   return {
     title: `${listing.title} | KOREA AUTO TRADE`,
     description,
     openGraph: {
-      title: listing.title,
+      title: ogTitle,
       description,
-      url: `${origin}/listings/${id}`,
+      url: pageUrl,
+      siteName: "KOREA AUTO TRADE",
+      locale: "en_US",
       type: "website",
-      images: image ? [{ url: image }] : undefined,
+      images: image ? [{ url: image, alt: listing.title }] : undefined,
     },
     twitter: {
       card: image ? "summary_large_image" : "summary",
-      title: listing.title,
+      title: ogTitle,
       description,
       images: image ? [image] : undefined,
     },
@@ -413,8 +419,41 @@ export default async function ListingDetailPage({ params }: Props) {
       : null;
   const showTopAuctionCountdown = Boolean(liveAuctionEndsAt) && !offerPanelVisible;
 
+  const listingJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Vehicle",
+    name: listing.title,
+    brand: listing.make || undefined,
+    model: listing.model || undefined,
+    vehicleIdentificationNumber: listing.vin?.trim() || undefined,
+    image: listing.images
+      .map((img) => absoluteMediaUrl(img.url, getPublicSiteOrigin() || "https://www.rbautotrade.com"))
+      .filter(Boolean)
+      .slice(0, 5),
+    url: `${getPublicSiteOrigin() || "https://www.rbautotrade.com"}/listings/${listing.id}`,
+    offers:
+      saleWon > 0
+        ? {
+            "@type": "Offer",
+            priceCurrency: "KRW",
+            price: saleWon,
+            availability:
+              listing.saleStatus === "SOLD"
+                ? "https://schema.org/SoldOut"
+                : listing.saleStatus === "RESERVED"
+                  ? "https://schema.org/PreOrder"
+                  : "https://schema.org/InStock",
+            url: `${getPublicSiteOrigin() || "https://www.rbautotrade.com"}/listings/${listing.id}`,
+          }
+        : undefined,
+  };
+
   return (
     <div className="site-container py-6 sm:py-7" lang="en">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(listingJsonLd) }}
+      />
       <div className="mb-3">
         <BackButton href={CATEGORY_PATHS[listing.category]} />
       </div>

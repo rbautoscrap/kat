@@ -24,7 +24,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "KOREA AUTO TRADE",
-  description: "Vehicle trading platform",
+  description:
+    "Korean salvage and used vehicles for export. Live auction, car listings, and stand-by stock. Asking price on the page. WhatsApp to buy.",
   icons: {
     // Version query busts Cloudflare/browser cache of the old Vercel icon.
     icon: [

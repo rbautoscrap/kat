@@ -33,6 +33,7 @@ const nav = [
     label: "Used Parts",
     category: "USED_PARTS",
   },
+  { href: "/how-to-buy", label: "How to buy" },
   { href: "/about-us", label: "About Us" },
 ];
 

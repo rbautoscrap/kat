@@ -92,12 +92,30 @@ export function ListingShareBar({
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
     const url = origin ? `${origin}${path}` : path;
-    const lines = [title.trim() || "KOREA AUTO TRADE listing"];
-    if (priceLabel?.trim()) lines.push(priceLabel.trim());
+    const headline = title.trim() || "KOREA AUTO TRADE listing";
+    const price = priceLabel?.trim() || "";
+    const lines = [headline];
+    if (price) lines.push(price);
+    lines.push("Korean salvage stock · deposit reserves the unit");
     lines.push(url);
     const text = lines.join("\n");
-    return { url, text };
+    const quote = price
+      ? `${headline} — ${price}. Korean stock, ready to ship.`
+      : `${headline}. Korean salvage stock. Ask on WhatsApp.`;
+    return { url, text, quote };
   }, [path, priceLabel, title]);
+
+  function shareUrlWithUtm(source: string) {
+    try {
+      const next = new URL(share.url, window.location.origin);
+      next.searchParams.set("utm_source", source);
+      next.searchParams.set("utm_medium", "share");
+      next.searchParams.set("utm_campaign", "listing");
+      return next.toString();
+    } catch {
+      return share.url;
+    }
+  }
 
   useEffect(() => {
     if (typeof navigator.share === "function") setCanNativeShare(true);
@@ -119,7 +137,7 @@ export function ListingShareBar({
     try {
       if (isKakaoShareReady()) {
         await shareToKakaoTalk({
-          url: share.url,
+          url: shareUrlWithUtm("kakao"),
           title,
           description: priceLabel?.trim() || "KOREA AUTO TRADE listing",
           imageUrl,
@@ -156,8 +174,18 @@ export function ListingShareBar({
     }
   }
 
-  const encodedUrl = encodeURIComponent(share.url);
-  const encodedText = encodeURIComponent(share.text);
+  const facebookHref = (() => {
+    const u = new URL("https://www.facebook.com/sharer/sharer.php");
+    u.searchParams.set("u", shareUrlWithUtm("facebook"));
+    u.searchParams.set("quote", share.quote);
+    u.searchParams.set("hashtag", "#KoreaAutoTrade");
+    return u.toString();
+  })();
+  const xHref = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrlWithUtm("x"))}&text=${encodeURIComponent(share.quote)}&hashtags=KoreaAutoTrade,SalvageCars`;
+  const telegramHref = `https://t.me/share/url?url=${encodeURIComponent(shareUrlWithUtm("telegram"))}&text=${encodeURIComponent(share.quote)}`;
+  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(
+    `${share.quote}\n${shareUrlWithUtm("whatsapp")}`,
+  )}`;
 
   return (
     <div className="listing-share">
@@ -165,7 +193,7 @@ export function ListingShareBar({
       <div className="listing-share-actions">
         <a
           className="listing-share-btn is-whatsapp"
-          href={`https://wa.me/?text=${encodedText}`}
+          href={whatsappHref}
           target="_blank"
           rel="noopener noreferrer"
           title="Share on WhatsApp"
@@ -175,7 +203,7 @@ export function ListingShareBar({
         </a>
         <a
           className="listing-share-btn is-facebook"
-          href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
+          href={facebookHref}
           target="_blank"
           rel="noopener noreferrer"
           title="Share on Facebook"
@@ -204,7 +232,7 @@ export function ListingShareBar({
         </button>
         <a
           className="listing-share-btn is-telegram"
-          href={`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`}
+          href={telegramHref}
           target="_blank"
           rel="noopener noreferrer"
           title="Share on Telegram"
@@ -214,7 +242,7 @@ export function ListingShareBar({
         </a>
         <a
           className="listing-share-btn is-x"
-          href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(title)}`}
+          href={xHref}
           target="_blank"
           rel="noopener noreferrer"
           title="Share on X"
