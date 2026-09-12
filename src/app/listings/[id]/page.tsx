@@ -6,6 +6,7 @@ import { ImageGallery } from "@/components/ImageGallery";
 import { ListingOwnerActions } from "@/components/ListingOwnerActions";
 import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl";
 import { PurchaseOfferPanel } from "@/components/PurchaseOfferPanel";
+import { AdminCopyValueButton } from "@/components/admin/AdminCopyValueButton";
 import { AdminListingCostPanel } from "@/components/admin/AdminListingCostPanel";
 import { AdminPurchaseOffersPanel } from "@/components/admin/AdminPurchaseOffersPanel";
 import { DownloadListingImagesButton } from "@/components/admin/DownloadListingImagesButton";
@@ -366,7 +367,18 @@ export default async function ListingDetailPage({ params }: Props) {
           label: "First Registration",
           value: formatRegistrationDate(listing.registrationDate) || "—",
         },
-        { label: "VIN", value: listing.vin || "—" },
+        {
+          label: "VIN",
+          value:
+            listing.vin && adminView ? (
+              <span className="inline-flex min-w-0 items-center gap-1.5">
+                <span className="min-w-0 break-words">{listing.vin}</span>
+                <AdminCopyValueButton value={listing.vin} label="차대번호" />
+              </span>
+            ) : (
+              listing.vin || "—"
+            ),
+        },
         { label: "Engine Mark", value: listing.engineMark || "—" },
         {
           label: "Displacement",
@@ -459,9 +471,14 @@ export default async function ListingDetailPage({ params }: Props) {
       </div>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-2.5">
         <div className="min-w-0">
-          <h1 className="site-heading min-w-0 max-w-4xl break-words text-[1.25rem] text-neutral-800 sm:text-[1.4rem]">
-            {listing.title}
-          </h1>
+          <div className="flex min-w-0 max-w-4xl items-start gap-1.5">
+            <h1 className="site-heading min-w-0 break-words text-[1.25rem] text-neutral-800 sm:text-[1.4rem]">
+              {listing.title}
+            </h1>
+            {adminView ? (
+              <AdminCopyValueButton value={listing.title} label="매물명" />
+            ) : null}
+          </div>
           {adminView ? (
             <div className="mt-2">
               <ListingSaleStatusControl

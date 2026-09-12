@@ -1910,6 +1910,25 @@ main {
   color: #2563eb;
 }
 
+.admin-copy-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #a3a3a3;
+  cursor: pointer;
+}
+
+.admin-copy-value:hover {
+  color: #171717;
+}
+
 .inventory-sheet .is-title.is-move-request,
 .inventory-sheet .inventory-title-link.is-move-request {
   color: #2563eb;
