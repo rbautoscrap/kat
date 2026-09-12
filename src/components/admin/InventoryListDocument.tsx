@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type {
   InventoryListReport,
   InventoryListRow,
@@ -12,6 +12,19 @@ type SortDir = "asc" | "desc";
 type LocationSort = { key: SortKey; dir: SortDir };
 
 const DEFAULT_SORT: LocationSort = { key: "cost", dir: "desc" };
+const JINCHEON_LOCATION = "진천사업소";
+const MOVE_REQUEST_KEY = "kat-inventory-move-chungju";
+
+function readMoveRequestIds(): string[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(MOVE_REQUEST_KEY) ?? "[]");
+    return Array.isArray(parsed)
+      ? parsed.filter((id): id is string => typeof id === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
 
 function sortBlock(block: InventoryStatusBlock, sort: LocationSort): InventoryStatusBlock {
   const rows = [...block.rows].sort((a, b) => compareRows(a, b, sort));
@@ -228,7 +241,37 @@ function ConsignmentIcon() {
   );
 }
 
-function StatusTable({ block }: { block: InventoryStatusBlock }) {
+function MoveToChungjuIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className="h-3.5 w-3.5">
+      <path
+        d="M4.4 12h12.2M13.2 8.4 16.8 12l-3.6 3.6"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M18.6 7.2V16.8"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function StatusTable({
+  block,
+  showMoveRequest = false,
+  moveRequested,
+  onToggleMove,
+}: {
+  block: InventoryStatusBlock;
+  showMoveRequest?: boolean;
+  moveRequested?: Set<string>;
+  onToggleMove?: (id: string) => void;
+}) {
   if (block.rows.length === 0) {
     return <p className="inventory-empty">해당 없음</p>;
   }
@@ -262,13 +305,30 @@ function StatusTable({ block }: { block: InventoryStatusBlock }) {
         </tr>
       </thead>
       <tbody>
-        {block.rows.map((row) => (
+        {block.rows.map((row) => {
+          const requested = Boolean(moveRequested?.has(row.id));
+          return (
           <tr key={row.id}>
             <td className="is-num">{row.no}</td>
-            <td className="is-title">
+            <td className={`is-title${requested ? " is-move-request" : ""}`}>
+              {showMoveRequest ? (
+                <button
+                  type="button"
+                  className={`inventory-move-icon inventory-no-print${requested ? " is-on" : ""}`}
+                  title={
+                    requested
+                      ? "충주 이동요청 취소"
+                      : "충주사업소로 이동요청"
+                  }
+                  aria-pressed={requested}
+                  onClick={() => onToggleMove?.(row.id)}
+                >
+                  <MoveToChungjuIcon />
+                </button>
+              ) : null}
               <a
                 href={`/listings/${row.id}`}
-                className="inventory-title-link"
+                className={`inventory-title-link${requested ? " is-move-request" : ""}`}
                 title={`${row.title} 매물 보기`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -293,7 +353,8 @@ function StatusTable({ block }: { block: InventoryStatusBlock }) {
             <td className="is-num">{row.costLabel}</td>
             <td className="is-num">{row.salePriceLabel}</td>
           </tr>
-        ))}
+          );
+        })}
       </tbody>
     </table>
   );
@@ -304,6 +365,27 @@ export function InventoryListDocument({ report }: Props) {
   const [showSold, setShowSold] = useState(false);
   const [showConsignment, setShowConsignment] = useState(false);
   const [sorts, setSorts] = useState<Record<string, LocationSort>>({});
+  const [moveRequested, setMoveRequested] = useState<Set<string>>(
+    () => new Set(),
+  );
+
+  useEffect(() => {
+    setMoveRequested(new Set(readMoveRequestIds()));
+  }, []);
+
+  function toggleMoveRequest(id: string) {
+    setMoveRequested((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      try {
+        localStorage.setItem(MOVE_REQUEST_KEY, JSON.stringify([...next]));
+      } catch {
+        /* ignore quota / private mode */
+      }
+      return next;
+    });
+  }
 
   function locationSort(location: string): LocationSort {
     return sorts[location] ?? DEFAULT_SORT;
@@ -435,7 +517,12 @@ export function InventoryListDocument({ report }: Props) {
                   cost={location.stock.costTotal}
                 />
               </h3>
-              <StatusTable block={stock} />
+              <StatusTable
+                block={stock}
+                showMoveRequest={location.location === JINCHEON_LOCATION}
+                moveRequested={moveRequested}
+                onToggleMove={toggleMoveRequest}
+              />
             </div>
 
             {showConsignment ? (
@@ -447,7 +534,12 @@ export function InventoryListDocument({ report }: Props) {
                     cost={location.consignment.costTotal}
                   />
                 </h3>
-                <StatusTable block={consignment} />
+                <StatusTable
+                  block={consignment}
+                  showMoveRequest={location.location === JINCHEON_LOCATION}
+                  moveRequested={moveRequested}
+                  onToggleMove={toggleMoveRequest}
+                />
               </div>
             ) : null}
 
@@ -460,7 +552,12 @@ export function InventoryListDocument({ report }: Props) {
                     cost={reserved.costTotal}
                   />
                 </h3>
-                <StatusTable block={reserved} />
+                <StatusTable
+                  block={reserved}
+                  showMoveRequest={location.location === JINCHEON_LOCATION}
+                  moveRequested={moveRequested}
+                  onToggleMove={toggleMoveRequest}
+                />
               </div>
             ) : null}
 
@@ -473,7 +570,12 @@ export function InventoryListDocument({ report }: Props) {
                     cost={sold.costTotal}
                   />
                 </h3>
-                <StatusTable block={sold} />
+                <StatusTable
+                  block={sold}
+                  showMoveRequest={location.location === JINCHEON_LOCATION}
+                  moveRequested={moveRequested}
+                  onToggleMove={toggleMoveRequest}
+                />
               </div>
             ) : null}
           </section>

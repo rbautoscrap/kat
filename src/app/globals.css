@@ -1883,9 +1883,36 @@ main {
 }
 
 .inventory-sheet .is-title {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
   font-weight: 650;
   word-break: keep-all;
   overflow-wrap: anywhere;
+}
+
+.inventory-move-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #a3a3a3;
+  cursor: pointer;
+}
+
+.inventory-move-icon:hover,
+.inventory-move-icon.is-on {
+  color: #2563eb;
+}
+
+.inventory-sheet .is-title.is-move-request,
+.inventory-sheet .inventory-title-link.is-move-request {
+  color: #2563eb;
 }
 
 .inventory-sheet .inventory-title-link {
@@ -1898,6 +1925,11 @@ main {
 .inventory-sheet .inventory-title-link:hover {
   color: #171717;
   text-decoration-color: #171717;
+}
+
+.inventory-sheet .inventory-title-link.is-move-request:hover {
+  color: #1d4ed8;
+  text-decoration-color: #1d4ed8;
 }
 
 .inventory-sheet .is-cat,
@@ -2030,6 +2062,13 @@ main {
   .inventory-sheet .inventory-title-link {
     color: inherit !important;
     text-decoration: none !important;
+  }
+
+  .inventory-sheet .is-title.is-move-request,
+  .inventory-sheet .inventory-title-link.is-move-request {
+    color: #2563eb !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .inventory-sheet .inventory-title-link::after {
