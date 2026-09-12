@@ -26,8 +26,17 @@ function readMoveRequestIds(): string[] {
   }
 }
 
-function sortBlock(block: InventoryStatusBlock, sort: LocationSort): InventoryStatusBlock {
-  const rows = [...block.rows].sort((a, b) => compareRows(a, b, sort));
+function sortBlock(
+  block: InventoryStatusBlock,
+  sort: LocationSort,
+  moveRequested?: Set<string>,
+): InventoryStatusBlock {
+  const rows = [...block.rows].sort((a, b) => {
+    const aMove = Boolean(moveRequested?.has(a.id));
+    const bMove = Boolean(moveRequested?.has(b.id));
+    if (aMove !== bMove) return aMove ? 1 : -1;
+    return compareRows(a, b, sort);
+  });
   return {
     ...block,
     rows: rows.map((row, index) => ({ ...row, no: index + 1 })),
@@ -485,12 +494,14 @@ export function InventoryListDocument({ report }: Props) {
 
       {splitAvailable.map((location) => {
         const sort = locationSort(location.location);
-        const stock = sortBlock(location.stock, sort);
-        const consignment = sortBlock(location.consignment, sort);
+        const stock = sortBlock(location.stock, sort, moveRequested);
+        const consignment = sortBlock(location.consignment, sort, moveRequested);
         const reserved = location.reserved
-          ? sortBlock(location.reserved, sort)
+          ? sortBlock(location.reserved, sort, moveRequested)
           : null;
-        const sold = location.sold ? sortBlock(location.sold, sort) : null;
+        const sold = location.sold
+          ? sortBlock(location.sold, sort, moveRequested)
+          : null;
 
         return (
           <section key={location.location} className="inventory-location">
