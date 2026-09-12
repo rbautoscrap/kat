@@ -6,7 +6,6 @@ import type {
   InventoryListRow,
   InventoryStatusBlock,
 } from "@/lib/inventory-list-types";
-import { downloadShippingMarkPng } from "@/components/admin/ShippingMarkDocument";
 
 type SortKey = "cost" | "days";
 type SortDir = "asc" | "desc";
@@ -242,28 +241,6 @@ function ConsignmentIcon() {
   );
 }
 
-function ShippingMarkIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden className="h-3.5 w-3.5">
-      <rect
-        x="5"
-        y="3.6"
-        width="14"
-        height="16.8"
-        rx="1.4"
-        stroke="currentColor"
-        strokeWidth="1.9"
-      />
-      <path
-        d="M8 8.2h8M8 12h8M8 15.8h5.2"
-        stroke="currentColor"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 function MoveToChungjuIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden className="h-3.5 w-3.5">
@@ -289,15 +266,11 @@ function StatusTable({
   showMoveRequest = false,
   moveRequested,
   onToggleMove,
-  shippingBusyId,
-  onDownloadShipping,
 }: {
   block: InventoryStatusBlock;
   showMoveRequest?: boolean;
   moveRequested?: Set<string>;
   onToggleMove?: (id: string) => void;
-  shippingBusyId?: string | null;
-  onDownloadShipping?: (row: InventoryListRow) => void;
 }) {
   if (block.rows.length === 0) {
     return <p className="inventory-empty">해당 없음</p>;
@@ -339,32 +312,19 @@ function StatusTable({
             <td className="is-num">{row.no}</td>
             <td className={`is-title${requested ? " is-move-request" : ""}`}>
               {showMoveRequest ? (
-                <>
-                  <button
-                    type="button"
-                    className={`inventory-move-icon inventory-no-print${requested ? " is-on" : ""}`}
-                    title={
-                      requested
-                        ? "충주 이동요청 취소"
-                        : "충주사업소로 이동요청"
-                    }
-                    aria-pressed={requested}
-                    onClick={() => onToggleMove?.(row.id)}
-                  >
-                    <MoveToChungjuIcon />
-                  </button>
-                  <button
-                    type="button"
-                    className={`inventory-move-icon inventory-ship-icon inventory-no-print${
-                      shippingBusyId === row.id ? " is-busy" : ""
-                    }`}
-                    title="충주 쉬핑마크 이미지 저장"
-                    disabled={shippingBusyId === row.id}
-                    onClick={() => onDownloadShipping?.(row)}
-                  >
-                    <ShippingMarkIcon />
-                  </button>
-                </>
+                <button
+                  type="button"
+                  className={`inventory-move-icon inventory-no-print${requested ? " is-on" : ""}`}
+                  title={
+                    requested
+                      ? "충주 이동요청 취소"
+                      : "충주사업소로 이동요청"
+                  }
+                  aria-pressed={requested}
+                  onClick={() => onToggleMove?.(row.id)}
+                >
+                  <MoveToChungjuIcon />
+                </button>
               ) : null}
               <a
                 href={`/listings/${row.id}`}
@@ -408,23 +368,10 @@ export function InventoryListDocument({ report }: Props) {
   const [moveRequested, setMoveRequested] = useState<Set<string>>(
     () => new Set(),
   );
-  const [shippingBusyId, setShippingBusyId] = useState<string | null>(null);
 
   useEffect(() => {
     setMoveRequested(new Set(readMoveRequestIds()));
   }, []);
-
-  async function saveShippingMark(row: InventoryListRow) {
-    if (shippingBusyId) return;
-    setShippingBusyId(row.id);
-    try {
-      await downloadShippingMarkPng(row);
-    } catch {
-      window.alert("쉬핑마크 이미지를 만들지 못했습니다. 다시 시도해 주세요.");
-    } finally {
-      setShippingBusyId(null);
-    }
-  }
 
   function toggleMoveRequest(id: string) {
     setMoveRequested((prev) => {
@@ -575,8 +522,6 @@ export function InventoryListDocument({ report }: Props) {
                 showMoveRequest={location.location === JINCHEON_LOCATION}
                 moveRequested={moveRequested}
                 onToggleMove={toggleMoveRequest}
-                shippingBusyId={shippingBusyId}
-                onDownloadShipping={saveShippingMark}
               />
             </div>
 
@@ -594,8 +539,6 @@ export function InventoryListDocument({ report }: Props) {
                   showMoveRequest={location.location === JINCHEON_LOCATION}
                   moveRequested={moveRequested}
                   onToggleMove={toggleMoveRequest}
-                  shippingBusyId={shippingBusyId}
-                  onDownloadShipping={saveShippingMark}
                 />
               </div>
             ) : null}
@@ -614,8 +557,6 @@ export function InventoryListDocument({ report }: Props) {
                   showMoveRequest={location.location === JINCHEON_LOCATION}
                   moveRequested={moveRequested}
                   onToggleMove={toggleMoveRequest}
-                  shippingBusyId={shippingBusyId}
-                  onDownloadShipping={saveShippingMark}
                 />
               </div>
             ) : null}
@@ -634,8 +575,6 @@ export function InventoryListDocument({ report }: Props) {
                   showMoveRequest={location.location === JINCHEON_LOCATION}
                   moveRequested={moveRequested}
                   onToggleMove={toggleMoveRequest}
-                  shippingBusyId={shippingBusyId}
-                  onDownloadShipping={saveShippingMark}
                 />
               </div>
             ) : null}
