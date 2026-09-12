@@ -3087,3 +3087,72 @@ main {
     print-color-adjust: exact;
   }
 }
+
+.shipping-mark-sheet {
+  box-sizing: border-box;
+  width: 1600px;
+  min-height: 980px;
+  padding: 48px 56px 52px;
+  background: #fff;
+  color: #111;
+  border: 10px solid #111;
+}
+
+.shipping-mark-brand {
+  margin: 0 0 36px;
+  padding-bottom: 22px;
+  border-bottom: 6px solid #111;
+  font-size: 54px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.shipping-mark-fields {
+  margin: 0;
+}
+
+.shipping-mark-fields > div + div {
+  margin-top: 28px;
+}
+
+.shipping-mark-fields dt {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #404040;
+}
+
+.shipping-mark-fields dd {
+  margin: 0;
+  font-size: 44px;
+  font-weight: 750;
+  line-height: 1.25;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.shipping-mark-fields dd.is-code {
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.shipping-mark-fields dd.is-dest {
+  font-size: 42px;
+}
+
+.shipping-mark-fields dd.is-dest strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 72px;
+  font-weight: 800;
+}
+
+.inventory-ship-icon:hover,
+.inventory-ship-icon.is-busy {
+  color: #171717;
+}
