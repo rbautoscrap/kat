@@ -10,7 +10,6 @@ import { AdminCopyValueButton } from "@/components/admin/AdminCopyValueButton";
 import { AdminListingCostPanel } from "@/components/admin/AdminListingCostPanel";
 import { AdminPurchaseOffersPanel } from "@/components/admin/AdminPurchaseOffersPanel";
 import { DownloadListingImagesButton } from "@/components/admin/DownloadListingImagesButton";
-import { ExportEstimatePanel } from "@/components/ExportEstimatePanel";
 import { AuctionCountdown } from "@/components/AuctionCountdown";
 import { LiveAuctionGatePanel } from "@/components/LiveAuctionGatePanel";
 import { ListingContactLinks } from "@/components/ListingContactLinks";
@@ -613,19 +612,6 @@ export default async function ListingDetailPage({ params }: Props) {
           </div>
         </div>
       </div>
-
-      {!isParts ? (
-        <ExportEstimatePanel
-          year={listing.year}
-          saleWon={saleWon}
-          usdPerKrw={fxRates?.usdPerKrw ?? 0}
-          title={listing.title}
-          vin={listing.vin}
-          whatsappNumber={
-            holidayMode ? listing.whatsappNumber : PRICE_INQUIRY_WHATSAPP
-          }
-        />
-      ) : null}
 
       {/* Guests see nothing. Members see form or their own offer only. */}
       {offerPanelVisible ? (
