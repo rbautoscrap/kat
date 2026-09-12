@@ -14,6 +14,7 @@ import { ADMIN_CATEGORY_LABELS } from "@/lib/admin-labels";
 import { compressImagesForUpload } from "@/lib/browser-compress-image";
 import { DEFAULT_LISTING_WHATSAPP } from "@/lib/contact";
 import {
+  koreaTodayYyyymmdd,
   parseAuctionEndsAtInput,
   toKoreaDatetimeLocalValue,
 } from "@/lib/format-korea-time";
@@ -999,6 +1000,7 @@ export function ListingForm({
             <InboundDateFields
               inboundDate={listing?.inboundDate ?? undefined}
               required={!listing}
+              defaultToToday={!listing}
             />
             <InternalCostFields
               auctionPrice={listing?.auctionPrice ?? undefined}
@@ -1583,13 +1585,17 @@ function calcDaysFromInbound(inboundDigits: string): string {
 function InboundDateFields({
   inboundDate,
   required = false,
+  defaultToToday = false,
 }: {
   inboundDate?: string;
   required?: boolean;
+  defaultToToday?: boolean;
 }) {
-  const [inbound, setInbound] = useState(() =>
-    digitsOnly(inboundDate ?? "").slice(0, 8),
-  );
+  const [inbound, setInbound] = useState(() => {
+    const existing = digitsOnly(inboundDate ?? "").slice(0, 8);
+    if (existing) return existing;
+    return defaultToToday ? koreaTodayYyyymmdd() : "";
+  });
   const days = calcDaysFromInbound(inbound);
 
   return (
@@ -1607,7 +1613,7 @@ function InboundDateFields({
           required={required}
           minLength={required ? 8 : undefined}
           maxLength={8}
-          placeholder="예: 20260719"
+          placeholder="등록일 자동입력 (예: 20260719)"
           value={inbound}
           onChange={(e) => setInbound(digitsOnly(e.target.value).slice(0, 8))}
           className="h-10 w-full rounded-md border border-neutral-200 bg-white px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400"

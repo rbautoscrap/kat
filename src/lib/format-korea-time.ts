@@ -95,6 +95,11 @@ export function toKoreaDatetimeLocalValue(
   return `${get("year")}-${get("month")}-${get("day")}T${hour}:${get("minute")}`;
 }
 
+/** Calendar date in Asia/Seoul, `YYYYMMDD`. */
+export function koreaTodayYyyymmdd(value: Date = new Date()): string {
+  return koreaTodayDate(value).replaceAll("-", "");
+}
+
 /** Calendar date in Asia/Seoul, `YYYY-MM-DD`. */
 export function koreaTodayDate(value: Date = new Date()): string {
   const parts = new Intl.DateTimeFormat("sv-SE", {

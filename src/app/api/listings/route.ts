@@ -5,6 +5,7 @@ import { invalidateHomeListingsCache } from "@/lib/home-listings";
 import { prisma } from "@/lib/prisma";
 import { toApiErrorMessage } from "@/lib/api-error";
 import { resolveSessionDbUser } from "@/lib/listing-access";
+import { koreaTodayYyyymmdd } from "@/lib/format-korea-time";
 import {
   formDataToListingInput,
   generateSerialNumber,
@@ -23,10 +24,8 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const parsed = formDataToListingInput(formData);
     if (parsed.category !== "USED_PARTS" && !parsed.inboundDate) {
-      return NextResponse.json(
-        { error: "낙찰일자를 입력해 주세요." },
-        { status: 400 },
-      );
+      parsed.inboundDate = koreaTodayYyyymmdd();
+      parsed.accumulatedDays = "0";
     }
     const data = await withPublicNotesTranslation(parsed);
     if (!canCreateListing(dbUser.role, data.category)) {
