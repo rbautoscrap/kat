@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Role } from "@prisma/client";
 import { updateProfile } from "@/app/profile/actions";
@@ -39,6 +39,13 @@ export function ProfileForm({ user, compact, onOffersClick }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [pending, setPending] = useState(false);
+  const [name, setName] = useState(user.name);
+  const [loginId, setLoginId] = useState(user.email);
+
+  useEffect(() => {
+    setName(user.name);
+    setLoginId(user.email);
+  }, [user.name, user.email]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -48,9 +55,11 @@ export function ProfileForm({ user, compact, onOffersClick }: Props) {
     setPending(true);
 
     const form = new FormData(formEl);
+    const nextName = String(form.get("name") ?? "");
+    const nextLoginId = String(form.get("email") ?? "");
     const result = await updateProfile({
-      name: String(form.get("name") ?? ""),
-      email: String(form.get("email") ?? ""),
+      name: nextName,
+      email: nextLoginId,
       currentPassword: String(form.get("currentPassword") ?? ""),
       password: String(form.get("password") ?? ""),
     });
@@ -62,6 +71,8 @@ export function ProfileForm({ user, compact, onOffersClick }: Props) {
     }
 
     setSuccess(true);
+    setName(nextName.trim());
+    setLoginId(nextLoginId.trim());
     const currentPassword = formEl.elements.namedItem(
       "currentPassword",
     ) as HTMLInputElement | null;
@@ -108,7 +119,8 @@ export function ProfileForm({ user, compact, onOffersClick }: Props) {
             name="name"
             required
             minLength={2}
-            defaultValue={user.name}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             autoComplete="name"
             className={inputClass}
           />
@@ -122,7 +134,8 @@ export function ProfileForm({ user, compact, onOffersClick }: Props) {
             type="text"
             required
             minLength={2}
-            defaultValue={user.email}
+            value={loginId}
+            onChange={(e) => setLoginId(e.target.value)}
             autoComplete="username"
             className={inputClass}
           />

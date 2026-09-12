@@ -3,7 +3,7 @@
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { auth, unstable_update } from "@/lib/auth";
 import { loginIdSchema, passwordSchema } from "@/lib/login-id";
 import { prisma } from "@/lib/prisma";
 
@@ -92,6 +92,17 @@ export async function updateProfile(input: {
         : {}),
     },
   });
+
+  try {
+    await unstable_update({
+      user: {
+        name: parsed.data.name,
+        email: parsed.data.email,
+      },
+    });
+  } catch (error) {
+    console.error("[updateProfile] session name sync failed", error);
+  }
 
   revalidatePath("/profile");
   revalidatePath("/");

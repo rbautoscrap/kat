@@ -46,7 +46,7 @@ const credentialsSchema = z.object({
 /** Absolute JWT lifetime. Cookie is also made browser-session scoped in the auth route. */
 const SESSION_MAX_AGE_SEC = 8 * 60 * 60; // 8 hours
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   trustHost: true,
   session: {
     strategy: "jwt",
@@ -119,7 +119,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       // Never query the database here. A SQLite lock during login would
       // stall every page that calls auth().
       if (user?.id) {
@@ -129,6 +129,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.name = user.name;
         token.email = user.email;
         token.checkedAt = Date.now();
+      }
+      if (trigger === "update" && session) {
+        const next =
+          session.user && typeof session.user === "object"
+            ? session.user
+            : session;
+        if (typeof next.name === "string") token.name = next.name;
+        if (typeof next.email === "string") token.email = next.email;
       }
       return token;
     },
