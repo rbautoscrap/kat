@@ -1703,6 +1703,17 @@ main {
   letter-spacing: -0.03em;
 }
 
+@media screen {
+  .inventory-head .inventory-brand,
+  .inventory-head h1 {
+    display: none;
+  }
+
+  .inventory-meta {
+    margin-top: 0;
+  }
+}
+
 .inventory-meta,
 .inventory-total {
   margin: 0.35rem 0 0;
