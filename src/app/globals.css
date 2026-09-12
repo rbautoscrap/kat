@@ -355,6 +355,141 @@ main {
   opacity: 0.6;
 }
 
+.export-estimate {
+  margin: 0 0 1.25rem;
+  padding: 0.9rem 0.95rem 1rem;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.export-estimate-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.export-estimate-kicker {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+
+.export-estimate h2 {
+  margin: 0.15rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: #262626;
+}
+
+.export-estimate-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 12.5rem;
+}
+
+.export-estimate-select span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #737373;
+}
+
+.export-estimate-select select {
+  height: 2.15rem;
+  padding: 0 0.55rem;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  color: #262626;
+  font-size: 13px;
+}
+
+.export-estimate-status {
+  margin: 0.75rem 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.export-estimate-status.is-ok {
+  color: #166534;
+}
+
+.export-estimate-status.is-warn {
+  color: #9a3412;
+}
+
+.export-estimate-status.is-blocked {
+  color: #b91c1c;
+}
+
+.export-estimate-rows {
+  margin: 0.8rem 0 0;
+}
+
+.export-estimate-rows > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  padding: 0.38rem 0;
+  border-top: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+
+.export-estimate-rows dt {
+  margin: 0;
+  color: #737373;
+}
+
+.export-estimate-rows dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  color: #262626;
+}
+
+.export-estimate-rows .is-total {
+  border-top: 1px solid #d4d4d4;
+  font-weight: 700;
+}
+
+.export-estimate-rows .is-total dt,
+.export-estimate-rows .is-total dd {
+  color: #171717;
+}
+
+.export-estimate-empty,
+.export-estimate-note,
+.export-estimate-disclaimer {
+  margin: 0.7rem 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #737373;
+}
+
+.export-estimate-disclaimer {
+  color: #a3a3a3;
+}
+
+.export-estimate-wa {
+  display: inline-flex;
+  margin-top: 0.85rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid #16a34a;
+  color: #15803d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.export-estimate-wa:hover {
+  background: #f0fdf4;
+}
+
 .listing-sale-price {
   margin-top: 0.2rem;
   color: var(--accent);

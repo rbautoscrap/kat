@@ -72,7 +72,10 @@ export default function HowToBuyPage() {
             How to buy
           </h1>
           <p className="mt-2 text-[14px] leading-relaxed tracking-wide text-neutral-500">
-            A simple 4-step process from price inquiry to shipment.
+            A simple 4-step process from price inquiry to shipment. On each
+            vehicle page you can pick a destination country for a rough
+            landed-cost estimate — Georgia, Kyrgyzstan, UAE, and other lower-barrier
+            markets first. It is not a booking.
           </p>
         </header>
 
