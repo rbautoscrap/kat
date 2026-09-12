@@ -5,7 +5,14 @@ import { usePathname } from "next/navigation";
 export function SiteSearchBar() {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/admin")) return null;
+  if (
+    pathname.startsWith("/admin") ||
+    pathname === "/login" ||
+    pathname === "/join" ||
+    pathname === "/profile"
+  ) {
+    return null;
+  }
 
   return (
     <div className="border-b border-[var(--line)] bg-white">

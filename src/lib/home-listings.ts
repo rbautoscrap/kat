@@ -22,7 +22,7 @@ export type HomeSections = {
   usedParts: HomeListing[];
 };
 
-const HOME_CACHE_MS = 20_000;
+const HOME_CACHE_MS = 60_000;
 
 const homeCache: {
   public: { at: number; data: HomeSections } | null;

@@ -18,7 +18,7 @@ let statsCache: {
   totalVisits: number;
 } | null = null;
 
-const STATS_CACHE_MS = 15_000;
+const STATS_CACHE_MS = 60_000;
 const FLUSH_MS = 15_000;
 
 let pendingIncrements = 0;

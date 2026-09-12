@@ -16,7 +16,7 @@ export type FxBoardQuote = {
 };
 
 const CACHE_MS = 60 * 60 * 1000;
-const BOARD_CACHE_MS = 60 * 1000;
+const BOARD_CACHE_MS = 10 * 60 * 1000;
 
 let cache: { at: number; rates: KrwFxRates } | null = null;
 let inflight: Promise<KrwFxRates | null> | null = null;

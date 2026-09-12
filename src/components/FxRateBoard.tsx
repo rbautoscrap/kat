@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { FxBoardQuote } from "@/lib/fx-rates";
 
-const POLL_MS = 45_000;
+const POLL_MS = 5 * 60_000;
 
 function formatWon(value: number) {
   return value.toLocaleString("en-US", {
@@ -63,10 +63,13 @@ export function FxRateBoard({ initial }: { initial?: FxBoardQuote | null }) {
       }
     }
 
-    const id = window.setInterval(() => {
+    function tick() {
+      if (document.visibilityState === "hidden") return;
       void load();
-    }, POLL_MS);
-    if (!initial) void load();
+    }
+
+    const id = window.setInterval(tick, POLL_MS);
+    if (!initial) tick();
 
     return () => {
       cancelled = true;

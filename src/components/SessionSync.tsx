@@ -57,13 +57,9 @@ export function SessionSync() {
     window.addEventListener("storage", onStorage);
     window.addEventListener("focus", onVisible);
     document.addEventListener("visibilitychange", onVisible);
-    const poll = window.setInterval(() => {
-      void check();
-    }, 15_000);
 
     return () => {
       cancelled = true;
-      window.clearInterval(poll);
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onVisible);
       document.removeEventListener("visibilitychange", onVisible);
