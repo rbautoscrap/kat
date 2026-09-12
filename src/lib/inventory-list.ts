@@ -142,7 +142,7 @@ export async function loadInventoryListReport(): Promise<InventoryListReport> {
     },
   });
 
-  const locationNames = ["충주사업소", "진천사업소"].filter((name) =>
+  const locationNames = ["진천사업소", "충주사업소"].filter((name) =>
     STORAGE_LOCATIONS.includes(name as (typeof STORAGE_LOCATIONS)[number]),
   );
   const hasUnassigned = listings.some(

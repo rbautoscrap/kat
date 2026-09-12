@@ -441,7 +441,7 @@ export function InventoryListDocument({ report }: Props) {
         <p className="inventory-brand">KOREA AUTO TRADE</p>
         <h1>재고 리스트</h1>
         <p className="inventory-meta">
-          충주·진천 입고지별 · 판매중 · 사업소별 원가·누적 정렬
+          진천·충주 입고지별 · 판매중 · 사업소별 원가·누적 정렬
           <span> · </span>
           {report.generatedAt}
         </p>
