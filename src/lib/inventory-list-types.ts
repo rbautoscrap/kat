@@ -11,6 +11,7 @@ export type InventoryListRow = {
   categoryLabel: string;
   inboundDate: string;
   days: string;
+  daysValue: number;
   daysAlert: boolean;
   costLabel: string;
   cost: number;

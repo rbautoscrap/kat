@@ -1729,12 +1729,53 @@ main {
   margin: 0;
 }
 
-.inventory-location h2 {
+.inventory-location-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem 0.75rem;
   margin-bottom: 0.65rem;
   padding-bottom: 0.35rem;
   border-bottom: 1px solid #d4d4d4;
+}
+
+.inventory-location h2 {
+  margin: 0;
   font-size: 1.05rem;
   font-weight: 750;
+}
+
+.inventory-sort-toggles {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.inventory-sort-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  height: 1.85rem;
+  padding: 0 0.55rem;
+  border: 1px solid #d4d4d4;
+  border-radius: 999px;
+  background: #fff;
+  color: #525252;
+  font-size: 12px;
+  font-weight: 650;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.inventory-sort-icon:hover {
+  border-color: #a3a3a3;
+  color: #171717;
+}
+
+.inventory-sort-icon.is-on {
+  border-color: #171717;
+  background: #171717;
+  color: #fff;
 }
 
 .inventory-status {
