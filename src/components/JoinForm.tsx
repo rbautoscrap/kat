@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   registerAccount,
   type RegisterState,
@@ -19,10 +20,18 @@ type Props = {
 };
 
 export function JoinForm({ onLoginClick }: Props) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState<RegisterState, FormData>(
     registerAccount,
     null,
   );
+
+  useEffect(() => {
+    if (state?.ok) {
+      router.push(`/login?pending=1&id=${encodeURIComponent(state.loginId)}`);
+      router.refresh();
+    }
+  }, [state, router]);
 
   return (
     <form action={formAction} className="w-full space-y-3.5">
@@ -95,7 +104,7 @@ export function JoinForm({ onLoginClick }: Props) {
           className={fieldClass}
         />
       </label>
-      {state?.error ? (
+      {state && !state.ok ? (
         <p className="text-[13px] leading-relaxed text-red-600">{state.error}</p>
       ) : null}
       <button

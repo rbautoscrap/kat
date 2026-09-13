@@ -18,7 +18,7 @@ export function hashSignupIp(ip: string): string | null {
   const salt =
     process.env.AUTH_SECRET?.trim() || process.env.NEXTAUTH_SECRET?.trim();
   if (!salt) {
-    throw new Error("AUTH_SECRET이 설정되지 않았습니다.");
+    return null;
   }
   return createHash("sha256")
     .update(`${salt}:join-ip:${trimmed}`)

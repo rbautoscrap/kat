@@ -15,12 +15,16 @@ export async function resolveSignupDeviceId() {
   }
 
   const deviceId = randomUUID().replace(/-/g, "");
-  jar.set(SIGNUP_DEVICE_COOKIE, deviceId, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365 * 2,
-  });
+  try {
+    jar.set(SIGNUP_DEVICE_COOKIE, deviceId, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365 * 2,
+    });
+  } catch {
+    /* Cookie writes can fail in some Server Action paths; join must still succeed. */
+  }
   return deviceId;
 }
