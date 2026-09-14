@@ -274,7 +274,7 @@ export function calcStatementTotals(
 ) {
   const code = currency as OfferCurrencyCode;
   const supplyNum = Number(String(amount).replace(/,/g, ""));
-  if (!Number.isFinite(supplyNum) || supplyNum < 0) {
+  if (!Number.isFinite(supplyNum)) {
     return {
       supply: "0",
       vat: "0",

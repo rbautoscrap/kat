@@ -10,6 +10,7 @@ import {
   INVOICE_CURRENCIES,
   addDaysToDateString,
   calcFinalFromKrw,
+  calcKrwFromFx,
   isInvoiceCreditLine,
   newInvoiceExtraKey,
   parseTermsDays,
@@ -30,6 +31,7 @@ type Line = {
   vin: string;
   qty: string;
   priceKrw: string;
+  finalFx: string;
 };
 
 type Props = {
@@ -44,6 +46,19 @@ function formatKrwInput(raw: string) {
   const digits = raw.replace(/\D/g, "");
   if (!digits) return "";
   return Number(digits).toLocaleString("en-US");
+}
+
+function formatFxInput(raw: string) {
+  const cleaned = raw.replace(/,/g, "").replace(/[^\d.]/g, "");
+  if (!cleaned) return "";
+  const [intPart = "", ...rest] = cleaned.split(".");
+  const formattedInt = intPart
+    ? Number(intPart).toLocaleString("en-US")
+    : cleaned.includes(".")
+      ? "0"
+      : "";
+  if (!cleaned.includes(".")) return formattedInt;
+  return `${formattedInt}.${rest.join("").slice(0, 2)}`;
 }
 
 export function InvoiceForm({
@@ -100,6 +115,7 @@ export function InvoiceForm({
           vin: item.vin ?? "",
           qty: item.qty || "1",
           priceKrw: formatKrwInput(item.priceKrw),
+          finalFx: formatFxInput(item.finalPrice),
         };
       });
   });
@@ -142,6 +158,7 @@ export function InvoiceForm({
         vin: listing.vin ?? "",
         qty: "1",
         priceKrw: "",
+        finalFx: "",
       },
     ]);
   }
@@ -161,6 +178,7 @@ export function InvoiceForm({
         vin: "",
         qty: "1",
         priceKrw: "",
+        finalFx: "",
       },
     ]);
   }
@@ -185,7 +203,8 @@ export function InvoiceForm({
           regNo: line.regNo || undefined,
           vin: line.vin || undefined,
           qty: line.qty || "1",
-          priceKrw: line.priceKrw,
+          priceKrw: line.priceKrw || undefined,
+          finalPrice: line.finalFx || undefined,
           isCredit: line.kind === "credit",
         })),
       };
@@ -208,7 +227,10 @@ export function InvoiceForm({
   const netFxPreview = useMemo(() => {
     let sum = 0;
     for (const line of lines) {
-      const fx = Number(calcFinalFromKrw(line.priceKrw, rateClean));
+      const typed = Number(line.finalFx.replace(/,/g, ""));
+      const fx = Number.isFinite(typed) && typed > 0
+        ? typed
+        : Number(calcFinalFromKrw(line.priceKrw, rateClean));
       if (!Number.isFinite(fx) || fx <= 0) continue;
       sum += line.kind === "credit" ? -fx : fx;
     }
@@ -463,7 +485,7 @@ export function InvoiceForm({
                       Remove
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
                     <input
                       value={line.regNo}
                       onChange={(e) =>
@@ -515,6 +537,12 @@ export function InvoiceForm({
                               ? {
                                   ...row,
                                   priceKrw: formatKrwInput(e.target.value),
+                                  finalFx: formatFxInput(
+                                    calcFinalFromKrw(
+                                      formatKrwInput(e.target.value),
+                                      rateClean,
+                                    ),
+                                  ),
                                 }
                               : row,
                           ),
@@ -522,14 +550,40 @@ export function InvoiceForm({
                       }
                       placeholder={isCredit ? "CREDIT (₩)" : "PRICE (₩)"}
                       className={`${fieldClass} mt-0`}
-                      required
+                    />
+                    <input
+                      value={line.finalFx}
+                      onChange={(e) =>
+                        setLines((prev) =>
+                          prev.map((row) =>
+                            row.lineKey === line.lineKey
+                              ? {
+                                  ...row,
+                                  finalFx: formatFxInput(e.target.value),
+                                  priceKrw: formatKrwInput(
+                                    calcKrwFromFx(
+                                      formatFxInput(e.target.value),
+                                      rateClean,
+                                    ),
+                                  ),
+                                }
+                              : row,
+                          ),
+                        )
+                      }
+                      placeholder={
+                        isCredit ? `CREDIT (${currency})` : `PRICE (${currency})`
+                      }
+                      className={`${fieldClass} mt-0`}
                     />
                   </div>
                   <p className="text-[11.5px] text-neutral-500">
-                    Final ≈{" "}
-                    {finalApprox
-                      ? `${isCredit ? "− " : ""}${currency} ${Number(finalApprox).toLocaleString("en-US")}`
-                      : "—"}
+                    {currency} {isCredit ? "− " : ""}
+                    {line.finalFx ||
+                      (finalApprox
+                        ? Number(finalApprox).toLocaleString("en-US")
+                        : "—")}
+                    {line.priceKrw ? ` · ₩ ${line.priceKrw}` : ""}
                   </p>
                 </div>
               );

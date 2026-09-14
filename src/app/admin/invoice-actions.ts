@@ -8,6 +8,7 @@ import { resolveSessionDbUser } from "@/lib/listing-access";
 import {
   addDaysToDateString,
   calcFinalFromKrw,
+  calcKrwFromFx,
   cleanMoney,
   formatTermsLabel,
   isInvoiceExtraKey,
@@ -51,9 +52,19 @@ const invoiceSchema = z.object({
         regNo: z.string().trim().max(60).optional(),
         vin: z.string().trim().max(40).optional(),
         qty: z.string().trim().min(1).max(10),
-        priceKrw: moneySchema,
+        priceKrw: z.string().trim().optional(),
+        finalPrice: z.string().trim().optional(),
         isCredit: z.boolean().optional(),
-      }),
+      }).refine(
+        (item) => {
+          const krw = cleanMoney(item.priceKrw ?? "");
+          const fx = cleanMoney(item.finalPrice ?? "");
+          const krwOk = /^\d+(\.\d{1,2})?$/.test(krw) && Number(krw) > 0;
+          const fxOk = /^\d+(\.\d{1,2})?$/.test(fx) && Number(fx) > 0;
+          return krwOk || fxOk;
+        },
+        { message: "Enter a KRW or foreign-currency amount." },
+      ),
     )
     .min(1, "Add at least one line item.")
     .max(30),
@@ -122,11 +133,14 @@ async function buildItems(
     if (isCredit && !isInvoiceExtraKey(item.lineKey)) {
       return { ok: false, error: "Credit must be an extra line." };
     }
-    const finalMagnitude = calcFinalFromKrw(item.priceKrw, rate);
-    if (!finalMagnitude) {
-      return { ok: false, error: "Check KRW price and exchange rate." };
+    const typedFx = cleanMoney(item.finalPrice ?? "");
+    const typedKrw = cleanMoney(item.priceKrw ?? "");
+    const finalMagnitude = typedFx || calcFinalFromKrw(typedKrw, rate);
+    const krwMagnitude = typedKrw || calcKrwFromFx(finalMagnitude, rate);
+    if (!finalMagnitude || !krwMagnitude) {
+      return { ok: false, error: "Check the amount and exchange rate." };
     }
-    const priceKrw = isCredit ? `-${item.priceKrw}` : item.priceKrw;
+    const priceKrw = isCredit ? `-${krwMagnitude}` : krwMagnitude;
     const finalPrice = isCredit ? `-${finalMagnitude}` : finalMagnitude;
 
     if (isInvoiceExtraKey(item.lineKey)) {

@@ -99,12 +99,20 @@ export function isInvoiceCreditLine(line: {
   );
 }
 
-/** KRW ÷ rate → foreign amount (rounded to nearest whole unit). */
+/** KRW ÷ rate → foreign amount (2 decimal places). */
 export function calcFinalFromKrw(priceKrw: string, rate: string): string {
   const krw = Math.abs(parseMoneyNumber(priceKrw));
   const r = parseMoneyNumber(rate);
   if (krw <= 0 || r <= 0) return "";
-  return String(Math.round(krw / r));
+  return (Math.round((krw / r) * 100) / 100).toFixed(2).replace(/\.00$/, "");
+}
+
+/** Foreign amount × rate → KRW. */
+export function calcKrwFromFx(finalFx: string, rate: string): string {
+  const fx = Math.abs(parseMoneyNumber(finalFx));
+  const r = parseMoneyNumber(rate);
+  if (fx <= 0 || r <= 0) return "";
+  return String(Math.round(fx * r));
 }
 
 export function sumFinalPrices(lines: { finalPrice: string }[]): string {

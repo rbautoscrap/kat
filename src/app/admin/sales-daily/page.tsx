@@ -49,15 +49,10 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
     view === "month"
       ? loadMonthPurchases(prevMonth)
       : Promise.resolve(emptyPurchases),
-    view === "month" ? Promise.resolve(null) : getKrwFxRates(),
+    getKrwFxRates(),
   ]);
 
-  const daySales = allRows.filter(
-    (row) =>
-      row.issueDate === date &&
-      ((row.source === "statement" && row.currency === "KRW") ||
-        row.source === "invoice"),
-  );
+  const daySales = allRows.filter((row) => row.issueDate === date);
   const receivables = allRows.filter(
     (row) =>
       row.currency === "KRW" &&
@@ -86,12 +81,17 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
         !isClosedReceivableRow(row),
     ),
   );
-  const monthlyBase = buildMonthlySalesReport(allRows, month, purchases);
+  const monthlyBase = buildMonthlySalesReport(
+    allRows,
+    month,
+    purchases,
+    fxRates,
+  );
   const monthly =
     view === "month"
       ? attachMonthOverMonth(
           monthlyBase,
-          buildMonthlySalesReport(allRows, prevMonth, prevPurchases),
+          buildMonthlySalesReport(allRows, prevMonth, prevPurchases, fxRates),
         )
       : monthlyBase;
 
@@ -115,7 +115,7 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
                 ? "미수 원장에 등록된 원화 항목만 보여 줍니다. 결재완료·취소 건은 목록과 합계에서 제외됩니다."
                 : view === "fx"
                   ? "미수 원장에 등록된 외화 항목만 보여 줍니다. 결재완료·취소 건은 목록과 합계에서 제외됩니다."
-                  : "오늘부터 작성한 거래명세서·해외 인보이스가 자동으로 반영됩니다. 분류를 취소하면 흐리게 표시되고 판매액·입금·이익 합계에서 빠집니다. 미수·외화는 총액만 보여 주고, 상세 목록은 우측 아이콘에서 확인하세요."}
+                  : "오늘부터 작성한 거래명세서·해외 인보이스가 자동으로 반영됩니다. 유로·달러는 당일 시세로 판매액에 합산됩니다. 분류를 취소하면 흐리게 표시되고 합계에서 빠집니다."}
           </p>
         </div>
         <DailySalesToolbar date={date} month={month} view={view} />

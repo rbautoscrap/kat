@@ -175,8 +175,8 @@ export function MonthlySalesReport({ report }: Props) {
         <section className="month-kpis" aria-label="월간 요약">
           <Kpi
             label="당월 판매액"
-            value={money(report.sales.total)}
-            note={`${report.salesCount}건 · 공급 ${money(report.sales.supply)} · 부가세 ${money(report.sales.vat)}`}
+            value={money(report.sales.total + report.fxSalesKrw)}
+            note={`${report.salesCount + report.fxSalesCount}건 · 원화 ${money(report.sales.total)} · 외화 ${money(report.fxSalesKrw)}`}
             change={mom?.sales}
           />
           <Kpi

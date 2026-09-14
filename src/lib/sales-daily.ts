@@ -347,20 +347,40 @@ export function sumSaleRowsByCurrency(rows: DailySaleRow[]) {
   }));
 }
 
-export function fxAmountToKrw(
-  amount: number,
-  currency: OfferCurrency,
+function fxRatePerKrw(
+  currency: string | null | undefined,
   rates?: KrwFxRates | null,
 ) {
-  if (currency === "KRW") return Math.round(amount);
   if (!rates) return 0;
-  const perKrw =
-    currency === "USD"
-      ? rates.usdPerKrw
-      : currency === "EUR"
-        ? rates.eurPerKrw
-        : 0;
-  return Math.round(convertFxToKrw(amount, perKrw));
+  const code = String(currency ?? "").trim().toUpperCase();
+  if (code === "USD" || code === "US$" || code === "$") return rates.usdPerKrw;
+  if (code === "EUR" || code === "EURO" || code === "€") return rates.eurPerKrw;
+  return 0;
+}
+
+export function fxAmountToKrw(
+  amount: number,
+  currency: OfferCurrency | string,
+  rates?: KrwFxRates | null,
+) {
+  const code = String(currency ?? "").trim().toUpperCase();
+  if (code === "KRW" || code === "₩") return Math.round(amount);
+  if (!Number.isFinite(amount) || amount === 0) return 0;
+  const perKrw = fxRatePerKrw(code, rates);
+  if (!Number.isFinite(perKrw) || perKrw <= 0) return 0;
+  const fxPerOneKrw = perKrw > 1 ? 1 / perKrw : perKrw;
+  return Math.round(convertFxToKrw(amount, fxPerOneKrw));
+}
+
+export function saleRowToKrw(
+  row: Pick<DailySaleRow, "currency" | "total" | "supply" | "amountKrw">,
+  rates?: KrwFxRates | null,
+) {
+  if (row.currency === "KRW") return parseSaleMoney(row.total);
+  const fx = parseSaleMoney(row.total) || parseSaleMoney(row.supply);
+  const live = fxAmountToKrw(fx, row.currency, rates);
+  if (live !== 0) return live;
+  return parseSaleMoney(row.amountKrw);
 }
 
 /** Live-rate KRW total for foreign rows; falls back to invoice KRW amount. */
@@ -370,8 +390,7 @@ export function sumForeignSalesToKrw(
 ) {
   return rows.reduce((sum, row) => {
     if (row.currency === "KRW") return sum;
-    const live = fxAmountToKrw(parseSaleMoney(row.total), row.currency, rates);
-    return sum + (live > 0 ? live : parseSaleMoney(row.amountKrw));
+    return sum + saleRowToKrw(row, rates);
   }, 0);
 }
 

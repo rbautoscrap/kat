@@ -4,10 +4,13 @@ import {
   isCancelledSaleRow,
   isClosedReceivableRow,
   parseSaleMoney,
+  saleRowToKrw,
+  sumForeignSalesToKrw,
   sumSaleRows,
   type DailySaleRow,
   type DailySaleTotals,
 } from "@/lib/sales-daily";
+import type { KrwFxRates } from "@/lib/fx-rates";
 
 export type MonthPurchaseTotals = {
   count: number;
@@ -141,7 +144,11 @@ export function attachMonthOverMonth(
     mom: {
       previousMonth: previous.month,
       previousLabel: previous.label,
-      sales: monthChange("당월 판매액", current.sales.total, previous.sales.total),
+      sales: monthChange(
+        "당월 판매액",
+        current.sales.total + current.fxSalesKrw,
+        previous.sales.total + previous.fxSalesKrw,
+      ),
       fxSalesKrw: monthChange(
         "외화 판매액",
         current.fxSalesKrw,
@@ -236,6 +243,7 @@ export function buildMonthlySalesReport(
   rows: DailySaleRow[],
   month: string,
   purchases: MonthPurchaseTotals = EMPTY_MONTH_PURCHASES,
+  rates?: KrwFxRates | null,
 ): MonthlySalesReportData {
   const { start, end, days } = monthBounds(month);
   const monthIssued = rows.filter(
@@ -250,10 +258,7 @@ export function buildMonthlySalesReport(
       !isCancelledSaleRow(row),
   );
   const fxOpen = fxSalesRows.filter(isOpenReceivable);
-  const fxSalesKrw = fxSalesRows.reduce(
-    (sum, row) => sum + parseSaleMoney(row.amountKrw),
-    0,
-  );
+  const fxSalesKrw = sumForeignSalesToKrw(fxSalesRows, rates);
   const fxSales = sumSaleRows(
     fxSalesRows,
     fxSalesRows[0]?.currency ?? "USD",
@@ -277,10 +282,16 @@ export function buildMonthlySalesReport(
   for (const row of monthSales) {
     const point = dailyMap.get(row.issueDate);
     if (!point) continue;
-    point.sales += parseSaleMoney(row.total);
+    point.sales += saleRowToKrw(row, rates);
     point.profit += parseSaleMoney(row.profit);
     point.paid += parseSaleMoney(row.paidAmount);
     point.remaining += parseSaleMoney(row.remaining);
+    point.count += 1;
+  }
+  for (const row of fxSalesRows) {
+    const point = dailyMap.get(row.issueDate);
+    if (!point) continue;
+    point.sales += saleRowToKrw(row, rates);
     point.count += 1;
   }
   const daily = [...dailyMap.values()];
