@@ -15,6 +15,33 @@ const DEFAULT_SORT: LocationSort = { key: "cost", dir: "desc" };
 const JINCHEON_LOCATION = "진천사업소";
 const MOVE_REQUEST_KEY = "kat-inventory-move-chungju";
 
+function useCompactInventoryLayout() {
+  const [compact, setCompact] = useState(false);
+
+  useEffect(() => {
+    const apply = () => {
+      const shortestScreen = Math.min(window.screen.width, window.screen.height);
+      const touchPhone = window.matchMedia(
+        "(hover: none) and (pointer: coarse)",
+      ).matches;
+      setCompact(
+        window.innerWidth < 1024 ||
+          shortestScreen <= 768 ||
+          (touchPhone && shortestScreen <= 1180),
+      );
+    };
+    apply();
+    window.addEventListener("resize", apply);
+    window.addEventListener("orientationchange", apply);
+    return () => {
+      window.removeEventListener("resize", apply);
+      window.removeEventListener("orientationchange", apply);
+    };
+  }, []);
+
+  return compact;
+}
+
 function readMoveRequestIds(): string[] {
   try {
     const parsed = JSON.parse(localStorage.getItem(MOVE_REQUEST_KEY) ?? "[]");
@@ -460,6 +487,7 @@ function MoveRequestButton({
 }
 
 export function InventoryListDocument({ report }: Props) {
+  const compact = useCompactInventoryLayout();
   const [showReserved, setShowReserved] = useState(false);
   const [showSold, setShowSold] = useState(false);
   const [showConsignment, setShowConsignment] = useState(false);
@@ -535,7 +563,7 @@ export function InventoryListDocument({ report }: Props) {
   );
 
   return (
-    <div className="inventory-sheet">
+    <div className={`inventory-sheet${compact ? " is-compact" : ""}`}>
       <header className="inventory-head">
         <p className="inventory-brand">KOREA AUTO TRADE</p>
         <h1>재고 리스트</h1>
