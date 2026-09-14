@@ -13,6 +13,10 @@ export async function GET() {
     {
       ok: true,
       service: "korea-auto-trade",
+      rev:
+        process.env.RAILWAY_GIT_COMMIT_SHA ||
+        process.env.NEXT_PUBLIC_BUILD_SHA ||
+        "",
       time: new Date().toISOString(),
     },
     {

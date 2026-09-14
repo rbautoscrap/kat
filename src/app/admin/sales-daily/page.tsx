@@ -18,6 +18,7 @@ import {
 } from "@/lib/sales-monthly";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type Props = {
   searchParams: Promise<{ date?: string; view?: string; month?: string }>;

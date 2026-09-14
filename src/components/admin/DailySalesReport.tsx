@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import {
   setReceivableLedger,
@@ -14,6 +14,7 @@ import {
   formatSaleMoney,
   formatSaleMoneyInput,
   formatSpotKrwRates,
+  boardQuoteToKrwRates,
   countableSaleRows,
   isCancelledSaleRow,
   isClosedReceivableRow,
@@ -163,6 +164,37 @@ export function DailySalesReport({
   const [addableFx, setAddableFx] = useState(initialAddableFx);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const [liveRates, setLiveRates] = useState<KrwFxRates | null>(fxRates);
+
+  useEffect(() => {
+    setDaySales(initialDaySales);
+    setReceivables(initialReceivables);
+    setFxReceivables(initialFx);
+    setAddableKrw(initialAddableKrw);
+    setAddableFx(initialAddableFx);
+  }, [
+    initialDaySales,
+    initialReceivables,
+    initialFx,
+    initialAddableKrw,
+    initialAddableFx,
+  ]);
+
+  useEffect(() => {
+    if (fxRates) setLiveRates(fxRates);
+    let cancelled = false;
+    fetch("/api/fx", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((quote) => {
+        if (cancelled) return;
+        const next = boardQuoteToKrwRates(quote);
+        if (next) setLiveRates(next);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [fxRates]);
 
   function syncAll(
     itemId: string,
@@ -249,14 +281,14 @@ export function DailySalesReport({
     const krw = sumSaleRows(countableDayKrw);
     return {
       ...krw,
-      total: krw.total + sumForeignSalesToKrw(countableDayFx, fxRates),
+      total: krw.total + sumForeignSalesToKrw(countableDayFx, liveRates),
     };
-  }, [countableDayFx, countableDayKrw, fxRates]);
+  }, [countableDayFx, countableDayKrw, liveRates]);
   const fxSalesKrw = useMemo(
-    () => sumForeignSalesToKrw(countableDayFx, fxRates),
-    [countableDayFx, fxRates],
+    () => sumForeignSalesToKrw(countableDayFx, liveRates),
+    [countableDayFx, liveRates],
   );
-  const spotRateLabel = formatSpotKrwRates(fxRates);
+  const spotRateLabel = formatSpotKrwRates(liveRates);
   const openReceivables = useMemo(
     () => receivables.filter((row) => !isClosedReceivableRow(row)),
     [receivables],

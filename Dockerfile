@@ -12,6 +12,8 @@ RUN npm ci
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ARG RAILWAY_GIT_COMMIT_SHA=unknown
+ENV NEXT_PUBLIC_BUILD_SHA=$RAILWAY_GIT_COMMIT_SHA
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 # Build-time only DB (not persisted). Runtime uses Volume at /app/data
@@ -22,6 +24,8 @@ RUN DATABASE_URL="file:./build.db" npx prisma generate \
 FROM base AS runner
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG RAILWAY_GIT_COMMIT_SHA=unknown
+ENV NEXT_PUBLIC_BUILD_SHA=$RAILWAY_GIT_COMMIT_SHA
 ENV PORT=8080
 ENV DATA_DIR=/app/data
 ENV DATABASE_URL=file:/app/data/prod.db

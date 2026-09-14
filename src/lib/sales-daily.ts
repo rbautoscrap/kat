@@ -93,6 +93,8 @@ export type DailySaleRow = {
   reportNote: string;
   inReceivableLedger: boolean;
   amountKrw: string;
+  /** Document FX rate, usually KRW per 1 EUR/USD. */
+  exchangeRate: string;
 };
 
 export type DailySaleTotals = {
@@ -257,6 +259,7 @@ export function buildSaleRow(args: {
   reportNote: string | null | undefined;
   inReceivableLedger?: boolean;
   amountKrw?: string | null;
+  exchangeRate?: string | null;
 }): DailySaleRow {
   const totals = calcStatementTotals(
     args.supplyAmount,
@@ -297,6 +300,7 @@ export function buildSaleRow(args: {
         ? total
         : roundMoney(moneyToNumber(String(args.amountKrw ?? 0)), "KRW"),
     ),
+    exchangeRate: args.exchangeRate?.trim() ?? "",
   };
 }
 
@@ -373,14 +377,26 @@ export function fxAmountToKrw(
 }
 
 export function saleRowToKrw(
-  row: Pick<DailySaleRow, "currency" | "total" | "supply" | "amountKrw">,
+  row: Pick<
+    DailySaleRow,
+    "currency" | "total" | "supply" | "amountKrw" | "exchangeRate"
+  >,
   rates?: KrwFxRates | null,
 ) {
   if (row.currency === "KRW") return parseSaleMoney(row.total);
   const fx = parseSaleMoney(row.total) || parseSaleMoney(row.supply);
+  if (fx === 0) return parseSaleMoney(row.amountKrw);
+
   const live = fxAmountToKrw(fx, row.currency, rates);
   if (live !== 0) return live;
-  return parseSaleMoney(row.amountKrw);
+
+  const docRate = parseSaleMoney(row.exchangeRate);
+  if (docRate > 10) return Math.round(fx * docRate);
+  if (docRate > 0) return Math.round(fx / docRate);
+
+  const stored = parseSaleMoney(row.amountKrw);
+  if (stored > Math.abs(fx) * 50) return stored;
+  return 0;
 }
 
 /** Live-rate KRW total for foreign rows; falls back to invoice KRW amount. */
@@ -392,6 +408,18 @@ export function sumForeignSalesToKrw(
     if (row.currency === "KRW") return sum;
     return sum + saleRowToKrw(row, rates);
   }, 0);
+}
+
+export function boardQuoteToKrwRates(quote: {
+  usd?: number;
+  eur?: number;
+}): KrwFxRates | null {
+  const usd = Number(quote.usd);
+  const eur = Number(quote.eur);
+  if (!Number.isFinite(usd) || usd <= 0 || !Number.isFinite(eur) || eur <= 0) {
+    return null;
+  }
+  return { usdPerKrw: 1 / usd, eurPerKrw: 1 / eur };
 }
 
 export function formatSpotKrwRates(rates?: KrwFxRates | null) {

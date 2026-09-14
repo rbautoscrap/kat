@@ -35,7 +35,7 @@ function isUsable(rates: KrwFxRates) {
 async function readJson(url: string, revalidate = 3600) {
   const res = await fetch(url, {
     next: { revalidate },
-    signal: AbortSignal.timeout(2500),
+    signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) throw new Error(`fx ${res.status}`);
   return res.json();
@@ -145,3 +145,4 @@ export function convertFxToKrw(amountFx: number, perKrw: number) {
   if (!Number.isFinite(perKrw) || perKrw <= 0) return 0;
   return amountFx / perKrw;
 }
+

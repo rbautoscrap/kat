@@ -121,6 +121,7 @@ export async function loadSaleRowsThrough(
           reportNote: item.reportNote,
           inReceivableLedger: item.inReceivableLedger,
           amountKrw: item.priceKrw,
+          exchangeRate: item.rate || invoice.exchangeRate,
         }),
       );
     }
