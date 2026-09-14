@@ -28,6 +28,12 @@ async function main() {
     await ensureColumn(prisma, names, "salePrice", "TEXT");
     await ensureColumn(prisma, names, "manufactureMonth", "INTEGER");
     await ensureColumn(prisma, names, "adminNote", "TEXT");
+    await ensureColumn(
+      prisma,
+      names,
+      "chungjuMoveRequested",
+      "BOOLEAN NOT NULL DEFAULT 0",
+    );
   } finally {
     await prisma.$disconnect();
   }

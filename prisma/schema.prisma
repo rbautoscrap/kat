@@ -113,6 +113,8 @@ model Listing {
   accumulatedDays  String?
   /** Admin-only internal memo on the listing detail cost panel. */
   adminNote        String?
+  /** Shared admin mark: request move from Jincheon to Chungju (UI only). */
+  chungjuMoveRequested Boolean @default(false)
   /** Admin-only detail page view counter (not shown publicly) */
   viewCount        Int             @default(0)
   /**

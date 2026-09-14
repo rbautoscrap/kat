@@ -16,6 +16,7 @@ export type InventoryListRow = {
   costLabel: string;
   cost: number;
   salePriceLabel: string;
+  chungjuMoveRequested: boolean;
 };
 
 export type InventoryStatusBlock = {

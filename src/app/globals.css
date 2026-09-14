@@ -2012,6 +2012,11 @@ main {
   cursor: pointer;
 }
 
+.inventory-move-icon:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
 .inventory-move-icon:hover,
 .inventory-move-icon.is-on {
   color: #2563eb;

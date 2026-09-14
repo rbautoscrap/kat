@@ -93,6 +93,7 @@ function toRow(
     auctionPrice: string | null;
     incidentalCost: string | null;
     salePrice: string | null;
+    chungjuMoveRequested?: boolean | null;
   },
   no: number,
 ): InventoryListRow {
@@ -115,6 +116,7 @@ function toRow(
     costLabel: moneyLabel(cost),
     cost,
     salePriceLabel: salePriceLabel(listing.salePrice),
+    chungjuMoveRequested: Boolean(listing.chungjuMoveRequested),
   };
 }
 
@@ -139,6 +141,7 @@ export async function loadInventoryListReport(): Promise<InventoryListReport> {
       auctionPrice: true,
       incidentalCost: true,
       salePrice: true,
+      chungjuMoveRequested: true,
     },
   });
 

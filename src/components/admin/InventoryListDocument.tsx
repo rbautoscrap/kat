@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toggleChungjuMoveRequest } from "@/app/admin/inventory/actions";
 import type {
   InventoryListReport,
   InventoryListRow,
@@ -13,7 +15,17 @@ type LocationSort = { key: SortKey; dir: SortDir };
 
 const DEFAULT_SORT: LocationSort = { key: "cost", dir: "desc" };
 const JINCHEON_LOCATION = "진천사업소";
-const MOVE_REQUEST_KEY = "kat-inventory-move-chungju";
+function moveIdsFromReport(report: InventoryListReport) {
+  const ids = new Set<string>();
+  for (const location of report.locations) {
+    for (const status of location.statuses) {
+      for (const row of status.rows) {
+        if (row.chungjuMoveRequested) ids.add(row.id);
+      }
+    }
+  }
+  return ids;
+}
 
 function useCompactInventoryLayout() {
   const [compact, setCompact] = useState(false);
@@ -40,17 +52,6 @@ function useCompactInventoryLayout() {
   }, []);
 
   return compact;
-}
-
-function readMoveRequestIds(): string[] {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(MOVE_REQUEST_KEY) ?? "[]");
-    return Array.isArray(parsed)
-      ? parsed.filter((id): id is string => typeof id === "string")
-      : [];
-  } catch {
-    return [];
-  }
 }
 
 function sortBlock(
@@ -301,11 +302,13 @@ function StatusTable({
   block,
   showMoveRequest = false,
   moveRequested,
+  movePendingId,
   onToggleMove,
 }: {
   block: InventoryStatusBlock;
   showMoveRequest?: boolean;
   moveRequested?: Set<string>;
+  movePendingId?: string | null;
   onToggleMove?: (id: string) => void;
 }) {
   if (block.rows.length === 0) {
@@ -353,6 +356,7 @@ function StatusTable({
                       {showMoveRequest ? (
                         <MoveRequestButton
                           requested={requested}
+                          disabled={Boolean(movePendingId)}
                           onToggle={() => onToggleMove?.(row.id)}
                         />
                       ) : null}
@@ -396,6 +400,7 @@ function StatusTable({
                   {showMoveRequest ? (
                     <MoveRequestButton
                       requested={requested}
+                      disabled={Boolean(movePendingId)}
                       onToggle={() => onToggleMove?.(row.id)}
                     />
                   ) : null}
@@ -468,9 +473,11 @@ function TitleLink({
 
 function MoveRequestButton({
   requested,
+  disabled,
   onToggle,
 }: {
   requested: boolean;
+  disabled?: boolean;
   onToggle: () => void;
 }) {
   return (
@@ -479,6 +486,7 @@ function MoveRequestButton({
       className={`inventory-move-icon inventory-no-print${requested ? " is-on" : ""}`}
       title={requested ? "충주 이동요청 취소" : "충주사업소로 이동요청"}
       aria-pressed={requested}
+      disabled={disabled}
       onClick={onToggle}
     >
       <MoveToChungjuIcon />
@@ -487,31 +495,56 @@ function MoveRequestButton({
 }
 
 export function InventoryListDocument({ report }: Props) {
+  const router = useRouter();
   const compact = useCompactInventoryLayout();
   const [showReserved, setShowReserved] = useState(false);
   const [showSold, setShowSold] = useState(false);
   const [showConsignment, setShowConsignment] = useState(false);
   const [sorts, setSorts] = useState<Record<string, LocationSort>>({});
-  const [moveRequested, setMoveRequested] = useState<Set<string>>(
-    () => new Set(),
+  const [moveRequested, setMoveRequested] = useState<Set<string>>(() =>
+    moveIdsFromReport(report),
   );
+  const [movePendingId, setMovePendingId] = useState<string | null>(null);
 
   useEffect(() => {
-    setMoveRequested(new Set(readMoveRequestIds()));
-  }, []);
+    setMoveRequested(moveIdsFromReport(report));
+  }, [report]);
 
-  function toggleMoveRequest(id: string) {
+  useEffect(() => {
+    function sync() {
+      if (document.visibilityState === "visible") router.refresh();
+    }
+    window.addEventListener("focus", sync);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      window.removeEventListener("focus", sync);
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, [router]);
+
+  async function toggleMoveRequest(id: string) {
+    if (movePendingId) return;
+    const previous = new Set(moveRequested);
     setMoveRequested((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      try {
-        localStorage.setItem(MOVE_REQUEST_KEY, JSON.stringify([...next]));
-      } catch {
-        /* ignore quota / private mode */
-      }
       return next;
     });
+    setMovePendingId(id);
+    try {
+      const result = await toggleChungjuMoveRequest(id);
+      if (!result.ok) {
+        setMoveRequested(previous);
+        return;
+      }
+      setMoveRequested(new Set(result.ids));
+      router.refresh();
+    } catch {
+      setMoveRequested(previous);
+    } finally {
+      setMovePendingId(null);
+    }
   }
 
   function locationSort(location: string): LocationSort {
@@ -650,6 +683,7 @@ export function InventoryListDocument({ report }: Props) {
                 block={stock}
                 showMoveRequest={location.location === JINCHEON_LOCATION}
                 moveRequested={moveRequested}
+                movePendingId={movePendingId}
                 onToggleMove={toggleMoveRequest}
               />
             </div>
@@ -667,6 +701,7 @@ export function InventoryListDocument({ report }: Props) {
                   block={consignment}
                   showMoveRequest={location.location === JINCHEON_LOCATION}
                   moveRequested={moveRequested}
+                  movePendingId={movePendingId}
                   onToggleMove={toggleMoveRequest}
                 />
               </div>
@@ -685,6 +720,7 @@ export function InventoryListDocument({ report }: Props) {
                   block={reserved}
                   showMoveRequest={location.location === JINCHEON_LOCATION}
                   moveRequested={moveRequested}
+                  movePendingId={movePendingId}
                   onToggleMove={toggleMoveRequest}
                 />
               </div>
@@ -703,6 +739,7 @@ export function InventoryListDocument({ report }: Props) {
                   block={sold}
                   showMoveRequest={location.location === JINCHEON_LOCATION}
                   moveRequested={moveRequested}
+                  movePendingId={movePendingId}
                   onToggleMove={toggleMoveRequest}
                 />
               </div>
