@@ -1845,6 +1845,10 @@ main {
   color: #737373;
 }
 
+.inventory-card-list {
+  display: none;
+}
+
 .inventory-sheet table {
   width: 100%;
   table-layout: auto;
@@ -1894,12 +1898,20 @@ main {
 }
 
 .inventory-sheet .is-title {
-  display: flex;
-  align-items: center;
-  gap: 0.28rem;
   font-weight: 650;
   word-break: keep-all;
   overflow-wrap: anywhere;
+}
+
+.inventory-title-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.inventory-title-cell .inventory-title-link {
+  min-width: 0;
 }
 
 .inventory-move-icon {
@@ -1970,6 +1982,125 @@ main {
 
 .inventory-sheet .is-code {
   font-variant-numeric: tabular-nums;
+}
+
+@media screen and (min-width: 768px) {
+  .inventory-sheet table {
+    min-width: 52rem;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .inventory-sheet-frame {
+    overflow-x: visible;
+  }
+
+  .inventory-move-icon {
+    width: 1.7rem;
+    height: 1.7rem;
+  }
+
+  .inventory-sheet {
+    padding: 0.7rem 0.7rem 0.95rem;
+  }
+
+  .inventory-location-head,
+  .inventory-location h2,
+  .inventory-status h3 {
+    align-items: flex-start;
+  }
+
+  .inventory-table-desktop {
+    display: none;
+  }
+
+  .inventory-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .inventory-card {
+    padding: 0.7rem 0.75rem 0.75rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 0.45rem;
+    background: #fff;
+  }
+
+  .inventory-card.is-move-request {
+    border-color: #93c5fd;
+    background: #f8fbff;
+  }
+
+  .inventory-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.55rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .inventory-card-no {
+    flex: 0 0 auto;
+    min-width: 1.4rem;
+    margin-top: 0.08rem;
+    color: #737373;
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .inventory-card .inventory-title-link {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.35;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  .inventory-card-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.38rem 0.7rem;
+    margin: 0;
+  }
+
+  .inventory-card-fields > div {
+    min-width: 0;
+  }
+
+  .inventory-card-fields > .is-wide {
+    grid-column: 1 / -1;
+  }
+
+  .inventory-card-fields dt {
+    margin: 0 0 0.08rem;
+    color: #8a8a8a;
+    font-size: 11px;
+    font-weight: 650;
+  }
+
+  .inventory-card-fields dd {
+    margin: 0;
+    color: #171717;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .inventory-card-fields dd.is-code {
+    font-variant-numeric: tabular-nums;
+    word-break: break-all;
+  }
+
+  .inventory-card-fields dd.is-num {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 @media print {
@@ -2068,6 +2199,14 @@ main {
   .inventory-print-root .overflow-x-auto {
     overflow: visible !important;
     border: none !important;
+  }
+
+  .inventory-card-list {
+    display: none !important;
+  }
+
+  .inventory-table-desktop {
+    display: block !important;
   }
 
   .inventory-sheet table {

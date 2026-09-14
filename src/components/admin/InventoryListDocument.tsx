@@ -286,86 +286,176 @@ function StatusTable({
   }
 
   return (
-    <table>
-      <colgroup>
-        <col className="col-no" />
-        <col className="col-title" />
-        <col className="col-cat" />
-        <col className="col-sn" />
-        <col className="col-vin" />
-        <col className="col-car" />
-        <col className="col-date" />
-        <col className="col-days" />
-        <col className="col-money" />
-        <col className="col-money" />
-      </colgroup>
-      <thead>
-        <tr>
-          <th className="is-num">No</th>
-          <th>차량명</th>
-          <th>구분</th>
-          <th>S/N</th>
-          <th>VIN</th>
-          <th>차량번호</th>
-          <th>낙찰일</th>
-          <th className="is-num">누적</th>
-          <th className="is-num">원가</th>
-          <th className="is-num">판매가</th>
-        </tr>
-      </thead>
-      <tbody>
+    <>
+      <div className="inventory-table-desktop">
+        <table>
+          <colgroup>
+            <col className="col-no" />
+            <col className="col-title" />
+            <col className="col-cat" />
+            <col className="col-sn" />
+            <col className="col-vin" />
+            <col className="col-car" />
+            <col className="col-date" />
+            <col className="col-days" />
+            <col className="col-money" />
+            <col className="col-money" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th className="is-num">No</th>
+              <th>차량명</th>
+              <th>구분</th>
+              <th>S/N</th>
+              <th>VIN</th>
+              <th>차량번호</th>
+              <th>낙찰일</th>
+              <th className="is-num">누적</th>
+              <th className="is-num">원가</th>
+              <th className="is-num">판매가</th>
+            </tr>
+          </thead>
+          <tbody>
+            {block.rows.map((row) => {
+              const requested = Boolean(moveRequested?.has(row.id));
+              return (
+                <tr key={row.id}>
+                  <td className="is-num">{row.no}</td>
+                  <td className={`is-title${requested ? " is-move-request" : ""}`}>
+                    <span className="inventory-title-cell">
+                      {showMoveRequest ? (
+                        <MoveRequestButton
+                          requested={requested}
+                          onToggle={() => onToggleMove?.(row.id)}
+                        />
+                      ) : null}
+                      <TitleLink row={row} requested={requested} />
+                    </span>
+                  </td>
+                  <td className="is-cat">{row.categoryLabel}</td>
+                  <td className="is-code" title={row.serialNumber}>
+                    {row.serialNumber}
+                  </td>
+                  <td className="is-code" title={row.vin}>
+                    {row.vin}
+                  </td>
+                  <td className="is-code" title={row.vehicleNumber}>
+                    {row.vehicleNumber}
+                  </td>
+                  <td className="is-date">{row.inboundDate}</td>
+                  <td className={`is-num${row.daysAlert ? " is-days-alert" : ""}`}>
+                    {row.days}
+                  </td>
+                  <td className="is-num">{row.costLabel}</td>
+                  <td className="is-num">{row.salePriceLabel}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <ul className="inventory-card-list">
         {block.rows.map((row) => {
           const requested = Boolean(moveRequested?.has(row.id));
           return (
-          <tr key={row.id}>
-            <td className="is-num">{row.no}</td>
-            <td className={`is-title${requested ? " is-move-request" : ""}`}>
-              {showMoveRequest ? (
-                <button
-                  type="button"
-                  className={`inventory-move-icon inventory-no-print${requested ? " is-on" : ""}`}
-                  title={
-                    requested
-                      ? "충주 이동요청 취소"
-                      : "충주사업소로 이동요청"
-                  }
-                  aria-pressed={requested}
-                  onClick={() => onToggleMove?.(row.id)}
-                >
-                  <MoveToChungjuIcon />
-                </button>
-              ) : null}
-              <a
-                href={`/listings/${row.id}`}
-                className={`inventory-title-link${requested ? " is-move-request" : ""}`}
-                title={`${row.title} 매물 보기`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {row.title}
-              </a>
-            </td>
-            <td className="is-cat">{row.categoryLabel}</td>
-            <td className="is-code" title={row.serialNumber}>
-              {row.serialNumber}
-            </td>
-            <td className="is-code" title={row.vin}>
-              {row.vin}
-            </td>
-            <td className="is-code" title={row.vehicleNumber}>
-              {row.vehicleNumber}
-            </td>
-            <td className="is-date">{row.inboundDate}</td>
-            <td className={`is-num${row.daysAlert ? " is-days-alert" : ""}`}>
-              {row.days}
-            </td>
-            <td className="is-num">{row.costLabel}</td>
-            <td className="is-num">{row.salePriceLabel}</td>
-          </tr>
+            <li
+              key={row.id}
+              className={`inventory-card${requested ? " is-move-request" : ""}`}
+            >
+              <div className="inventory-card-top">
+                <span className="inventory-card-no">{row.no}</span>
+                <div className="inventory-title-cell">
+                  {showMoveRequest ? (
+                    <MoveRequestButton
+                      requested={requested}
+                      onToggle={() => onToggleMove?.(row.id)}
+                    />
+                  ) : null}
+                  <TitleLink row={row} requested={requested} />
+                </div>
+              </div>
+              <dl className="inventory-card-fields">
+                <div>
+                  <dt>구분</dt>
+                  <dd>{row.categoryLabel}</dd>
+                </div>
+                <div>
+                  <dt>누적</dt>
+                  <dd className={row.daysAlert ? "is-days-alert" : undefined}>
+                    {row.days}
+                  </dd>
+                </div>
+                <div>
+                  <dt>S/N</dt>
+                  <dd className="is-code">{row.serialNumber}</dd>
+                </div>
+                <div>
+                  <dt>VIN</dt>
+                  <dd className="is-code">{row.vin}</dd>
+                </div>
+                <div className="is-wide">
+                  <dt>차량번호</dt>
+                  <dd className="is-code">{row.vehicleNumber}</dd>
+                </div>
+                <div>
+                  <dt>낙찰일</dt>
+                  <dd>{row.inboundDate}</dd>
+                </div>
+                <div>
+                  <dt>원가</dt>
+                  <dd className="is-num">{row.costLabel}</dd>
+                </div>
+                <div>
+                  <dt>판매가</dt>
+                  <dd className="is-num">{row.salePriceLabel}</dd>
+                </div>
+              </dl>
+            </li>
           );
         })}
-      </tbody>
-    </table>
+      </ul>
+    </>
+  );
+}
+
+function TitleLink({
+  row,
+  requested,
+}: {
+  row: InventoryListRow;
+  requested: boolean;
+}) {
+  return (
+    <a
+      href={`/listings/${row.id}`}
+      className={`inventory-title-link${requested ? " is-move-request" : ""}`}
+      title={`${row.title} 매물 보기`}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {row.title}
+    </a>
+  );
+}
+
+function MoveRequestButton({
+  requested,
+  onToggle,
+}: {
+  requested: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`inventory-move-icon inventory-no-print${requested ? " is-on" : ""}`}
+      title={requested ? "충주 이동요청 취소" : "충주사업소로 이동요청"}
+      aria-pressed={requested}
+      onClick={onToggle}
+    >
+      <MoveToChungjuIcon />
+    </button>
   );
 }
 
