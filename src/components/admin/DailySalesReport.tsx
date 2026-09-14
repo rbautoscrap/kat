@@ -14,6 +14,8 @@ import {
   formatSaleMoney,
   formatSaleMoneyInput,
   formatSpotKrwRates,
+  countableSaleRows,
+  isCancelledSaleRow,
   isClosedReceivableRow,
   isUnpaidRow,
   parseSaleMoney,
@@ -235,16 +237,24 @@ export function DailySalesReport({
     () => daySales.filter((row) => row.currency !== "KRW"),
     [daySales],
   );
+  const countableDayKrw = useMemo(
+    () => countableSaleRows(daySalesKrw),
+    [daySalesKrw],
+  );
+  const countableDayFx = useMemo(
+    () => countableSaleRows(daySalesFx),
+    [daySalesFx],
+  );
   const dayTotals = useMemo(() => {
-    const krw = sumSaleRows(daySalesKrw);
+    const krw = sumSaleRows(countableDayKrw);
     return {
       ...krw,
-      total: krw.total + sumForeignSalesToKrw(daySalesFx, fxRates),
+      total: krw.total + sumForeignSalesToKrw(countableDayFx, fxRates),
     };
-  }, [daySalesFx, daySalesKrw, fxRates]);
+  }, [countableDayFx, countableDayKrw, fxRates]);
   const fxSalesKrw = useMemo(
-    () => sumForeignSalesToKrw(daySalesFx, fxRates),
-    [daySalesFx, fxRates],
+    () => sumForeignSalesToKrw(countableDayFx, fxRates),
+    [countableDayFx, fxRates],
   );
   const spotRateLabel = formatSpotKrwRates(fxRates);
   const openReceivables = useMemo(
@@ -396,7 +406,7 @@ export function DailySalesReport({
             badge="원화"
             tone="krw"
             rows={daySalesKrw}
-            totals={sumSaleRows(daySalesKrw)}
+            totals={sumSaleRows(countableDayKrw)}
             pending={pending}
             onPatch={syncAll}
             onSave={save}
@@ -408,15 +418,15 @@ export function DailySalesReport({
             tone="fx"
             rows={daySalesFx}
             totals={sumSaleRows(
-              daySalesFx,
-              daySalesFx[0]?.currency ?? "EUR",
+              countableDayFx,
+              countableDayFx[0]?.currency ?? daySalesFx[0]?.currency ?? "EUR",
             )}
             pending={pending}
             onPatch={syncAll}
             onSave={save}
             krwEquivalent={fxSalesKrw}
             rateNote={
-              daySalesFx.length
+              countableDayFx.length
                 ? spotRateLabel
                   ? `현재 시세 ${spotRateLabel} 기준 원화 환산`
                   : "시세를 불러오지 못해 인보이스 원화 금액으로 환산"
@@ -737,14 +747,16 @@ function ReportTable({
   const visibleRows = highlightUnpaid
     ? rows.filter((row) => !isClosedReceivableRow(row))
     : rows;
-  const currency = visibleRows[0]?.currency ?? rows[0]?.currency ?? "KRW";
+  const countedRows = countableSaleRows(visibleRows);
+  const cancelledCount = visibleRows.length - countedRows.length;
+  const currency = countedRows[0]?.currency ?? visibleRows[0]?.currency ?? rows[0]?.currency ?? "KRW";
   const showVat = !fx;
   const showProfit = !fx;
   const colSpan = 6 + (showVat ? 1 : 0) + (showProfit ? 2 : 0);
-  const footerGroups = visibleRows.length
-    ? sumSaleRowsByCurrency(visibleRows)
-    : [{ currency, totals: sumSaleRows(visibleRows, currency) }];
-  const hasFxRows = visibleRows.some((row) => row.currency !== "KRW");
+  const footerGroups = countedRows.length
+    ? sumSaleRowsByCurrency(countedRows)
+    : [{ currency, totals: sumSaleRows(countedRows, currency) }];
+  const hasFxRows = countedRows.some((row) => row.currency !== "KRW");
 
   return (
     <section
@@ -755,7 +767,12 @@ function ReportTable({
       <div className="daily-sales-section-head">
         <h2>
           {title}
-          {badge ? <em>{badge} {visibleRows.length}건</em> : null}
+          {badge ? (
+            <em>
+              {badge} {countedRows.length}건
+              {cancelledCount > 0 ? ` · 취소 ${cancelledCount}` : ""}
+            </em>
+          ) : null}
         </h2>
         {addable && onAdd ? (
           <AddReceivableControl
@@ -800,12 +817,17 @@ function ReportTable({
               </tr>
             ) : (
               visibleRows.map((row) => {
-                const unpaid = isUnpaidRow(row);
+                const cancelled = isCancelledSaleRow(row);
+                const unpaid = !cancelled && isUnpaidRow(row);
                 return (
                   <tr
                     key={row.itemId}
                     className={
-                      highlightUnpaid && unpaid ? "is-unpaid" : undefined
+                      cancelled
+                        ? "is-cancelled"
+                        : highlightUnpaid && unpaid
+                          ? "is-unpaid"
+                          : undefined
                     }
                   >
                     <td>

@@ -42,6 +42,11 @@ export function isCancelledSaleRow(row: { shipmentType: string }) {
   );
 }
 
+/** 판매액·입금·이익 합계에 넣는 행. 취소 건은 제외합니다. */
+export function countableSaleRows<T extends { shipmentType: string }>(rows: T[]) {
+  return rows.filter((row) => !isCancelledSaleRow(row));
+}
+
 /** 미수금현황에서 제외: 결재완료·취소·잔액 0 */
 export function isClosedReceivableRow(row: {
   shipmentType: string;

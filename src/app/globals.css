@@ -2789,6 +2789,33 @@ main {
   background: #fff8dc;
 }
 
+.daily-sales-table tbody tr.is-cancelled td {
+  background: #f4f4f4;
+  color: #a3a3a3;
+  text-decoration: line-through;
+}
+
+.daily-sales-table tbody tr.is-cancelled .is-remain,
+.daily-sales-table tbody tr.is-cancelled .is-profit,
+.daily-sales-table tbody tr.is-cancelled .is-loss,
+.daily-sales-table tbody tr.is-cancelled .daily-sales-link,
+.daily-sales-table tbody tr.is-cancelled .daily-sales-plate {
+  color: #a3a3a3;
+}
+
+.daily-sales-table tbody tr.is-cancelled .daily-sales-link {
+  font-weight: 500;
+}
+
+.daily-sales-table tbody tr.is-cancelled td.is-edit {
+  text-decoration: none;
+}
+
+.daily-sales-table tbody tr.is-cancelled .is-edit select {
+  color: #737373;
+  font-weight: 700;
+}
+
 .daily-sales-table .is-center { text-align: center; }
 .daily-sales-table .is-num {
   text-align: right;
@@ -3267,6 +3294,7 @@ main {
 
   .daily-sales-table thead th,
   .daily-sales-table tbody tr.is-unpaid td,
+  .daily-sales-table tbody tr.is-cancelled td,
   .daily-sales-kpi.is-warn,
   .daily-sales-kpi.is-profit-kpi,
   .daily-sales-table .is-profit,
