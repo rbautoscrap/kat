@@ -12,10 +12,10 @@ import type {
 import { Prisma } from "@prisma/client";
 import { auth, isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
-import { deleteUploadedFiles } from "@/lib/listing-actions";
+import { deleteListingById } from "@/lib/delete-listing";
 import { loginIdSchema, passwordSchema } from "@/lib/login-id";
 import { optionalPhoneSchema, phoneKeyFromPhone } from "@/lib/phone";
-import { invalidateHomeListingsCache } from "@/lib/home-listings";
+import { revalidateListingSurfaces } from "@/lib/home-listings";
 import { prisma } from "@/lib/prisma";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
@@ -156,11 +156,7 @@ export async function updateListingCategory(
     };
   }
 
-  invalidateHomeListingsCache();
-  revalidatePath("/admin");
-  revalidatePath("/admin/listings");
-  revalidatePath("/");
-  revalidatePath(`/listings/${listingId}`);
+  revalidateListingSurfaces(listingId);
   return { ok: true };
 }
 
@@ -192,12 +188,7 @@ export async function updateListingSaleStatus(
     };
   }
 
-  invalidateHomeListingsCache();
-  revalidatePath("/admin");
-  revalidatePath("/admin/listings");
-  revalidatePath("/");
-  revalidatePath("/listings");
-  revalidatePath(`/listings/${listingId}`);
+  revalidateListingSurfaces(listingId);
   return { ok: true };
 }
 
@@ -229,10 +220,7 @@ export async function updateListingSalePrice(
     };
   }
 
-  invalidateHomeListingsCache();
-  revalidatePath("/");
-  revalidatePath("/listings");
-  revalidatePath(`/listings/${listingId}`);
+  revalidateListingSurfaces(listingId);
   return { ok: true };
 }
 
@@ -312,36 +300,7 @@ export async function setUserAccountStatus(
 
 export async function deleteListing(listingId: string): Promise<ActionResult> {
   if (!(await assertAdmin())) return { ok: false, error: "권한이 없습니다." };
-
-  if (!listingId) return { ok: false, error: "매물을 찾을 수 없습니다." };
-
-  const listing = await prisma.listing.findUnique({
-    where: { id: listingId },
-    select: {
-      id: true,
-      images: { select: { url: true } },
-    },
-  });
-  if (!listing) return { ok: false, error: "매물을 찾을 수 없습니다." };
-
-  try {
-    // Statement FKs use onDelete: SetNull — snapshots remain after listing delete.
-    await prisma.listing.delete({ where: { id: listingId } });
-    await deleteUploadedFiles(listing.images.map((img) => img.url));
-  } catch (error) {
-    return {
-      ok: false,
-      error: prismaErrorMessage(error, "매물 삭제에 실패했습니다."),
-    };
-  }
-
-  invalidateHomeListingsCache();
-  revalidatePath("/admin");
-  revalidatePath("/admin/listings");
-  revalidatePath("/admin/statements");
-  revalidatePath("/");
-  revalidatePath("/listings");
-  return { ok: true };
+  return deleteListingById(listingId);
 }
 
 /** Pin listing to the front for 24 hours via bumpedAt (does not change createdAt). */
@@ -370,12 +329,7 @@ export async function bumpListingToFront(
     };
   }
 
-  invalidateHomeListingsCache();
-  revalidatePath("/admin");
-  revalidatePath("/admin/listings");
-  revalidatePath("/");
-  revalidatePath("/listings");
-  revalidatePath(`/listings/${listingId}`);
+  revalidateListingSurfaces(listingId);
   return { ok: true };
 }
 
@@ -562,11 +516,7 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
     };
   }
 
-  invalidateHomeListingsCache();
-  revalidatePath("/admin");
+  revalidateListingSurfaces();
   revalidatePath("/admin/users");
-  revalidatePath("/admin/listings");
-  revalidatePath("/");
-  revalidatePath("/listings");
   return { ok: true };
 }

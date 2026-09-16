@@ -55,9 +55,16 @@ export default async function ListingsPage({ searchParams }: Props) {
   const visibilityWhere: Prisma.ListingWhereInput = canViewSold
     ? {}
     : memberListingVisibilityWhere();
+  const soldPartsWhere: Prisma.ListingWhereInput = canViewSold
+    ? {}
+    : {
+        NOT: {
+          AND: [{ category: "USED_PARTS" }, { saleStatus: "SOLD" }],
+        },
+      };
 
   const where: Prisma.ListingWhereInput = {
-    AND: [categoryWhere, searchWhere, visibilityWhere],
+    AND: [categoryWhere, searchWhere, visibilityWhere, soldPartsWhere],
   };
 
   const fromMenu = Boolean(category) && !q;

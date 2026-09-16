@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import type { Listing, ListingImage, ListingCategory, Prisma } from "@prisma/client";
 import { memberListingVisibilityWhere } from "@/lib/live-auction";
 import { orderByIds, orderListingsNewestFirst } from "@/lib/listing-shuffle";
@@ -22,16 +23,24 @@ export type HomeSections = {
   usedParts: HomeListing[];
 };
 
-const HOME_CACHE_MS = 60_000;
-
-const homeCache: {
-  public: { at: number; data: HomeSections } | null;
-  admin: { at: number; data: HomeSections } | null;
-} = { public: null, admin: null };
-
+/** @deprecated Home always reads SQLite; kept so existing call sites compile. */
 export function invalidateHomeListingsCache() {
-  homeCache.public = null;
-  homeCache.admin = null;
+  /* no process-local cache — stale cards after delete caused 404s */
+}
+
+export function revalidateListingSurfaces(listingId?: string) {
+  invalidateHomeListingsCache();
+  revalidatePath("/", "layout");
+  revalidatePath("/listings");
+  revalidatePath("/my-parts");
+  revalidatePath("/offers");
+  revalidatePath("/admin");
+  revalidatePath("/admin/listings");
+  revalidatePath("/admin/statements");
+  if (listingId) {
+    revalidatePath(`/listings/${listingId}`);
+    revalidatePath(`/listings/${listingId}/edit`);
+  }
 }
 
 function pickIds(
@@ -39,7 +48,7 @@ function pickIds(
     id: string;
     category: ListingCategory;
     saleStatus: string | null;
-        bumpedAt: Date | null;
+    bumpedAt: Date | null;
     createdAt: Date;
   }[],
   category: ListingCategory,
@@ -51,12 +60,6 @@ function pickIds(
 export async function loadHomeListings(
   includeEndedAuctions: boolean,
 ): Promise<HomeSections> {
-  const cacheKey = includeEndedAuctions ? "admin" : "public";
-  const cached = homeCache[cacheKey];
-  if (cached && Date.now() - cached.at < HOME_CACHE_MS) {
-    return cached.data;
-  }
-
   const visibility: Prisma.ListingWhereInput = includeEndedAuctions
     ? {}
     : memberListingVisibilityWhere();
@@ -84,7 +87,11 @@ export async function loadHomeListings(
       ),
     ).slice(0, HOME_SECTION_LIMIT);
     const auctionIds = pickIds(rows, "LIVE_AUCTION");
-    const partsIds = pickIds(rows, "USED_PARTS");
+    // Completed Used Parts leave the home board (P2P message board).
+    const partsIds = pickIds(
+      rows.filter((row) => row.saleStatus !== "SOLD"),
+      "USED_PARTS",
+    );
     const pageIds = [...standByIds, ...carIds, ...auctionIds, ...partsIds];
 
     const covers =
@@ -97,19 +104,13 @@ export async function loadHomeListings(
             },
           });
 
-    const data: HomeSections = {
+    return {
       standBy: orderByIds(covers, standByIds),
       carListings: orderByIds(covers, carIds),
       liveAuction: orderByIds(covers, auctionIds),
       usedParts: orderByIds(covers, partsIds),
     };
-    homeCache[cacheKey] = { at: Date.now(), data };
-    return data;
   } catch (error) {
-    if (cached) {
-      console.error("[HomePage] listing query failed, serving stale cache", error);
-      return cached.data;
-    }
     console.error("[HomePage] listing query failed", error);
     throw error;
   }

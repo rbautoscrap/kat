@@ -124,7 +124,11 @@ export function ListingAdminControls({
             if (!confirmListingDelete()) return;
             startTransition(async () => {
               const result = await deleteListing(listingId);
-              if (!result.ok) alert(result.error);
+              if (!result.ok) {
+                alert(result.error);
+                return;
+              }
+              router.refresh();
             });
           }}
         >

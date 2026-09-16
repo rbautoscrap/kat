@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { invalidateHomeListingsCache } from "@/lib/home-listings";
+import { deleteListingById } from "@/lib/delete-listing";
+import { revalidateListingSurfaces } from "@/lib/home-listings";
 import { prisma } from "@/lib/prisma";
 import { toApiErrorMessage } from "@/lib/api-error";
 import { requireListingModifier } from "@/lib/listing-access";
@@ -133,7 +134,7 @@ export async function PUT(request: Request, { params }: Params) {
       await deleteUploadedFiles(orphanUrls);
     }
 
-    invalidateHomeListingsCache();
+    revalidateListingSurfaces(id);
     return NextResponse.json({ id });
   } catch (err) {
     console.error("[PUT /api/listings/:id]", err);
@@ -156,19 +157,9 @@ export async function DELETE(_request: Request, { params }: Params) {
     );
   }
 
-  try {
-    const urls = access.listing.images.map((img) => img.url);
-    await prisma.listing.delete({ where: { id } });
-    await deleteUploadedFiles(urls);
-    invalidateHomeListingsCache();
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    console.error("[DELETE /api/listings/:id]", err);
-    return NextResponse.json(
-      {
-        error: toApiErrorMessage(err, "매물 삭제에 실패했습니다."),
-      },
-      { status: 400 },
-    );
+  const result = await deleteListingById(id);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
   }
+  return NextResponse.json({ ok: true });
 }

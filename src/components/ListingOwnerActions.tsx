@@ -42,6 +42,7 @@ export function ListingOwnerActions({
     try {
       const res = await fetch(`/api/listings/${listingId}`, {
         method: "DELETE",
+        cache: "no-store",
       });
       const json = (await res.json().catch(() => ({}))) as {
         error?: string;
@@ -51,7 +52,7 @@ export function ListingOwnerActions({
         setPending(false);
         return;
       }
-      router.push(categoryPath);
+      router.replace(categoryPath);
       router.refresh();
     } catch {
       setError("Failed to delete listing.");

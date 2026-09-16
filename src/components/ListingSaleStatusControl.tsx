@@ -29,6 +29,7 @@ export function ListingSaleStatusControl({
       const result = await updateListingSaleStatus(listingId, next);
       if (!result.ok) {
         alert(result.error);
+        router.refresh();
         return;
       }
       router.refresh();
