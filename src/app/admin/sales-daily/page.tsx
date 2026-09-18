@@ -6,6 +6,7 @@ import { getKrwFxRates } from "@/lib/fx-rates";
 import { loadMonthPurchases, loadSaleRowsThrough } from "@/lib/sales-daily-load";
 import {
   isClosedReceivableRow,
+  isUnpaidRow,
   parseSalesDailyView,
   sortSaleRowsByRecentDate,
 } from "@/lib/sales-daily";
@@ -71,7 +72,8 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
       (row) =>
         row.currency === "KRW" &&
         !row.inReceivableLedger &&
-        !isClosedReceivableRow(row),
+        !isClosedReceivableRow(row) &&
+        isUnpaidRow(row),
     ),
   );
   const addableFx = sortSaleRowsByRecentDate(
@@ -79,7 +81,8 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
       (row) =>
         row.currency !== "KRW" &&
         !row.inReceivableLedger &&
-        !isClosedReceivableRow(row),
+        !isClosedReceivableRow(row) &&
+        isUnpaidRow(row),
     ),
   );
   const monthlyBase = buildMonthlySalesReport(
@@ -113,9 +116,9 @@ export default async function AdminDailySalesPage({ searchParams }: Props) {
             {view === "month"
               ? "선택한 달 1일부터 말일까지 거래명세서와 입고 매입비용을 기준으로 집계하고, 전월 대비 증감을 함께 보여 줍니다."
               : view === "recv"
-                ? "미수 원장에 등록된 원화 항목만 보여 줍니다. 결재완료·취소 건은 목록과 합계에서 제외됩니다."
+                ? "미수 원장에 등록된 원화 항목만 보여 줍니다. 입금해도 항목은 남고, 결재완료·취소만 목록에서 빠집니다."
                 : view === "fx"
-                  ? "미수 원장에 등록된 외화 항목만 보여 줍니다. 결재완료·취소 건은 목록과 합계에서 제외됩니다."
+                  ? "미수 원장에 등록된 외화 항목만 보여 줍니다. 입금해도 항목은 남고, 결재완료·취소만 목록에서 빠집니다."
                   : "오늘부터 작성한 거래명세서·해외 인보이스가 자동으로 반영됩니다. 유로·달러는 당일 시세로 판매액에 합산됩니다. 분류를 취소하면 흐리게 표시되고 합계에서 빠집니다."}
           </p>
         </div>

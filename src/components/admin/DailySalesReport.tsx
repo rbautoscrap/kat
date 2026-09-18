@@ -136,9 +136,10 @@ function applyPatch(
     if (row.itemId !== itemId) return row;
     const next = { ...row, ...patch };
     const paid = parseSaleMoney(next.paidAmount);
-    next.remaining = String(
-      remainingOf(parseSaleMoney(next.total), paid, next.currency),
-    );
+    const billed =
+      parseSaleMoney(next.total) ||
+      parseSaleMoney(next.supply) + parseSaleMoney(next.vat);
+    next.remaining = String(remainingOf(billed, paid, next.currency));
     return next;
   });
 }

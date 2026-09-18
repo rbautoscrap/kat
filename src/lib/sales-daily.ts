@@ -47,14 +47,12 @@ export function countableSaleRows<T extends { shipmentType: string }>(rows: T[])
   return rows.filter((row) => !isCancelledSaleRow(row));
 }
 
-/** 미수금현황에서 제외: 결재완료·취소·잔액 0 */
+/** 미수금현황에서 제외: 결재완료·취소만. 입금으로 잔액이 0이 되어도 분류할 때까지 유지합니다. */
 export function isClosedReceivableRow(row: {
   shipmentType: string;
   remaining?: string;
 }) {
-  if (isSettledSaleRow(row) || isCancelledSaleRow(row)) return true;
-  if (row.remaining == null || row.remaining === "") return false;
-  return parseSaleMoney(row.remaining) <= 0;
+  return isSettledSaleRow(row) || isCancelledSaleRow(row);
 }
 
 function normalizeShipmentLabel(value: string | null | undefined) {
