@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { FxBoardQuote } from "@/lib/fx-rates";
 
-const POLL_MS = 5 * 60_000;
+const REFRESH_MS = 10 * 60_000;
 
 function formatWon(value: number) {
   return value.toLocaleString("en-US", {
@@ -50,30 +50,33 @@ export function FxRateBoard({ initial }: { initial?: FxBoardQuote | null }) {
 
   useEffect(() => {
     let cancelled = false;
+    let lastLoad = initial ? Date.now() : 0;
 
     async function load() {
       try {
-        const res = await fetch("/api/fx", { cache: "no-store" });
+        const res = await fetch("/api/fx");
         if (!res.ok) return;
         const data = (await res.json()) as FxBoardQuote & { ok?: boolean };
         if (cancelled || !data.ok || !data.usd || !data.eur) return;
+        lastLoad = Date.now();
         setQuote({ usd: data.usd, eur: data.eur, asOf: data.asOf });
       } catch {
         /* keep last quote */
       }
     }
 
-    function tick() {
-      if (document.visibilityState === "hidden") return;
+    if (!initial) void load();
+
+    function onVisible() {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastLoad < REFRESH_MS) return;
       void load();
     }
 
-    const id = window.setInterval(tick, POLL_MS);
-    if (!initial) tick();
-
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
-      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [initial]);
 

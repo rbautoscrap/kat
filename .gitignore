@@ -56,3 +56,7 @@ next-env.d.ts
 /prisma/build.db-journal
 /build.db
 /build.db-journal
+
+# Editor / merge leftovers — never ship
+*.pLDH
+*.ts.pLDH

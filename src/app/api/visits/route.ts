@@ -44,27 +44,24 @@ export async function POST() {
   const today = todayKey();
   const alreadyCounted = cookieStore.get("visit_counted")?.value === today;
 
-  let stats;
   if (alreadyCounted) {
-    stats = await getVisitStats();
-  } else {
-    const updated = await recordVisit();
-    stats = updated
-      ? {
-          todayVisits: updated.todayVisits,
-          totalVisits: updated.totalVisits,
-        }
-      : await getVisitStats();
+    return new NextResponse(null, { status: 204 });
   }
 
+  const updated = await recordVisit();
+  const stats = updated
+    ? {
+        todayVisits: updated.todayVisits,
+        totalVisits: updated.totalVisits,
+      }
+    : await getVisitStats();
+
   const response = NextResponse.json(stats);
-  if (!alreadyCounted) {
-    response.cookies.set("visit_counted", today, {
-      path: "/",
-      maxAge: 60 * 60 * 24,
-      sameSite: "lax",
-      httpOnly: true,
-    });
-  }
+  response.cookies.set("visit_counted", today, {
+    path: "/",
+    maxAge: 60 * 60 * 24,
+    sameSite: "lax",
+    httpOnly: true,
+  });
   return response;
 }

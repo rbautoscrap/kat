@@ -16,3 +16,11 @@ prisma/build.db
 prisma/build.db-journal
 .cursor
 *.md
+*.pLDH
+*.ts.pLDH
+*.zip
+docs/*.pdf
+docs/KAT-*
+docs/policy-fund-brief.html
+docs/vehicle-exit-notices.html
+docs/rbauto-logo-watermark.jpg

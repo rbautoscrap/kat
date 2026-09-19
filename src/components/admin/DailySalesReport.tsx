@@ -183,8 +183,9 @@ export function DailySalesReport({
 
   useEffect(() => {
     if (fxRates) setLiveRates(fxRates);
+    if (fxRates) return;
     let cancelled = false;
-    fetch("/api/fx", { cache: "no-store" })
+    fetch("/api/fx")
       .then((res) => res.json())
       .then((quote) => {
         if (cancelled) return;

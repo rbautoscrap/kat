@@ -2,9 +2,17 @@
 
 import { useEffect } from "react";
 
-/** One POST per browser day to record a visit; display is server-rendered. */
+const SENT_KEY = "kat-visit-sent";
+
+/** One POST per browser tab session. The cookie then skips extra DB writes. */
 export function VisitBeacon() {
   useEffect(() => {
+    try {
+      if (sessionStorage.getItem(SENT_KEY) === "1") return;
+      sessionStorage.setItem(SENT_KEY, "1");
+    } catch {
+      /* private mode */
+    }
     void fetch("/api/visits", { method: "POST", keepalive: true }).catch(
       () => {},
     );

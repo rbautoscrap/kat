@@ -36,6 +36,9 @@ export function SessionSync() {
 
     void check();
 
+    let lastFocusCheck = 0;
+    const FOCUS_GAP_MS = 30_000;
+
     let channel: BroadcastChannel | null = null;
     try {
       channel = new BroadcastChannel(AUTH_SYNC_KEY);
@@ -51,7 +54,11 @@ export function SessionSync() {
     }
 
     function onVisible() {
-      if (document.visibilityState === "visible") void check();
+      if (document.visibilityState !== "visible") return;
+      const now = Date.now();
+      if (now - lastFocusCheck < FOCUS_GAP_MS) return;
+      lastFocusCheck = now;
+      void check();
     }
 
     window.addEventListener("storage", onStorage);
