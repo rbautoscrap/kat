@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { ListingCategory, ListingSaleStatus } from "@prisma/client";
 import { AuctionImageBadge } from "@/components/AuctionImageBadge";
 import { DownloadPhotoButton } from "@/components/DownloadPhotoButton";
@@ -37,6 +38,7 @@ export function ImageGallery({
   listingId,
   persistDisplayGroup = false,
 }: Props) {
+  const router = useRouter();
   const grouped = useMemo(() => splitListingImages(images), [images]);
   const available = LISTING_IMAGE_GROUPS.filter(
     (group) => grouped[group].length > 0,
@@ -78,11 +80,12 @@ export function ImageGallery({
     if (!persistDisplayGroup || !listingId || next === group) return;
     setSaving(true);
     try {
-      await fetch(`/api/listings/${listingId}`, {
+      const res = await fetch(`/api/listings/${listingId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ displayedImageGroup: next }),
       });
+      if (res.ok) router.refresh();
     } catch {
       /* keep local selection */
     } finally {
@@ -94,7 +97,7 @@ export function ImageGallery({
 
   return (
     <>
-      {available.length > 1 ? (
+      {persistDisplayGroup && available.length > 1 ? (
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <ListingImageGroupToggle
             value={group}
@@ -104,11 +107,11 @@ export function ImageGallery({
           />
           <span className="text-[12px] tracking-wide text-neutral-500">
             {listingImageGroupLabel(group)} 대표·상세
-            {persistDisplayGroup
-              ? saving
-                ? " · 저장 중"
-                : " · 사이트 노출"
-              : ""}
+            {saving
+              ? " · 저장 중"
+              : group === 2
+                ? " · Car Listings로 이동"
+                : " · Stand by로 이동"}
           </span>
         </div>
       ) : null}

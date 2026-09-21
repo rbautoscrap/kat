@@ -30,7 +30,9 @@ import {
 import {
   LISTING_IMAGE_GROUPS,
   MAX_DETAIL_IMAGES_PER_GROUP,
+  listingImageGroupCategory,
   listingImageGroupLabel,
+  listingMovesWithImageGroup,
   parseListingImageGroup,
   splitListingImages,
   type ListingImageGroup,
@@ -292,12 +294,17 @@ export function ListingForm({
     vehicleGroupsFromListing(listing?.images),
   );
   const [displayedImageGroup, setDisplayedImageGroup] =
-    useState<ListingImageGroup>(() =>
-      parseListingImageGroup(
-        (listing as { displayedImageGroup?: number } | undefined)
-          ?.displayedImageGroup,
-      ),
-    );
+    useState<ListingImageGroup>(() => {
+      if (listing) {
+        return parseListingImageGroup(
+          (listing as { displayedImageGroup?: number }).displayedImageGroup,
+        );
+      }
+      const start = defaultCategory ?? "CAR_LISTINGS";
+      if (start === "STAND_BY") return 1;
+      if (start === "CAR_LISTINGS") return 2;
+      return 1;
+    });
   const [category, setCategory] = useState<ListingCategory>(
     () => listing?.category ?? defaultCategory ?? "CAR_LISTINGS",
   );
@@ -339,12 +346,21 @@ export function ListingForm({
 
   function onCategoryChange(next: ListingCategory) {
     setCategory(next);
+    if (next === "STAND_BY") setDisplayedImageGroup(1);
+    if (next === "CAR_LISTINGS") setDisplayedImageGroup(2);
     if (
       next === "LIVE_AUCTION" &&
       !(listing as { auctionEndsAt?: Date | string | null } | undefined)
         ?.auctionEndsAt
     ) {
       applyAuctionPreset(nextAuctionPreset());
+    }
+  }
+
+  function onDisplayedImageGroupChange(next: ListingImageGroup) {
+    setDisplayedImageGroup(next);
+    if (listingMovesWithImageGroup(category)) {
+      setCategory(listingImageGroupCategory(next));
     }
   }
 
@@ -1379,11 +1395,15 @@ export function ListingForm({
                   return !ready && displayedImageGroup !== 2;
                 })(),
               }}
-              onChange={setDisplayedImageGroup}
+              onChange={onDisplayedImageGroupChange}
             />
             <span className="text-[12px] tracking-wide text-neutral-500">
-              {listingImageGroupLabel(displayedImageGroup)} 대표·상세가
-              사이트에 표시됩니다
+              {listingImageGroupLabel(displayedImageGroup)}
+              {listingMovesWithImageGroup(category)
+                ? displayedImageGroup === 2
+                  ? " · Car Listings로 이동"
+                  : " · Stand by로 이동"
+                : " 대표·상세가 사이트에 표시됩니다"}
             </span>
           </div>
         </div>

@@ -13,7 +13,11 @@ import {
   saveListingImageUploads,
   withPublicNotesTranslation,
 } from "@/lib/listing-actions";
-import { resolveDisplayedImageGroup } from "@/lib/listing-images";
+import {
+  listingImageGroupCategory,
+  listingMovesWithImageGroup,
+  resolveDisplayedImageGroup,
+} from "@/lib/listing-images";
 
 export async function POST(request: Request) {
   const dbUser = await resolveSessionDbUser();
@@ -74,15 +78,21 @@ export async function POST(request: Request) {
       );
     }
 
+    const displayedImageGroup = resolveDisplayedImageGroup(
+      data.displayedImageGroup,
+      imageCreates,
+    );
+    const category = listingMovesWithImageGroup(data.category)
+      ? listingImageGroupCategory(displayedImageGroup)
+      : data.category;
+
     const listing = await prisma.listing.create({
       data: {
         ...data,
+        category,
         serialNumber: generateSerialNumber(),
         authorId: dbUser.id,
-        displayedImageGroup: resolveDisplayedImageGroup(
-          data.displayedImageGroup,
-          imageCreates,
-        ),
+        displayedImageGroup,
         // 24h front placement so the new unit shows on home + category first page.
         bumpedAt: new Date(),
         images: {

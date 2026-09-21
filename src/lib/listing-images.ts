@@ -36,6 +36,19 @@ export function listingImageGroupLabel(group: number): string {
     : "1그룹 (Stand by)";
 }
 
+export function listingImageGroupCategory(
+  group: number,
+): "STAND_BY" | "CAR_LISTINGS" {
+  return parseListingImageGroup(group) === 2 ? "CAR_LISTINGS" : "STAND_BY";
+}
+
+/** Photo-set switch moves stock between Stand by and Car Listings only. */
+export function listingMovesWithImageGroup(
+  category: string | null | undefined,
+) {
+  return category === "CAR_LISTINGS" || category === "STAND_BY";
+}
+
 export function imageGroupOf(image: {
   group?: number | null;
 }): ListingImageGroup {

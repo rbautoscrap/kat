@@ -3,6 +3,7 @@ import { deleteListingById } from "@/lib/delete-listing";
 import { revalidateListingSurfaces } from "@/lib/home-listings";
 import { prisma } from "@/lib/prisma";
 import { toApiErrorMessage } from "@/lib/api-error";
+import { isAdmin } from "@/lib/auth";
 import { requireListingModifier } from "@/lib/listing-access";
 import {
   deleteUploadedFiles,
@@ -12,7 +13,11 @@ import {
   saveListingImageUploads,
   withPublicNotesTranslation,
 } from "@/lib/listing-actions";
-import { resolveDisplayedImageGroup } from "@/lib/listing-images";
+import {
+  listingImageGroupCategory,
+  listingMovesWithImageGroup,
+  resolveDisplayedImageGroup,
+} from "@/lib/listing-images";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -170,10 +175,17 @@ export async function PUT(request: Request, { params }: Params) {
             existing.images,
           );
 
+    const category = listingMovesWithImageGroup(
+      data.category ?? existing.category,
+    )
+      ? listingImageGroupCategory(displayedImageGroup)
+      : data.category;
+
     await prisma.listing.update({
       where: { id },
       data: {
         ...data,
+        category,
         displayedImageGroup,
         ...imageUpdate,
       },
@@ -206,18 +218,28 @@ export async function PATCH(request: Request, { params }: Params) {
     );
   }
 
+  if (!isAdmin(access.dbUser.role)) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+  }
+
   try {
     const body = (await request.json()) as { displayedImageGroup?: unknown };
     const displayedImageGroup = resolveDisplayedImageGroup(
       body.displayedImageGroup,
       access.listing.images,
     );
+    const category = listingMovesWithImageGroup(access.listing.category)
+      ? listingImageGroupCategory(displayedImageGroup)
+      : undefined;
     await prisma.listing.update({
       where: { id },
-      data: { displayedImageGroup },
+      data: {
+        displayedImageGroup,
+        ...(category ? { category } : {}),
+      },
     });
     revalidateListingSurfaces(id);
-    return NextResponse.json({ displayedImageGroup });
+    return NextResponse.json({ displayedImageGroup, category });
   } catch (err) {
     console.error("[PATCH /api/listings/:id]", err);
     return NextResponse.json(

@@ -47,7 +47,12 @@ import {
 import { PRICE_INQUIRY_WHATSAPP } from "@/lib/contact";
 import { convertKrw, getFxBoardQuote, getKrwFxRates } from "@/lib/fx-rates";
 import { displayAccumulatedDays } from "@/lib/listing-actions";
-import { listingCardCoverUrl, splitListingImages } from "@/lib/listing-images";
+import {
+  imagesForDisplayGroup,
+  listingCardCoverUrl,
+  listingMovesWithImageGroup,
+  splitListingImages,
+} from "@/lib/listing-images";
 import { recordListingView } from "@/lib/listing-views";
 import { isPriceInquiryHoliday } from "@/lib/site-settings";
 import {
@@ -311,7 +316,10 @@ export default async function ListingDetailPage({ params }: Props) {
 
   const isParts = isPartsCategory(listing.category);
   const groupedPhotos = splitListingImages(listing.images);
-  const galleryImages = listing.images;
+  const galleryImages =
+    adminView && !isParts
+      ? listing.images
+      : imagesForDisplayGroup(listing.images, listing.displayedImageGroup);
   const coverUrl = listingCardCoverUrl(
     listing.images,
     listing.displayedImageGroup,
@@ -696,7 +704,7 @@ export default async function ListingDetailPage({ params }: Props) {
             listingId={listing.id}
             persistDisplayGroup={
               adminView &&
-              !isParts &&
+              listingMovesWithImageGroup(listing.category) &&
               groupedPhotos[1].length > 0 &&
               groupedPhotos[2].length > 0
             }

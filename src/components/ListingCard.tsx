@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { Listing, ListingImage } from "@prisma/client";
 import { AuctionCountdown } from "@/components/AuctionCountdown";
 import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl";
@@ -12,6 +13,7 @@ import { ListingImageGroupToggle } from "@/components/ListingImageGroupToggle";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
 import {
   listingCardCoverUrl,
+  listingMovesWithImageGroup,
   LISTING_IMAGE_GROUPS,
   parseListingImageGroup,
   splitListingImages,
@@ -47,6 +49,7 @@ export function ListingCard({
   canManageSaleStatus = false,
   isSignedIn = false,
 }: Props) {
+  const router = useRouter();
   const [gateOpen, setGateOpen] = useState(false);
   const [photoGroup, setPhotoGroup] = useState<ListingImageGroup>(() =>
     parseListingImageGroup(listing.displayedImageGroup),
@@ -73,7 +76,9 @@ export function ListingCard({
   ).trim();
   const salePriceLabel = formatSalePriceDisplay(listing.salePrice);
   const groupToggle =
-    !isParts && photoSets.length > 1 ? (
+    canManageSaleStatus &&
+    listingMovesWithImageGroup(listing.category) &&
+    photoSets.length > 1 ? (
       <div
         className="absolute bottom-1 left-1 z-[3]"
         onClick={(event) => {
@@ -85,7 +90,18 @@ export function ListingCard({
           size="sm"
           value={photoGroup}
           available={photoSets}
-          onChange={setPhotoGroup}
+          onChange={(next) => {
+            if (next === photoGroup) return;
+            setPhotoGroup(next);
+            void (async () => {
+              const res = await fetch(`/api/listings/${listing.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ displayedImageGroup: next }),
+              });
+              if (res.ok) router.refresh();
+            })();
+          }}
         />
       </div>
     ) : null;
