@@ -18,6 +18,7 @@ import {
 import { canonicalizeStorageLocation } from "@/lib/storage-location";
 import {
   assembleListingImageCreates,
+  MAX_DETAIL_IMAGES_PER_GROUP,
   MAX_IMAGES_PER_GROUP,
   parseListingImageGroup,
   type GroupUpload,
@@ -641,10 +642,15 @@ export async function saveListingImageUploads(
     });
 
     for (const { group, coverFile, galleryFiles } of groupFiles) {
+      if (galleryFiles.length > MAX_DETAIL_IMAGES_PER_GROUP) {
+        throw new Error(
+          `${group}그룹 상세 사진은 최대 ${MAX_DETAIL_IMAGES_PER_GROUP}장까지 업로드할 수 있습니다.`,
+        );
+      }
       const total = (coverFile ? 1 : 0) + galleryFiles.length;
       if (total > MAX_IMAGES_PER_GROUP) {
         throw new Error(
-          `${group}그룹 이미지는 대표 사진 포함 최대 ${MAX_IMAGES_PER_GROUP}장까지 업로드할 수 있습니다.`,
+          `${group}그룹 이미지는 대표 1장 + 상세 ${MAX_DETAIL_IMAGES_PER_GROUP}장까지입니다.`,
         );
       }
     }

@@ -29,7 +29,7 @@ import {
 } from "@/lib/listings";
 import {
   LISTING_IMAGE_GROUPS,
-  MAX_IMAGES_PER_GROUP,
+  MAX_DETAIL_IMAGES_PER_GROUP,
   listingImageGroupLabel,
   parseListingImageGroup,
   splitListingImages,
@@ -366,10 +366,11 @@ export function ListingForm({
     (group: ListingImageGroup, files: FileList | File[]) => {
       const list = Array.from(files).filter(isImageFile);
       patchVehicleGroup(group, (current) => {
-        const remaining = MAX_IMAGES_PER_GROUP - 1 - current.keptGallery.length;
+        const remaining =
+          MAX_DETAIL_IMAGES_PER_GROUP - current.keptGallery.length;
         if (list.length > remaining) {
           setError(
-            `${group}그룹 상세 사진은 최대 ${remaining}장까지 선택할 수 있습니다. (대표 포함 ${MAX_IMAGES_PER_GROUP}장)`,
+            `${listingImageGroupLabel(group)} 상세 사진은 최대 ${remaining}장까지 선택할 수 있습니다.`,
           );
           const input = vehicleGalleryRefs[group].current;
           if (input) input.value = "";
@@ -603,14 +604,11 @@ export function ListingForm({
         data.delete(`images${group}`);
         vehicleUploads[group] = { cover, gallery };
         const kept = vehicleGroups[group];
-        const total =
-          (cover ? 1 : 0) +
-          gallery.length +
-          (kept.keptCover ? 1 : 0) +
-          kept.keptGallery.length;
-        if (total > MAX_IMAGES_PER_GROUP) {
+        const detailTotal =
+          gallery.length + kept.keptGallery.length;
+        if (detailTotal > MAX_DETAIL_IMAGES_PER_GROUP) {
           setError(
-            `${group}그룹 사진은 대표 포함 최대 ${MAX_IMAGES_PER_GROUP}장입니다.`,
+            `${listingImageGroupLabel(group)} 상세 사진은 최대 ${MAX_DETAIL_IMAGES_PER_GROUP}장입니다.`,
           );
           setPending(false);
           return;
@@ -1431,17 +1429,13 @@ export function ListingForm({
               <div>
                 <span className="mb-1 block text-[13px] font-medium tracking-wide text-neutral-600">
                   대표 이미지
-                  {listing ? (
-                    <span className="font-normal text-neutral-400">
-                      {" "}
-                      (삭제 후 새 사진을 올리거나, 상세 사진이 대표로 승격됩니다)
-                    </span>
-                  ) : (
-                    <span className="font-normal text-neutral-400">
-                      {" "}
-                      · 이 그룹의 목록 카드에 표시
-                    </span>
-                  )}
+                  <span className="font-normal text-neutral-400">
+                    {" "}
+                    · 1장만
+                    {listing
+                      ? " · 삭제 후 새로 올리거나, 상세 사진이 대표로 승격됩니다"
+                      : " · 이 그룹의 목록 카드에 표시"}
+                  </span>
                 </span>
 
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
@@ -1486,7 +1480,7 @@ export function ListingForm({
                     hint={
                       state.coverName
                         ? state.coverName
-                        : "드래그하여 놓거나 선택 · JPG/PNG/WEBP/GIF · 1장"
+                        : "드래그하여 놓거나 선택 · JPG/PNG/WEBP/GIF · 1장만"
                     }
                     onFiles={(files) => {
                       const file = files.find(isImageFile) ?? null;
@@ -1514,7 +1508,7 @@ export function ListingForm({
                     상세 이미지
                     <span className="font-normal text-neutral-400">
                       {" "}
-                      · 대표 포함 최대 {MAX_IMAGES_PER_GROUP}장
+                      · 최대 {MAX_DETAIL_IMAGES_PER_GROUP}장
                       {listing ? " · 개별 × 또는 전체 삭제" : ""}
                     </span>
                   </span>
@@ -1565,8 +1559,8 @@ export function ListingForm({
                   browseLabel={`${listingImageGroupLabel(group)} 상세 사진 선택`}
                   hint={
                     state.photoCount > 0
-                      ? `${state.photoCount}장 선택됨 (최대 ${MAX_IMAGES_PER_GROUP - 1}장) · 드래그로 다시 지정 가능`
-                      : `드래그하여 놓거나 선택 · JPG/PNG · 최대 ${MAX_IMAGES_PER_GROUP - 1}장`
+                      ? `${state.photoCount}장 선택됨 (최대 ${MAX_DETAIL_IMAGES_PER_GROUP}장) · 드래그로 다시 지정 가능`
+                      : `드래그하여 놓거나 선택 · JPG/PNG · 최대 ${MAX_DETAIL_IMAGES_PER_GROUP}장`
                   }
                   onFiles={(files) => applyVehicleGalleryFiles(group, files)}
                   onInputChange={(e) => {

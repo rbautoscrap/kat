@@ -1,7 +1,10 @@
 export const LISTING_IMAGE_GROUPS = [1, 2] as const;
 export type ListingImageGroup = (typeof LISTING_IMAGE_GROUPS)[number];
 
-export const MAX_IMAGES_PER_GROUP = 70;
+export const MAX_COVER_IMAGES_PER_GROUP = 1;
+export const MAX_DETAIL_IMAGES_PER_GROUP = 70;
+export const MAX_IMAGES_PER_GROUP =
+  MAX_COVER_IMAGES_PER_GROUP + MAX_DETAIL_IMAGES_PER_GROUP;
 
 export type ListingImageFields = {
   id?: string;
