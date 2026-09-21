@@ -7,10 +7,12 @@ import { requireListingModifier } from "@/lib/listing-access";
 import {
   deleteUploadedFiles,
   formDataToListingInput,
+  listingImageCreatesFromForm,
   maxImagesForCategory,
   saveListingImageUploads,
   withPublicNotesTranslation,
 } from "@/lib/listing-actions";
+import { resolveDisplayedImageGroup } from "@/lib/listing-images";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -47,8 +49,7 @@ export async function PUT(request: Request, { params }: Params) {
       : await withPublicNotesTranslation(parsed);
 
     const maxImages = maxImagesForCategory(data.category ?? existing.category);
-    const { coverUrl, galleryUrls, hasUpload } =
-      await saveListingImageUploads(formData, { maxImages });
+    const uploads = await saveListingImageUploads(formData, { maxImages });
 
     const manageImages = formData.get("manageImages") === "1";
     const keepImageIds = formData
@@ -59,50 +60,88 @@ export async function PUT(request: Request, { params }: Params) {
       | {
           images: {
             deleteMany: Record<string, never>;
-            create: { url: string; sortOrder: number }[];
+            create: {
+              url: string;
+              sortOrder: number;
+              group: number;
+              isCover: boolean;
+            }[];
           };
         }
       | undefined;
     let orphanUrls: string[] = [];
+    let nextImageRows:
+      | {
+          url: string;
+          sortOrder: number;
+          group: number;
+          isCover: boolean;
+        }[]
+      | undefined;
 
-    if (hasUpload || manageImages) {
+    if (uploads.grouped || uploads.hasUpload || manageImages) {
       const previousUrls = existing.images.map((img) => img.url);
-      const byId = new Map(existing.images.map((img) => [img.id, img]));
-      const keptUrls = keepImageIds
-        .map((id) => byId.get(id)?.url)
-        .filter((url): url is string => Boolean(url));
 
-      let ordered: string[];
-      if (manageImages) {
-        // Explicit keep list from editor (+ optional new uploads)
-        ordered = coverUrl
-          ? [coverUrl, ...keptUrls, ...galleryUrls]
-          : [...keptUrls, ...galleryUrls];
-      } else if (coverUrl && galleryUrls.length > 0) {
-        ordered = [coverUrl, ...galleryUrls];
-      } else if (coverUrl) {
-        const existingGallery = existing.images.slice(1).map((img) => img.url);
-        ordered = [coverUrl, ...existingGallery];
+      if (uploads.grouped) {
+        nextImageRows = listingImageCreatesFromForm({
+          existing: existing.images,
+          formData,
+          uploads,
+        });
       } else {
-        const existingCover = existing.images[0]?.url;
-        ordered = existingCover
-          ? [existingCover, ...galleryUrls]
-          : galleryUrls;
+        const byId = new Map(existing.images.map((img) => [img.id, img]));
+        const keptUrls = keepImageIds
+          .map((id) => byId.get(id)?.url)
+          .filter((url): url is string => Boolean(url));
+
+        let ordered: string[];
+        if (manageImages) {
+          ordered = uploads.coverUrl
+            ? [uploads.coverUrl, ...keptUrls, ...uploads.galleryUrls]
+            : [...keptUrls, ...uploads.galleryUrls];
+        } else if (uploads.coverUrl && uploads.galleryUrls.length > 0) {
+          ordered = [uploads.coverUrl, ...uploads.galleryUrls];
+        } else if (uploads.coverUrl) {
+          const existingGallery = existing.images.slice(1).map((img) => img.url);
+          ordered = [uploads.coverUrl, ...existingGallery];
+        } else {
+          const existingCover = existing.images[0]?.url;
+          ordered = existingCover
+            ? [existingCover, ...uploads.galleryUrls]
+            : uploads.galleryUrls;
+        }
+
+        ordered = ordered.filter(
+          (url, index) => ordered.indexOf(url) === index,
+        );
+        nextImageRows = ordered.map((url, i) => ({
+          url,
+          sortOrder: i,
+          group: 1,
+          isCover: i === 0,
+        }));
       }
 
-      // Deduplicate while preserving order
-      ordered = ordered.filter(
-        (url, index) => ordered.indexOf(url) === index,
-      );
-
-      if (ordered.length === 0) {
+      if (!nextImageRows.length) {
         return NextResponse.json(
           { error: "사진은 최소 1장 이상 남겨 주세요." },
           { status: 400 },
         );
       }
 
-      if (ordered.length > maxImages) {
+      if (
+        data.category !== "USED_PARTS" &&
+        existing.category !== "USED_PARTS" &&
+        uploads.grouped &&
+        !nextImageRows.some((row) => row.group === 1 && row.isCover)
+      ) {
+        return NextResponse.json(
+          { error: "1그룹 대표 사진을 남겨 주세요." },
+          { status: 400 },
+        );
+      }
+
+      if (nextImageRows.length > maxImages) {
         return NextResponse.json(
           {
             error: `이미지는 최대 ${maxImages}장까지 등록할 수 있습니다.`,
@@ -111,21 +150,31 @@ export async function PUT(request: Request, { params }: Params) {
         );
       }
 
-      const kept = new Set(ordered);
+      const kept = new Set(nextImageRows.map((row) => row.url));
       orphanUrls = previousUrls.filter((url) => !kept.has(url));
 
       imageUpdate = {
         images: {
           deleteMany: {},
-          create: ordered.map((url, i) => ({ url, sortOrder: i })),
+          create: nextImageRows,
         },
       };
     }
+
+    const displayedImageGroup = nextImageRows
+      ? resolveDisplayedImageGroup(data.displayedImageGroup, nextImageRows)
+      : data.category === "USED_PARTS"
+        ? 1
+        : resolveDisplayedImageGroup(
+            data.displayedImageGroup,
+            existing.images,
+          );
 
     await prisma.listing.update({
       where: { id },
       data: {
         ...data,
+        displayedImageGroup,
         ...imageUpdate,
       },
     });
@@ -141,6 +190,39 @@ export async function PUT(request: Request, { params }: Params) {
     return NextResponse.json(
       {
         error: toApiErrorMessage(err, "매물 수정에 실패했습니다."),
+      },
+      { status: 400 },
+    );
+  }
+}
+
+export async function PATCH(request: Request, { params }: Params) {
+  const { id } = await params;
+  const access = await requireListingModifier(id);
+  if (!access.ok) {
+    return NextResponse.json(
+      { error: access.error },
+      { status: access.status },
+    );
+  }
+
+  try {
+    const body = (await request.json()) as { displayedImageGroup?: unknown };
+    const displayedImageGroup = resolveDisplayedImageGroup(
+      body.displayedImageGroup,
+      access.listing.images,
+    );
+    await prisma.listing.update({
+      where: { id },
+      data: { displayedImageGroup },
+    });
+    revalidateListingSurfaces(id);
+    return NextResponse.json({ displayedImageGroup });
+  } catch (err) {
+    console.error("[PATCH /api/listings/:id]", err);
+    return NextResponse.json(
+      {
+        error: toApiErrorMessage(err, "노출 그룹을 바꾸지 못했습니다."),
       },
       { status: 400 },
     );

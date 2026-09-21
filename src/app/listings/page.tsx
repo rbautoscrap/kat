@@ -19,6 +19,7 @@ import {
   USED_PARTS_LIST_CLASS,
   USED_PARTS_PAGE_SIZE,
 } from "@/lib/listings";
+import { LISTING_CARD_COVER_INCLUDE } from "@/lib/listing-images";
 import { compareListingsForDisplay, orderByIds } from "@/lib/listing-shuffle";
 import type { Prisma } from "@prisma/client";
 
@@ -34,9 +35,7 @@ type Props = {
 
 type ListingWithCover = Listing & { images: ListingImage[] };
 
-const coverInclude = {
-  images: { orderBy: { sortOrder: "asc" as const }, take: 1 },
-};
+const coverInclude = LISTING_CARD_COVER_INCLUDE;
 
 export default async function ListingsPage({ searchParams }: Props) {
   const params = await searchParams;

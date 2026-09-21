@@ -47,6 +47,7 @@ import {
 import { PRICE_INQUIRY_WHATSAPP } from "@/lib/contact";
 import { convertKrw, getFxBoardQuote, getKrwFxRates } from "@/lib/fx-rates";
 import { displayAccumulatedDays } from "@/lib/listing-actions";
+import { listingCardCoverUrl, splitListingImages } from "@/lib/listing-images";
 import { recordListingView } from "@/lib/listing-views";
 import { isPriceInquiryHoliday } from "@/lib/site-settings";
 import {
@@ -73,10 +74,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     select: {
       title: true,
       salePrice: true,
+      displayedImageGroup: true,
       images: {
-        orderBy: { sortOrder: "asc" },
-        take: 1,
-        select: { url: true },
+        where: { isCover: true },
+        orderBy: [{ group: "asc" }, { sortOrder: "asc" }],
+        take: 2,
+        select: { url: true, group: true, isCover: true },
       },
     },
   });
@@ -90,7 +93,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = price
     ? `${listing.title} from Korea. Asking ${price}. Deposit reserves the unit. How to buy: WhatsApp → invoice → deposit → ship.`
     : `${listing.title} from Korea. Ask price on WhatsApp. How to buy in 4 steps.`;
-  const image = absoluteMediaUrl(listing.images[0]?.url, origin);
+  const image = absoluteMediaUrl(
+    listingCardCoverUrl(listing.images, listing.displayedImageGroup),
+    origin,
+  );
   const pageUrl = `${origin}/listings/${id}`;
 
   return {
@@ -118,7 +124,9 @@ export default async function ListingDetailPage({ params }: Props) {
   const { id } = await params;
   const listing = await prisma.listing.findUnique({
     where: { id },
-    include: { images: { orderBy: { sortOrder: "asc" } } },
+    include: {
+      images: { orderBy: [{ group: "asc" }, { sortOrder: "asc" }] },
+    },
   });
   if (!listing) notFound();
 
@@ -302,6 +310,12 @@ export default async function ListingDetailPage({ params }: Props) {
   );
 
   const isParts = isPartsCategory(listing.category);
+  const groupedPhotos = splitListingImages(listing.images);
+  const galleryImages = listing.images;
+  const coverUrl = listingCardCoverUrl(
+    listing.images,
+    listing.displayedImageGroup,
+  );
   const isLiveAuction = listing.category === "LIVE_AUCTION";
   const contactDigits = listing.whatsappNumber.replace(/\D/g, "");
   const contactDisplay = listing.whatsappNumber.trim() || "—";
@@ -513,7 +527,7 @@ export default async function ListingDetailPage({ params }: Props) {
           path={`/listings/${listing.id}`}
           priceLabel={salePriceLabel}
           imageUrl={absoluteMediaUrl(
-            listing.images[0]?.url,
+            coverUrl,
             getPublicSiteOrigin() || "https://www.rbautotrade.com",
           )}
         />
@@ -660,7 +674,7 @@ export default async function ListingDetailPage({ params }: Props) {
         </div>
       )}
 
-      {listing.images.length > 0 && (
+      {galleryImages.length > 0 && (
         <section className="w-full">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <h2 className="site-heading text-[14px] text-neutral-800">
@@ -674,10 +688,18 @@ export default async function ListingDetailPage({ params }: Props) {
             ) : null}
           </div>
           <ImageGallery
-            images={listing.images}
+            images={galleryImages}
             alt={listing.title}
             saleStatus={listing.saleStatus}
             category={listing.category}
+            defaultGroup={listing.displayedImageGroup}
+            listingId={listing.id}
+            persistDisplayGroup={
+              adminView &&
+              !isParts &&
+              groupedPhotos[1].length > 0 &&
+              groupedPhotos[2].length > 0
+            }
           />
         </section>
       )}

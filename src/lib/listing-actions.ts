@@ -16,6 +16,14 @@ import {
   parseRegistrationDateInput,
 } from "@/lib/listings";
 import { canonicalizeStorageLocation } from "@/lib/storage-location";
+import {
+  assembleListingImageCreates,
+  MAX_IMAGES_PER_GROUP,
+  parseListingImageGroup,
+  type GroupUpload,
+  type ListingImageCreateRow,
+  type ListingImageGroup,
+} from "@/lib/listing-images";
 
 export {
   MAX_IMAGES_PER_LISTING,
@@ -383,6 +391,10 @@ export function formDataToListingInput(formData: FormData) {
     accumulatedDays,
     auctionEndsAt,
     title: buildListingTitle(data.year, data.make, data.model, data.category),
+    displayedImageGroup:
+      data.category === "USED_PARTS"
+        ? 1
+        : parseListingImageGroup(formData.get("displayedImageGroup")),
   };
 }
 
@@ -563,17 +575,125 @@ function fileFromForm(entry: FormDataEntryValue | null) {
   return entry instanceof File && entry.size > 0 ? entry : null;
 }
 
+function isGroupedImageForm(formData: FormData) {
+  return (
+    String(formData.get("imageLayout") ?? "") === "groups" ||
+    formData.get("keepCoverId1") != null ||
+    formData.get("keepCoverId2") != null ||
+    formData.getAll("keepImageIds1").length > 0 ||
+    formData.getAll("keepImageIds2").length > 0 ||
+    formData.get("coverImage1") != null ||
+    formData.get("coverImage2") != null ||
+    formData.getAll("images1").some((f) => f instanceof File && f.size > 0) ||
+    formData.getAll("images2").some((f) => f instanceof File && f.size > 0)
+  );
+}
+
+async function saveGroupFiles(
+  coverFile: File | null,
+  galleryFiles: File[],
+  savedUrls: string[],
+): Promise<GroupUpload> {
+  const coverUrl = coverFile ? await saveImageFile(coverFile) : null;
+  if (coverUrl) savedUrls.push(coverUrl);
+  const galleryUrls = await mapPool(
+    galleryFiles,
+    UPLOAD_CONCURRENCY,
+    async (file) => {
+      const url = await saveImageFile(file);
+      savedUrls.push(url);
+      return url;
+    },
+  );
+  return { coverUrl, galleryUrls };
+}
+
+export type ListingImageUploadResult = {
+  coverUrl: string | null;
+  galleryUrls: string[];
+  urls: string[];
+  hasUpload: boolean;
+  grouped: boolean;
+  groups: Record<ListingImageGroup, GroupUpload>;
+};
+
 /** Cover (대표) + gallery uploads. Cover is always first in `urls`. */
 export async function saveListingImageUploads(
   formData: FormData,
   options?: { maxImages?: number },
-) {
+): Promise<ListingImageUploadResult> {
   ensureUploadTempEnv();
   tuneSharpForUploads();
 
   const maxImages =
     options?.maxImages ??
     maxImagesForCategory(String(formData.get("category") ?? ""));
+  const grouped = isGroupedImageForm(formData);
+  const emptyGroup: GroupUpload = { coverUrl: null, galleryUrls: [] };
+
+  if (grouped) {
+    const groupFiles = ([1, 2] as const).map((group) => {
+      const coverFile = fileFromForm(formData.get(`coverImage${group}`));
+      const galleryFiles = formData
+        .getAll(`images${group}`)
+        .filter((f): f is File => f instanceof File && f.size > 0);
+      return { group, coverFile, galleryFiles };
+    });
+
+    for (const { group, coverFile, galleryFiles } of groupFiles) {
+      const total = (coverFile ? 1 : 0) + galleryFiles.length;
+      if (total > MAX_IMAGES_PER_GROUP) {
+        throw new Error(
+          `${group}그룹 이미지는 대표 사진 포함 최대 ${MAX_IMAGES_PER_GROUP}장까지 업로드할 수 있습니다.`,
+        );
+      }
+    }
+
+    const grandTotal = groupFiles.reduce(
+      (sum, { coverFile, galleryFiles }) =>
+        sum + (coverFile ? 1 : 0) + galleryFiles.length,
+      0,
+    );
+    if (grandTotal > maxImages) {
+      throw new Error(
+        `이미지는 대표 사진 포함 최대 ${maxImages}장까지 업로드할 수 있습니다.`,
+      );
+    }
+
+    await assertUploadSpace(uploadsDir());
+    const savedUrls: string[] = [];
+    try {
+      const groups = {
+        1: emptyGroup,
+        2: emptyGroup,
+      } as Record<ListingImageGroup, GroupUpload>;
+      for (const { group, coverFile, galleryFiles } of groupFiles) {
+        groups[group] = await saveGroupFiles(
+          coverFile,
+          galleryFiles,
+          savedUrls,
+        );
+      }
+      const urls = [
+        ...(groups[1].coverUrl ? [groups[1].coverUrl] : []),
+        ...groups[1].galleryUrls,
+        ...(groups[2].coverUrl ? [groups[2].coverUrl] : []),
+        ...groups[2].galleryUrls,
+      ];
+      return {
+        coverUrl: groups[1].coverUrl ?? groups[2].coverUrl,
+        galleryUrls: [...groups[1].galleryUrls, ...groups[2].galleryUrls],
+        urls,
+        hasUpload: urls.length > 0,
+        grouped: true,
+        groups,
+      };
+    } catch (err) {
+      await deleteUploadedFiles(savedUrls);
+      throw mapUploadError(err);
+    }
+  }
+
   const coverFile = fileFromForm(formData.get("coverImage"));
   const galleryFiles = formData
     .getAll("images")
@@ -590,30 +710,52 @@ export async function saveListingImageUploads(
 
   const savedUrls: string[] = [];
   try {
-    const coverUrl = coverFile ? await saveImageFile(coverFile) : null;
-    if (coverUrl) savedUrls.push(coverUrl);
-
-    const galleryUrls = await mapPool(
-      galleryFiles,
-      UPLOAD_CONCURRENCY,
-      async (file) => {
-        const url = await saveImageFile(file);
-        savedUrls.push(url);
-        return url;
-      },
-    );
-
+    const group1 = await saveGroupFiles(coverFile, galleryFiles, savedUrls);
     return {
-      coverUrl,
-      galleryUrls,
-      /** Ordered list for full replace: cover first, then gallery */
-      urls: coverUrl ? [coverUrl, ...galleryUrls] : galleryUrls,
-      hasUpload: Boolean(coverUrl || galleryUrls.length),
+      coverUrl: group1.coverUrl,
+      galleryUrls: group1.galleryUrls,
+      urls: group1.coverUrl
+        ? [group1.coverUrl, ...group1.galleryUrls]
+        : group1.galleryUrls,
+      hasUpload: Boolean(group1.coverUrl || group1.galleryUrls.length),
+      grouped: false,
+      groups: { 1: group1, 2: emptyGroup },
     };
   } catch (err) {
     await deleteUploadedFiles(savedUrls);
     throw mapUploadError(err);
   }
+}
+
+export function listingImageCreatesFromForm(args: {
+  existing: {
+    id: string;
+    url: string;
+    sortOrder?: number | null;
+    group?: number | null;
+    isCover?: boolean | null;
+  }[];
+  formData: FormData;
+  uploads: ListingImageUploadResult;
+}): ListingImageCreateRow[] {
+  const keepCoverId = {
+    1: String(args.formData.get("keepCoverId1") ?? "") || null,
+    2: String(args.formData.get("keepCoverId2") ?? "") || null,
+  };
+  const keepGalleryIds = {
+    1: args.formData
+      .getAll("keepImageIds1")
+      .filter((v): v is string => typeof v === "string" && v.length > 0),
+    2: args.formData
+      .getAll("keepImageIds2")
+      .filter((v): v is string => typeof v === "string" && v.length > 0),
+  };
+  return assembleListingImageCreates({
+    existing: args.existing,
+    uploads: args.uploads.groups,
+    keepCoverId,
+    keepGalleryIds,
+  });
 }
 
 /** @deprecated Prefer saveListingImageUploads — kept for any legacy callers */

@@ -84,7 +84,11 @@ export async function requireListingModifier(listingId: string) {
 
   const listing = await prisma.listing.findUnique({
     where: { id: listingId },
-    include: { images: { orderBy: { sortOrder: "asc" as const } } },
+    include: {
+      images: {
+        orderBy: [{ group: "asc" as const }, { sortOrder: "asc" as const }],
+      },
+    },
   });
   if (!listing) {
     return {

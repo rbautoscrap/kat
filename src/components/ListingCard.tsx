@@ -8,7 +8,15 @@ import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl"
 import { ListingThumb } from "@/components/ListingThumb";
 import { LiveAuctionAccessDialog } from "@/components/LiveAuctionAccessDialog";
 import { AuctionImageBadge } from "@/components/AuctionImageBadge";
+import { ListingImageGroupToggle } from "@/components/ListingImageGroupToggle";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
+import {
+  listingCardCoverUrl,
+  LISTING_IMAGE_GROUPS,
+  parseListingImageGroup,
+  splitListingImages,
+  type ListingImageGroup,
+} from "@/lib/listing-images";
 import {
   formatNotesDisplay,
   isPartsCategory,
@@ -40,7 +48,16 @@ export function ListingCard({
   isSignedIn = false,
 }: Props) {
   const [gateOpen, setGateOpen] = useState(false);
-  const thumb = listing.images[0]?.url ?? "/placeholder-car.svg";
+  const [photoGroup, setPhotoGroup] = useState<ListingImageGroup>(() =>
+    parseListingImageGroup(listing.displayedImageGroup),
+  );
+  const groupedCovers = splitListingImages(listing.images);
+  const photoSets = LISTING_IMAGE_GROUPS.filter(
+    (group) => groupedCovers[group].length > 0,
+  );
+  const thumb =
+    listingCardCoverUrl(listing.images, photoGroup) ??
+    "/placeholder-car.svg";
   const label = listingCardLabel(listing);
   const large = size === "large";
   const isSold = listing.saleStatus === "SOLD";
@@ -55,6 +72,23 @@ export function ListingCard({
     listing.damagesEn,
   ).trim();
   const salePriceLabel = formatSalePriceDisplay(listing.salePrice);
+  const groupToggle =
+    !isParts && photoSets.length > 1 ? (
+      <div
+        className="absolute bottom-1 left-1 z-[3]"
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+      >
+        <ListingImageGroupToggle
+          size="sm"
+          value={photoGroup}
+          available={photoSets}
+          onChange={setPhotoGroup}
+        />
+      </div>
+    ) : null;
 
   if (layout === "list") {
     const listMedia = (
@@ -69,6 +103,7 @@ export function ListingCard({
         {listing.category === "LIVE_AUCTION" ? (
           <AuctionImageBadge />
         ) : null}
+        {groupToggle}
       </div>
     );
 
@@ -154,6 +189,7 @@ export function ListingCard({
           Parts
         </span>
       ) : null}
+      {groupToggle}
     </div>
   );
 

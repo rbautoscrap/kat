@@ -18,15 +18,22 @@ import {
   parseAuctionEndsAtInput,
   toKoreaDatetimeLocalValue,
 } from "@/lib/format-korea-time";
+import { ListingImageGroupToggle } from "@/components/ListingImageGroupToggle";
 import {
   formatRegistrationDate,
   isPartsCategory,
   isStockVehicleCategory,
-  MAX_IMAGES_PER_LISTING,
   MAX_IMAGES_PER_USED_PARTS,
   parseListingYearInput,
   parseRegistrationDateInput,
 } from "@/lib/listings";
+import {
+  LISTING_IMAGE_GROUPS,
+  MAX_IMAGES_PER_GROUP,
+  parseListingImageGroup,
+  splitListingImages,
+  type ListingImageGroup,
+} from "@/lib/listing-images";
 import {
   STORAGE_LOCATIONS,
   canonicalizeStorageLocation,
@@ -34,6 +41,39 @@ import {
 
 const IMAGE_ACCEPT =
   "image/jpeg,image/png,image/webp,image/gif";
+
+type VehicleGroupUi = {
+  coverName: string | null;
+  coverPreview: string | null;
+  photoCount: number;
+  keptCover: ListingImage | null;
+  keptGallery: ListingImage[];
+};
+
+function emptyVehicleGroup(): VehicleGroupUi {
+  return {
+    coverName: null,
+    coverPreview: null,
+    photoCount: 0,
+    keptCover: null,
+    keptGallery: [],
+  };
+}
+
+function vehicleGroupsFromListing(
+  images: ListingImage[] | undefined,
+): Record<ListingImageGroup, VehicleGroupUi> {
+  const split = splitListingImages(images ?? []);
+  const from = (imgs: ListingImage[]): VehicleGroupUi => {
+    const cover = imgs.find((img) => img.isCover) ?? imgs[0] ?? null;
+    return {
+      ...emptyVehicleGroup(),
+      keptCover: cover,
+      keptGallery: cover ? imgs.filter((img) => img.id !== cover.id) : imgs,
+    };
+  };
+  return { 1: from(split[1]), 2: from(split[2]) };
+}
 
 function isImageFile(file: File) {
   return file.type.startsWith("image/");
@@ -237,9 +277,6 @@ export function ListingForm({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
-  const [coverName, setCoverName] = useState<string | null>(null);
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const [photoCount, setPhotoCount] = useState(0);
   /** Used Parts: single-slot multi upload (first = cover, rest = gallery). */
   const [partsFiles, setPartsFiles] = useState<File[]>([]);
   const [partsPreviews, setPartsPreviews] = useState<string[]>([]);
@@ -250,6 +287,16 @@ export function ListingForm({
   const [keptGallery, setKeptGallery] = useState<ListingImage[]>(
     () => listing?.images?.slice(1) ?? [],
   );
+  const [vehicleGroups, setVehicleGroups] = useState(() =>
+    vehicleGroupsFromListing(listing?.images),
+  );
+  const [displayedImageGroup, setDisplayedImageGroup] =
+    useState<ListingImageGroup>(() =>
+      parseListingImageGroup(
+        (listing as { displayedImageGroup?: number } | undefined)
+          ?.displayedImageGroup,
+      ),
+    );
   const [category, setCategory] = useState<ListingCategory>(
     () => listing?.category ?? defaultCategory ?? "CAR_LISTINGS",
   );
@@ -266,8 +313,23 @@ export function ListingForm({
       ? null
       : nextAuctionPreset().id,
   );
-  const coverInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef1 = useRef<HTMLInputElement>(null);
+  const galleryInputRef1 = useRef<HTMLInputElement>(null);
+  const coverInputRef2 = useRef<HTMLInputElement>(null);
+  const galleryInputRef2 = useRef<HTMLInputElement>(null);
+  const vehicleCoverRefs = { 1: coverInputRef1, 2: coverInputRef2 };
+  const vehicleGalleryRefs = { 1: galleryInputRef1, 2: galleryInputRef2 };
+
+  function patchVehicleGroup(
+    group: ListingImageGroup,
+    patch: (current: VehicleGroupUi) => VehicleGroupUi,
+  ) {
+    setVehicleGroups((prev) => ({
+      ...prev,
+      [group]: patch(prev[group]),
+    }));
+  }
 
   function applyAuctionPreset(preset: AuctionPreset) {
     setAuctionEndsAt(toDatetimeLocalValue(resolveAuctionPreset(preset)));
@@ -285,35 +347,38 @@ export function ListingForm({
     }
   }
 
-  const applyCoverFile = useCallback(
-    (file: File | null) => {
-      setCoverName(file?.name ?? null);
-      setCoverPreview((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return file ? URL.createObjectURL(file) : null;
+  const applyVehicleCoverFile = useCallback(
+    (group: ListingImageGroup, file: File | null) => {
+      patchVehicleGroup(group, (current) => {
+        if (current.coverPreview) URL.revokeObjectURL(current.coverPreview);
+        return {
+          ...current,
+          coverName: file?.name ?? null,
+          coverPreview: file ? URL.createObjectURL(file) : null,
+        };
       });
-      if (file) setKeptCover(null);
     },
     [],
   );
 
-  const applyGalleryFiles = useCallback(
-    (files: FileList | File[]) => {
+  const applyVehicleGalleryFiles = useCallback(
+    (group: ListingImageGroup, files: FileList | File[]) => {
       const list = Array.from(files).filter(isImageFile);
-      const maxGallery = MAX_IMAGES_PER_LISTING - 1;
-      if (list.length > maxGallery) {
-        setError(
-          `추가 사진은 최대 ${maxGallery}장까지 선택할 수 있습니다. (대표 사진 포함 ${MAX_IMAGES_PER_LISTING}장)`,
-        );
-        if (galleryInputRef.current) galleryInputRef.current.value = "";
-        setPhotoCount(0);
-        return;
-      }
-      setError(null);
-      setPhotoCount(list.length);
-      if (galleryInputRef.current) {
-        assignInputFiles(galleryInputRef.current, list, true);
-      }
+      patchVehicleGroup(group, (current) => {
+        const remaining = MAX_IMAGES_PER_GROUP - 1 - current.keptGallery.length;
+        if (list.length > remaining) {
+          setError(
+            `${group}그룹 상세 사진은 최대 ${remaining}장까지 선택할 수 있습니다. (대표 포함 ${MAX_IMAGES_PER_GROUP}장)`,
+          );
+          const input = vehicleGalleryRefs[group].current;
+          if (input) input.value = "";
+          return { ...current, photoCount: 0 };
+        }
+        setError(null);
+        const input = vehicleGalleryRefs[group].current;
+        if (input) assignInputFiles(input, list, true);
+        return { ...current, photoCount: list.length };
+      });
     },
     [],
   );
@@ -478,32 +543,26 @@ export function ListingForm({
       data.set("auctionEndsAt", parsedEnds.toISOString());
     }
 
-    // Drop empty file fields so the API does not treat them as uploads
-    const coverEntry = data.get("coverImage");
-    if (coverEntry instanceof File && coverEntry.size === 0) {
-      data.delete("coverImage");
-    }
-    let galleryFiles = data
-      .getAll("images")
-      .filter((f): f is File => f instanceof File && f.size > 0);
+    data.delete("coverImage");
     data.delete("images");
 
-    let coverFile =
-      coverEntry instanceof File && coverEntry.size > 0 ? coverEntry : null;
+    let coverFile: File | null = null;
+    let galleryFiles: File[] = [];
+    const vehicleUploads: Record<
+      ListingImageGroup,
+      { cover: File | null; gallery: File[] }
+    > = {
+      1: { cover: null, gallery: [] },
+      2: { cover: null, gallery: [] },
+    };
 
     if (partsMode) {
-      data.delete("coverImage");
-      data.delete("images");
       if (partsFiles.length > 0) {
         coverFile = partsFiles[0] ?? null;
         galleryFiles = partsFiles.slice(1);
         if (coverFile) data.set("coverImage", coverFile);
-      } else {
-        coverFile = null;
-        galleryFiles = [];
       }
-      const keptPartsCount =
-        (keptCover ? 1 : 0) + keptGallery.length;
+      const keptPartsCount = (keptCover ? 1 : 0) + keptGallery.length;
       const partsTotal =
         (coverFile ? 1 : 0) + galleryFiles.length + keptPartsCount;
       if (partsTotal > MAX_IMAGES_PER_USED_PARTS) {
@@ -513,31 +572,60 @@ export function ListingForm({
         setPending(false);
         return;
       }
-    }
-
-    if (!listing) {
-      if (!coverFile) {
-        setError(
-          partsMode
-            ? "Please add at least one photo."
-            : "대표(메인) 사진을 등록해 주세요.",
-        );
+      if (!listing && !coverFile) {
+        setError("Please add at least one photo.");
+        setPending(false);
+        return;
+      }
+      if (
+        listing &&
+        !coverFile &&
+        !keptCover &&
+        keptGallery.length === 0 &&
+        galleryFiles.length === 0
+      ) {
+        setError("Please keep at least one photo.");
         setPending(false);
         return;
       }
     } else {
-      const hasNewCover = Boolean(coverFile);
-      const hasNewGallery = galleryFiles.length > 0;
-      if (
-        !hasNewCover &&
-        !keptCover &&
-        keptGallery.length === 0 &&
-        !hasNewGallery
-      ) {
+      data.set("imageLayout", "groups");
+      data.set("displayedImageGroup", String(displayedImageGroup));
+      for (const group of LISTING_IMAGE_GROUPS) {
+        const coverEntry = data.get(`coverImage${group}`);
+        const cover =
+          coverEntry instanceof File && coverEntry.size > 0 ? coverEntry : null;
+        if (!cover) data.delete(`coverImage${group}`);
+        const gallery = data
+          .getAll(`images${group}`)
+          .filter((f): f is File => f instanceof File && f.size > 0);
+        data.delete(`images${group}`);
+        vehicleUploads[group] = { cover, gallery };
+        const kept = vehicleGroups[group];
+        const total =
+          (cover ? 1 : 0) +
+          gallery.length +
+          (kept.keptCover ? 1 : 0) +
+          kept.keptGallery.length;
+        if (total > MAX_IMAGES_PER_GROUP) {
+          setError(
+            `${group}그룹 사진은 대표 포함 최대 ${MAX_IMAGES_PER_GROUP}장입니다.`,
+          );
+          setPending(false);
+          return;
+        }
+      }
+      const group1 = vehicleGroups[1];
+      const hasGroup1 =
+        Boolean(vehicleUploads[1].cover) ||
+        Boolean(group1.keptCover) ||
+        group1.keptGallery.length > 0 ||
+        vehicleUploads[1].gallery.length > 0;
+      if (!hasGroup1) {
         setError(
-          partsMode
-            ? "Please keep at least one photo."
-            : "사진은 최소 1장 이상 남겨 주세요.",
+          listing
+            ? "1그룹 사진은 최소 1장 이상 남겨 주세요."
+            : "1그룹 대표 사진을 등록해 주세요.",
         );
         setPending(false);
         return;
@@ -545,10 +633,14 @@ export function ListingForm({
     }
 
     try {
-      const toCompress = [
-        ...(coverFile ? [coverFile] : []),
-        ...galleryFiles,
-      ];
+      const toCompress = partsMode
+        ? [...(coverFile ? [coverFile] : []), ...galleryFiles]
+        : LISTING_IMAGE_GROUPS.flatMap((group) => [
+            ...(vehicleUploads[group].cover
+              ? [vehicleUploads[group].cover!]
+              : []),
+            ...vehicleUploads[group].gallery,
+          ]);
       if (toCompress.length > 0) {
         const optimizing = partsMode
           ? (done: number, total: number) =>
@@ -561,19 +653,50 @@ export function ListingForm({
           (done, total) => setProgress(optimizing(done, total)),
         );
         let idx = 0;
-        if (coverFile) {
-          coverFile = compressed[idx++] ?? coverFile;
-          data.delete("coverImage");
-          data.set("coverImage", coverFile);
+        if (partsMode) {
+          if (coverFile) {
+            coverFile = compressed[idx++] ?? coverFile;
+            data.delete("coverImage");
+            data.set("coverImage", coverFile);
+          }
+          galleryFiles = compressed.slice(idx);
+        } else {
+          for (const group of LISTING_IMAGE_GROUPS) {
+            if (vehicleUploads[group].cover) {
+              vehicleUploads[group].cover =
+                compressed[idx++] ?? vehicleUploads[group].cover;
+              data.set(`coverImage${group}`, vehicleUploads[group].cover!);
+            }
+            vehicleUploads[group].gallery = compressed.slice(
+              idx,
+              idx + vehicleUploads[group].gallery.length,
+            );
+            idx += vehicleUploads[group].gallery.length;
+          }
         }
-        galleryFiles = compressed.slice(idx);
       }
 
-      for (const file of galleryFiles) {
-        data.append("images", file);
+      if (partsMode) {
+        for (const file of galleryFiles) {
+          data.append("images", file);
+        }
+      } else {
+        for (const group of LISTING_IMAGE_GROUPS) {
+          for (const file of vehicleUploads[group].gallery) {
+            data.append(`images${group}`, file);
+          }
+        }
       }
 
-      const uploadCount = galleryFiles.length + (coverFile ? 1 : 0);
+      const uploadCount = partsMode
+        ? galleryFiles.length + (coverFile ? 1 : 0)
+        : LISTING_IMAGE_GROUPS.reduce(
+            (sum, group) =>
+              sum +
+              (vehicleUploads[group].cover ? 1 : 0) +
+              vehicleUploads[group].gallery.length,
+            0,
+          );
       setProgress(
         partsMode
           ? uploadCount > 20
@@ -977,12 +1100,49 @@ export function ListingForm({
       ) : null}
 
       {listing ? <input type="hidden" name="manageImages" value="1" /> : null}
-      {keptCover ? (
-        <input type="hidden" name="keepImageIds" value={keptCover.id} />
-      ) : null}
-      {keptGallery.map((img) => (
-        <input key={img.id} type="hidden" name="keepImageIds" value={img.id} />
-      ))}
+      {partsMode ? (
+        <>
+          {keptCover ? (
+            <input type="hidden" name="keepImageIds" value={keptCover.id} />
+          ) : null}
+          {keptGallery.map((img) => (
+            <input
+              key={img.id}
+              type="hidden"
+              name="keepImageIds"
+              value={img.id}
+            />
+          ))}
+        </>
+      ) : (
+        <>
+          <input type="hidden" name="imageLayout" value="groups" />
+          <input
+            type="hidden"
+            name="displayedImageGroup"
+            value={displayedImageGroup}
+          />
+          {LISTING_IMAGE_GROUPS.map((group) => (
+            <span key={group}>
+              {vehicleGroups[group].keptCover ? (
+                <input
+                  type="hidden"
+                  name={`keepCoverId${group}`}
+                  value={vehicleGroups[group].keptCover!.id}
+                />
+              ) : null}
+              {vehicleGroups[group].keptGallery.map((img) => (
+                <input
+                  key={img.id}
+                  type="hidden"
+                  name={`keepImageIds${group}`}
+                  value={img.id}
+                />
+              ))}
+            </span>
+          ))}
+        </>
+      )}
 
       {partsMode ? (
         <div className="space-y-2 text-sm">
@@ -1196,170 +1356,282 @@ export function ListingForm({
           ) : null}
         </div>
       ) : (
-      <div className="space-y-3 text-sm">
+      <div className="space-y-4 text-sm">
         <div>
-          <span className="mb-1 block text-[13px] font-medium tracking-wide text-neutral-600">
-            대표(메인) 사진
-            {listing ? (
-              <span className="font-normal text-neutral-400">
-                {" "}
-                (삭제 후 새 사진을 올리거나, 추가 사진이 대표로 승격됩니다)
-              </span>
-            ) : (
-              <span className="font-normal text-neutral-400">
-                {" "}
-                · 목록·카드에 표시됩니다
-              </span>
-            )}
+          <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
+            사이트 노출 그룹
+            <span className="font-normal text-neutral-400">
+              {" "}
+              · 아이콘을 눌러 목록·상세에 보여줄 세트를 선택합니다
+            </span>
           </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <ListingImageGroupToggle
+              value={displayedImageGroup}
+              showEmpty
+              labels={{ 1: "1그룹", 2: "2그룹" }}
+              disabled={{
+                2: (() => {
+                  const groupState = vehicleGroups[2];
+                  const ready =
+                    Boolean(groupState.keptCover) ||
+                    Boolean(groupState.coverPreview) ||
+                    groupState.keptGallery.length > 0 ||
+                    groupState.photoCount > 0;
+                  return !ready && displayedImageGroup !== 2;
+                })(),
+              }}
+              onChange={setDisplayedImageGroup}
+            />
+            <span className="text-[12px] tracking-wide text-neutral-500">
+              {displayedImageGroup}그룹 대표·상세가 사이트에 표시됩니다
+            </span>
+          </div>
+        </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-            {(coverPreview || keptCover?.url) && (
-              <div className="relative h-[4.5rem] w-full shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 sm:w-[7.5rem]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={coverPreview ?? keptCover!.url}
-                  alt="대표 사진 미리보기"
-                  className="h-full w-full object-cover"
+        {LISTING_IMAGE_GROUPS.map((group) => {
+          const state = vehicleGroups[group];
+          const coverInput = vehicleCoverRefs[group];
+          const galleryInput = vehicleGalleryRefs[group];
+          const showing = displayedImageGroup === group;
+          return (
+            <div
+              key={group}
+              className={`space-y-3 rounded-lg border px-3 py-3 ${
+                showing
+                  ? "border-neutral-800 bg-white"
+                  : "border-neutral-200 bg-neutral-50/40"
+              }`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[13.5px] font-semibold tracking-wide text-neutral-800">
+                  {group}그룹
+                  {showing ? (
+                    <span className="ml-1.5 font-normal text-emerald-700">
+                      사이트 노출
+                    </span>
+                  ) : (
+                    <span className="ml-1.5 font-normal text-neutral-400">
+                      보관
+                    </span>
+                  )}
+                </p>
+                {group === 2 ? (
+                  <span className="text-[12px] tracking-wide text-neutral-400">
+                    선택 사항
+                  </span>
+                ) : (
+                  <span className="text-[12px] tracking-wide text-neutral-400">
+                    대표 사진 필수
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <span className="mb-1 block text-[13px] font-medium tracking-wide text-neutral-600">
+                  대표 이미지
+                  {listing ? (
+                    <span className="font-normal text-neutral-400">
+                      {" "}
+                      (삭제 후 새 사진을 올리거나, 상세 사진이 대표로 승격됩니다)
+                    </span>
+                  ) : (
+                    <span className="font-normal text-neutral-400">
+                      {" "}
+                      · 이 그룹의 목록 카드에 표시
+                    </span>
+                  )}
+                </span>
+
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+                  {(state.coverPreview || state.keptCover?.url) && (
+                    <div className="relative h-[4.5rem] w-full shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 sm:w-[7.5rem]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={state.coverPreview ?? state.keptCover!.url}
+                        alt={`${group}그룹 대표 미리보기`}
+                        className="h-full w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (coverInput.current) coverInput.current.value = "";
+                          if (state.coverPreview) {
+                            applyVehicleCoverFile(group, null);
+                            return;
+                          }
+                          patchVehicleGroup(group, (current) => {
+                            const [next, ...rest] = current.keptGallery;
+                            return {
+                              ...current,
+                              keptCover: next ?? null,
+                              keptGallery: rest,
+                            };
+                          });
+                        }}
+                        className="absolute right-1 top-1 inline-flex h-6 items-center rounded bg-black/70 px-1.5 text-[11px] font-medium text-white hover:bg-black/85"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  )}
+
+                  <ImageDropZone
+                    className="min-w-0 flex-1"
+                    inputRef={coverInput}
+                    name={`coverImage${group}`}
+                    accept={IMAGE_ACCEPT}
+                    browseLabel={`${group}그룹 대표 사진 선택`}
+                    hint={
+                      state.coverName
+                        ? state.coverName
+                        : "드래그하여 놓거나 선택 · JPG/PNG/WEBP/GIF · 1장"
+                    }
+                    onFiles={(files) => {
+                      const file = files.find(isImageFile) ?? null;
+                      if (!file) {
+                        setError("이미지 파일만 등록할 수 있습니다.");
+                        return;
+                      }
+                      setError(null);
+                      if (coverInput.current) {
+                        assignInputFiles(coverInput.current, [file], false);
+                      }
+                      applyVehicleCoverFile(group, file);
+                    }}
+                    onInputChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      applyVehicleCoverFile(group, file);
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-1 flex flex-wrap items-end justify-between gap-2">
+                  <span className="block text-[13px] font-medium tracking-wide text-neutral-600">
+                    상세 이미지
+                    <span className="font-normal text-neutral-400">
+                      {" "}
+                      · 대표 포함 최대 {MAX_IMAGES_PER_GROUP}장
+                      {listing ? " · 개별 × 또는 전체 삭제" : ""}
+                    </span>
+                  </span>
+                  {listing &&
+                  (state.keptGallery.length > 0 || state.photoCount > 0) ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const parts: string[] = [];
+                        if (state.keptGallery.length > 0) {
+                          parts.push(
+                            `보관 중인 상세 사진 ${state.keptGallery.length}장`,
+                          );
+                        }
+                        if (state.photoCount > 0) {
+                          parts.push(`새로 선택한 사진 ${state.photoCount}장`);
+                        }
+                        if (
+                          !confirm(
+                            `${group}그룹 ${parts.join("과 ")}을(를) 모두 삭제할까요?`,
+                          )
+                        ) {
+                          return;
+                        }
+                        patchVehicleGroup(group, (current) => ({
+                          ...current,
+                          keptGallery: [],
+                          photoCount: 0,
+                        }));
+                        if (galleryInput.current) galleryInput.current.value = "";
+                        setError(null);
+                      }}
+                      className="inline-flex h-7 shrink-0 items-center rounded-md border border-red-200 bg-white px-2.5 text-[12px] font-medium tracking-wide text-red-700 transition hover:bg-red-50"
+                    >
+                      상세 사진 전체 삭제
+                      {state.keptGallery.length + state.photoCount > 0
+                        ? ` (${state.keptGallery.length + state.photoCount})`
+                        : ""}
+                    </button>
+                  ) : null}
+                </div>
+
+                <ImageDropZone
+                  inputRef={galleryInput}
+                  name={`images${group}`}
+                  accept={IMAGE_ACCEPT}
+                  multiple
+                  browseLabel={`${group}그룹 상세 사진 선택`}
+                  hint={
+                    state.photoCount > 0
+                      ? `${state.photoCount}장 선택됨 (최대 ${MAX_IMAGES_PER_GROUP - 1}장) · 드래그로 다시 지정 가능`
+                      : `드래그하여 놓거나 선택 · JPG/PNG · 최대 ${MAX_IMAGES_PER_GROUP - 1}장`
+                  }
+                  onFiles={(files) => applyVehicleGalleryFiles(group, files)}
+                  onInputChange={(e) => {
+                    applyVehicleGalleryFiles(group, e.target.files ?? []);
+                  }}
                 />
-                {listing && !coverPreview && keptCover ? (
-                  <button
-                    type="button"
-                    onClick={() => setKeptCover(null)}
-                    className="absolute right-1 top-1 inline-flex h-6 items-center rounded bg-black/70 px-1.5 text-[11px] font-medium text-white hover:bg-black/85"
-                  >
-                    삭제
-                  </button>
+
+                {state.keptGallery.length > 0 ? (
+                  <div className="mt-2 grid grid-cols-5 gap-1.5 sm:grid-cols-8">
+                    {state.keptGallery.map((img) => (
+                      <div key={img.id} className="relative aspect-square">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={img.url}
+                          alt=""
+                          className="h-full w-full rounded-sm border border-neutral-200 object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            patchVehicleGroup(group, (current) => ({
+                              ...current,
+                              keptCover: img,
+                              keptGallery: [
+                                ...(current.keptCover
+                                  ? [current.keptCover]
+                                  : []),
+                                ...current.keptGallery.filter(
+                                  (item) => item.id !== img.id,
+                                ),
+                              ],
+                            }))
+                          }
+                          className="absolute left-0.5 top-0.5 rounded bg-white/90 px-1 py-0.5 text-[9px] font-semibold text-neutral-800 shadow-sm ring-1 ring-neutral-200 hover:bg-white"
+                        >
+                          대표
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            patchVehicleGroup(group, (current) => ({
+                              ...current,
+                              keptGallery: current.keptGallery.filter(
+                                (item) => item.id !== img.id,
+                              ),
+                            }))
+                          }
+                          className="absolute right-0.5 top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/75 text-[12px] leading-none text-white hover:bg-black/90"
+                          aria-label="사진 삭제"
+                          title="삭제"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                {listing && state.keptGallery.length === 0 ? (
+                  <p className="mt-1.5 text-[12px] tracking-wide text-neutral-400">
+                    보관 중인 상세 사진이 없습니다. 위에서 새로 추가할 수 있습니다.
+                  </p>
                 ) : null}
               </div>
-            )}
-
-            <ImageDropZone
-              className="min-w-0 flex-1"
-              inputRef={coverInputRef}
-              name="coverImage"
-              accept={IMAGE_ACCEPT}
-              browseLabel="대표 사진 선택"
-              hint={
-                coverName
-                  ? coverName
-                  : "드래그하여 놓거나 선택 · JPG/PNG/WEBP/GIF · 1장"
-              }
-              onFiles={(files) => {
-                const file = files.find(isImageFile) ?? null;
-                if (!file) {
-                  setError("이미지 파일만 등록할 수 있습니다.");
-                  return;
-                }
-                setError(null);
-                if (coverInputRef.current) {
-                  assignInputFiles(coverInputRef.current, [file], false);
-                }
-                applyCoverFile(file);
-              }}
-              onInputChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                applyCoverFile(file);
-              }}
-            />
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-1 flex flex-wrap items-end justify-between gap-2">
-            <span className="block text-[13px] font-medium tracking-wide text-neutral-600">
-              추가 사진
-              <span className="font-normal text-neutral-400">
-                {" "}
-                · 대표 사진 포함 최대 {MAX_IMAGES_PER_LISTING}장
-                {listing ? " · 개별 × 또는 전체 삭제" : ""}
-              </span>
-            </span>
-            {listing && (keptGallery.length > 0 || photoCount > 0) ? (
-              <button
-                type="button"
-                onClick={() => {
-                  const parts: string[] = [];
-                  if (keptGallery.length > 0) {
-                    parts.push(`보관 중인 추가 사진 ${keptGallery.length}장`);
-                  }
-                  if (photoCount > 0) {
-                    parts.push(`새로 선택한 사진 ${photoCount}장`);
-                  }
-                  if (
-                    !confirm(
-                      `${parts.join("과 ")}을(를) 모두 삭제할까요?\n삭제 후 아래에서 새 사진을 등록할 수 있습니다.`,
-                    )
-                  ) {
-                    return;
-                  }
-                  setKeptGallery([]);
-                  setPhotoCount(0);
-                  if (galleryInputRef.current) {
-                    galleryInputRef.current.value = "";
-                  }
-                  setError(null);
-                }}
-                className="inline-flex h-7 shrink-0 items-center rounded-md border border-red-200 bg-white px-2.5 text-[12px] font-medium tracking-wide text-red-700 transition hover:bg-red-50"
-              >
-                추가 사진 전체 삭제
-                {keptGallery.length + photoCount > 0
-                  ? ` (${keptGallery.length + photoCount})`
-                  : ""}
-              </button>
-            ) : null}
-          </div>
-
-          <ImageDropZone
-            inputRef={galleryInputRef}
-            name="images"
-            accept={IMAGE_ACCEPT}
-            multiple
-            browseLabel="추가 사진 선택"
-            hint={
-              photoCount > 0
-                ? `${photoCount}장 선택됨 (최대 99장) · 드래그로 다시 지정 가능`
-                : "드래그하여 놓거나 선택 · JPG/PNG · 최대 99장"
-            }
-            onFiles={(files) => applyGalleryFiles(files)}
-            onInputChange={(e) => {
-              applyGalleryFiles(e.target.files ?? []);
-            }}
-          />
-
-          {keptGallery.length > 0 ? (
-            <div className="mt-2 grid grid-cols-5 gap-1.5 sm:grid-cols-8">
-              {keptGallery.map((img) => (
-                <div key={img.id} className="relative aspect-square">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={img.url}
-                    alt=""
-                    className="h-full w-full rounded-sm border border-neutral-200 object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setKeptGallery((prev) =>
-                        prev.filter((item) => item.id !== img.id),
-                      )
-                    }
-                    className="absolute right-0.5 top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/75 text-[12px] leading-none text-white hover:bg-black/90"
-                    aria-label="사진 삭제"
-                    title="삭제"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
             </div>
-          ) : null}
-          {listing && keptGallery.length === 0 ? (
-            <p className="mt-1.5 text-[12px] tracking-wide text-neutral-400">
-              보관 중인 추가 사진이 없습니다. 위에서 새로 추가할 수 있습니다.
-            </p>
-          ) : null}
-        </div>
+          );
+        })}
       </div>
       )}
 

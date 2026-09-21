@@ -143,6 +143,8 @@ export async function seedSampleListings(authorId: string) {
             create: Array.from({ length: IMAGES_PER_LISTING }, (_, offset) => ({
               url: IMAGES[(imageOffset + offset) % IMAGES.length]!,
               sortOrder: offset,
+              group: 1,
+              isCover: offset === 0,
             })),
           },
         },

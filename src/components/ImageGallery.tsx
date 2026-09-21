@@ -1,17 +1,30 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ListingCategory, ListingSaleStatus } from "@prisma/client";
 import { AuctionImageBadge } from "@/components/AuctionImageBadge";
 import { DownloadPhotoButton } from "@/components/DownloadPhotoButton";
+import { ListingImageGroupToggle } from "@/components/ListingImageGroupToggle";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
+import {
+  imagesForDisplayGroup,
+  LISTING_IMAGE_GROUPS,
+  parseListingImageGroup,
+  splitListingImages,
+  type ListingImageGroup,
+} from "@/lib/listing-images";
+
+type GalleryImage = { id: string; url: string; group?: number | null; isCover?: boolean | null };
 
 type Props = {
-  images: { id: string; url: string }[];
+  images: GalleryImage[];
   alt: string;
   saleStatus?: ListingSaleStatus;
   category?: ListingCategory | null;
+  defaultGroup?: number | null;
+  listingId?: string;
+  persistDisplayGroup?: boolean;
 };
 
 export function ImageGallery({
@@ -19,9 +32,31 @@ export function ImageGallery({
   alt,
   saleStatus = "AVAILABLE",
   category,
+  defaultGroup,
+  listingId,
+  persistDisplayGroup = false,
 }: Props) {
+  const grouped = useMemo(() => splitListingImages(images), [images]);
+  const available = LISTING_IMAGE_GROUPS.filter(
+    (group) => grouped[group].length > 0,
+  );
+  const [group, setGroup] = useState<ListingImageGroup>(() =>
+    parseListingImageGroup(
+      imagesForDisplayGroup(images, defaultGroup)[0]?.group ?? defaultGroup,
+    ),
+  );
+  const [saving, setSaving] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const active = images.find((img) => img.id === activeId) ?? null;
+
+  useEffect(() => {
+    const next = parseListingImageGroup(
+      imagesForDisplayGroup(images, defaultGroup)[0]?.group ?? defaultGroup,
+    );
+    setGroup(next);
+  }, [images, defaultGroup]);
+
+  const visible = grouped[group].length > 0 ? grouped[group] : images;
+  const active = visible.find((img) => img.id === activeId) ?? null;
 
   useEffect(() => {
     if (!active) return;
@@ -36,12 +71,49 @@ export function ImageGallery({
     };
   }, [active]);
 
-  if (images.length === 0) return null;
+  async function selectGroup(next: ListingImageGroup) {
+    setGroup(next);
+    setActiveId(null);
+    if (!persistDisplayGroup || !listingId || next === group) return;
+    setSaving(true);
+    try {
+      await fetch(`/api/listings/${listingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ displayedImageGroup: next }),
+      });
+    } catch {
+      /* keep local selection */
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (visible.length === 0) return null;
 
   return (
     <>
+      {available.length > 1 ? (
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <ListingImageGroupToggle
+            value={group}
+            available={available}
+            onChange={selectGroup}
+            size="md"
+          />
+          <span className="text-[12px] tracking-wide text-neutral-500">
+            {group}그룹 대표·상세
+            {persistDisplayGroup
+              ? saving
+                ? " · 저장 중"
+                : " · 사이트 노출"
+              : ""}
+          </span>
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-3 gap-1 sm:grid-cols-5">
-        {images.map((img, index) => (
+        {visible.map((img, index) => (
           <div
             key={img.id}
             className="relative aspect-[4/3] overflow-hidden bg-neutral-100"
@@ -59,7 +131,6 @@ export function ImageGallery({
                 sizes="(max-width: 640px) 33vw, 20vw"
                 draggable={false}
                 className="object-cover"
-                // /uploads are served from Volume via route handler — skip optimizer
                 unoptimized={
                   img.url.startsWith("http") || img.url.startsWith("/uploads/")
                 }

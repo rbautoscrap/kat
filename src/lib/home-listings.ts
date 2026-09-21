@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 import type { Listing, ListingImage, ListingCategory, Prisma } from "@prisma/client";
 import { memberListingVisibilityWhere } from "@/lib/live-auction";
 import { orderByIds, orderListingsNewestFirst } from "@/lib/listing-shuffle";
+import { LISTING_CARD_COVER_INCLUDE } from "@/lib/listing-images";
 import { prisma } from "@/lib/prisma";
 
 export const HOME_SECTION_LIMIT = 10;
@@ -99,9 +100,7 @@ export async function loadHomeListings(
         ? []
         : await prisma.listing.findMany({
             where: { id: { in: pageIds } },
-            include: {
-              images: { orderBy: { sortOrder: "asc" as const }, take: 1 },
-            },
+            include: LISTING_CARD_COVER_INCLUDE,
           });
 
     return {

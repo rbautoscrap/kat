@@ -126,6 +126,8 @@ model Listing {
   auctionEndsAt    DateTime?
   /** Admin “상단” pin; listing-order boost lasts 24 hours from this time. */
   bumpedAt         DateTime?
+  /** Public cards/detail default to this photo set (1 or 2). */
+  displayedImageGroup Int          @default(1)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   authorId         String
@@ -315,10 +317,14 @@ model ListingImage {
   id        String  @id @default(cuid())
   url       String
   sortOrder Int     @default(0)
+  /** Photo set 1 or 2 (vehicle listings). Used Parts stay on group 1. */
+  group     Int     @default(1)
+  isCover   Boolean @default(false)
   listingId String
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@index([listingId, sortOrder])
+  @@index([listingId, group, sortOrder])
 }
 
 model SiteStats {
