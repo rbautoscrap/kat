@@ -155,7 +155,7 @@ export const LISTING_CATEGORY_PAGE_SIZE = 20;
 export const USED_PARTS_PAGE_SIZE = 12;
 
 /** Vehicle listings may attach many photos; Used Parts is capped lower. */
-export const MAX_IMAGES_PER_LISTING = 100;
+export const MAX_IMAGES_PER_LISTING = 140;
 export { MAX_IMAGES_PER_GROUP } from "@/lib/listing-images";
 export const MAX_IMAGES_PER_USED_PARTS = 20;
 
