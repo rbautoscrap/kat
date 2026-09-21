@@ -27,6 +27,12 @@ export function parseListingImageGroup(value: unknown): ListingImageGroup {
   return Number(value) === 2 ? 2 : 1;
 }
 
+export function listingImageGroupLabel(group: number): string {
+  return parseListingImageGroup(group) === 2
+    ? "2그룹 (Car Listings)"
+    : "1그룹 (Stand by)";
+}
+
 export function imageGroupOf(image: {
   group?: number | null;
 }): ListingImageGroup {

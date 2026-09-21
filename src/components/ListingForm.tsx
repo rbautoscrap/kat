@@ -30,6 +30,7 @@ import {
 import {
   LISTING_IMAGE_GROUPS,
   MAX_IMAGES_PER_GROUP,
+  listingImageGroupLabel,
   parseListingImageGroup,
   splitListingImages,
   type ListingImageGroup,
@@ -1369,7 +1370,6 @@ export function ListingForm({
             <ListingImageGroupToggle
               value={displayedImageGroup}
               showEmpty
-              labels={{ 1: "1그룹", 2: "2그룹" }}
               disabled={{
                 2: (() => {
                   const groupState = vehicleGroups[2];
@@ -1384,7 +1384,8 @@ export function ListingForm({
               onChange={setDisplayedImageGroup}
             />
             <span className="text-[12px] tracking-wide text-neutral-500">
-              {displayedImageGroup}그룹 대표·상세가 사이트에 표시됩니다
+              {listingImageGroupLabel(displayedImageGroup)} 대표·상세가
+              사이트에 표시됩니다
             </span>
           </div>
         </div>
@@ -1405,7 +1406,7 @@ export function ListingForm({
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-[13.5px] font-semibold tracking-wide text-neutral-800">
-                  {group}그룹
+                  {listingImageGroupLabel(group)}
                   {showing ? (
                     <span className="ml-1.5 font-normal text-emerald-700">
                       사이트 노출
@@ -1449,7 +1450,7 @@ export function ListingForm({
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={state.coverPreview ?? state.keptCover!.url}
-                        alt={`${group}그룹 대표 미리보기`}
+                        alt={`${listingImageGroupLabel(group)} 대표 미리보기`}
                         className="h-full w-full object-cover"
                       />
                       <button
@@ -1481,7 +1482,7 @@ export function ListingForm({
                     inputRef={coverInput}
                     name={`coverImage${group}`}
                     accept={IMAGE_ACCEPT}
-                    browseLabel={`${group}그룹 대표 사진 선택`}
+                    browseLabel={`${listingImageGroupLabel(group)} 대표 사진 선택`}
                     hint={
                       state.coverName
                         ? state.coverName
@@ -1561,7 +1562,7 @@ export function ListingForm({
                   name={`images${group}`}
                   accept={IMAGE_ACCEPT}
                   multiple
-                  browseLabel={`${group}그룹 상세 사진 선택`}
+                  browseLabel={`${listingImageGroupLabel(group)} 상세 사진 선택`}
                   hint={
                     state.photoCount > 0
                       ? `${state.photoCount}장 선택됨 (최대 ${MAX_IMAGES_PER_GROUP - 1}장) · 드래그로 다시 지정 가능`

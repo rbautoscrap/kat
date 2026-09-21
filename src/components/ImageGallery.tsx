@@ -10,6 +10,7 @@ import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
 import {
   imagesForDisplayGroup,
   LISTING_IMAGE_GROUPS,
+  listingImageGroupLabel,
   parseListingImageGroup,
   splitListingImages,
   type ListingImageGroup,
@@ -102,7 +103,7 @@ export function ImageGallery({
             size="md"
           />
           <span className="text-[12px] tracking-wide text-neutral-500">
-            {group}그룹 대표·상세
+            {listingImageGroupLabel(group)} 대표·상세
             {persistDisplayGroup
               ? saving
                 ? " · 저장 중"

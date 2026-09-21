@@ -2,6 +2,7 @@
 
 import {
   LISTING_IMAGE_GROUPS,
+  listingImageGroupLabel,
   type ListingImageGroup,
 } from "@/lib/listing-images";
 
@@ -80,19 +81,15 @@ export function ListingImageGroupToggle({
       {groups.map((group) => {
         const selected = value === group;
         const isDisabled = Boolean(disabled?.[group]) || (!showEmpty && !ready.has(group));
-        const label = labels?.[group] ?? `${group}`;
+        const label = labels?.[group] ?? listingImageGroupLabel(group);
         return (
           <button
             key={group}
             type="button"
             disabled={isDisabled}
-            title={
-              group === 1
-                ? "1그룹 대표·상세 사진"
-                : "2그룹 대표·상세 사진"
-            }
+            title={label}
             aria-pressed={selected}
-            aria-label={`${group}그룹 사진`}
+            aria-label={label}
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
@@ -101,7 +98,7 @@ export function ListingImageGroupToggle({
             className={`inline-flex items-center justify-center rounded-full border font-semibold tracking-wide transition ${
               compact
                 ? "h-7 w-7 px-0 text-[12px]"
-                : "h-10 gap-1.5 border-neutral-300 px-2.5 text-[13px] shadow-none"
+                : "h-9 gap-1.5 border-neutral-300 px-3 text-[13px] shadow-none"
             } ${
               selected
                 ? "border-neutral-900 bg-neutral-900 text-white shadow-sm"
