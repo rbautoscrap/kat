@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateListingSalePrice } from "@/app/admin/actions";
 import { AuthModalShell } from "@/components/AuthModalShell";
+import { HolidayWhatsAppLink } from "@/components/HolidayWhatsAppLink";
 import { formatSalePriceDisplay } from "@/lib/listings";
 
 type Props = {
@@ -110,16 +111,14 @@ export function ListingSalePriceBox({
               {displayKrw}
             </p>
             {buyHref ? (
-              <a
+              <HolidayWhatsAppLink
                 href={buyHref}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="listing-sale-price-buy"
                 title="Buy now via WhatsApp CS"
               >
                 <WhatsAppIcon />
                 Buy Now
-              </a>
+              </HolidayWhatsAppLink>
             ) : null}
             {canEdit && listingId ? (
               <div className="listing-sale-price-actions">

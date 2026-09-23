@@ -1,3 +1,7 @@
+"use client";
+
+import { HolidayWhatsAppLink } from "@/components/HolidayWhatsAppLink";
+
 type Props = {
   priceHref: string | null;
   csHref: string | null;
@@ -21,26 +25,22 @@ export function ListingContactLinks({
     <div className="flex w-full flex-col gap-1.5">
       <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
         {priceHref ? (
-          <a
+          <HolidayWhatsAppLink
             href={priceHref}
-            target="_blank"
-            rel="noopener noreferrer"
             className="inline-flex min-h-[3.25rem] items-center justify-center gap-1 rounded bg-[#1877F2] px-2 py-1.5 text-[12px] font-semibold tracking-wide text-white transition hover:brightness-95"
           >
             <WhatsAppIcon />
             Price Check Only
-          </a>
+          </HolidayWhatsAppLink>
         ) : null}
         {csHref ? (
-          <a
+          <HolidayWhatsAppLink
             href={csHref}
-            target="_blank"
-            rel="noopener noreferrer"
             className="inline-flex min-h-[3.25rem] items-center justify-center gap-1 rounded bg-[#25D366] px-2 py-1.5 text-[12px] font-semibold tracking-wide text-white transition hover:brightness-95"
           >
             <WhatsAppIcon />
             Documents / CS
-          </a>
+          </HolidayWhatsAppLink>
         ) : null}
       </div>
       <p className="text-center text-[10.5px] leading-snug tracking-wide text-neutral-500 sm:text-left">

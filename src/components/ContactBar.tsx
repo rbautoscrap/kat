@@ -1,3 +1,4 @@
+import { HolidayWhatsAppLink } from "@/components/HolidayWhatsAppLink";
 import {
   CONTACT_FACEBOOK_URL,
   CONTACT_LINE,
@@ -17,16 +18,14 @@ export function ContactBar() {
           {CONTACT_LINE}
         </span>
         <div className="flex shrink-0 flex-wrap items-center gap-1.5">
-          <a
+          <HolidayWhatsAppLink
             href={`https://wa.me/${CONTACT_WHATSAPP}`}
-            target="_blank"
-            rel="noopener noreferrer"
             className="inline-flex items-center gap-1 rounded-full bg-[#25D366]/15 px-2.5 py-0.5 text-[11.5px] font-medium text-[#6eef9a] transition hover:bg-[#25D366]/25"
-            aria-label="WhatsApp"
+            ariaLabel="WhatsApp"
           >
             <WhatsAppIcon />
             WhatsApp
-          </a>
+          </HolidayWhatsAppLink>
           {kakaoHref ? (
             <a
               href={kakaoHref}

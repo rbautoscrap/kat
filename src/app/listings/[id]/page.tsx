@@ -12,6 +12,7 @@ import { AdminPurchaseOffersPanel } from "@/components/admin/AdminPurchaseOffers
 import { DownloadListingImagesButton } from "@/components/admin/DownloadListingImagesButton";
 import { AuctionCountdown } from "@/components/AuctionCountdown";
 import { LiveAuctionGatePanel } from "@/components/LiveAuctionGatePanel";
+import { HolidayWhatsAppLink } from "@/components/HolidayWhatsAppLink";
 import { ListingContactLinks } from "@/components/ListingContactLinks";
 import { ListingSalePriceBox } from "@/components/ListingSalePriceBox";
 import { ListingShareBar } from "@/components/ListingShareBar";
@@ -365,14 +366,12 @@ export default async function ListingDetailPage({ params }: Props) {
                   <span>{contactDisplay}</span>
                 )}
                 {partsWhatsAppHref ? (
-                  <a
+                  <HolidayWhatsAppLink
                     href={partsWhatsAppHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="inline-flex items-center rounded bg-[#25D366] px-2 py-0.5 text-[11.5px] font-semibold tracking-wide text-white hover:bg-[#1ebe57]"
                   >
                     WhatsApp
-                  </a>
+                  </HolidayWhatsAppLink>
                 ) : null}
               </span>
             ) : (
