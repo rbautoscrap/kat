@@ -18,7 +18,11 @@ import {
   listingMovesWithImageGroup,
   resolveDisplayedImageGroup,
 } from "@/lib/listing-images";
-import { parseLinkedMenus, serializeLinkedMenus } from "@/lib/listing-menus";
+import {
+  linkedMenusForWrite,
+  parseLinkedMenus,
+  serializeLinkedMenus,
+} from "@/lib/listing-menus";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -176,9 +180,8 @@ export async function PUT(request: Request, { params }: Params) {
             existing.images,
           );
 
-    const category = listingMovesWithImageGroup(
-      data.category ?? existing.category,
-    )
+    const requestedCategory = data.category ?? existing.category;
+    const category = listingMovesWithImageGroup(requestedCategory)
       ? listingImageGroupCategory(displayedImageGroup)
       : data.category;
 
@@ -188,6 +191,11 @@ export async function PUT(request: Request, { params }: Params) {
         ...data,
         category,
         displayedImageGroup,
+        linkedMenus: linkedMenusForWrite(
+          parseLinkedMenus(data.linkedMenus),
+          requestedCategory,
+          category,
+        ),
         ...imageUpdate,
       },
     });

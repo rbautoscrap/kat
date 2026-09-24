@@ -9,7 +9,11 @@ export const LINKABLE_MENUS = [
 
 export type LinkableMenu = (typeof LINKABLE_MENUS)[number];
 
-const TOKEN = (menu: string) => `,${menu},`;
+export const LINKABLE_MENU_LABELS: Record<LinkableMenu, string> = {
+  CAR_LISTINGS: "Car Listings",
+  STAND_BY: "Stand by",
+  DRIVABLE_CARS: "Drivable Cars",
+};
 
 export function isLinkableMenu(value: string): value is LinkableMenu {
   return (LINKABLE_MENUS as readonly string[]).includes(value);
@@ -50,6 +54,24 @@ export function serializeLinkedMenus(
   return `,${extra.join(",")},`;
 }
 
+/** Keep the chosen category as an extra menu when photo-group remap changes it. */
+export function linkedMenusForWrite(
+  menus: readonly string[],
+  requestedCategory: ListingCategory | string | null | undefined,
+  storedCategory: ListingCategory | string | null | undefined,
+): string | null {
+  const extra = [...menus];
+  if (
+    requestedCategory &&
+    storedCategory &&
+    requestedCategory !== storedCategory &&
+    isLinkableMenu(String(requestedCategory))
+  ) {
+    extra.push(String(requestedCategory));
+  }
+  return serializeLinkedMenus(extra, storedCategory);
+}
+
 export function listingShowsOnMenu(
   listing: {
     category: ListingCategory | string;
@@ -68,7 +90,7 @@ export function publicMenuWhere(
     return {
       OR: [
         { category: { in: ["CAR_LISTINGS", "CONSIGNMENT_SALE"] } },
-        { linkedMenus: { contains: TOKEN("CAR_LISTINGS") } },
+        { linkedMenus: { contains: "CAR_LISTINGS" } },
       ],
     };
   }
@@ -76,7 +98,7 @@ export function publicMenuWhere(
     return {
       OR: [
         { category: menu },
-        { linkedMenus: { contains: TOKEN(menu) } },
+        { linkedMenus: { contains: menu } },
       ],
     };
   }

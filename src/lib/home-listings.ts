@@ -82,8 +82,8 @@ export async function loadHomeListings(
           {
             OR: [
               { category: { in: [...HOME_CATEGORIES] } },
-              { linkedMenus: { contains: ",CAR_LISTINGS," } },
-              { linkedMenus: { contains: ",STAND_BY," } },
+              { linkedMenus: { contains: "CAR_LISTINGS" } },
+              { linkedMenus: { contains: "STAND_BY" } },
             ],
           },
           visibility,

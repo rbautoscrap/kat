@@ -18,6 +18,7 @@ import {
   listingMovesWithImageGroup,
   resolveDisplayedImageGroup,
 } from "@/lib/listing-images";
+import { linkedMenusForWrite, parseLinkedMenus } from "@/lib/listing-menus";
 
 export async function POST(request: Request) {
   const dbUser = await resolveSessionDbUser();
@@ -82,14 +83,20 @@ export async function POST(request: Request) {
       data.displayedImageGroup,
       imageCreates,
     );
-    const category = listingMovesWithImageGroup(data.category)
+    const requestedCategory = data.category;
+    const category = listingMovesWithImageGroup(requestedCategory)
       ? listingImageGroupCategory(displayedImageGroup)
-      : data.category;
+      : requestedCategory;
 
     const listing = await prisma.listing.create({
       data: {
         ...data,
         category,
+        linkedMenus: linkedMenusForWrite(
+          parseLinkedMenus(data.linkedMenus),
+          requestedCategory,
+          category,
+        ),
         serialNumber: generateSerialNumber(),
         authorId: dbUser.id,
         displayedImageGroup,

@@ -4,29 +4,43 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import type { ListingCategory } from "@prisma/client";
 import { updateListingLinkedMenus } from "@/app/admin/actions";
-import { ADMIN_CATEGORY_LABELS } from "@/lib/admin-labels";
 import {
+  LINKABLE_MENU_LABELS,
   LINKABLE_MENUS,
   menuCoveredByCategory,
   type LinkableMenu,
 } from "@/lib/listing-menus";
 
 const boxClass =
-  "inline-flex h-7 items-center gap-1 rounded border px-1.5 text-[11.5px] leading-none";
+  "inline-flex h-7 items-center rounded border px-2 text-[11.5px] leading-none";
 
 export function ListingMenuLinkFields({
+  listingId,
   category,
   value,
   onChange,
 }: {
+  listingId?: string;
   category: ListingCategory;
   value: LinkableMenu[];
   onChange: (next: LinkableMenu[]) => void;
 }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
   const extras = LINKABLE_MENUS.filter(
     (menu) => !menuCoveredByCategory(category, menu),
   );
   if (extras.length === 0) return null;
+
+  function apply(next: LinkableMenu[]) {
+    onChange(next);
+    if (!listingId) return;
+    startTransition(async () => {
+      const result = await updateListingLinkedMenus(listingId, next);
+      if (!result.ok) alert(result.error);
+      else router.refresh();
+    });
+  }
 
   return (
     <div className="sm:col-span-2">
@@ -43,21 +57,22 @@ export function ListingMenuLinkFields({
                 on
                   ? "border-neutral-800 bg-neutral-800 text-white"
                   : "border-neutral-200 bg-white text-neutral-600"
-              }`}
+              } ${pending ? "opacity-60" : ""}`}
             >
               <input
                 type="checkbox"
                 name="linkedMenus"
                 value={menu}
                 checked={on}
+                disabled={pending}
                 onChange={() =>
-                  onChange(
+                  apply(
                     on ? value.filter((item) => item !== menu) : [...value, menu],
                   )
                 }
                 className="sr-only"
               />
-              {ADMIN_CATEGORY_LABELS[menu]}
+              {LINKABLE_MENU_LABELS[menu]}
             </label>
           );
         })}
@@ -83,7 +98,7 @@ export function ListingMenuLinkToggles({
   if (extras.length === 0) return null;
 
   const selected = extras.filter((menu) =>
-    (linkedMenus ?? "").includes(`,${menu},`),
+    (linkedMenus ?? "").includes(menu),
   );
 
   return (
@@ -112,7 +127,7 @@ export function ListingMenuLinkToggles({
               });
             }}
           >
-            {ADMIN_CATEGORY_LABELS[menu]}
+            {LINKABLE_MENU_LABELS[menu]}
           </button>
         );
       })}

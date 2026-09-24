@@ -429,6 +429,10 @@ export function ListingForm({
 
     const data = new FormData(form);
     data.set("category", category);
+    data.delete("linkedMenus");
+    for (const menu of linkedMenus) {
+      data.append("linkedMenus", menu);
+    }
 
     if (partsMode) {
       data.set("year", "0");
@@ -813,6 +817,7 @@ export function ListingForm({
             </select>
           </label>
           <ListingMenuLinkFields
+            listingId={listing?.id}
             category={category}
             value={linkedMenus}
             onChange={setLinkedMenus}
