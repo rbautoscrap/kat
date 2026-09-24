@@ -82,7 +82,8 @@ function parseCategory(value?: string): ListingCategory | "ALL" {
     value === "CAR_LISTINGS" ||
     value === "CONSIGNMENT_SALE" ||
     value === "LIVE_AUCTION" ||
-    value === "STAND_BY"
+    value === "STAND_BY" ||
+    value === "DRIVABLE_CARS"
   ) {
     return value;
   }
@@ -346,6 +347,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
     CONSIGNMENT_SALE: 0,
     LIVE_AUCTION: 0,
     STAND_BY: 0,
+    DRIVABLE_CARS: 0,
     USED_PARTS: 0,
   } as Record<ListingCategory | "ALL", number>;
 

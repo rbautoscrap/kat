@@ -174,6 +174,7 @@ const LISTING_CATEGORIES = [
   "CONSIGNMENT_SALE",
   "LIVE_AUCTION",
   "STAND_BY",
+  "DRIVABLE_CARS",
   "USED_PARTS",
 ] as const;
 

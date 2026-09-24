@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { Listing, ListingImage } from "@prisma/client";
 import { BackButton } from "@/components/BackButton";
 import { ListingCard } from "@/components/ListingCard";
@@ -46,6 +47,9 @@ export default async function ListingsPage({ searchParams }: Props) {
   const category = parseCategory(params.category ?? null);
   const q = params.q?.trim() ?? "";
   const page = parsePage(params.page);
+  if (category === "DRIVABLE_CARS" && !q) {
+    redirect(page > 1 ? `/drivable-cars?page=${page}` : "/drivable-cars");
+  }
 
   const searchWhere = buildPublicListingSearchWhere(q);
   const categoryWhere: Prisma.ListingWhereInput = category

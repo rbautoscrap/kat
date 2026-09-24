@@ -122,7 +122,11 @@ function toRow(
 
 export async function loadInventoryListReport(): Promise<InventoryListReport> {
   const listings = await prisma.listing.findMany({
-    where: { category: { in: ["CAR_LISTINGS", "CONSIGNMENT_SALE", "STAND_BY"] } },
+    where: {
+      category: {
+        in: ["CAR_LISTINGS", "CONSIGNMENT_SALE", "STAND_BY", "DRIVABLE_CARS"],
+      },
+    },
     select: {
       id: true,
       title: true,

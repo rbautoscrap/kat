@@ -15,6 +15,7 @@ const CATEGORY_ORDER: ListingCategory[] = [
   "CAR_LISTINGS",
   "CONSIGNMENT_SALE",
   "STAND_BY",
+  "DRIVABLE_CARS",
 ];
 
 export default async function AdminOverviewPage() {

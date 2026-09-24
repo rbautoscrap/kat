@@ -24,6 +24,7 @@ enum ListingCategory {
   CONSIGNMENT_SALE
   LIVE_AUCTION
   STAND_BY
+  DRIVABLE_CARS
   USED_PARTS
 }
 

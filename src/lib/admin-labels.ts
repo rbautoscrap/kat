@@ -28,6 +28,7 @@ export const ADMIN_CATEGORY_LABELS: Record<ListingCategory, string> = {
   CONSIGNMENT_SALE: "위탁 판매",
   LIVE_AUCTION: "라이브 경매",
   STAND_BY: "스탠바이",
+  DRIVABLE_CARS: "주행가능",
   USED_PARTS: "중고부품",
 };
 
@@ -37,6 +38,7 @@ export const ADMIN_MANAGED_CATEGORIES = [
   "CAR_LISTINGS",
   "CONSIGNMENT_SALE",
   "STAND_BY",
+  "DRIVABLE_CARS",
 ] as const satisfies readonly ListingCategory[];
 
 export type AdminManagedCategory = (typeof ADMIN_MANAGED_CATEGORIES)[number];

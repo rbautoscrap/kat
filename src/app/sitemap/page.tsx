@@ -7,7 +7,7 @@ export default function SitemapPage() {
     { href: "/listings?category=CAR_LISTINGS", label: "Car Listings" },
     { href: "/listings?category=STAND_BY", label: "Stand by" },
     { href: "/listings?category=USED_PARTS", label: "Used Parts" },
-    { href: "/how-to-buy", label: "How to buy" },
+    { href: "/drivable-cars", label: "Drivable Cars" },
     { href: "/about-us", label: "About Us" },
     { href: "/join", label: "Join" },
     { href: "/login", label: "Login" },

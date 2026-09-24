@@ -24,8 +24,8 @@ export async function Footer() {
             <span className="text-neutral-400">
               © {new Date().getFullYear()} KOREA AUTO TRADE
             </span>
-            <Link href="/how-to-buy" className="hover:text-white">
-              How to buy
+            <Link href="/drivable-cars" className="hover:text-white">
+              Drivable Cars
             </Link>
             <Link href="/about-us" className="hover:text-white">
               About Us

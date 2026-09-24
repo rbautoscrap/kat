@@ -42,6 +42,15 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: "/drivable-cars",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, must-revalidate",
+          },
+        ],
+      },
+      {
         source: "/listings",
         headers: [
           {

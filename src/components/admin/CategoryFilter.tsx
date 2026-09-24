@@ -26,6 +26,7 @@ const filters: Array<{ value: "ALL" | ListingCategory; label: string }> = [
   { value: "CAR_LISTINGS", label: ADMIN_CATEGORY_LABELS.CAR_LISTINGS },
   { value: "CONSIGNMENT_SALE", label: ADMIN_CATEGORY_LABELS.CONSIGNMENT_SALE },
   { value: "STAND_BY", label: ADMIN_CATEGORY_LABELS.STAND_BY },
+  { value: "DRIVABLE_CARS", label: ADMIN_CATEGORY_LABELS.DRIVABLE_CARS },
 ];
 
 const sortOptions: Array<{

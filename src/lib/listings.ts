@@ -5,6 +5,7 @@ export const CATEGORY_LABELS: Record<ListingCategory, string> = {
   CONSIGNMENT_SALE: "Consignment",
   LIVE_AUCTION: "Live Auction",
   STAND_BY: "Stand by",
+  DRIVABLE_CARS: "Drivable Cars",
   USED_PARTS: "Used Parts",
 };
 
@@ -13,6 +14,7 @@ export const STOCK_VEHICLE_CATEGORIES = [
   "CAR_LISTINGS",
   "CONSIGNMENT_SALE",
   "STAND_BY",
+  "DRIVABLE_CARS",
 ] as const satisfies readonly ListingCategory[];
 
 export function isStockVehicleCategory(
@@ -136,6 +138,7 @@ export const CATEGORY_PATHS: Record<ListingCategory, string> = {
   CONSIGNMENT_SALE: "/listings?category=CAR_LISTINGS",
   LIVE_AUCTION: "/listings?category=LIVE_AUCTION",
   STAND_BY: "/listings?category=STAND_BY",
+  DRIVABLE_CARS: "/drivable-cars",
   USED_PARTS: "/listings?category=USED_PARTS",
 };
 
@@ -153,6 +156,11 @@ export const USED_PARTS_LIST_CLASS =
 
 export const LISTING_CATEGORY_PAGE_SIZE = 20;
 export const USED_PARTS_PAGE_SIZE = 12;
+export const DRIVABLE_CARS_PAGE_SIZE = 10;
+
+/** Drivable Cars gallery: 10 tiles, 5 across on desktop. */
+export const DRIVABLE_CARS_GRID_CLASS =
+  "grid grid-cols-2 items-start gap-x-4 gap-y-7 sm:grid-cols-3 sm:gap-x-5 md:grid-cols-5";
 
 /** Vehicle listings may attach many photos; Used Parts is capped lower. */
 export const MAX_IMAGES_PER_LISTING = 142;
@@ -177,6 +185,7 @@ export function parseCategory(
     value === "CONSIGNMENT_SALE" ||
     value === "LIVE_AUCTION" ||
     value === "STAND_BY" ||
+    value === "DRIVABLE_CARS" ||
     value === "USED_PARTS"
   ) {
     return value;

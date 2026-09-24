@@ -33,6 +33,8 @@ export function revalidateListingSurfaces(listingId?: string) {
   invalidateHomeListingsCache();
   revalidatePath("/", "layout");
   revalidatePath("/listings");
+  revalidatePath("/drivable-cars");
+  revalidatePath("/how-to-buy");
   revalidatePath("/my-parts");
   revalidatePath("/offers");
   revalidatePath("/admin");

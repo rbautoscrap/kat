@@ -145,7 +145,9 @@ export async function loadMonthPurchases(
 
   const listings = await prisma.listing.findMany({
     where: {
-      category: { in: ["CAR_LISTINGS", "CONSIGNMENT_SALE", "STAND_BY"] },
+      category: {
+        in: ["CAR_LISTINGS", "CONSIGNMENT_SALE", "STAND_BY", "DRIVABLE_CARS"],
+      },
       OR: [
         { inboundDate: { contains: compact } },
         { inboundDate: { contains: month } },

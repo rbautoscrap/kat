@@ -1,0 +1,2 @@
+-- SQLite stores ListingCategory as TEXT; no table rewrite required.
+-- New allowed value: DRIVABLE_CARS (showcase stock on /drivable-cars).
