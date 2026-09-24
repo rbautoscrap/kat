@@ -14,6 +14,16 @@ import { ADMIN_CATEGORY_LABELS } from "@/lib/admin-labels";
 import { compressImagesForUpload } from "@/lib/browser-compress-image";
 import { DEFAULT_LISTING_WHATSAPP } from "@/lib/contact";
 import {
+  AUCTION_TODAY_PRESETS,
+  AUCTION_TOMORROW_PRESETS,
+  defaultAuctionEndsLocal,
+  formatAuctionEndsSummary,
+  isAuctionPresetPast,
+  nextAuctionPreset,
+  resolveAuctionPreset,
+  type AuctionPreset,
+} from "@/lib/auction-clock";
+import {
   koreaTodayYyyymmdd,
   parseAuctionEndsAtInput,
   toKoreaDatetimeLocalValue,
@@ -196,80 +206,6 @@ function resolveFuelType(value?: string | null) {
 const selectClass =
   "h-10 w-full rounded-md border border-neutral-200 bg-neutral-50/40 px-3 text-[13.5px] tracking-wide outline-none focus:border-neutral-400 focus:bg-white";
 
-type AuctionPreset = {
-  id: string;
-  dayLabel: string;
-  timeLabel: string;
-  dayOffset: number;
-  hour: number;
-  minute: number;
-};
-
-const AUCTION_CLOCK_PRESETS: AuctionPreset[] = [
-  { id: "today10", dayLabel: "오늘", timeLabel: "10시", dayOffset: 0, hour: 10, minute: 0 },
-  { id: "today14", dayLabel: "오늘", timeLabel: "2시", dayOffset: 0, hour: 14, minute: 0 },
-  { id: "today18", dayLabel: "오늘", timeLabel: "6시", dayOffset: 0, hour: 18, minute: 0 },
-  { id: "tomorrow10", dayLabel: "내일", timeLabel: "10시", dayOffset: 1, hour: 10, minute: 0 },
-  { id: "tomorrow14", dayLabel: "내일", timeLabel: "2시", dayOffset: 1, hour: 14, minute: 0 },
-  { id: "tomorrow18", dayLabel: "내일", timeLabel: "6시", dayOffset: 1, hour: 18, minute: 0 },
-];
-
-const AUCTION_TODAY_PRESETS = AUCTION_CLOCK_PRESETS.filter((p) => p.dayOffset === 0);
-const AUCTION_TOMORROW_PRESETS = AUCTION_CLOCK_PRESETS.filter((p) => p.dayOffset === 1);
-
-function toDatetimeLocalValue(date: Date) {
-  return toKoreaDatetimeLocalValue(date);
-}
-
-function auctionPresetWallTime(preset: AuctionPreset, now = new Date()): string {
-  const seoulStamp = toKoreaDatetimeLocalValue(now);
-  const [datePart] = seoulStamp.split("T");
-  const [y, mo, d] = (datePart ?? "").split("-").map(Number);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const day = new Date(Date.UTC(y, mo - 1, d + preset.dayOffset));
-  return `${day.getUTCFullYear()}-${pad(day.getUTCMonth() + 1)}-${pad(day.getUTCDate())}T${pad(preset.hour)}:${pad(preset.minute)}`;
-}
-
-function resolveAuctionPreset(preset: AuctionPreset, now = new Date()): Date {
-  return (
-    parseAuctionEndsAtInput(auctionPresetWallTime(preset, now)) ??
-    new Date(now.getTime() + 60 * 60 * 1000)
-  );
-}
-
-function isAuctionPresetPast(preset: AuctionPreset, now = new Date()) {
-  return resolveAuctionPreset(preset, now).getTime() <= now.getTime();
-}
-
-function nextAuctionPreset(now = new Date()): AuctionPreset {
-  return (
-    AUCTION_CLOCK_PRESETS.find((preset) => !isAuctionPresetPast(preset, now)) ??
-    AUCTION_TOMORROW_PRESETS[0]!
-  );
-}
-
-function formatAuctionEndsSummary(localValue: string): string {
-  if (!localValue) return "";
-  const d = parseAuctionEndsAtInput(localValue);
-  if (!d) return "";
-  return d.toLocaleString("ko-KR", {
-    timeZone: "Asia/Seoul",
-    month: "numeric",
-    day: "numeric",
-    weekday: "short",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-function defaultAuctionEndsLocal(existing?: Date | string | null) {
-  if (existing) {
-    const formatted = toKoreaDatetimeLocalValue(existing);
-    if (formatted) return formatted;
-  }
-  return toDatetimeLocalValue(resolveAuctionPreset(nextAuctionPreset()));
-}
-
 export function ListingForm({
   listing,
   defaultCategory,
@@ -340,7 +276,7 @@ export function ListingForm({
   }
 
   function applyAuctionPreset(preset: AuctionPreset) {
-    setAuctionEndsAt(toDatetimeLocalValue(resolveAuctionPreset(preset)));
+    setAuctionEndsAt(toKoreaDatetimeLocalValue(resolveAuctionPreset(preset)));
     setAuctionPresetId(preset.id);
   }
 

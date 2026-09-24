@@ -12,6 +12,7 @@ import {
 } from "@/components/admin/SaleStatusFilter";
 import { AdminListingSearch } from "@/components/admin/AdminListingSearch";
 import { AdminPagination } from "@/components/admin/AdminPagination";
+import { LiveAuctionFolderImport } from "@/components/admin/LiveAuctionFolderImport";
 import { NewListingModal } from "@/components/admin/NewListingModal";
 import { AdminListingOffersCell } from "@/components/admin/AdminListingOffersCell";
 import { buildListingSearchWhere } from "@/lib/admin-listing-search";
@@ -436,6 +437,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
           >
             재고 PDF
           </Link>
+          <LiveAuctionFolderImport />
           <NewListingModal />
         </div>
       </div>
