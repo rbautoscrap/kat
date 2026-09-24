@@ -129,6 +129,8 @@ model Listing {
   bumpedAt         DateTime?
   /** Public cards/detail default to this photo set (1 or 2). */
   displayedImageGroup Int          @default(1)
+  /** Extra public menus, stored as `,CAR_LISTINGS,STAND_BY,`. */
+  linkedMenus         String?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   authorId         String

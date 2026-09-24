@@ -3,6 +3,7 @@ import type { Listing, ListingImage, ListingCategory, Prisma } from "@prisma/cli
 import { memberListingVisibilityWhere } from "@/lib/live-auction";
 import { orderByIds, orderListingsNewestFirst } from "@/lib/listing-shuffle";
 import { LISTING_CARD_COVER_INCLUDE } from "@/lib/listing-images";
+import { listingShowsOnMenu } from "@/lib/listing-menus";
 import { prisma } from "@/lib/prisma";
 
 export const HOME_SECTION_LIMIT = 10;
@@ -50,13 +51,20 @@ function pickIds(
   rows: {
     id: string;
     category: ListingCategory;
+    linkedMenus?: string | null;
     saleStatus: string | null;
     bumpedAt: Date | null;
     createdAt: Date;
   }[],
   category: ListingCategory,
 ): string[] {
-  const slice = rows.filter((row) => row.category === category);
+  const slice = rows.filter((row) =>
+    category === "CAR_LISTINGS"
+      ? listingShowsOnMenu(row, "CAR_LISTINGS")
+      : category === "STAND_BY"
+        ? listingShowsOnMenu(row, "STAND_BY")
+        : row.category === category,
+  );
   return orderListingsNewestFirst(slice).slice(0, HOME_SECTION_LIMIT);
 }
 
@@ -70,11 +78,21 @@ export async function loadHomeListings(
   try {
     const rows = await prisma.listing.findMany({
       where: {
-        AND: [{ category: { in: [...HOME_CATEGORIES] } }, visibility],
+        AND: [
+          {
+            OR: [
+              { category: { in: [...HOME_CATEGORIES] } },
+              { linkedMenus: { contains: ",CAR_LISTINGS," } },
+              { linkedMenus: { contains: ",STAND_BY," } },
+            ],
+          },
+          visibility,
+        ],
       },
       select: {
         id: true,
         category: true,
+        linkedMenus: true,
         saleStatus: true,
         bumpedAt: true,
         createdAt: true,
@@ -82,13 +100,7 @@ export async function loadHomeListings(
     });
 
     const standByIds = pickIds(rows, "STAND_BY");
-    const carIds = orderListingsNewestFirst(
-      rows.filter(
-        (row) =>
-          row.category === "CAR_LISTINGS" ||
-          row.category === "CONSIGNMENT_SALE",
-      ),
-    ).slice(0, HOME_SECTION_LIMIT);
+    const carIds = pickIds(rows, "CAR_LISTINGS");
     const auctionIds = pickIds(rows, "LIVE_AUCTION");
     // Completed Used Parts leave the home board (P2P message board).
     const partsIds = pickIds(

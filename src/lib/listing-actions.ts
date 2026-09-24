@@ -15,6 +15,7 @@ import {
   parseListingYearInput,
   parseRegistrationDateInput,
 } from "@/lib/listings";
+import { serializeLinkedMenus } from "@/lib/listing-menus";
 import { canonicalizeStorageLocation } from "@/lib/storage-location";
 import {
   assembleListingImageCreates,
@@ -397,6 +398,13 @@ export function formDataToListingInput(formData: FormData) {
       data.category === "USED_PARTS"
         ? 1
         : parseListingImageGroup(formData.get("displayedImageGroup")),
+    linkedMenus:
+      data.category === "USED_PARTS"
+        ? null
+        : serializeLinkedMenus(
+            formData.getAll("linkedMenus").map(String),
+            data.category,
+          ),
   };
 }
 

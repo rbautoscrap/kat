@@ -40,6 +40,7 @@ async function main() {
       "displayedImageGroup",
       "INTEGER NOT NULL DEFAULT 1",
     );
+    await ensureColumn(prisma, names, "linkedMenus", "TEXT");
 
     const imageRows = await prisma.$queryRawUnsafe(
       `PRAGMA table_info("ListingImage")`,

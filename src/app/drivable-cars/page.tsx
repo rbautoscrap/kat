@@ -12,6 +12,7 @@ import {
   DRIVABLE_CARS_GRID_CLASS,
   DRIVABLE_CARS_PAGE_SIZE,
 } from "@/lib/listings";
+import { publicMenuWhere } from "@/lib/listing-menus";
 import { LISTING_CARD_COVER_INCLUDE } from "@/lib/listing-images";
 import { compareListingsForDisplay, orderByIds } from "@/lib/listing-shuffle";
 import type { Prisma } from "@prisma/client";
@@ -38,7 +39,7 @@ export default async function DrivableCarsPage({ searchParams }: Props) {
 
   const where: Prisma.ListingWhereInput = {
     AND: [
-      { category: "DRIVABLE_CARS" },
+      publicMenuWhere("DRIVABLE_CARS"),
       canViewSold ? {} : memberListingVisibilityWhere(),
     ],
   };

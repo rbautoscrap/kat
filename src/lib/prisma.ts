@@ -7,7 +7,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
  */
 const clientRevision = `${Object.keys(Prisma.ListingScalarFieldEnum)
   .sort()
-  .join(",")}|sale-status-v1|sqlite-busy-v3|image-groups-v1`;
+  .join(",")}|sale-status-v1|sqlite-busy-v3|image-groups-v1|menu-links-v1`;
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;

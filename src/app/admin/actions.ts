@@ -16,6 +16,7 @@ import { deleteListingById } from "@/lib/delete-listing";
 import { loginIdSchema, passwordSchema } from "@/lib/login-id";
 import { optionalPhoneSchema, phoneKeyFromPhone } from "@/lib/phone";
 import { revalidateListingSurfaces } from "@/lib/home-listings";
+import { parseLinkedMenus, serializeLinkedMenus } from "@/lib/listing-menus";
 import { prisma } from "@/lib/prisma";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
@@ -141,19 +142,56 @@ export async function updateListingCategory(
 
   const listing = await prisma.listing.findUnique({
     where: { id: listingId },
-    select: { id: true },
+    select: { id: true, linkedMenus: true },
   });
   if (!listing) return { ok: false, error: "매물을 찾을 수 없습니다." };
 
   try {
     await prisma.listing.update({
       where: { id: listingId },
-      data: { category },
+      data: {
+        category,
+        linkedMenus: serializeLinkedMenus(
+          parseLinkedMenus(listing.linkedMenus),
+          category,
+        ),
+      },
     });
   } catch (error) {
     return {
       ok: false,
       error: prismaErrorMessage(error, "카테고리 변경에 실패했습니다."),
+    };
+  }
+
+  revalidateListingSurfaces(listingId);
+  return { ok: true };
+}
+
+export async function updateListingLinkedMenus(
+  listingId: string,
+  menus: string[],
+): Promise<ActionResult> {
+  if (!(await assertAdmin())) return { ok: false, error: "권한이 없습니다." };
+  if (!listingId) return { ok: false, error: "매물을 찾을 수 없습니다." };
+
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId },
+    select: { id: true, category: true },
+  });
+  if (!listing) return { ok: false, error: "매물을 찾을 수 없습니다." };
+
+  try {
+    await prisma.listing.update({
+      where: { id: listingId },
+      data: {
+        linkedMenus: serializeLinkedMenus(menus, listing.category),
+      },
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: prismaErrorMessage(error, "메뉴 연결에 실패했습니다."),
     };
   }
 

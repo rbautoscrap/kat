@@ -1,4 +1,5 @@
 import type { ListingCategory, ListingSaleStatus } from "@prisma/client";
+import { publicMenuWhere } from "@/lib/listing-menus";
 
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {
   CAR_LISTINGS: "Car Listings",
@@ -193,12 +194,9 @@ export function parseCategory(
   return null;
 }
 
-/** Car Listings page also shows consignment stock. */
+/** Car Listings page also shows consignment stock and linked menus. */
 export function publicCategoryFilter(category: ListingCategory) {
-  if (category === "CAR_LISTINGS") {
-    return { in: ["CAR_LISTINGS", "CONSIGNMENT_SALE"] as ListingCategory[] };
-  }
-  return category;
+  return publicMenuWhere(category);
 }
 
 export function youtubeEmbedUrl(url?: string | null) {

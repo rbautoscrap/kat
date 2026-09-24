@@ -15,6 +15,7 @@ import {
   ADMIN_MANAGED_CATEGORIES,
   SALE_STATUS_ADMIN_LABELS,
 } from "@/lib/admin-labels";
+import { ListingMenuLinkToggles } from "@/components/admin/ListingMenuLinks";
 import { confirmListingDelete } from "@/lib/confirm-listing-delete";
 import {
   adminActionBtnClass,
@@ -31,12 +32,14 @@ type Props = {
   listingId: string;
   category: ListingCategory;
   saleStatus: ListingSaleStatus;
+  linkedMenus?: string | null;
 };
 
 export function ListingAdminControls({
   listingId,
   category,
   saleStatus,
+  linkedMenus,
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -91,6 +94,11 @@ export function ListingAdminControls({
           ))}
         </select>
       </div>
+      <ListingMenuLinkToggles
+        listingId={listingId}
+        category={category}
+        linkedMenus={linkedMenus}
+      />
       <div className="grid grid-cols-3 gap-1.5">
         <button
           type="button"

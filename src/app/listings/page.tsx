@@ -53,7 +53,7 @@ export default async function ListingsPage({ searchParams }: Props) {
 
   const searchWhere = buildPublicListingSearchWhere(q);
   const categoryWhere: Prisma.ListingWhereInput = category
-    ? { category: publicCategoryFilter(category) }
+    ? publicCategoryFilter(category)
     : {};
   const visibilityWhere: Prisma.ListingWhereInput = canViewSold
     ? {}

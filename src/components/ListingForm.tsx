@@ -28,7 +28,13 @@ import {
   parseAuctionEndsAtInput,
   toKoreaDatetimeLocalValue,
 } from "@/lib/format-korea-time";
+import { ListingMenuLinkFields } from "@/components/admin/ListingMenuLinks";
 import { ListingImageGroupToggle } from "@/components/ListingImageGroupToggle";
+import {
+  menuCoveredByCategory,
+  parseLinkedMenus,
+  type LinkableMenu,
+} from "@/lib/listing-menus";
 import {
   formatRegistrationDate,
   isPartsCategory,
@@ -244,6 +250,11 @@ export function ListingForm({
   const [category, setCategory] = useState<ListingCategory>(
     () => listing?.category ?? defaultCategory ?? "CAR_LISTINGS",
   );
+  const [linkedMenus, setLinkedMenus] = useState<LinkableMenu[]>(() =>
+    parseLinkedMenus(
+      (listing as { linkedMenus?: string | null } | undefined)?.linkedMenus,
+    ),
+  );
   const partsMode = isPartsCategory(category);
   const [auctionEndsAt, setAuctionEndsAt] = useState(() =>
     defaultAuctionEndsLocal(
@@ -282,6 +293,9 @@ export function ListingForm({
 
   function onCategoryChange(next: ListingCategory) {
     setCategory(next);
+    setLinkedMenus((prev) =>
+      prev.filter((menu) => !menuCoveredByCategory(next, menu)),
+    );
     if (next === "STAND_BY") setDisplayedImageGroup(1);
     if (next === "CAR_LISTINGS") setDisplayedImageGroup(2);
     if (
@@ -296,7 +310,11 @@ export function ListingForm({
   function onDisplayedImageGroupChange(next: ListingImageGroup) {
     setDisplayedImageGroup(next);
     if (listingMovesWithImageGroup(category)) {
-      setCategory(listingImageGroupCategory(next));
+      const nextCategory = listingImageGroupCategory(next);
+      setCategory(nextCategory);
+      setLinkedMenus((prev) =>
+        prev.filter((menu) => !menuCoveredByCategory(nextCategory, menu)),
+      );
     }
   }
 
@@ -792,9 +810,14 @@ export function ListingForm({
                 {c.label}
               </option>
             ))}
-          </select>
-        </label>
-        <label className="block text-sm">
+            </select>
+          </label>
+          <ListingMenuLinkFields
+            category={category}
+            value={linkedMenus}
+            onChange={setLinkedMenus}
+          />
+          <label className="block text-sm">
           <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
             연식
           </span>

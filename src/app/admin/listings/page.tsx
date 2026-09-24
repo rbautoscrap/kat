@@ -38,6 +38,7 @@ import {
   formatCostWon,
   getInventoryCostSummary,
 } from "@/lib/inventory-cost";
+import { publicMenuWhere } from "@/lib/listing-menus";
 import { canonicalizeStorageLocation } from "@/lib/storage-location";
 import {
   compareListingsForDisplay,
@@ -162,7 +163,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
     NOT: { category: "USED_PARTS" },
   };
   const categoryWhere: Prisma.ListingWhereInput =
-    category === "ALL" ? {} : { category };
+    category === "ALL" ? {} : publicMenuWhere(category);
   const saleWhere: Prisma.ListingWhereInput =
     sale === "ALL" ? {} : { saleStatus: sale };
   const locationWhere = storageWhere(storage);
@@ -681,6 +682,7 @@ export default async function AdminListingsPage({ searchParams }: Props) {
                       listingId={listing.id}
                       category={listing.category}
                       saleStatus={listing.saleStatus}
+                      linkedMenus={listing.linkedMenus}
                     />
                   </td>
                 </tr>

@@ -18,6 +18,7 @@ import {
   listingMovesWithImageGroup,
   resolveDisplayedImageGroup,
 } from "@/lib/listing-images";
+import { parseLinkedMenus, serializeLinkedMenus } from "@/lib/listing-menus";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -235,7 +236,15 @@ export async function PATCH(request: Request, { params }: Params) {
       where: { id },
       data: {
         displayedImageGroup,
-        ...(category ? { category } : {}),
+        ...(category
+          ? {
+              category,
+              linkedMenus: serializeLinkedMenus(
+                parseLinkedMenus(access.listing.linkedMenus),
+                category,
+              ),
+            }
+          : {}),
       },
     });
     revalidateListingSurfaces(id);
