@@ -54,22 +54,46 @@ export function serializeLinkedMenus(
   return `,${extra.join(",")},`;
 }
 
-/** Keep the chosen category as an extra menu when photo-group remap changes it. */
-export function linkedMenusForWrite(
-  menus: readonly string[],
-  requestedCategory: ListingCategory | string | null | undefined,
-  storedCategory: ListingCategory | string | null | undefined,
-): string | null {
-  const extra = [...menus];
-  if (
-    requestedCategory &&
-    storedCategory &&
-    requestedCategory !== storedCategory &&
-    isLinkableMenu(String(requestedCategory))
-  ) {
-    extra.push(String(requestedCategory));
+export function selectedMenusFromListing(
+  category: ListingCategory | string | null | undefined,
+  linkedMenus?: string | null,
+): LinkableMenu[] {
+  const selected = new Set(parseLinkedMenus(linkedMenus));
+  if (isLinkableMenu(String(category ?? ""))) {
+    selected.add(category as LinkableMenu);
   }
-  return serializeLinkedMenus(extra, storedCategory);
+  if (category === "CONSIGNMENT_SALE") selected.add("CAR_LISTINGS");
+  return LINKABLE_MENUS.filter((menu) => selected.has(menu));
+}
+
+/** Checkbox set is the source of truth. Unchecking Stand by leaves that menu. */
+export function applyLinkedMenuSelection(
+  selected: readonly string[],
+  current: ListingCategory,
+): { category: ListingCategory; linkedMenus: string | null } {
+  const menus = LINKABLE_MENUS.filter((menu) => selected.includes(menu));
+  if (current === "USED_PARTS") {
+    return { category: current, linkedMenus: null };
+  }
+  if (current === "LIVE_AUCTION") {
+    return {
+      category: current,
+      linkedMenus: serializeLinkedMenus(menus, current),
+    };
+  }
+  if (menus.length === 0) {
+    const fallback =
+      current === "STAND_BY" || current === "DRIVABLE_CARS"
+        ? "CAR_LISTINGS"
+        : current;
+    return { category: fallback, linkedMenus: null };
+  }
+  const category =
+    isLinkableMenu(current) && menus.includes(current) ? current : menus[0]!;
+  return {
+    category,
+    linkedMenus: serializeLinkedMenus(menus, category),
+  };
 }
 
 export function listingShowsOnMenu(

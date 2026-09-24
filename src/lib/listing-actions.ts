@@ -15,7 +15,7 @@ import {
   parseListingYearInput,
   parseRegistrationDateInput,
 } from "@/lib/listings";
-import { serializeLinkedMenus } from "@/lib/listing-menus";
+import { applyLinkedMenuSelection } from "@/lib/listing-menus";
 import { canonicalizeStorageLocation } from "@/lib/storage-location";
 import {
   assembleListingImageCreates,
@@ -371,6 +371,13 @@ export function formDataToListingInput(formData: FormData) {
   }
 
   const { auctionEndsAt: _auctionEndsAtRaw, ...fields } = data;
+  const applied =
+    data.category === "USED_PARTS"
+      ? { category: data.category, linkedMenus: null as string | null }
+      : applyLinkedMenuSelection(
+          formData.getAll("linkedMenus").map(String),
+          data.category,
+        );
 
   return {
     ...fields,
@@ -393,18 +400,18 @@ export function formDataToListingInput(formData: FormData) {
     manufactureMonth: null,
     accumulatedDays,
     auctionEndsAt,
-    title: buildListingTitle(data.year, data.make, data.model, data.category),
+    title: buildListingTitle(
+      data.year,
+      data.make,
+      data.model,
+      applied.category,
+    ),
     displayedImageGroup:
-      data.category === "USED_PARTS"
+      applied.category === "USED_PARTS"
         ? 1
         : parseListingImageGroup(formData.get("displayedImageGroup")),
-    linkedMenus:
-      data.category === "USED_PARTS"
-        ? null
-        : serializeLinkedMenus(
-            formData.getAll("linkedMenus").map(String),
-            data.category,
-          ),
+    category: applied.category,
+    linkedMenus: applied.linkedMenus,
   };
 }
 

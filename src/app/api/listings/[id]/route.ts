@@ -18,11 +18,7 @@ import {
   listingMovesWithImageGroup,
   resolveDisplayedImageGroup,
 } from "@/lib/listing-images";
-import {
-  linkedMenusForWrite,
-  parseLinkedMenus,
-  serializeLinkedMenus,
-} from "@/lib/listing-menus";
+import { parseLinkedMenus, serializeLinkedMenus } from "@/lib/listing-menus";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -180,10 +176,7 @@ export async function PUT(request: Request, { params }: Params) {
             existing.images,
           );
 
-    const requestedCategory = data.category ?? existing.category;
-    const category = listingMovesWithImageGroup(requestedCategory)
-      ? listingImageGroupCategory(displayedImageGroup)
-      : data.category;
+    const category = data.category;
 
     await prisma.listing.update({
       where: { id },
@@ -191,11 +184,6 @@ export async function PUT(request: Request, { params }: Params) {
         ...data,
         category,
         displayedImageGroup,
-        linkedMenus: linkedMenusForWrite(
-          parseLinkedMenus(data.linkedMenus),
-          requestedCategory,
-          category,
-        ),
         ...imageUpdate,
       },
     });

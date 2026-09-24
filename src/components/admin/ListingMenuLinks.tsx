@@ -5,9 +5,10 @@ import { useTransition } from "react";
 import type { ListingCategory } from "@prisma/client";
 import { updateListingLinkedMenus } from "@/app/admin/actions";
 import {
+  applyLinkedMenuSelection,
   LINKABLE_MENU_LABELS,
   LINKABLE_MENUS,
-  menuCoveredByCategory,
+  selectedMenusFromListing,
   type LinkableMenu,
 } from "@/lib/listing-menus";
 
@@ -19,21 +20,21 @@ export function ListingMenuLinkFields({
   category,
   value,
   onChange,
+  onCategoryChange,
 }: {
   listingId?: string;
   category: ListingCategory;
   value: LinkableMenu[];
   onChange: (next: LinkableMenu[]) => void;
+  onCategoryChange?: (next: ListingCategory) => void;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const extras = LINKABLE_MENUS.filter(
-    (menu) => !menuCoveredByCategory(category, menu),
-  );
-  if (extras.length === 0) return null;
 
   function apply(next: LinkableMenu[]) {
-    onChange(next);
+    const written = applyLinkedMenuSelection(next, category);
+    onChange(selectedMenusFromListing(written.category, written.linkedMenus));
+    onCategoryChange?.(written.category);
     if (!listingId) return;
     startTransition(async () => {
       const result = await updateListingLinkedMenus(listingId, next);
@@ -48,7 +49,7 @@ export function ListingMenuLinkFields({
         추가 노출
       </p>
       <div className="flex flex-wrap gap-1.5">
-        {extras.map((menu) => {
+        {LINKABLE_MENUS.map((menu) => {
           const on = value.includes(menu);
           return (
             <label
@@ -92,18 +93,11 @@ export function ListingMenuLinkToggles({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const extras = LINKABLE_MENUS.filter(
-    (menu) => !menuCoveredByCategory(category, menu),
-  );
-  if (extras.length === 0) return null;
-
-  const selected = extras.filter((menu) =>
-    (linkedMenus ?? "").includes(menu),
-  );
+  const selected = selectedMenusFromListing(category, linkedMenus);
 
   return (
     <div className="flex flex-wrap gap-1">
-      {extras.map((menu) => {
+      {LINKABLE_MENUS.map((menu) => {
         const on = selected.includes(menu);
         return (
           <button

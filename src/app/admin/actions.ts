@@ -16,7 +16,11 @@ import { deleteListingById } from "@/lib/delete-listing";
 import { loginIdSchema, passwordSchema } from "@/lib/login-id";
 import { optionalPhoneSchema, phoneKeyFromPhone } from "@/lib/phone";
 import { revalidateListingSurfaces } from "@/lib/home-listings";
-import { parseLinkedMenus, serializeLinkedMenus } from "@/lib/listing-menus";
+import {
+  applyLinkedMenuSelection,
+  parseLinkedMenus,
+  serializeLinkedMenus,
+} from "@/lib/listing-menus";
 import { prisma } from "@/lib/prisma";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
@@ -182,10 +186,12 @@ export async function updateListingLinkedMenus(
   if (!listing) return { ok: false, error: "매물을 찾을 수 없습니다." };
 
   try {
+    const applied = applyLinkedMenuSelection(menus, listing.category);
     await prisma.listing.update({
       where: { id: listingId },
       data: {
-        linkedMenus: serializeLinkedMenus(menus, listing.category),
+        category: applied.category,
+        linkedMenus: applied.linkedMenus,
       },
     });
   } catch (error) {

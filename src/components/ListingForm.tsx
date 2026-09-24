@@ -31,8 +31,9 @@ import {
 import { ListingMenuLinkFields } from "@/components/admin/ListingMenuLinks";
 import { ListingImageGroupToggle } from "@/components/ListingImageGroupToggle";
 import {
-  menuCoveredByCategory,
-  parseLinkedMenus,
+  isLinkableMenu,
+  LINKABLE_MENUS,
+  selectedMenusFromListing,
   type LinkableMenu,
 } from "@/lib/listing-menus";
 import {
@@ -46,7 +47,6 @@ import {
 import {
   LISTING_IMAGE_GROUPS,
   MAX_DETAIL_IMAGES_PER_GROUP,
-  listingImageGroupCategory,
   listingImageGroupLabel,
   listingMovesWithImageGroup,
   parseListingImageGroup,
@@ -251,7 +251,8 @@ export function ListingForm({
     () => listing?.category ?? defaultCategory ?? "CAR_LISTINGS",
   );
   const [linkedMenus, setLinkedMenus] = useState<LinkableMenu[]>(() =>
-    parseLinkedMenus(
+    selectedMenusFromListing(
+      listing?.category ?? defaultCategory ?? "CAR_LISTINGS",
       (listing as { linkedMenus?: string | null } | undefined)?.linkedMenus,
     ),
   );
@@ -293,9 +294,11 @@ export function ListingForm({
 
   function onCategoryChange(next: ListingCategory) {
     setCategory(next);
-    setLinkedMenus((prev) =>
-      prev.filter((menu) => !menuCoveredByCategory(next, menu)),
-    );
+    setLinkedMenus((prev) => {
+      const nextSet = new Set(prev);
+      if (isLinkableMenu(next)) nextSet.add(next);
+      return LINKABLE_MENUS.filter((menu) => nextSet.has(menu));
+    });
     if (next === "STAND_BY") setDisplayedImageGroup(1);
     if (next === "CAR_LISTINGS") setDisplayedImageGroup(2);
     if (
@@ -309,13 +312,6 @@ export function ListingForm({
 
   function onDisplayedImageGroupChange(next: ListingImageGroup) {
     setDisplayedImageGroup(next);
-    if (listingMovesWithImageGroup(category)) {
-      const nextCategory = listingImageGroupCategory(next);
-      setCategory(nextCategory);
-      setLinkedMenus((prev) =>
-        prev.filter((menu) => !menuCoveredByCategory(nextCategory, menu)),
-      );
-    }
   }
 
   const applyVehicleCoverFile = useCallback(
@@ -821,6 +817,7 @@ export function ListingForm({
             category={category}
             value={linkedMenus}
             onChange={setLinkedMenus}
+            onCategoryChange={setCategory}
           />
           <label className="block text-sm">
           <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
