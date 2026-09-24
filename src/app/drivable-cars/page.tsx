@@ -83,9 +83,14 @@ export default async function DrivableCarsPage({ searchParams }: Props) {
       <div className="mb-3 sm:mb-4">
         <BackButton href="/" />
       </div>
-      <h1 className="site-heading mb-6 text-[1.1rem] text-neutral-800 sm:mb-8 sm:text-[1.2rem]">
-        Drivable Cars
-      </h1>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="site-heading text-[1.1rem] text-neutral-800 sm:text-[1.2rem]">
+          Drivable Cars
+        </h1>
+        <p className="mt-1 text-[12.5px] tracking-wide text-neutral-500">
+          Road-legal vehicles in Korea.
+        </p>
+      </div>
       {loadError ? (
         <p className="text-[13px] tracking-wide text-neutral-500">
           Listings are temporarily unavailable.
