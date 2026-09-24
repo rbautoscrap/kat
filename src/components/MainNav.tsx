@@ -20,12 +20,12 @@ const nav = [
     label: "Stand by",
     category: "STAND_BY",
   },
+  { href: "/drivable-cars", label: "Drivable Cars" },
   {
     href: "/listings?category=USED_PARTS",
     label: "Used Parts",
     category: "USED_PARTS",
   },
-  { href: "/drivable-cars", label: "Drivable Cars" },
   { href: "/about-us", label: "About Us" },
 ];
 
