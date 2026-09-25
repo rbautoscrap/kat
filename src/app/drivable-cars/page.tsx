@@ -108,7 +108,6 @@ export default async function DrivableCarsPage({ searchParams }: Props) {
                 listing={listing}
                 size="large"
                 canViewSold={canViewSold}
-                canManageSaleStatus={canViewSold}
                 isSignedIn={isSignedIn}
               />
             ))}
