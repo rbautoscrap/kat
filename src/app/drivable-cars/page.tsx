@@ -9,8 +9,8 @@ import { resolveSessionDbUser } from "@/lib/listing-access";
 import { memberListingVisibilityWhere } from "@/lib/live-auction";
 import { prisma } from "@/lib/prisma";
 import {
-  DRIVABLE_CARS_GRID_CLASS,
-  DRIVABLE_CARS_PAGE_SIZE,
+  LISTING_CATEGORY_GRID_CLASS,
+  LISTING_CATEGORY_PAGE_SIZE,
 } from "@/lib/listings";
 import { publicMenuWhere } from "@/lib/listing-menus";
 import { LISTING_CARD_COVER_INCLUDE } from "@/lib/listing-images";
@@ -35,7 +35,7 @@ export default async function DrivableCarsPage({ searchParams }: Props) {
   const canViewSold = isAdmin(dbUser?.role);
   const isSignedIn = Boolean(dbUser?.id);
   const page = parsePage(params.page);
-  const pageSize = DRIVABLE_CARS_PAGE_SIZE;
+  const pageSize = LISTING_CATEGORY_PAGE_SIZE;
 
   const where: Prisma.ListingWhereInput = {
     AND: [
@@ -101,7 +101,7 @@ export default async function DrivableCarsPage({ searchParams }: Props) {
         </p>
       ) : (
         <>
-          <div className={DRIVABLE_CARS_GRID_CLASS}>
+          <div className={LISTING_CATEGORY_GRID_CLASS}>
             {listings.map((listing) => (
               <ListingCard
                 key={listing.id}

@@ -157,11 +157,6 @@ export const USED_PARTS_LIST_CLASS =
 
 export const LISTING_CATEGORY_PAGE_SIZE = 20;
 export const USED_PARTS_PAGE_SIZE = 12;
-export const DRIVABLE_CARS_PAGE_SIZE = 10;
-
-/** Drivable Cars gallery: 10 tiles, 2×5 on phone / 5×2 on desktop. */
-export const DRIVABLE_CARS_GRID_CLASS =
-  "grid grid-cols-2 items-start gap-x-3.5 gap-y-6 sm:grid-cols-5 sm:gap-x-4 sm:gap-y-7";
 
 /** Vehicle listings may attach many photos; Used Parts is capped lower. */
 export const MAX_IMAGES_PER_LISTING = 142;
