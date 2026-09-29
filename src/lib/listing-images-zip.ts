@@ -85,7 +85,11 @@ export async function createListingImagesZipStream(
   };
 }
 
-export function zipDownloadFilename(serialNumber: string, listingId: string) {
+export function zipDownloadFilename(
+  serialNumber: string,
+  listingId: string,
+  group: number,
+) {
   const safe = serialNumber.replace(/[^\w.-]+/g, "_").slice(0, 40) || listingId;
-  return `${safe}-photos.zip`;
+  return `${safe}-G${group}-photos.zip`;
 }

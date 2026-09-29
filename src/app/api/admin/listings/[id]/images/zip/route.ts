@@ -5,6 +5,7 @@ import {
   createListingImagesZipStream,
   zipDownloadFilename,
 } from "@/lib/listing-images-zip";
+import { parseListingImageGroup } from "@/lib/listing-images";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -13,21 +14,25 @@ export const maxDuration = 120;
 
 type Params = { params: Promise<{ id: string }> };
 
-/** Admin-only: download all photos for a listing as a ZIP. */
-export async function GET(_request: Request, { params }: Params) {
+/** Admin-only: download one photo group (?group=1|2) of a listing as a ZIP. */
+export async function GET(request: Request, { params }: Params) {
   const dbUser = await resolveSessionDbUser();
   if (!dbUser || !isAdmin(dbUser.role)) {
     return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
 
   const { id } = await params;
+  const group = parseListingImageGroup(
+    new URL(request.url).searchParams.get("group"),
+  );
   const listing = await prisma.listing.findUnique({
     where: { id },
     select: {
       id: true,
       serialNumber: true,
       images: {
-        orderBy: { sortOrder: "asc" },
+        where: group === 2 ? { group: 2 } : { NOT: { group: 2 } },
+        orderBy: [{ isCover: "desc" }, { sortOrder: "asc" }],
         select: { url: true },
       },
     },
@@ -51,7 +56,11 @@ export async function GET(_request: Request, { params }: Params) {
     const { stream } = await createListingImagesZipStream(
       listing.images.map((img) => img.url),
     );
-    const filename = zipDownloadFilename(listing.serialNumber, listing.id);
+    const filename = zipDownloadFilename(
+      listing.serialNumber,
+      listing.id,
+      group,
+    );
     return new NextResponse(stream, {
       headers: {
         "Content-Type": "application/zip",

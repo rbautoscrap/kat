@@ -690,7 +690,8 @@ export default async function ListingDetailPage({ params }: Props) {
             {adminView ? (
               <DownloadListingImagesButton
                 listingId={listing.id}
-                imageCount={listing.images.length}
+                group1Count={groupedPhotos[1].length}
+                group2Count={groupedPhotos[2].length}
               />
             ) : null}
           </div>
