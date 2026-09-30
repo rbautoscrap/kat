@@ -32,7 +32,7 @@ export function invalidateHomeListingsCache() {
 
 export function revalidateListingSurfaces(listingId?: string) {
   invalidateHomeListingsCache();
-  revalidatePath("/", "layout");
+  revalidatePath("/");
   revalidatePath("/listings");
   revalidatePath("/drivable-cars");
   revalidatePath("/how-to-buy");

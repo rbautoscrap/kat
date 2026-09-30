@@ -13,12 +13,10 @@ import { MobileNav } from "@/components/MobileNav";
 import { MyPartsNavLink } from "@/components/MyPartsNavLink";
 import { ProfileButton } from "@/components/ProfileButton";
 import { ProtectPublicImages } from "@/components/ProtectPublicImages";
-import { getFxBoardQuote } from "@/lib/fx-rates";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 
 export async function Header() {
   const dbUser = await resolveSessionDbUser();
-  const fxQuote = await getFxBoardQuote().catch(() => null);
   /** + List: ADMIN / AUTHORIZED only — hide from regular members (incl. mobile). */
   const canList = canManageListings(dbUser?.role);
   const canListParts = canListUsedParts(dbUser?.role);
@@ -127,7 +125,7 @@ export async function Header() {
           </div>
         </div>
       </div>
-      <FxRateBoard initial={fxQuote} />
+      <FxRateBoard />
     </header>
   );
 }

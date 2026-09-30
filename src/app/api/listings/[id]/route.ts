@@ -159,12 +159,28 @@ export async function PUT(request: Request, { params }: Params) {
       const kept = new Set(nextImageRows.map((row) => row.url));
       orphanUrls = previousUrls.filter((url) => !kept.has(url));
 
-      imageUpdate = {
-        images: {
-          deleteMany: {},
-          create: nextImageRows,
-        },
-      };
+      const imagesUnchanged =
+        !uploads.hasUpload &&
+        orphanUrls.length === 0 &&
+        existing.images.length === nextImageRows.length &&
+        existing.images.every((image, index) => {
+          const next = nextImageRows![index]!;
+          return (
+            image.url === next.url &&
+            image.group === next.group &&
+            image.sortOrder === next.sortOrder &&
+            Boolean(image.isCover) === next.isCover
+          );
+        });
+
+      if (!imagesUnchanged) {
+        imageUpdate = {
+          images: {
+            deleteMany: {},
+            create: nextImageRows,
+          },
+        };
+      }
     }
 
     const displayedImageGroup = nextImageRows

@@ -637,18 +637,47 @@ export type ListingImageUploadResult = {
 };
 
 /** Cover (대표) + gallery uploads. Cover is always first in `urls`. */
+function formHasImageFiles(formData: FormData) {
+  for (const [key, value] of formData.entries()) {
+    if (!(value instanceof File) || value.size <= 0) continue;
+    if (
+      key === "coverImage" ||
+      key === "coverImage1" ||
+      key === "coverImage2" ||
+      key === "images" ||
+      key === "images1" ||
+      key === "images2" ||
+      key === "partsImages"
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function saveListingImageUploads(
   formData: FormData,
   options?: { maxImages?: number },
 ): Promise<ListingImageUploadResult> {
+  const emptyGroup: GroupUpload = { coverUrl: null, galleryUrls: [] };
+  const grouped = isGroupedImageForm(formData);
+  if (!formHasImageFiles(formData)) {
+    return {
+      coverUrl: null,
+      galleryUrls: [],
+      urls: [],
+      hasUpload: false,
+      grouped,
+      groups: { 1: emptyGroup, 2: emptyGroup },
+    };
+  }
+
   ensureUploadTempEnv();
   tuneSharpForUploads();
 
   const maxImages =
     options?.maxImages ??
     maxImagesForCategory(String(formData.get("category") ?? ""));
-  const grouped = isGroupedImageForm(formData);
-  const emptyGroup: GroupUpload = { coverUrl: null, galleryUrls: [] };
 
   if (grouped) {
     const groupFiles = ([1, 2] as const).map((group) => {

@@ -35,7 +35,7 @@ function isUsable(rates: KrwFxRates) {
 async function readJson(url: string, revalidate = 3600) {
   const res = await fetch(url, {
     next: { revalidate },
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(2000),
   });
   if (!res.ok) throw new Error(`fx ${res.status}`);
   return res.json();

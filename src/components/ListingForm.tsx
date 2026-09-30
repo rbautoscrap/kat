@@ -714,7 +714,6 @@ export function ListingForm({
         window.location.assign(nextUrl);
       } else {
         router.push(nextUrl);
-        router.refresh();
       }
     } catch (err) {
       const aborted =
