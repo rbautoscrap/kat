@@ -9,6 +9,7 @@ import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl"
 import { ListingThumb } from "@/components/ListingThumb";
 import { LiveAuctionAccessDialog } from "@/components/LiveAuctionAccessDialog";
 import { AuctionImageBadge } from "@/components/AuctionImageBadge";
+import { FloodImageBadge } from "@/components/FloodImageBadge";
 import { ListingImageGroupToggle } from "@/components/ListingImageGroupToggle";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
 import {
@@ -195,10 +196,15 @@ export function ListingCard({
       />
       <SaleStatusOverlay status={listing.saleStatus} />
       {listing.category === "LIVE_AUCTION" ? <AuctionImageBadge /> : null}
-      {listing.category === "CONSIGNMENT_SALE" ? (
-        <span className="absolute left-1.5 top-1.5 rounded bg-neutral-900/75 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white">
-          Consignment
-        </span>
+      {listing.category === "CONSIGNMENT_SALE" || listing.isFlooded ? (
+        <div className="pointer-events-none absolute left-0 top-0 z-[1] flex flex-col items-start">
+          {listing.isFlooded ? <FloodImageBadge /> : null}
+          {listing.category === "CONSIGNMENT_SALE" ? (
+            <span className="ml-1.5 mt-1.5 rounded bg-neutral-900/75 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white">
+              Consignment
+            </span>
+          ) : null}
+        </div>
       ) : null}
       {isParts ? (
         <span className="absolute right-1.5 top-1.5 rounded bg-neutral-900/75 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white">

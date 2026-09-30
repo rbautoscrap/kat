@@ -819,6 +819,16 @@ export function ListingForm({
             onChange={setLinkedMenus}
             onCategoryChange={setCategory}
           />
+          <label className="flex items-center gap-2 text-[13px] font-medium tracking-wide text-neutral-700 sm:col-span-2">
+            <input
+              type="checkbox"
+              name="isFlooded"
+              value="1"
+              defaultChecked={Boolean(listing?.isFlooded)}
+              className="h-4 w-4 accent-sky-700"
+            />
+            침수차 <span className="text-[12px] font-normal text-neutral-500">(사진에 Water 표시)</span>
+          </label>
           <label className="block text-sm">
           <span className="mb-1.5 block text-[13px] font-medium tracking-wide text-neutral-600">
             연식

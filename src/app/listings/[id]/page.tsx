@@ -702,6 +702,7 @@ export default async function ListingDetailPage({ params }: Props) {
             category={listing.category}
             defaultGroup={listing.displayedImageGroup}
             listingId={listing.id}
+            flooded={listing.isFlooded}
             persistDisplayGroup={
               adminView &&
               listingMovesWithImageGroup(listing.category) &&

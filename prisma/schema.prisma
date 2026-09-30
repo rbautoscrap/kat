@@ -131,6 +131,8 @@ model Listing {
   displayedImageGroup Int          @default(1)
   /** Extra public menus, stored as `,CAR_LISTINGS,STAND_BY,`. */
   linkedMenus         String?
+  /** Flood-damaged unit; public photos show a Water badge. */
+  isFlooded           Boolean      @default(false)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   authorId         String

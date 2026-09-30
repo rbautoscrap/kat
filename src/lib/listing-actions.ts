@@ -412,6 +412,8 @@ export function formDataToListingInput(formData: FormData) {
         : parseListingImageGroup(formData.get("displayedImageGroup")),
     category: applied.category,
     linkedMenus: applied.linkedMenus,
+    isFlooded:
+      applied.category !== "USED_PARTS" && formData.get("isFlooded") === "1",
   };
 }
 

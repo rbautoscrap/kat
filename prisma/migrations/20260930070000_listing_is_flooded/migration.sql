@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Listing" ADD COLUMN "isFlooded" BOOLEAN NOT NULL DEFAULT 0;

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ListingCategory, ListingSaleStatus } from "@prisma/client";
 import { AuctionImageBadge } from "@/components/AuctionImageBadge";
+import { FloodImageBadge } from "@/components/FloodImageBadge";
 import { DownloadPhotoButton } from "@/components/DownloadPhotoButton";
 import { ListingImageGroupToggle } from "@/components/ListingImageGroupToggle";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
@@ -27,6 +28,7 @@ type Props = {
   defaultGroup?: number | null;
   listingId?: string;
   persistDisplayGroup?: boolean;
+  flooded?: boolean;
 };
 
 export function ImageGallery({
@@ -37,6 +39,7 @@ export function ImageGallery({
   defaultGroup,
   listingId,
   persistDisplayGroup = false,
+  flooded = false,
 }: Props) {
   const router = useRouter();
   const grouped = useMemo(() => splitListingImages(images), [images]);
@@ -142,6 +145,11 @@ export function ImageGallery({
               <SaleStatusOverlay status={saleStatus} size="detail" />
               {category === "LIVE_AUCTION" ? (
                 <AuctionImageBadge size="detail" />
+              ) : null}
+              {flooded ? (
+                <span className="pointer-events-none absolute left-0 top-0 z-[1]">
+                  <FloodImageBadge size="detail" />
+                </span>
               ) : null}
             </button>
             <DownloadPhotoButton

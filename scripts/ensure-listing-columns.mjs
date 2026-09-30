@@ -41,6 +41,12 @@ async function main() {
       "INTEGER NOT NULL DEFAULT 1",
     );
     await ensureColumn(prisma, names, "linkedMenus", "TEXT");
+    await ensureColumn(
+      prisma,
+      names,
+      "isFlooded",
+      "BOOLEAN NOT NULL DEFAULT 0",
+    );
 
     const imageRows = await prisma.$queryRawUnsafe(
       `PRAGMA table_info("ListingImage")`,
