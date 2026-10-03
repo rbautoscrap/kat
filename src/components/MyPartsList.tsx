@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ListingSaleStatus } from "@prisma/client";
 import { ListingThumb } from "@/components/ListingThumb";
+import { PhotoWatermark } from "@/components/PhotoWatermark";
 import { SALE_STATUS_LABELS } from "@/lib/listings";
 import type { MyPartsRow, MyPartsTab } from "@/lib/my-parts";
 function formatListedDate(value: Date) {
@@ -117,6 +118,7 @@ export function MyPartsList({ rows, tab, counts }: Props) {
                     sizes="120px"
                     className="object-cover"
                   />
+                  <PhotoWatermark />
                 </Link>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">

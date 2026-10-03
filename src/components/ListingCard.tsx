@@ -10,6 +10,7 @@ import { ListingThumb } from "@/components/ListingThumb";
 import { LiveAuctionAccessDialog } from "@/components/LiveAuctionAccessDialog";
 import { AuctionImageBadge } from "@/components/AuctionImageBadge";
 import { FloodImageBadge } from "@/components/FloodImageBadge";
+import { PhotoWatermark } from "@/components/PhotoWatermark";
 import { ListingImageGroupToggle } from "@/components/ListingImageGroupToggle";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
 import {
@@ -116,6 +117,7 @@ export function ListingCard({
           sizes="140px"
           className="object-cover"
         />
+        <PhotoWatermark />
         <SaleStatusOverlay status={listing.saleStatus} />
         {listing.category === "LIVE_AUCTION" ? (
           <AuctionImageBadge />
@@ -194,6 +196,7 @@ export function ListingCard({
           canOpen ? "group-hover:scale-[1.02]" : ""
         }`}
       />
+      <PhotoWatermark />
       <SaleStatusOverlay status={listing.saleStatus} />
       {listing.category === "LIVE_AUCTION" ? <AuctionImageBadge /> : null}
       {listing.category === "CONSIGNMENT_SALE" || listing.isFlooded ? (
