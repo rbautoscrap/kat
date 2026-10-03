@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import type { ListingCategory, ListingSaleStatus } from "@prisma/client";
 import { AuctionImageBadge } from "@/components/AuctionImageBadge";
 import { FloodImageBadge } from "@/components/FloodImageBadge";
-import { PhotoWatermark } from "@/components/PhotoWatermark";
 import { DownloadPhotoButton } from "@/components/DownloadPhotoButton";
 import { ListingImageGroupToggle } from "@/components/ListingImageGroupToggle";
 import { SaleStatusOverlay } from "@/components/SaleStatusOverlay";
@@ -146,7 +145,6 @@ export function ImageGallery({
                   img.url.startsWith("http") || img.url.startsWith("/uploads/")
                 }
               />
-              <PhotoWatermark size="detail" />
               <SaleStatusOverlay status={saleStatus} size="detail" />
               {category === "LIVE_AUCTION" ? (
                 <AuctionImageBadge size="detail" />
@@ -176,16 +174,13 @@ export function ImageGallery({
           onClick={() => setActiveId(null)}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <span className="relative inline-flex max-h-full max-w-full">
-            <img
-              src={active.url}
-              alt={alt}
-              draggable={false}
-              data-protect-image=""
-              className="max-h-[calc(100vh-2rem)] max-w-full cursor-zoom-out object-contain"
-            />
-            <PhotoWatermark size="detail" />
-          </span>
+          <img
+            src={active.url}
+            alt={alt}
+            draggable={false}
+            data-protect-image=""
+            className="max-h-full max-w-full cursor-zoom-out object-contain"
+          />
           {canDownload ? (
             <DownloadPhotoButton
               imageId={active.id}
