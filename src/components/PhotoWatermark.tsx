@@ -12,7 +12,7 @@ export function PhotoWatermark({ size = "card" }: Props) {
       className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center"
     >
       <span
-        className={`select-none font-black tracking-[0.22em] text-white/40 [text-shadow:0_1px_2px_rgba(0,0,0,0.45)] ${
+        className={`select-none font-semibold tracking-[0.22em] text-white/20 ${
           detail
             ? "text-[1.7rem] sm:text-[2.4rem]"
             : "text-[0.95rem] sm:text-[1.15rem]"
