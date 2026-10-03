@@ -11,7 +11,7 @@ function isProtectedImageTarget(target: EventTarget | null) {
   if (!(target instanceof Element)) return false;
   // Allow intentional drag-reorder in editors (e.g. Used Parts photo order).
   if (target.closest("[data-allow-image-drag]")) return false;
-  // Public compressed-download control (not the original file).
+  // Staff download control. Members and guests have no download button.
   if (target.closest("[data-allow-image-download]")) return false;
   return Boolean(
     target.closest(

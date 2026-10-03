@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   canAccessLiveAuctionAsSignedIn,
+  canManageListings,
   isAdmin,
 } from "@/lib/auth";
 import { isLiveAuctionEnded } from "@/lib/live-auction";
@@ -17,7 +18,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-/** Compressed copy for members and visitors (not the original file). */
+/** Compressed photo download for listing staff only. */
 export async function GET(request: Request) {
   const ip = await clientIpFromHeaders();
   const limited = rateLimit(`images:download:${ip}`, 30, 60_000);
@@ -29,6 +30,11 @@ export async function GET(request: Request) {
         headers: { "Retry-After": String(limited.retryAfterSec) },
       },
     );
+  }
+
+  const dbUser = await resolveSessionDbUser();
+  if (!canManageListings(dbUser?.role)) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
 
   const id = new URL(request.url).searchParams.get("id")?.trim() ?? "";
@@ -57,7 +63,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Image not found." }, { status: 404 });
   }
 
-  const dbUser = await resolveSessionDbUser();
   const adminView = isAdmin(dbUser?.role);
   const listing = image.listing;
 

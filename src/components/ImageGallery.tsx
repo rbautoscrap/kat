@@ -29,6 +29,8 @@ type Props = {
   listingId?: string;
   persistDisplayGroup?: boolean;
   flooded?: boolean;
+  /** Listing staff may save photos. Members and guests cannot. */
+  canDownload?: boolean;
 };
 
 export function ImageGallery({
@@ -40,6 +42,7 @@ export function ImageGallery({
   listingId,
   persistDisplayGroup = false,
   flooded = false,
+  canDownload = false,
 }: Props) {
   const router = useRouter();
   const grouped = useMemo(() => splitListingImages(images), [images]);
@@ -152,10 +155,12 @@ export function ImageGallery({
                 </span>
               ) : null}
             </button>
-            <DownloadPhotoButton
-              imageId={img.id}
-              className="absolute bottom-1 right-1 z-[2] inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/65 text-white shadow-sm transition hover:bg-black/80 disabled:opacity-70 sm:h-8 sm:w-8"
-            />
+            {canDownload ? (
+              <DownloadPhotoButton
+                imageId={img.id}
+                className="absolute bottom-1 right-1 z-[2] inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/65 text-white shadow-sm transition hover:bg-black/80 disabled:opacity-70 sm:h-8 sm:w-8"
+              />
+            ) : null}
           </div>
         ))}
       </div>
@@ -176,11 +181,13 @@ export function ImageGallery({
             data-protect-image=""
             className="max-h-full max-w-full cursor-zoom-out object-contain"
           />
-          <DownloadPhotoButton
-            imageId={active.id}
-            iconClassName="h-5 w-5"
-            className="absolute right-4 top-4 z-[2] inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/70 text-white shadow-md transition hover:bg-black/85 disabled:opacity-70"
-          />
+          {canDownload ? (
+            <DownloadPhotoButton
+              imageId={active.id}
+              iconClassName="h-5 w-5"
+              className="absolute right-4 top-4 z-[2] inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/70 text-white shadow-md transition hover:bg-black/85 disabled:opacity-70"
+            />
+          ) : null}
         </div>
       )}
     </>

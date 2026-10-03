@@ -16,7 +16,12 @@ import { HolidayWhatsAppLink } from "@/components/HolidayWhatsAppLink";
 import { ListingContactLinks } from "@/components/ListingContactLinks";
 import { ListingSalePriceBox } from "@/components/ListingSalePriceBox";
 import { ListingShareBar } from "@/components/ListingShareBar";
-import { auth, canAccessLiveAuctionAsSignedIn, isAdmin } from "@/lib/auth";
+import {
+  auth,
+  canAccessLiveAuctionAsSignedIn,
+  canManageListings,
+  isAdmin,
+} from "@/lib/auth";
 import {
   resolveSessionDbUser,
   userCanModifyListing,
@@ -703,6 +708,7 @@ export default async function ListingDetailPage({ params }: Props) {
             defaultGroup={listing.displayedImageGroup}
             listingId={listing.id}
             flooded={listing.isFlooded}
+            canDownload={canManageListings(dbUser?.role)}
             persistDisplayGroup={
               adminView &&
               listingMovesWithImageGroup(listing.category) &&

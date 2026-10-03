@@ -40,7 +40,7 @@ export async function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-white/95 backdrop-blur-md">
-      <ProtectPublicImages allowImageSave={admin} />
+      <ProtectPublicImages allowImageSave={canList} />
       <div className="site-container">
         {/* Mobile: brand + menu button only */}
         <div className="flex h-14 items-center justify-between gap-3 md:hidden">
