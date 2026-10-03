@@ -7,7 +7,13 @@ import {
   getBackupFilePath,
   isSafeBackupName,
 } from "@/lib/maintenance";
+import { prisma } from "@/lib/prisma";
 import { resolveSessionDbUser } from "@/lib/listing-access";
+import { verifyRestoreTicket } from "@/lib/restore-ticket";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 900;
 
 type Params = { params: Promise<{ name: string }> };
 
@@ -17,8 +23,20 @@ async function requireAdminUser() {
   return dbUser;
 }
 
-export async function GET(_request: Request, { params }: Params) {
-  if (!(await requireAdminUser())) {
+export async function GET(request: Request, { params }: Params) {
+  const ticket = new URL(request.url).searchParams.get("ticket")?.trim() ?? "";
+  if (ticket) {
+    const parsed = verifyRestoreTicket(ticket);
+    const user = parsed
+      ? await prisma.user.findUnique({
+          where: { id: parsed.userId },
+          select: { role: true },
+        })
+      : null;
+    if (!user || !isAdmin(user.role)) {
+      return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+    }
+  } else if (!(await requireAdminUser())) {
     return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
 

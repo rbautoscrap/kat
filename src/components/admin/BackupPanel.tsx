@@ -27,76 +27,7 @@ type RestoreJson = {
 type JobPhase =
   | { kind: "idle" }
   | { kind: "creating" }
-  | { kind: "downloading"; name: string; loaded: number; total: number | null }
   | { kind: "restoring"; detail?: string };
-
-function formatBytes(n: number) {
-  if (!Number.isFinite(n) || n <= 0) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
-  let value = n;
-  let i = 0;
-  while (value >= 1024 && i < units.length - 1) {
-    value /= 1024;
-    i += 1;
-  }
-  return `${value.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
-}
-
-function triggerBlobDownload(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.rel = "noopener";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  // Revoke after the browser has started the download.
-  window.setTimeout(() => URL.revokeObjectURL(url), 4_000);
-}
-
-/** Fetch a backup ZIP once as a blob (avoids duplicate browser downloads). */
-async function downloadBackupOnce(
-  name: string,
-  onProgress: (loaded: number, total: number | null) => void,
-) {
-  const res = await fetch(`/api/admin/backups/${encodeURIComponent(name)}`, {
-    method: "GET",
-    credentials: "same-origin",
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    throw new Error("다운로드에 실패했습니다.");
-  }
-
-  const totalHeader = res.headers.get("Content-Length");
-  const total = totalHeader ? Number(totalHeader) : null;
-  const usableTotal =
-    total != null && Number.isFinite(total) && total > 0 ? total : null;
-
-  const reader = res.body?.getReader();
-  if (!reader) {
-    const blob = await res.blob();
-    onProgress(blob.size, blob.size);
-    triggerBlobDownload(blob, name);
-    return;
-  }
-
-  const chunks: BlobPart[] = [];
-  let loaded = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (value) {
-      chunks.push(value);
-      loaded += value.byteLength;
-      onProgress(loaded, usableTotal);
-    }
-  }
-  const blob = new Blob(chunks, { type: "application/zip" });
-  onProgress(blob.size, usableTotal ?? blob.size);
-  triggerBlobDownload(blob, name);
-}
 
 export function BackupPanel({ initialBackups }: Props) {
   const router = useRouter();
@@ -125,17 +56,35 @@ export function BackupPanel({ initialBackups }: Props) {
     if (downloadLockRef.current) return;
     downloadLockRef.current = name;
     setError(null);
-    setPhase({ kind: "downloading", name, loaded: 0, total: null });
     try {
-      await downloadBackupOnce(name, (loaded, total) => {
-        setPhase({ kind: "downloading", name, loaded, total });
+      const res = await fetch("/api/admin/backups/download-ticket", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
       });
-      setMessage(`다운로드를 시작했습니다. (${name})`);
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        url?: string;
+        error?: string;
+      };
+      if (!res.ok || !json.ok || !json.url) {
+        setError(json.error ?? "다운로드에 실패했습니다.");
+        return;
+      }
+      const link = document.createElement("a");
+      link.href = json.url;
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setMessage(
+        `PC 다운로드를 시작했습니다. (${name}) 브라우저 다운로드 목록을 확인하세요.`,
+      );
     } catch {
       setError("다운로드 중 오류가 발생했습니다.");
     } finally {
       downloadLockRef.current = null;
-      setPhase({ kind: "idle" });
     }
   }
 
@@ -162,11 +111,8 @@ export function BackupPanel({ initialBackups }: Props) {
         return;
       }
 
-      setMessage(`백업이 생성되었습니다. (${json.backup.name}) PC로 받는 중…`);
+      setPhase({ kind: "idle" });
       router.refresh();
-
-      // Single blob download — do not also open a raw <a href> to the API
-      // (that combo can make Chrome save the same ZIP twice).
       await runDownload(json.backup.name);
     } catch {
       setError("백업 요청 중 네트워크 오류가 발생했습니다.");
@@ -311,11 +257,6 @@ export function BackupPanel({ initialBackups }: Props) {
     }
   }
 
-  const downloadPct =
-    phase.kind === "downloading" && phase.total && phase.total > 0
-      ? Math.min(100, Math.round((phase.loaded / phase.total) * 100))
-      : null;
-
   return (
     <section className="admin-panel overflow-hidden">
       <div className="border-b border-[var(--line)] px-5 py-4">
@@ -326,7 +267,7 @@ export function BackupPanel({ initialBackups }: Props) {
             </h2>
             <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">
               데이터베이스와 업로드 이미지를 Railway 볼륨에 ZIP으로 저장·복원합니다.
-              대용량 ZIP 복원은 Cloudflare를 거치지 않고 Railway로 직접 업로드됩니다.
+              대용량 ZIP은 Cloudflare를 거치지 않고 Railway로 직접 주고받습니다.
             </p>
           </div>
           <div className="admin-section-head-actions flex flex-wrap items-center justify-end gap-2">
@@ -357,11 +298,7 @@ export function BackupPanel({ initialBackups }: Props) {
               onClick={() => void onCreate()}
               className="inline-flex h-8 items-center rounded-md bg-neutral-800 px-3 text-[12.5px] font-semibold text-white transition hover:bg-neutral-700 disabled:opacity-50"
             >
-              {phase.kind === "creating"
-                ? "백업 생성 중…"
-                : phase.kind === "downloading"
-                  ? "다운로드 중…"
-                  : "지금 백업"}
+              {phase.kind === "creating" ? "백업 생성 중…" : "지금 백업"}
             </button>
           </div>
         </div>
@@ -376,38 +313,6 @@ export function BackupPanel({ initialBackups }: Props) {
             </div>
             <p className="mt-1.5 text-[12px] text-neutral-500">
               용량이 크면 1~수 분 걸릴 수 있습니다. 창을 닫지 마세요.
-            </p>
-          </div>
-        ) : null}
-
-        {phase.kind === "downloading" ? (
-          <div className="mt-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2.5">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-[13px] font-medium text-sky-950">
-                PC로 다운로드 중…
-              </p>
-              <p className="text-[12px] tabular-nums text-sky-800/90">
-                {downloadPct != null
-                  ? `${downloadPct}%`
-                  : formatBytes(phase.loaded)}
-                {phase.total ? ` / ${formatBytes(phase.total)}` : ""}
-              </p>
-            </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-sky-100">
-              <div
-                className="h-full rounded-full bg-sky-600 transition-[width] duration-200"
-                style={{
-                  width:
-                    downloadPct != null
-                      ? `${downloadPct}%`
-                      : phase.loaded > 0
-                        ? "35%"
-                        : "8%",
-                }}
-              />
-            </div>
-            <p className="mt-1.5 truncate text-[12px] text-sky-800/80">
-              {phase.name}
             </p>
           </div>
         ) : null}
@@ -464,8 +369,6 @@ export function BackupPanel({ initialBackups }: Props) {
               {initialBackups.map((backup) => {
                 const deleting = deletingName === backup.name;
                 const restoringThis = restoringName === backup.name;
-                const downloadingThis =
-                  phase.kind === "downloading" && phase.name === backup.name;
                 return (
                   <tr key={backup.name}>
                     <td
@@ -491,7 +394,7 @@ export function BackupPanel({ initialBackups }: Props) {
                           onClick={() => void runDownload(backup.name)}
                           className={adminActionBtnClass}
                         >
-                          {downloadingThis ? "받는 중…" : "다운로드"}
+                          다운로드
                         </button>
                         <button
                           type="button"
