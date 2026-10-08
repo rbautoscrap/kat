@@ -101,6 +101,7 @@ export type ListingDisplayOrderFields = {
   bumpedAt?: Date | string | null;
   createdAt?: Date | string | null;
   costPrice?: string | null;
+  auctionEndsAt?: Date | string | null;
 };
 
 /**
@@ -124,6 +125,42 @@ export function compareListingsForDisplay(
   }
 
   return (toMs(b.createdAt) || 0) - (toMs(a.createdAt) || 0);
+}
+
+/**
+ * Live Auction: soonest deadline first.
+ * Ended auctions stay behind open ones. Reserved/sold stay last.
+ */
+export function compareLiveAuctionsByDeadline(
+  a: ListingDisplayOrderFields,
+  b: ListingDisplayOrderFields,
+  now = Date.now(),
+): number {
+  const rankDiff =
+    listingSaleStatusRank(a.saleStatus) - listingSaleStatusRank(b.saleStatus);
+  if (rankDiff !== 0) return rankDiff;
+
+  const endA = toMs(a.auctionEndsAt);
+  const endB = toMs(b.auctionEndsAt);
+  const closeRank = (end: number) => {
+    if (!end) return 2;
+    return end > now ? 0 : 1;
+  };
+  const closeDiff = closeRank(endA) - closeRank(endB);
+  if (closeDiff !== 0) return closeDiff;
+  if (endA && endB && endA !== endB) {
+    return closeRank(endA) === 1 ? endB - endA : endA - endB;
+  }
+  return (toMs(b.createdAt) || 0) - (toMs(a.createdAt) || 0);
+}
+
+export function orderLiveAuctionsByDeadline(
+  items: ListingDisplayOrderFields[],
+  now = Date.now(),
+): string[] {
+  return [...items]
+    .sort((a, b) => compareLiveAuctionsByDeadline(a, b, now))
+    .map((item) => item.id);
 }
 
 /** Id order for non-shuffled category pages / home strips. */

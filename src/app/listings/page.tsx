@@ -21,7 +21,11 @@ import {
   USED_PARTS_PAGE_SIZE,
 } from "@/lib/listings";
 import { LISTING_CARD_COVER_INCLUDE } from "@/lib/listing-images";
-import { compareListingsForDisplay, orderByIds } from "@/lib/listing-shuffle";
+import {
+  compareListingsForDisplay,
+  compareLiveAuctionsByDeadline,
+  orderByIds,
+} from "@/lib/listing-shuffle";
 import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -95,9 +99,14 @@ export default async function ListingsPage({ searchParams }: Props) {
         saleStatus: true,
         bumpedAt: true,
         createdAt: true,
+        auctionEndsAt: true,
       },
     });
-    idRows.sort((a, b) => compareListingsForDisplay(a, b));
+    idRows.sort((a, b) =>
+      category === "LIVE_AUCTION"
+        ? compareLiveAuctionsByDeadline(a, b)
+        : compareListingsForDisplay(a, b),
+    );
     const pageIds = idRows
       .slice((currentPage - 1) * pageSize, currentPage * pageSize)
       .map((r) => r.id);

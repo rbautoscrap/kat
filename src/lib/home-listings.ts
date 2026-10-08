@@ -1,7 +1,11 @@
 import { revalidatePath } from "next/cache";
 import type { Listing, ListingImage, ListingCategory, Prisma } from "@prisma/client";
 import { memberListingVisibilityWhere } from "@/lib/live-auction";
-import { orderByIds, orderListingsNewestFirst } from "@/lib/listing-shuffle";
+import {
+  orderByIds,
+  orderListingsNewestFirst,
+  orderLiveAuctionsByDeadline,
+} from "@/lib/listing-shuffle";
 import { LISTING_CARD_COVER_INCLUDE } from "@/lib/listing-images";
 import { listingShowsOnMenu } from "@/lib/listing-menus";
 import { prisma } from "@/lib/prisma";
@@ -55,6 +59,7 @@ function pickIds(
     saleStatus: string | null;
     bumpedAt: Date | null;
     createdAt: Date;
+    auctionEndsAt: Date | null;
   }[],
   category: ListingCategory,
 ): string[] {
@@ -65,7 +70,11 @@ function pickIds(
         ? listingShowsOnMenu(row, "STAND_BY")
         : row.category === category,
   );
-  return orderListingsNewestFirst(slice).slice(0, HOME_SECTION_LIMIT);
+  const ordered =
+    category === "LIVE_AUCTION"
+      ? orderLiveAuctionsByDeadline(slice)
+      : orderListingsNewestFirst(slice);
+  return ordered.slice(0, HOME_SECTION_LIMIT);
 }
 
 export async function loadHomeListings(
@@ -96,6 +105,7 @@ export async function loadHomeListings(
         saleStatus: true,
         bumpedAt: true,
         createdAt: true,
+        auctionEndsAt: true,
       },
     });
 
