@@ -4,7 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Listing, ListingImage } from "@prisma/client";
-import { AuctionCountdown } from "@/components/AuctionCountdown";
+import {
+  AuctionCountdown,
+  isAuctionClosingSoon,
+} from "@/components/AuctionCountdown";
 import { ListingSaleStatusControl } from "@/components/ListingSaleStatusControl";
 import { ListingThumb } from "@/components/ListingThumb";
 import { LiveAuctionAccessDialog } from "@/components/LiveAuctionAccessDialog";
@@ -42,6 +45,14 @@ type Props = {
   isSignedIn?: boolean;
 };
 
+function ClosingMark() {
+  return (
+    <span className="pointer-events-none absolute bottom-0 left-0 z-[2] bg-red-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-white">
+      Closing
+    </span>
+  );
+}
+
 export function ListingCard({
   listing,
   size = "default",
@@ -52,6 +63,15 @@ export function ListingCard({
 }: Props) {
   const router = useRouter();
   const [gateOpen, setGateOpen] = useState(false);
+  const auctionEndsAt =
+    listing.category === "LIVE_AUCTION" && listing.auctionEndsAt
+      ? listing.auctionEndsAt instanceof Date
+        ? listing.auctionEndsAt.toISOString()
+        : String(listing.auctionEndsAt)
+      : null;
+  const [closingSoon, setClosingSoon] = useState(() =>
+    auctionEndsAt ? isAuctionClosingSoon(auctionEndsAt) : false,
+  );
   const [photoGroup, setPhotoGroup] = useState<ListingImageGroup>(() =>
     parseListingImageGroup(listing.displayedImageGroup),
   );
@@ -109,7 +129,11 @@ export function ListingCard({
 
   if (layout === "list") {
     const listMedia = (
-      <div className="relative h-[4.75rem] w-[7rem] shrink-0 overflow-hidden rounded-[3px] bg-neutral-100 sm:h-[5.5rem] sm:w-[8.5rem]">
+      <div
+        className={`relative h-[4.75rem] w-[7rem] shrink-0 overflow-hidden rounded-[3px] bg-neutral-100 sm:h-[5.5rem] sm:w-[8.5rem] ${
+          closingSoon ? "ring-2 ring-red-600" : ""
+        }`}
+      >
         <ListingThumb
           src={thumb}
           alt={listing.title}
@@ -120,6 +144,7 @@ export function ListingCard({
         {listing.category === "LIVE_AUCTION" ? (
           <AuctionImageBadge />
         ) : null}
+        {closingSoon ? <ClosingMark /> : null}
         {groupToggle}
       </div>
     );
@@ -181,7 +206,11 @@ export function ListingCard({
   }
 
   const media = (
-    <div className="relative aspect-[3/2] overflow-hidden rounded-[3px] bg-neutral-100">
+    <div
+      className={`relative aspect-[3/2] overflow-hidden rounded-[3px] bg-neutral-100 ${
+        closingSoon ? "ring-2 ring-red-600" : ""
+      }`}
+    >
       <ListingThumb
         src={thumb}
         alt={listing.title}
@@ -196,6 +225,7 @@ export function ListingCard({
       />
       <SaleStatusOverlay status={listing.saleStatus} />
       {listing.category === "LIVE_AUCTION" ? <AuctionImageBadge /> : null}
+      {closingSoon ? <ClosingMark /> : null}
       {listing.category === "CONSIGNMENT_SALE" || listing.isFlooded ? (
         <div className="pointer-events-none absolute left-0 top-0 z-[1] flex flex-col items-start">
           {listing.isFlooded ? <FloodImageBadge /> : null}
@@ -229,14 +259,11 @@ export function ListingCard({
       {salePriceLabel ? (
         <p className="listing-sale-price">{salePriceLabel}</p>
       ) : null}
-      {listing.category === "LIVE_AUCTION" && listing.auctionEndsAt ? (
+      {auctionEndsAt ? (
         <AuctionCountdown
-          endsAt={
-            listing.auctionEndsAt instanceof Date
-              ? listing.auctionEndsAt.toISOString()
-              : String(listing.auctionEndsAt)
-          }
+          endsAt={auctionEndsAt}
           compact
+          onClosingChange={setClosingSoon}
         />
       ) : null}
     </>

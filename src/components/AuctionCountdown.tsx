@@ -1,7 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+
+/** Card emphasis for auctions closing inside this window. */
+export const LIVE_AUCTION_CLOSING_MS = 2 * 60 * 60 * 1000;
+
+export function isAuctionClosingSoon(endsAt: string, now = Date.now()) {
+  const endMs = new Date(endsAt).getTime();
+  if (!Number.isFinite(endMs)) return false;
+  const left = endMs - now;
+  return left > 0 && left <= LIVE_AUCTION_CLOSING_MS;
+}
 
 type Props = {
   endsAt: string;
@@ -12,6 +22,8 @@ type Props = {
   /** Member detail gets a fuller timer; admin stays compact-inline */
   emphasize?: boolean;
   className?: string;
+  /** Fires only when the closing-soon flag changes. */
+  onClosingChange?: (closing: boolean) => void;
 };
 
 type Parts = {
@@ -87,8 +99,11 @@ export function AuctionCountdown({
   variant = "default",
   emphasize = true,
   className = "",
+  onClosingChange,
 }: Props) {
   const router = useRouter();
+  const onClosingChangeRef = useRef(onClosingChange);
+  onClosingChangeRef.current = onClosingChange;
   const endMs = new Date(endsAt).getTime();
   const [parts, setParts] = useState<Parts>(() =>
     toParts(Number.isFinite(endMs) ? endMs - Date.now() : 0),
@@ -105,9 +120,15 @@ export function AuctionCountdown({
 
     let refreshed = false;
     let id = 0;
+    const closingRef = { current: isAuctionClosingSoon(endsAt) };
     const tick = () => {
       const next = endMs - Date.now();
       setParts(toParts(next));
+      const closing = next > 0 && next <= LIVE_AUCTION_CLOSING_MS;
+      if (closing !== closingRef.current) {
+        closingRef.current = closing;
+        onClosingChangeRef.current?.(closing);
+      }
       if (next <= 0 && !refreshed) {
         refreshed = true;
         window.clearInterval(id);
@@ -119,7 +140,7 @@ export function AuctionCountdown({
     tick();
     id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
-  }, [endMs, router]);
+  }, [endMs, endsAt, router]);
 
   const ended = parts.totalMs <= 0;
   const urgent = !ended && parts.totalMs < 60 * 60 * 1000;
@@ -146,11 +167,19 @@ export function AuctionCountdown({
   if (compact) {
     return (
       <p
-        className={`mt-1 font-mono text-[11.5px] font-medium tabular-nums tracking-wide ${
-          ended ? "text-neutral-400" : "text-red-600"
+        className={`mt-1 font-mono text-[11.5px] tabular-nums tracking-wide ${
+          ended
+            ? "font-medium text-neutral-400"
+            : parts.totalMs <= LIVE_AUCTION_CLOSING_MS
+              ? "font-semibold text-red-700"
+              : "font-medium text-red-600"
         } ${className}`}
       >
-        {ended ? "Auction ended" : `Ends in ${formatCompact(parts)}`}
+        {ended
+          ? "Auction ended"
+          : parts.totalMs <= LIVE_AUCTION_CLOSING_MS
+            ? `Closing ${formatCompact(parts)}`
+            : `Ends in ${formatCompact(parts)}`}
       </p>
     );
   }
