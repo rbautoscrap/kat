@@ -34,6 +34,7 @@ export async function PUT(request: Request, { params }: Params) {
 
   const existing = access.listing;
 
+  let pendingUploads: string[] = [];
   try {
     const formData = await request.formData();
     const parsed = formDataToListingInput(formData);
@@ -56,6 +57,7 @@ export async function PUT(request: Request, { params }: Params) {
 
     const maxImages = maxImagesForCategory(data.category ?? existing.category);
     const uploads = await saveListingImageUploads(formData, { maxImages });
+    pendingUploads = uploads.urls;
 
     const manageImages = formData.get("manageImages") === "1";
     const keepImageIds = formData
@@ -129,6 +131,8 @@ export async function PUT(request: Request, { params }: Params) {
       }
 
       if (!nextImageRows.length) {
+        await deleteUploadedFiles(pendingUploads);
+        pendingUploads = [];
         return NextResponse.json(
           { error: "사진은 최소 1장 이상 남겨 주세요." },
           { status: 400 },
@@ -141,6 +145,8 @@ export async function PUT(request: Request, { params }: Params) {
         uploads.grouped &&
         !nextImageRows.some((row) => row.group === 1 && row.isCover)
       ) {
+        await deleteUploadedFiles(pendingUploads);
+        pendingUploads = [];
         return NextResponse.json(
           { error: "1그룹 대표 사진을 남겨 주세요." },
           { status: 400 },
@@ -148,6 +154,8 @@ export async function PUT(request: Request, { params }: Params) {
       }
 
       if (nextImageRows.length > maxImages) {
+        await deleteUploadedFiles(pendingUploads);
+        pendingUploads = [];
         return NextResponse.json(
           {
             error: `이미지는 최대 ${maxImages}장까지 등록할 수 있습니다.`,
@@ -203,6 +211,7 @@ export async function PUT(request: Request, { params }: Params) {
         ...imageUpdate,
       },
     });
+    pendingUploads = [];
 
     if (orphanUrls.length) {
       await deleteUploadedFiles(orphanUrls);
@@ -211,6 +220,7 @@ export async function PUT(request: Request, { params }: Params) {
     revalidateListingSurfaces(id);
     return NextResponse.json({ id });
   } catch (err) {
+    if (pendingUploads.length) await deleteUploadedFiles(pendingUploads);
     console.error("[PUT /api/listings/:id]", err);
     return NextResponse.json(
       {

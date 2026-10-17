@@ -63,7 +63,14 @@ export async function deleteListingById(listingId: string): Promise<
   }
 
   try {
-    await deleteUploadedFiles(urls);
+    const stillUsed = urls.length
+      ? await prisma.listingImage.findMany({
+          where: { url: { in: urls } },
+          select: { url: true },
+        })
+      : [];
+    const keep = new Set(stillUsed.map((row) => row.url));
+    await deleteUploadedFiles(urls.filter((url) => !keep.has(url)));
   } catch (error) {
     console.error("[deleteListingById] file cleanup", error);
   }

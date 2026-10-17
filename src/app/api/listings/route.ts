@@ -6,6 +6,7 @@ import { toApiErrorMessage } from "@/lib/api-error";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 import { koreaTodayYyyymmdd } from "@/lib/format-korea-time";
 import {
+  deleteUploadedFiles,
   formDataToListingInput,
   generateSerialNumber,
   listingImageCreatesFromForm,
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
   }
 
+  let pendingUploads: string[] = [];
   try {
     const formData = await request.formData();
     const parsed = formDataToListingInput(formData);
@@ -36,6 +38,7 @@ export async function POST(request: Request) {
     const uploads = await saveListingImageUploads(formData, {
       maxImages,
     });
+    pendingUploads = uploads.urls;
 
     const imageCreates = uploads.grouped
       ? listingImageCreatesFromForm({
@@ -51,6 +54,8 @@ export async function POST(request: Request) {
         }));
 
     if (imageCreates.length === 0 || !imageCreates.some((row) => row.isCover)) {
+      await deleteUploadedFiles(pendingUploads);
+      pendingUploads = [];
       return NextResponse.json(
         { error: "대표(메인) 사진을 등록해 주세요." },
         { status: 400 },
@@ -60,12 +65,16 @@ export async function POST(request: Request) {
       data.category !== "USED_PARTS" &&
       !imageCreates.some((row) => row.group === 1 && row.isCover)
     ) {
+      await deleteUploadedFiles(pendingUploads);
+      pendingUploads = [];
       return NextResponse.json(
         { error: "1그룹 대표 사진을 등록해 주세요." },
         { status: 400 },
       );
     }
     if (imageCreates.length > maxImages) {
+      await deleteUploadedFiles(pendingUploads);
+      pendingUploads = [];
       return NextResponse.json(
         {
           error: `이미지는 최대 ${maxImages}장까지 등록할 수 있습니다.`,
@@ -94,10 +103,12 @@ export async function POST(request: Request) {
         },
       },
     });
+    pendingUploads = [];
 
     revalidateListingSurfaces(listing.id);
     return NextResponse.json({ id: listing.id });
   } catch (err) {
+    if (pendingUploads.length) await deleteUploadedFiles(pendingUploads);
     console.error("[POST /api/listings]", err);
     return NextResponse.json(
       {
