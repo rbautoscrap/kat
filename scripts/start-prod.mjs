@@ -281,6 +281,19 @@ if (existsSync(ensureListing)) {
   });
 }
 
+const resetAdminPassword = path.join(
+  process.cwd(),
+  "scripts",
+  "reset-admin-password.mjs",
+);
+if (existsSync(resetAdminPassword)) {
+  console.log("[start-prod] Applying admin password reset…");
+  spawnSync(process.execPath, [resetAdminPassword], {
+    stdio: "inherit",
+    env: process.env,
+  });
+}
+
 console.log(`[start-prod] Starting Next.js on http://${bindHost}:${port}`);
 const next = spawnSync(
   process.execPath,
