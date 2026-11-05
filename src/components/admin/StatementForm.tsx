@@ -6,6 +6,7 @@ import {
   createStatement,
   updateStatement,
 } from "@/app/admin/statement-actions";
+import { useDocumentListingSearch } from "@/components/admin/useDocumentListingSearch";
 import {
   CURRENCY_META,
   OFFER_CURRENCIES,
@@ -178,20 +179,15 @@ export function StatementForm({
   const listingCount = selected.filter((s) => s.kind === "listing").length;
   const extraCount = selected.filter((s) => s.kind === "extra").length;
 
-  const filteredListings = useMemo(() => {
-    const selectable = listings.filter(
-      (l) => !parseOrphanListingKey(l.id) && !isExtraLineKey(l.id),
-    );
-    const q = listingQuery.trim().toLowerCase();
-    if (!q) return selectable;
-    return selectable.filter(
-      (l) =>
-        l.label.toLowerCase().includes(q) ||
-        l.serialNumber.toLowerCase().includes(q) ||
-        (l.vin ?? "").toLowerCase().includes(q) ||
-        (l.vehicleNumber ?? "").toLowerCase().includes(q),
-    );
-  }, [listings, listingQuery]);
+  const selectableListings = useMemo(
+    () =>
+      listings.filter(
+        (l) => !parseOrphanListingKey(l.id) && !isExtraLineKey(l.id),
+      ),
+    [listings],
+  );
+  const { results: filteredListings, searching: listingSearching } =
+    useDocumentListingSearch(selectableListings, listingQuery);
 
   const selectedMember = useMemo(
     () => members.find((m) => m.id === buyerUserId) ?? null,
@@ -386,13 +382,14 @@ export function StatementForm({
           id="listing-search"
           value={listingQuery}
           onChange={(e) => setListingQuery(e.target.value)}
-          placeholder="시리얼, 차량명, VIN…"
+          placeholder="시리얼, 차량명, VIN, 차량번호 (전체 매물)"
+          autoComplete="off"
           className={fieldClass}
         />
         <div className="mt-2 max-h-48 overflow-y-auto rounded-md border-2 border-red-500">
           {filteredListings.length === 0 ? (
             <p className="px-3 py-3 text-[13px] text-neutral-500">
-              검색 결과가 없습니다.
+              {listingSearching ? "전체 매물 검색 중…" : "검색 결과가 없습니다."}
             </p>
           ) : (
             <ul className="divide-y divide-[var(--line)]">

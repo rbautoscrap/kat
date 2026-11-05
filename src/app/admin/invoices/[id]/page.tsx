@@ -29,7 +29,7 @@ export default async function InvoiceDetailPage({ params }: Props) {
 
   const listings = await prisma.listing.findMany({
     orderBy: { createdAt: "desc" },
-    take: 500,
+    take: 60,
     select: {
       id: true,
       serialNumber: true,

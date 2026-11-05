@@ -34,7 +34,7 @@ export default async function StatementDetailPage({ params }: Props) {
   const [listings, users] = await Promise.all([
     prisma.listing.findMany({
       orderBy: { createdAt: "desc" },
-      take: 500,
+      take: 60,
       select: {
         id: true,
         serialNumber: true,

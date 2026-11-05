@@ -151,7 +151,7 @@ export default async function AdminStatementsPage({ searchParams }: Props) {
     }),
     prisma.listing.findMany({
       orderBy: { createdAt: "desc" },
-      take: 500,
+      take: 60,
       select: {
         id: true,
         serialNumber: true,

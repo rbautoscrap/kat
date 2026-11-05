@@ -6,6 +6,7 @@ import {
   createOverseasInvoice,
   updateOverseasInvoice,
 } from "@/app/admin/invoice-actions";
+import { useDocumentListingSearch } from "@/components/admin/useDocumentListingSearch";
 import {
   INVOICE_CURRENCIES,
   addDaysToDateString,
@@ -131,20 +132,8 @@ export function InvoiceForm({
     [lines],
   );
 
-  const filteredListings = useMemo(() => {
-    const q = listingQuery.trim().toLowerCase();
-    const base = listings;
-    if (!q) return base.slice(0, 60);
-    return base
-      .filter(
-        (l) =>
-          l.label.toLowerCase().includes(q) ||
-          l.serialNumber.toLowerCase().includes(q) ||
-          (l.vin ?? "").toLowerCase().includes(q) ||
-          (l.vehicleNumber ?? "").toLowerCase().includes(q),
-      )
-      .slice(0, 80);
-  }, [listings, listingQuery]);
+  const { results: filteredListings, searching: listingSearching } =
+    useDocumentListingSearch(listings, listingQuery, "title");
 
   function addListing(listing: ListingOption) {
     if (selectedListingIds.has(listing.id)) return;
@@ -356,9 +345,11 @@ export function InvoiceForm({
         <div className="mt-2 max-h-48 overflow-y-auto rounded-md border border-[var(--line)] bg-white">
           {filteredListings.length === 0 ? (
             <p className="px-3 py-3 text-[13px] text-neutral-500">
-              {listingQuery.trim()
-                ? "검색 결과가 없습니다."
-                : "등록된 매물이 없습니다."}
+              {listingSearching
+                ? "전체 매물 검색 중…"
+                : listingQuery.trim()
+                  ? "검색 결과가 없습니다."
+                  : "등록된 매물이 없습니다."}
             </p>
           ) : (
             <ul className="divide-y divide-[var(--line)]">
@@ -398,9 +389,9 @@ export function InvoiceForm({
             </ul>
           )}
         </div>
-        {!listingQuery.trim() && listings.length > 60 ? (
+        {!listingQuery.trim() ? (
           <p className="mt-1.5 text-[11.5px] text-neutral-500">
-            상위 60건만 표시됩니다. 검색어로 더 찾아보세요.
+            최근 매물만 표시됩니다. 오래된 매물은 검색하세요.
           </p>
         ) : null}
       </div>
