@@ -1,6 +1,10 @@
 import { ListingSection } from "@/components/ListingSection";
 import { isAdmin } from "@/lib/auth";
-import { HOME_SECTION_LIMIT, loadHomeListings } from "@/lib/home-listings";
+import {
+  HOME_SECTION_LIMIT,
+  HOME_STAND_BY_LIMIT,
+  loadHomeListings,
+} from "@/lib/home-listings";
 import { resolveSessionDbUser } from "@/lib/listing-access";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +49,7 @@ export default async function HomePage({ searchParams }: Props) {
         category="STAND_BY"
         listings={standBy}
         {...sectionProps}
+        limit={HOME_STAND_BY_LIMIT}
       />
       <ListingSection
         category="CAR_LISTINGS"

@@ -11,6 +11,8 @@ import { listingShowsOnMenu } from "@/lib/listing-menus";
 import { prisma } from "@/lib/prisma";
 
 export const HOME_SECTION_LIMIT = 10;
+/** Stand by home strip: 5 columns × 3 rows. */
+export const HOME_STAND_BY_LIMIT = 15;
 
 const HOME_CATEGORIES = [
   "CAR_LISTINGS",
@@ -62,6 +64,7 @@ function pickIds(
     auctionEndsAt: Date | null;
   }[],
   category: ListingCategory,
+  limit = HOME_SECTION_LIMIT,
 ): string[] {
   const slice = rows.filter((row) =>
     category === "CAR_LISTINGS"
@@ -74,7 +77,7 @@ function pickIds(
     category === "LIVE_AUCTION"
       ? orderLiveAuctionsByDeadline(slice)
       : orderListingsNewestFirst(slice);
-  return ordered.slice(0, HOME_SECTION_LIMIT);
+  return ordered.slice(0, limit);
 }
 
 export async function loadHomeListings(
@@ -109,7 +112,7 @@ export async function loadHomeListings(
       },
     });
 
-    const standByIds = pickIds(rows, "STAND_BY");
+    const standByIds = pickIds(rows, "STAND_BY", HOME_STAND_BY_LIMIT);
     const carIds = pickIds(rows, "CAR_LISTINGS");
     const auctionIds = pickIds(rows, "LIVE_AUCTION");
     // Completed Used Parts leave the home board (P2P message board).
