@@ -287,7 +287,7 @@ const ensurePromo = path.join(
   "ensure-promo-queue.mjs",
 );
 if (existsSync(ensurePromo)) {
-  console.log("[start-prod] Ensuring promo queue table…");
+  console.log("[start-prod] Removing retired promo queue table…");
   spawnSync(process.execPath, [ensurePromo], {
     stdio: "inherit",
     env: process.env,
