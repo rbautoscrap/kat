@@ -281,6 +281,19 @@ if (existsSync(ensureListing)) {
   });
 }
 
+const ensurePromo = path.join(
+  process.cwd(),
+  "scripts",
+  "ensure-promo-queue.mjs",
+);
+if (existsSync(ensurePromo)) {
+  console.log("[start-prod] Ensuring promo queue table…");
+  spawnSync(process.execPath, [ensurePromo], {
+    stdio: "inherit",
+    env: process.env,
+  });
+}
+
 console.log(`[start-prod] Starting Next.js on http://${bindHost}:${port}`);
 const next = spawnSync(
   process.execPath,
