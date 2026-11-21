@@ -11,6 +11,7 @@ import {
   type PromoChannelResults,
 } from "@/lib/promo-channel-results";
 import { fillPromoQueue, listPromoQueue } from "@/lib/promo-queue";
+import { publishPromoToTelegram } from "@/lib/promo-telegram";
 import { prisma } from "@/lib/prisma";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
@@ -150,4 +151,84 @@ export async function recordPromoPostedAction(input: {
   });
   revalidatePath("/admin/promo");
   return { ok: true };
+}
+
+/** Publish one approved item to Telegram and store the channel result. */
+export async function publishPromoTelegramAction(
+  id: string,
+): Promise<ActionResult & { detail?: string }> {
+  if (!(await assertAdmin())) return { ok: false, error: "권한이 없습니다." };
+  const row = await prisma.promoQueueItem.findUnique({ where: { id } });
+  if (!row || (row.status !== "APPROVED" && row.status !== "POSTED")) {
+    return { ok: false, error: "승인된 항목만 게시할 수 있습니다." };
+  }
+
+  const tg = await publishPromoToTelegram(row.body);
+  const merged = mergeChannelResults(
+    row.channelResults,
+    {
+      telegram: {
+        ok: tg.ok,
+        at: tg.at,
+        url: tg.url,
+        error: tg.error,
+      },
+    },
+    tg.at,
+  );
+
+  await prisma.promoQueueItem.update({
+    where: { id: row.id },
+    data: {
+      status: tg.ok ? "POSTED" : row.status,
+      postedAt: tg.ok ? (row.postedAt ?? new Date()) : row.postedAt,
+      channelResults: serializeChannelResults(merged),
+    },
+  });
+  revalidatePath("/admin/promo");
+  if (!tg.ok) return { ok: false, error: tg.error || "Telegram 게시 실패" };
+  return { ok: true, detail: tg.url || "Telegram 게시됨" };
+}
+
+/** Publish up to 10 approved items to Telegram (avoids request timeouts). */
+export async function publishApprovedTelegramBatchAction(): Promise<
+  ActionResult & { posted?: number; failed?: number }
+> {
+  if (!(await assertAdmin())) return { ok: false, error: "권한이 없습니다." };
+  const rows = await prisma.promoQueueItem.findMany({
+    where: { status: "APPROVED" },
+    orderBy: [{ costWon: "desc" }, { approvedAt: "asc" }],
+    take: 10,
+  });
+  if (!rows.length) return { ok: true, posted: 0, failed: 0 };
+
+  let posted = 0;
+  let failed = 0;
+  for (const row of rows) {
+    const tg = await publishPromoToTelegram(row.body);
+    const merged = mergeChannelResults(
+      row.channelResults,
+      {
+        telegram: {
+          ok: tg.ok,
+          at: tg.at,
+          url: tg.url,
+          error: tg.error,
+        },
+      },
+      tg.at,
+    );
+    await prisma.promoQueueItem.update({
+      where: { id: row.id },
+      data: {
+        status: tg.ok ? "POSTED" : "APPROVED",
+        postedAt: tg.ok ? new Date() : null,
+        channelResults: serializeChannelResults(merged),
+      },
+    });
+    if (tg.ok) posted += 1;
+    else failed += 1;
+  }
+  revalidatePath("/admin/promo");
+  return { ok: true, posted, failed };
 }

@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 import {
   approvePromoAction,
+  publishApprovedTelegramBatchAction,
+  publishPromoTelegramAction,
   recordPromoPostedAction,
   refillPromoQueueAction,
   skipPromoAction,
@@ -43,6 +45,7 @@ type Props = {
   rows: Row[];
   webhookPath: string;
   secretConfigured: boolean;
+  telegramConfigured: boolean;
 };
 
 const statusLabel: Record<string, string> = {
@@ -56,6 +59,7 @@ export function PromoQueuePanel({
   rows,
   webhookPath,
   secretConfigured,
+  telegramConfigured,
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -126,6 +130,31 @@ export function PromoQueuePanel({
     });
   }
 
+  function publishTelegram(id: string) {
+    startTransition(async () => {
+      const result = await publishPromoTelegramAction(id);
+      if (!result.ok) {
+        setMessage(result.error);
+        return;
+      }
+      refreshMessage(result.detail || "Telegram 게시됨");
+    });
+  }
+
+  function publishTelegramBatch() {
+    startTransition(async () => {
+      const result = await publishApprovedTelegramBatchAction();
+      if (!result.ok) {
+        setMessage(result.error);
+        return;
+      }
+      refreshMessage(
+        `Telegram 게시 ${result.posted ?? 0}건` +
+          (result.failed ? ` · 실패 ${result.failed}건` : ""),
+      );
+    });
+  }
+
   const drafts = rows.filter((r) => r.status === "DRAFT");
   const approved = rows.filter((r) => r.status === "APPROVED");
   const posted = rows.filter((r) => r.status === "POSTED");
@@ -139,8 +168,8 @@ export function PromoQueuePanel({
             SNS 홍보 큐
           </h2>
           <p className="mt-1 max-w-2xl text-[12.5px] leading-relaxed text-neutral-500">
-            고액(300만원↑) 또는 장기재고(30일↑) 판매중 매물 영문 초안 → 승인 →
-            채널별 게시 시각·성공/실패를 이 화면에 남깁니다.
+            고액·장기 재고 초안 → 승인 → <strong>Telegram 지금 게시</strong>로
+            바로 올립니다. Instagram·Facebook·X는 URL을 아래에 기록합니다.
           </p>
         </div>
         <button
@@ -159,17 +188,20 @@ export function PromoQueuePanel({
         ) : null}
         <div className="rounded-sm border border-[var(--line)] bg-neutral-50 px-3 py-2.5 text-[12px] text-neutral-600">
           <p>
-            n8n GET{" "}
-            <code className="rounded bg-white px-1">{webhookPath}</code>
-            {" · "}
-            헤더 <code className="rounded bg-white px-1">x-promo-secret</code>
-            {secretConfigured ? " (PROMO_WEBHOOK_SECRET)" : " (AUTH_SECRET)"}
+            Telegram:{" "}
+            {telegramConfigured ? (
+              <span className="font-medium text-emerald-700">연결됨 — 아래 버튼으로 게시</span>
+            ) : (
+              <span className="font-medium text-amber-800">
+                Railway Variables에 TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID 필요
+              </span>
+            )}
           </p>
-          <p className="mt-1">
-            게시 후 POST ·{" "}
-            <code className="rounded bg-white px-1">
-              {`{"items":[{"id":"…","channels":{"telegram":{"ok":true,"url":"…"},"instagram":{"ok":false,"error":"…"}}}]}`}
-            </code>
+          <p className="mt-1 text-neutral-500">
+            n8n 선택: GET{" "}
+            <code className="rounded bg-white px-1">{webhookPath}</code> ·
+            헤더 <code className="rounded bg-white px-1">x-promo-secret</code>
+            {secretConfigured ? "" : " (AUTH_SECRET)"}
           </p>
         </div>
       </div>
@@ -206,23 +238,47 @@ export function PromoQueuePanel({
         )}
       </Section>
 
-      <Section title={`승인·게시대기 ${approved.length}`}>
+      <Section
+        title={`승인·게시대기 ${approved.length}`}
+        action={
+          approved.length > 0 ? (
+            <Btn
+              pending={pending}
+              primary
+              onClick={publishTelegramBatch}
+            >
+              대기분 Telegram 10건 게시
+            </Btn>
+          ) : null
+        }
+      >
         {approved.length === 0 ? (
           <Empty>승인된 항목 없음</Empty>
         ) : (
           approved.map((row) => (
             <Card key={row.id} row={row}>
               <p className="mt-1 text-[11.5px] text-neutral-500">
-                승인 {formatKoreaDateTime(row.approvedAt)} · n8n 대기 또는 아래
-                결과 직접 기록
+                승인 {formatKoreaDateTime(row.approvedAt)}
               </p>
               <pre className="mt-2 whitespace-pre-wrap rounded-md bg-neutral-50 px-2.5 py-2 text-[12px] text-neutral-700">
                 {row.body}
               </pre>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <Btn
+                  pending={pending}
+                  primary
+                  onClick={() => publishTelegram(row.id)}
+                >
+                  Telegram 지금 게시
+                </Btn>
+                <Btn pending={pending} onClick={() => skip(row.id)}>
+                  제외
+                </Btn>
+              </div>
               <ChannelResultForm
                 pending={pending}
-                onSkip={() => skip(row.id)}
                 onSave={(channels) => record(row.id, channels)}
+                compact
               />
             </Card>
           ))
@@ -431,15 +487,18 @@ function Btn({
 function Section({
   title,
   children,
+  action,
 }: {
   title: string;
   children: ReactNode;
+  action?: ReactNode;
 }) {
   return (
     <section className="px-4 sm:px-5">
-      <h3 className="mb-2 text-[13px] font-semibold text-neutral-800">
-        {title}
-      </h3>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-[13px] font-semibold text-neutral-800">{title}</h3>
+        {action}
+      </div>
       <div className="space-y-2">{children}</div>
     </section>
   );
