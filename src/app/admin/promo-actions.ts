@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth, isAdmin } from "@/lib/auth";
 import { resolveSessionDbUser } from "@/lib/listing-access";
+import {
+  isPromoChannelKey,
+  mergeChannelResults,
+  serializeChannelResults,
+  type PromoChannelResults,
+} from "@/lib/promo-channel-results";
 import { fillPromoQueue, listPromoQueue } from "@/lib/promo-queue";
 import { prisma } from "@/lib/prisma";
 
@@ -86,6 +92,61 @@ export async function skipPromoAction(id: string): Promise<ActionResult> {
   await prisma.promoQueueItem.update({
     where: { id },
     data: { status: "SKIPPED" },
+  });
+  revalidatePath("/admin/promo");
+  return { ok: true };
+}
+
+const channelResultSchema = z.record(
+  z.string(),
+  z.object({
+    ok: z.boolean(),
+    url: z.string().trim().max(500).optional(),
+    error: z.string().trim().max(300).optional(),
+    at: z.string().trim().max(40).optional(),
+  }),
+);
+
+/** Admin: record per-channel publish results (n8n or manual). */
+export async function recordPromoPostedAction(input: {
+  id: string;
+  channels: Record<string, { ok: boolean; url?: string; error?: string }>;
+}): Promise<ActionResult> {
+  if (!(await assertAdmin())) return { ok: false, error: "권한이 없습니다." };
+  const id = String(input.id ?? "").trim();
+  const parsed = channelResultSchema.safeParse(input.channels ?? {});
+  if (!id || !parsed.success) {
+    return { ok: false, error: "채널 결과가 올바르지 않습니다." };
+  }
+
+  const row = await prisma.promoQueueItem.findUnique({ where: { id } });
+  if (!row || (row.status !== "APPROVED" && row.status !== "POSTED")) {
+    return { ok: false, error: "승인·게시 항목만 기록할 수 있습니다." };
+  }
+
+  const nowIso = new Date().toISOString();
+  const incoming: PromoChannelResults = {};
+  for (const [key, value] of Object.entries(parsed.data)) {
+    if (!isPromoChannelKey(key)) continue;
+    incoming[key] = {
+      ok: value.ok,
+      url: value.url,
+      error: value.error,
+      at: value.at || nowIso,
+    };
+  }
+  if (!Object.keys(incoming).length) {
+    return { ok: false, error: "채널을 1개 이상 선택해 주세요." };
+  }
+
+  const merged = mergeChannelResults(row.channelResults, incoming, nowIso);
+  await prisma.promoQueueItem.update({
+    where: { id },
+    data: {
+      status: "POSTED",
+      postedAt: row.postedAt ?? new Date(),
+      channelResults: serializeChannelResults(merged),
+    },
   });
   revalidatePath("/admin/promo");
   return { ok: true };

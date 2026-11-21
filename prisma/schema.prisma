@@ -169,6 +169,8 @@ model PromoQueueItem {
   ageDays    Int       @default(0)
   /** Comma list: telegram,instagram,facebook,x */
   channels   String    @default("telegram,instagram,facebook,x")
+  /** JSON: { telegram: { ok, at, url?, error? }, ... } */
+  channelResults String?
   approvedAt DateTime?
   postedAt   DateTime?
   createdAt  DateTime  @default(now())

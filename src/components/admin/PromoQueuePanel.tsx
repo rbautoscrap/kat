@@ -4,10 +4,18 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 import {
   approvePromoAction,
+  recordPromoPostedAction,
   refillPromoQueueAction,
   skipPromoAction,
   updatePromoDraftAction,
 } from "@/app/admin/promo-actions";
+import { formatKoreaDateTime } from "@/lib/format-korea-time";
+import {
+  PROMO_CHANNEL_KEYS,
+  PROMO_CHANNEL_LABELS,
+  parseChannelResults,
+  type PromoChannelKey,
+} from "@/lib/promo-channel-results";
 
 type Row = {
   id: string;
@@ -19,6 +27,9 @@ type Row = {
   costWon: number;
   ageDays: number;
   channels: string;
+  channelResults: string | null;
+  approvedAt: string | Date | null;
+  postedAt: string | Date | null;
   listing: {
     serialNumber: string;
     year: number;
@@ -86,7 +97,7 @@ export function PromoQueuePanel({
         setMessage(result.error);
         return;
       }
-      refreshMessage("승인됨 — n8n이 가져갑니다");
+      refreshMessage("승인됨 — n8n 또는 아래 채널 결과로 기록");
     });
   }
 
@@ -101,11 +112,24 @@ export function PromoQueuePanel({
     });
   }
 
+  function record(
+    id: string,
+    channels: Record<string, { ok: boolean; url?: string; error?: string }>,
+  ) {
+    startTransition(async () => {
+      const result = await recordPromoPostedAction({ id, channels });
+      if (!result.ok) {
+        setMessage(result.error);
+        return;
+      }
+      refreshMessage("채널별 게시 결과 저장");
+    });
+  }
+
   const drafts = rows.filter((r) => r.status === "DRAFT");
   const approved = rows.filter((r) => r.status === "APPROVED");
-  const done = rows.filter(
-    (r) => r.status === "POSTED" || r.status === "SKIPPED",
-  );
+  const posted = rows.filter((r) => r.status === "POSTED");
+  const skipped = rows.filter((r) => r.status === "SKIPPED");
 
   return (
     <div className="space-y-5">
@@ -115,8 +139,8 @@ export function PromoQueuePanel({
             SNS 홍보 큐
           </h2>
           <p className="mt-1 max-w-2xl text-[12.5px] leading-relaxed text-neutral-500">
-            고액(300만원↑) 또는 장기재고(30일↑) 판매중 매물을 골라 영문 초안을
-            만듭니다. 승인 후 n8n이 Telegram·Instagram·Facebook·X로 게시합니다.
+            고액(300만원↑) 또는 장기재고(30일↑) 판매중 매물 영문 초안 → 승인 →
+            채널별 게시 시각·성공/실패를 이 화면에 남깁니다.
           </p>
         </div>
         <button
@@ -139,18 +163,20 @@ export function PromoQueuePanel({
             <code className="rounded bg-white px-1">{webhookPath}</code>
             {" · "}
             헤더 <code className="rounded bg-white px-1">x-promo-secret</code>
-            {secretConfigured ? " (서버 시크릿 설정됨)" : " (AUTH_SECRET 사용)"}
+            {secretConfigured ? " (PROMO_WEBHOOK_SECRET)" : " (AUTH_SECRET)"}
           </p>
           <p className="mt-1">
-            게시 후 POST 동일 URL · body{" "}
-            <code className="rounded bg-white px-1">{`{"ids":["…"]}`}</code>
+            게시 후 POST ·{" "}
+            <code className="rounded bg-white px-1">
+              {`{"items":[{"id":"…","channels":{"telegram":{"ok":true,"url":"…"},"instagram":{"ok":false,"error":"…"}}}]}`}
+            </code>
           </p>
         </div>
       </div>
 
       <Section title={`초안 ${drafts.length}`}>
         {drafts.length === 0 ? (
-          <Empty>초안 없음 — 위에서 채우기</Empty>
+          <Empty>초안 없음</Empty>
         ) : (
           drafts.map((row) => (
             <Card key={row.id} row={row}>
@@ -165,30 +191,15 @@ export function PromoQueuePanel({
                 }
               />
               <div className="mt-2 flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => save(row.id)}
-                  className="h-8 rounded-md border border-neutral-300 bg-white px-2.5 text-[12px]"
-                >
+                <Btn pending={pending} onClick={() => save(row.id)}>
                   저장
-                </button>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => approve(row.id)}
-                  className="h-8 rounded-md bg-emerald-700 px-2.5 text-[12px] font-medium text-white"
-                >
+                </Btn>
+                <Btn pending={pending} onClick={() => approve(row.id)} primary>
                   승인
-                </button>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => skip(row.id)}
-                  className="h-8 rounded-md border border-neutral-300 bg-white px-2.5 text-[12px] text-neutral-600"
-                >
+                </Btn>
+                <Btn pending={pending} onClick={() => skip(row.id)}>
                   제외
-                </button>
+                </Btn>
               </div>
             </Card>
           ))
@@ -201,32 +212,219 @@ export function PromoQueuePanel({
         ) : (
           approved.map((row) => (
             <Card key={row.id} row={row}>
+              <p className="mt-1 text-[11.5px] text-neutral-500">
+                승인 {formatKoreaDateTime(row.approvedAt)} · n8n 대기 또는 아래
+                결과 직접 기록
+              </p>
               <pre className="mt-2 whitespace-pre-wrap rounded-md bg-neutral-50 px-2.5 py-2 text-[12px] text-neutral-700">
                 {row.body}
               </pre>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => skip(row.id)}
-                className="mt-2 h-8 rounded-md border border-neutral-300 bg-white px-2.5 text-[12px]"
-              >
-                제외
-              </button>
+              <ChannelResultForm
+                pending={pending}
+                onSkip={() => skip(row.id)}
+                onSave={(channels) => record(row.id, channels)}
+              />
             </Card>
           ))
         )}
       </Section>
 
-      <Section title={`최근 처리 ${done.length}`}>
-        {done.length === 0 ? (
+      <Section title={`게시 결과 ${posted.length}`}>
+        {posted.length === 0 ? (
+          <Empty>아직 채널 게시 결과 없음 — 승인 후 n8n 또는 직접 기록</Empty>
+        ) : (
+          posted.slice(0, 40).map((row) => (
+            <Card key={row.id} row={row}>
+              <p className="mt-1 text-[11.5px] text-neutral-500">
+                승인 {formatKoreaDateTime(row.approvedAt)} · 게시{" "}
+                {formatKoreaDateTime(row.postedAt)}
+              </p>
+              <ChannelResultView raw={row.channelResults} />
+              <ChannelResultForm
+                pending={pending}
+                onSave={(channels) => record(row.id, channels)}
+                compact
+              />
+            </Card>
+          ))
+        )}
+      </Section>
+
+      <Section title={`제외 ${skipped.length}`}>
+        {skipped.length === 0 ? (
           <Empty>없음</Empty>
         ) : (
-          done.slice(0, 20).map((row) => (
+          skipped.slice(0, 15).map((row) => (
             <Card key={row.id} row={row} compact />
           ))
         )}
       </Section>
     </div>
+  );
+}
+
+function ChannelResultView({ raw }: { raw: string | null }) {
+  const results = parseChannelResults(raw);
+  const keys = PROMO_CHANNEL_KEYS.filter((k) => results[k]);
+  if (!keys.length) {
+    return (
+      <p className="mt-2 text-[12px] text-amber-700">
+        게시됨으로 표시됐으나 채널별 상세가 없습니다.
+      </p>
+    );
+  }
+  return (
+    <ul className="mt-2 divide-y divide-[var(--line)] rounded-md border border-[var(--line)]">
+      {keys.map((key) => {
+        const row = results[key]!;
+        return (
+          <li
+            key={key}
+            className="flex flex-wrap items-baseline justify-between gap-2 px-2.5 py-1.5 text-[12px]"
+          >
+            <span className="font-medium text-neutral-800">
+              {PROMO_CHANNEL_LABELS[key]}{" "}
+              <span className={row.ok ? "text-emerald-700" : "text-red-700"}>
+                {row.ok ? "성공" : "실패"}
+              </span>
+            </span>
+            <span className="tabular-nums text-neutral-500">
+              {formatKoreaDateTime(row.at)}
+            </span>
+            {row.url ? (
+              <a
+                href={row.url}
+                target="_blank"
+                rel="noreferrer"
+                className="basis-full text-sky-700 hover:underline"
+              >
+                {row.url}
+              </a>
+            ) : null}
+            {!row.ok && row.error ? (
+              <span className="basis-full text-red-600">{row.error}</span>
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function ChannelResultForm({
+  pending,
+  onSave,
+  onSkip,
+  compact,
+}: {
+  pending: boolean;
+  onSave: (
+    channels: Record<string, { ok: boolean; url?: string; error?: string }>,
+  ) => void;
+  onSkip?: () => void;
+  compact?: boolean;
+}) {
+  const [ok, setOk] = useState<Record<PromoChannelKey, boolean>>({
+    telegram: true,
+    instagram: true,
+    facebook: true,
+    x: true,
+  });
+  const [urls, setUrls] = useState<Partial<Record<PromoChannelKey, string>>>(
+    {},
+  );
+
+  return (
+    <div className={`space-y-2 ${compact ? "mt-2" : "mt-3"}`}>
+      {!compact ? (
+        <p className="text-[11.5px] font-medium text-neutral-600">
+          채널별 결과 기록
+        </p>
+      ) : (
+        <p className="text-[11.5px] text-neutral-500">결과 추가·수정</p>
+      )}
+      <div className="grid gap-2 sm:grid-cols-2">
+        {PROMO_CHANNEL_KEYS.map((key) => (
+          <label
+            key={key}
+            className="flex flex-col gap-1 rounded-md border border-neutral-200 px-2 py-1.5 text-[12px]"
+          >
+            <span className="flex items-center gap-2 font-medium text-neutral-800">
+              <input
+                type="checkbox"
+                checked={ok[key]}
+                onChange={(e) =>
+                  setOk((prev) => ({ ...prev, [key]: e.target.checked }))
+                }
+              />
+              {PROMO_CHANNEL_LABELS[key]} {ok[key] ? "성공" : "실패"}
+            </span>
+            <input
+              value={urls[key] ?? ""}
+              onChange={(e) =>
+                setUrls((prev) => ({ ...prev, [key]: e.target.value }))
+              }
+              placeholder="게시 URL (선택)"
+              className="h-7 rounded border border-neutral-200 px-2 text-[11.5px]"
+            />
+          </label>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        <Btn
+          pending={pending}
+          primary
+          onClick={() => {
+            const channels: Record<
+              string,
+              { ok: boolean; url?: string; error?: string }
+            > = {};
+            for (const key of PROMO_CHANNEL_KEYS) {
+              channels[key] = {
+                ok: ok[key],
+                url: urls[key]?.trim() || undefined,
+                error: ok[key] ? undefined : "게시 실패",
+              };
+            }
+            onSave(channels);
+          }}
+        >
+          게시 결과 저장
+        </Btn>
+        {onSkip ? (
+          <Btn pending={pending} onClick={onSkip}>
+            제외
+          </Btn>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function Btn({
+  children,
+  onClick,
+  pending,
+  primary,
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  pending: boolean;
+  primary?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      onClick={onClick}
+      className={`h-8 rounded-md px-2.5 text-[12px] disabled:opacity-50 ${
+        primary
+          ? "bg-emerald-700 font-medium text-white"
+          : "border border-neutral-300 bg-white text-neutral-700"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -261,7 +459,7 @@ function Card({
   compact,
 }: {
   row: Row;
-  children?: React.ReactNode;
+  children?: ReactNode;
   compact?: boolean;
 }) {
   return (

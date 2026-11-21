@@ -13,7 +13,18 @@ async function main() {
       `SELECT name FROM sqlite_master WHERE type='table' AND name='PromoQueueItem'`,
     );
     if (tables.length) {
-      console.log("[ensure-promo-queue] PromoQueueItem OK");
+      const cols = await prisma.$queryRawUnsafe(
+        `PRAGMA table_info("PromoQueueItem")`,
+      );
+      const names = new Set(cols.map((c) => c.name));
+      if (!names.has("channelResults")) {
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE "PromoQueueItem" ADD COLUMN "channelResults" TEXT`,
+        );
+        console.log("[ensure-promo-queue] added channelResults");
+      } else {
+        console.log("[ensure-promo-queue] PromoQueueItem OK");
+      }
       return;
     }
     await prisma.$executeRawUnsafe(`
@@ -28,6 +39,7 @@ async function main() {
         "costWon" INTEGER NOT NULL DEFAULT 0,
         "ageDays" INTEGER NOT NULL DEFAULT 0,
         "channels" TEXT NOT NULL DEFAULT 'telegram,instagram,facebook,x',
+        "channelResults" TEXT,
         "approvedAt" DATETIME,
         "postedAt" DATETIME,
         "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
